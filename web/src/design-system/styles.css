@@ -1,0 +1,5 @@
+/* The design system's stylesheet: generated tokens first, then bundle.css verbatim.
+ * docs/design-system/components/bundle.css is copied in unchanged — every value it uses comes
+ * from tokens.css, which scripts/gen-tokens.mjs derives from docs/design-system/tokens.json. */
+@import './tokens.css';
+@import './bundle.css';

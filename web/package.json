@@ -1,0 +1,60 @@
+{
+  "name": "wms-web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run gen:tokens && tsc -b --force && vite build",
+    "preview": "vite preview",
+    "serve": "vite preview --port 3000 --strictPort",
+    "typecheck": "tsc -b --force",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "gen:api": "node scripts/gen-api.mjs",
+    "gen:tokens": "node scripts/gen-tokens.mjs"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.1",
+    "@tanstack/react-query": "5.62.7",
+    "decimal.js": "10.4.3",
+    "i18next": "24.2.0",
+    "oidc-client-ts": "3.1.0",
+    "openapi-fetch": "0.13.4",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-hook-form": "^7.54.2",
+    "react-i18next": "15.2.0",
+    "react-router-dom": "6.28.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.17.0",
+    "@testing-library/jest-dom": "6.6.3",
+    "@testing-library/react": "16.1.0",
+    "@testing-library/user-event": "14.5.2",
+    "@types/node": "^22.10.2",
+    "@types/react": "18.3.17",
+    "@types/react-dom": "18.3.5",
+    "@vitejs/plugin-react": "4.3.4",
+    "eslint": "9.17.0",
+    "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-react-hooks": "5.1.0",
+    "eslint-plugin-react-refresh": "0.4.16",
+    "globals": "15.13.0",
+    "jsdom": "25.0.1",
+    "openapi-typescript": "7.4.4",
+    "prettier": "3.4.2",
+    "typescript": "5.7.2",
+    "typescript-eslint": "8.18.1",
+    "vite": "6.0.5",
+    "vitest": "^3.2.4"
+  }
+}

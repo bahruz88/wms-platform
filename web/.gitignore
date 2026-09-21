@@ -1,0 +1,29 @@
+# --- build output ---
+dist/
+dist-ssr/
+coverage/
+*.local
+
+# --- dependencies ---
+node_modules/
+
+# --- generated ---
+# OpenAPI types (regenerate with `npm run gen:api`) — see src/api/generated/README.md
+src/api/generated/*
+!src/api/generated/README.md
+
+# --- editors / OS ---
+.DS_Store
+.idea/
+*.swp
+.vscode/*
+!.vscode/extensions.json
+
+# --- env ---
+.env
+.env.*
+!.env.example
+
+# --- logs ---
+*.log
+npm-debug.log*
