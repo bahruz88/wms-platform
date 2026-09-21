@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Badge, DataTable, TextField, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listSuppliers, type SupplierSummary } from '@api/endpoints';
-import { ErrorState, LoadingState, Page, Section } from '@/components/Page';
+import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 import { Pager } from '@/components/Pager';
 
 /**
@@ -56,35 +56,39 @@ export function SuppliersScreen() {
 
   return (
     <Page title="Təchizatçılar" subtitle="Təchizatçı kataloqu və qida təsdiqi vəziyyəti">
-      <div className="wms-toolbar">
-        <TextField
-          label="Axtarış"
-          value={search}
-          placeholder="Ad, kod və ya VÖEN"
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
-      </div>
-      <Section>
+      <Card>
+        <div className="wms-toolbar">
+          <TextField
+            label="Axtarış"
+            value={search}
+            placeholder="Ad, kod və ya VÖEN"
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+          <div className="wms-toolbar__spacer" />
+        </div>
+      </Card>
+      <Card
+        title="Təchizatçılar"
+        flush
+        footer={suppliers.data ? <Pager page={suppliers.data} onPageChange={setPage} /> : undefined}
+      >
         {suppliers.isLoading ? (
           <LoadingState />
         ) : suppliers.isError ? (
           <ErrorState error={suppliers.error} onRetry={() => void suppliers.refetch()} />
         ) : (
-          <>
-            <DataTable<SupplierSummary>
-              columns={columns}
-              rows={suppliers.data?.items ?? []}
-              rowKey={(row) => row.id}
-              label="Təchizatçı siyahısı"
-              empty="Təchizatçı yoxdur. Satınalmaya başlamazdan əvvəl təchizatçı əlavə edin."
-            />
-            {suppliers.data ? <Pager page={suppliers.data} onPageChange={setPage} /> : null}
-          </>
+          <DataTable<SupplierSummary>
+            columns={columns}
+            rows={suppliers.data?.items ?? []}
+            rowKey={(row) => row.id}
+            label="Təchizatçı siyahısı"
+            empty="Təchizatçı yoxdur. Satınalmaya başlamazdan əvvəl təchizatçı əlavə edin."
+          />
         )}
-      </Section>
+      </Card>
     </Page>
   );
 }

@@ -3,7 +3,7 @@ import { Alert, DataTable, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listCurrencyRates, type CurrencyRate } from '@api/endpoints';
 import { formatDate } from '@core/format';
-import { ErrorState, LoadingState, Page, Section } from '@/components/Page';
+import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 import { Pager } from '@/components/Pager';
 
 /**
@@ -31,24 +31,25 @@ export function CurrencyRatesScreen() {
         Sənəd tarixinə məzənnə yoxdursa PO və xarici valyutada qəbul bloklanır —{' '}
         <span className="wms-num">409 FX_RATE_MISSING</span>.
       </Alert>
-      <Section>
+      <Card
+        title="Məzənnələr"
+        flush
+        footer={rates.data ? <Pager page={rates.data} onPageChange={setPage} /> : undefined}
+      >
         {rates.isLoading ? (
           <LoadingState />
         ) : rates.isError ? (
           <ErrorState error={rates.error} onRetry={() => void rates.refetch()} />
         ) : (
-          <>
-            <DataTable<CurrencyRate>
-              columns={columns}
-              rows={rates.data?.items ?? []}
-              rowKey={(row) => row.id}
-              label="Məzənnə siyahısı"
-              empty="Məzənnə yoxdur. Xarici valyutada əməliyyat üçün gündəlik məzənnə daxil edin."
-            />
-            {rates.data ? <Pager page={rates.data} onPageChange={setPage} /> : null}
-          </>
+          <DataTable<CurrencyRate>
+            columns={columns}
+            rows={rates.data?.items ?? []}
+            rowKey={(row) => row.id}
+            label="Məzənnə siyahısı"
+            empty="Məzənnə yoxdur. Xarici valyutada əməliyyat üçün gündəlik məzənnə daxil edin."
+          />
         )}
-      </Section>
+      </Card>
     </Page>
   );
 }

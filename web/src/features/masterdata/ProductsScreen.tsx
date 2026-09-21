@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Badge, DataTable, TextField, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listProducts, type ProductSummary } from '@api/endpoints';
-import { ErrorState, LoadingState, Page, Section } from '@/components/Page';
+import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 import { Pager } from '@/components/Pager';
 
 /**
@@ -84,36 +84,40 @@ export function ProductsScreen() {
       title="Məhsullar"
       subtitle="Məhsul kataloqu — sıralama `nameSortKey` üzrə (Azərbaycan əlifbası)"
     >
-      <div className="wms-toolbar">
-        <TextField
-          label="Axtarış"
-          value={search}
-          placeholder="SKU və ya ad"
-          hint="Ad `TRIM` edilir; baş və son boşluqlar saxlanılmır."
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
-      </div>
-      <Section>
+      <Card>
+        <div className="wms-toolbar">
+          <TextField
+            label="Axtarış"
+            value={search}
+            placeholder="SKU və ya ad"
+            hint="Ad `TRIM` edilir; baş və son boşluqlar saxlanılmır."
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+          <div className="wms-toolbar__spacer" />
+        </div>
+      </Card>
+      <Card
+        title="Məhsullar"
+        flush
+        footer={products.data ? <Pager page={products.data} onPageChange={setPage} /> : undefined}
+      >
         {products.isLoading ? (
           <LoadingState />
         ) : products.isError ? (
           <ErrorState error={products.error} onRetry={() => void products.refetch()} />
         ) : (
-          <>
-            <DataTable<ProductSummary>
-              columns={columns}
-              rows={products.data?.items ?? []}
-              rowKey={(row) => row.id}
-              label="Məhsul siyahısı"
-              empty="Bu axtarışa uyğun məhsul yoxdur. Axtarışı dəyişin və ya yeni məhsul əlavə edin."
-            />
-            {products.data ? <Pager page={products.data} onPageChange={setPage} /> : null}
-          </>
+          <DataTable<ProductSummary>
+            columns={columns}
+            rows={products.data?.items ?? []}
+            rowKey={(row) => row.id}
+            label="Məhsul siyahısı"
+            empty="Bu axtarışa uyğun məhsul yoxdur. Axtarışı dəyişin və ya yeni məhsul əlavə edin."
+          />
         )}
-      </Section>
+      </Card>
     </Page>
   );
 }

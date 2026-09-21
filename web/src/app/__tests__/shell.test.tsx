@@ -51,10 +51,25 @@ describe('navigation', () => {
       '/inventory/stock-requests',
       '/inventory/counts',
       '/inventory/waste',
+      // Screen-map §3.11 «Qaytarma», between the other document flows and the read-only views.
+      '/inventory/returns',
       '/inventory/balances',
       '/inventory/batches',
       '/inventory/movements',
     ]);
+  });
+
+  it('filters «Qaytarma» on the code the service enforces, not the contract spelling', () => {
+    const returns = NAV_GROUPS.flatMap((g) => g.items).find((i) => i.to === '/inventory/returns');
+    // The contract writes `inv.rtv.view`; the gateway checks `inv.return.view`.
+    expect(returns?.permission).toBe('inv.return.view');
+    expect(
+      visibleNavGroups(permissionsForRoles(['WAREHOUSE_KEEPER'])).flatMap((g) => g.items),
+    ).toContainEqual(expect.objectContaining({ to: '/inventory/returns' }));
+    // The branch user gets 403 from the gateway, so the entry is not shown to them.
+    expect(
+      visibleNavGroups(permissionsForRoles(['BRANCH_USER'])).flatMap((g) => g.items),
+    ).not.toContainEqual(expect.objectContaining({ to: '/inventory/returns' }));
   });
 
   it('lights the parent entry for a detail route and for a tab sibling', () => {

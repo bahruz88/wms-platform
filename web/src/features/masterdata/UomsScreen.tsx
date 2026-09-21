@@ -1,7 +1,7 @@
 import { Badge, DataTable, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listUoms, type Uom } from '@api/endpoints';
-import { ErrorState, LoadingState, Page, Section } from '@/components/Page';
+import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 
 /**
  * Units of measure — docs/ux/screen-map.md §5.3. `decimals` is where every quantity's display
@@ -31,7 +31,7 @@ export function UomsScreen() {
       title="Ölçü vahidləri"
       subtitle="`decimals` miqdarın göstərilmə dəqiqliyini təyin edir — ekranlarda sabit yazılmır"
     >
-      <Section>
+      <Card title="Ölçü vahidləri" flush>
         {uoms.isLoading ? (
           <LoadingState />
         ) : uoms.isError ? (
@@ -45,7 +45,7 @@ export function UomsScreen() {
             empty="Ölçü vahidi yoxdur. Master data quraşdırması ilə başlayın."
           />
         )}
-      </Section>
+      </Card>
     </Page>
   );
 }

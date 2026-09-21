@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { batchRef, indexById, locationRef, normalizeBalance, productRef } from '../adapters';
+import {
+  batchRef,
+  indexById,
+  locationRef,
+  moneyRef,
+  normalizeBalance,
+  productRef,
+} from '../adapters';
 import type { Location, ProductSummary } from '../endpoints';
 
 const products = indexById<ProductSummary>([
@@ -100,5 +107,44 @@ describe('reference adapters', () => {
     );
     expect(balance.avgUnitCost).toBeUndefined();
     expect(balance.totalValue).toBeUndefined();
+  });
+});
+
+/**
+ * The return-to-vendor endpoints disagree with their contract about `claimAmount`: the schema
+ * says `Money { amount, currency }`, the running service sends and accepts a bare decimal
+ * string. Reading `.amount` off the string produced `undefined`, which reached `Decimal` and
+ * threw, blanking the whole document — so both shapes are absorbed at the edge.
+ */
+describe('moneyRef', () => {
+  it('accepts the contract object', () => {
+    expect(moneyRef({ amount: '40.0000', currency: 'USD' })).toEqual({
+      amount: '40.0000',
+      currency: 'USD',
+    });
+  });
+
+  it('accepts the bare decimal string the service actually sends', () => {
+    expect(moneyRef('40.0000')).toEqual({ amount: '40.0000', currency: 'AZN' });
+  });
+
+  it('defaults the currency only when the payload has none', () => {
+    expect(moneyRef('7', 'USD')).toEqual({ amount: '7', currency: 'USD' });
+    expect(moneyRef({ amount: '7', currency: 'EUR' }, 'USD')).toEqual({
+      amount: '7',
+      currency: 'EUR',
+    });
+  });
+
+  it('reads an absent, null or empty amount as no money at all, never as zero', () => {
+    expect(moneyRef(null)).toBeNull();
+    expect(moneyRef(undefined)).toBeNull();
+    expect(moneyRef('')).toBeNull();
+    expect(moneyRef({})).toBeNull();
+  });
+
+  it('never turns the amount into a number', () => {
+    expect(typeof moneyRef('0.1')?.amount).toBe('string');
+    expect(moneyRef(0.1)?.amount).toBe('0.1');
   });
 });

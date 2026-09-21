@@ -100,10 +100,21 @@ describe('count variance threshold', () => {
 });
 
 describe('pending approval links', () => {
+  /**
+   * This test used to be green while `/inventory/waste/:id` was not a route at all, so a WASTE
+   * link from the dashboard landed on `NotFoundScreen`: asserting the string proved only that
+   * the string had not changed. The route now exists, and
+   * `features/inventory/__tests__/screens.test.tsx` mounts the real route table at this very
+   * URL — that is the assertion that would have caught it.
+   */
   it('sends each document type to the screen that can decide it', () => {
     expect(approvalLink({ docType: 'PO', docId: 87 })).toBe('/procurement/purchase-orders/87');
     expect(approvalLink({ docType: 'WASTE', docId: 67 })).toBe('/inventory/waste/67');
     expect(approvalLink({ docType: 'COUNT_ADJUST', docId: 12 })).toBe('/inventory/counts/12');
+  });
+
+  it('keeps an unknown document type on the approvals list rather than inventing a route', () => {
+    expect(approvalLink({ docType: 'RFQ' as 'PO', docId: 3 })).toBe('/procurement/approvals');
   });
 });
 

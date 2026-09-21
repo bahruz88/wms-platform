@@ -139,3 +139,29 @@ export function normalizeGoodsReceipt(
     }),
   };
 }
+
+/**
+ * `Money` from a field the contract declares as `{ amount, currency }` but the live service
+ * answers with as a bare decimal string.
+ *
+ * `GET /inventory/return-to-vendor/{id}` returns `"claimAmount": "40.0000"`. Reading
+ * `.amount` off that yields `undefined`, which reaches `Decimal` and throws
+ * `[DecimalError] Invalid argument: undefined` — the whole screen goes blank. Rather than let a
+ * shape divergence take a document down, both shapes are accepted here and the screen always
+ * gets the contract's object back.
+ */
+export function moneyRef(
+  value: unknown,
+  defaultCurrency = 'AZN',
+): { amount: string; currency: string } | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') {
+    return value.trim() === '' ? null : { amount: value, currency: defaultCurrency };
+  }
+  if (typeof value === 'number') return { amount: String(value), currency: defaultCurrency };
+  const row = asRecord(value);
+  const amount =
+    str(row.amount) ?? (num(row.amount) !== undefined ? String(row.amount) : undefined);
+  if (amount === undefined) return null;
+  return { amount, currency: str(row.currency) ?? defaultCurrency };
+}

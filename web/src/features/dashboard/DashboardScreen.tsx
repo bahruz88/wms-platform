@@ -8,16 +8,15 @@ import {
   listBalances,
   listCounts,
   listGoodsReceipts,
-  listInventorySettings,
   listPendingApprovals,
   type Balance,
   type CountSummary,
   type DashboardSummary,
   type GoodsReceiptSummary,
-  type InventorySetting,
   type PendingApproval,
 } from '@api/endpoints';
 import { normalizeBalance } from '@api/adapters';
+import { settingsFallbackNote, useInventorySettings } from '@api/settings';
 import { useAuth } from '@auth/index';
 import { Decimal, Money } from '@core/decimal';
 import { daysUntil, formatDate, formatDateTime, formatMoney, formatNumber } from '@core/format';
@@ -40,10 +39,6 @@ import { Card, DocNo, ErrorState, Page, ProductCell } from '@/components/Page';
  * (components/KpiCard/README.md, SPEC §16).
  */
 
-/** The artboard's thresholds; overridden by `inv_setting` as soon as `/settings` is routed. */
-const DEFAULT_EXPIRY_WARNING_DAYS = 30;
-const DEFAULT_EXPIRY_CRITICAL_DAYS = 7;
-
 interface ExpiringRow {
   key: string;
   productName: string;
@@ -65,12 +60,9 @@ export function DashboardScreen() {
     retry: false,
   });
 
-  const settings = useApiPage<InventorySetting>(
-    ['dashboard', 'settings'],
-    listInventorySettings,
-    50,
-    { retry: false },
-  );
+  // One place reads `inv_setting`, and it says when it is showing a documented default rather
+  // than the tenant's own value (TOR §36).
+  const settings = useInventorySettings('dashboard');
 
   const balances = useApiPage<Balance>(
     ['dashboard', 'balances'],
@@ -99,13 +91,8 @@ export function DashboardScreen() {
     { retry: false },
   );
 
-  const setting = (key: string, fallback: number): number => {
-    const raw = (settings.data?.items ?? []).find((s) => s.key === key)?.value;
-    const parsed = raw === undefined ? Number.NaN : Number(raw);
-    return Number.isFinite(parsed) ? parsed : fallback;
-  };
-  const warningDays = setting('expiry_warning_days', DEFAULT_EXPIRY_WARNING_DAYS);
-  const criticalDays = setting('expiry_critical_days', DEFAULT_EXPIRY_CRITICAL_DAYS);
+  const warningDays = settings.get('expiry_warning_days');
+  const criticalDays = settings.get('expiry_critical_days');
 
   const rows = useMemo(
     () => (balances.data?.items ?? []).map((row) => normalizeBalance(row)),
@@ -234,6 +221,12 @@ export function DashboardScreen() {
               {formatDateTime(health.lastBalanceReconciliationAt)}
             </div>
           ) : null}
+        </Alert>
+      ) : null}
+
+      {settings.unavailable ? (
+        <Alert tone="info" title="Hədlər tenant parametrindən oxunmadı" code="NOT_FOUND">
+          {settingsFallbackNote(settings.status)}
         </Alert>
       ) : null}
 

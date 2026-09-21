@@ -1,27 +1,16 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  Alert,
-  Badge,
-  Button,
-  DataTable,
-  Dialog,
-  Select,
-  VarianceIndicator,
-  type Column,
-} from '@ds/index';
+import { Alert, Badge, Button, DataTable, Dialog, VarianceIndicator, type Column } from '@ds/index';
 import { useApiPage, useApiQuery } from '@api/hooks';
 import {
   cancelGoodsReceipt,
   getGoodsReceipt,
   listProducts,
-  listReasonCodes,
   listUoms,
   postGoodsReceipt,
   type GoodsReceipt,
   type ProductSummary,
-  type ReasonCode,
   type Uom,
 } from '@api/endpoints';
 import { indexById, normalizeGoodsReceipt } from '@api/adapters';
@@ -36,8 +25,10 @@ import {
   LoadingState,
   Meta,
   MetaGrid,
+  NotOpenYet,
   ProductCell,
 } from '@/components/Page';
+import { ReasonCodePicker, isUnrouted } from '@/components/ReasonCodePicker';
 
 type Line = GoodsReceipt['lines'][number];
 
@@ -67,13 +58,6 @@ export function GoodsReceiptDetailScreen() {
     { retry: false },
   );
   const uoms = useApiPage<Uom>(['uoms', 'receipt'], () => listUoms({}), 200, { retry: false });
-  const reasons = useApiPage<ReasonCode>(
-    ['reason-codes', 'adjustment'],
-    () => listReasonCodes({}),
-    200,
-    { retry: false },
-  );
-
   const receipt = useApiQuery<GoodsReceipt>(['goods-receipt', receiptId], () =>
     getGoodsReceipt(receiptId),
   );
@@ -114,6 +98,13 @@ export function GoodsReceiptDetailScreen() {
 
   const isPosted = doc.status === 'POSTED';
   const canViewCost = can('master.product.view_cost');
+
+  // `POST /goods-receipts/{id}/cancel` is in the contract but not routed on the gateway: it
+  // answers a bare 404 with no problem `code`, i.e. an unmatched route rather than a refused
+  // operation. The button is not hidden — the operation is real and the permission is real —
+  // but the moment it comes back unrouted the dialog says so in place of a false success, and
+  // the button afterwards carries the reason in its `title`.
+  const cancelUnrouted = isUnrouted(cancel.error);
 
   const total = canViewCost
     ? doc.lines.reduce((acc, line) => {
@@ -239,11 +230,18 @@ export function GoodsReceiptDetailScreen() {
             <Badge tone="neutral" title="SPEC §9.4">
               Post edilmiş sənəd redaktə olunmur
             </Badge>
-          ) : can('inv.receipt.create') ? (
+          ) : !can('inv.receipt.create') ? null : cancelUnrouted ? (
+            <Button
+              disabled
+              title="POST /inventory/goods-receipts/{id}/cancel gateway-də marşrutlanmır (404)"
+            >
+              Ləğv et
+            </Button>
+          ) : (
             <Button variant="secondary" onClick={() => setCancelOpen(true)}>
               Ləğv et
             </Button>
-          ) : null}
+          )}
           {isPosted ? null : can('inv.receipt.post') ? (
             <Button variant="primary" onClick={() => setPostOpen(true)}>
               Post et
@@ -257,7 +255,8 @@ export function GoodsReceiptDetailScreen() {
       }
     >
       {post.isError ? <ErrorState error={post.error} /> : null}
-      {cancel.isError ? <ErrorState error={cancel.error} /> : null}
+      {/* An unrouted cancel is reported inside the dialog the user is still looking at. */}
+      {cancel.isError && !cancelUnrouted ? <ErrorState error={cancel.error} /> : null}
       {post.isSuccess ? (
         <Alert tone="success" title={`Post edildi — ${doc.docNo}`}>
           Balans yeniləndi; hərəkətlər `RECEIPT` qrupuna yazıldı.
@@ -406,22 +405,23 @@ export function GoodsReceiptDetailScreen() {
           </>
         }
       >
-        <Select
-          label="Səbəb kodu"
-          required
-          value={reasonCodeId}
-          placeholder="Səbəb seçin"
-          hint={
-            reasons.isError
-              ? 'GET /master-data/reason-codes hələ açılmayıb — id yazmaq üçün siyahı yoxdur.'
-              : 'Qrup: ADJUSTMENT'
-          }
-          options={(reasons.data?.items ?? []).map((r) => ({
-            value: String(r.id),
-            label: `${r.code} · ${r.name}`,
-          }))}
-          onChange={(e) => setReasonCodeId(e.target.value)}
-        />
+        <div className="wms-stack">
+          <ReasonCodePicker
+            reasonGroup="ADJUSTMENT"
+            cacheKey="receipt-cancel"
+            value={reasonCodeId}
+            onChange={setReasonCodeId}
+          />
+          {cancelUnrouted ? (
+            <NotOpenYet
+              operation="POST /inventory/goods-receipts/{id}/cancel"
+              status={isApiError(cancel.error) ? cancel.error.status : 404}
+            >
+              Sənəd dəyişmədi — sorğu gateway-də marşrutlanmır. Qaralamanı bağlamaq üçün əməliyyat
+              açılana qədər anbar müdirinə müraciət edin.
+            </NotOpenYet>
+          ) : null}
+        </div>
       </Dialog>
     </DocumentPage>
   );

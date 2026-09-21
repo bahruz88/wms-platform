@@ -39,6 +39,14 @@ function renderDeepLink(path: string, session: WmsSession | null) {
               </RequirePermission>
             }
           />
+          <Route
+            path="/inventory/goods-receipts/new"
+            element={
+              <RequirePermission permission="inv.receipt.create">
+                <div>Yeni qəbul məzmunu</div>
+              </RequirePermission>
+            }
+          />
         </Routes>
       </MemoryRouter>
     </TestAuthProvider>,
@@ -93,9 +101,15 @@ describe('RequirePermission', () => {
   });
 
   it('applies the same rule the AUDITOR really gets from the backend map', () => {
-    // The backend's `*.view` pattern does not cover three-segment codes, so the auditor has no
-    // inv.balance.view. The interface reproduces that rather than guessing a friendlier answer.
+    // Changed with the backend's `Matches` fix: `*.view` now spans one **or more** segments, so
+    // the auditor does hold inv.balance.view and the read screen opens. The gateway agrees —
+    // the auditor token answers 200 on GET /inventory/balances.
     renderDeepLink('/inventory/balances', sessionFor(['AUDITOR']));
+    expect(screen.queryByText('Bu ekrana icazəniz yoxdur')).toBeNull();
+  });
+
+  it('still refuses the AUDITOR a write screen, because read-only is read-only', () => {
+    renderDeepLink('/inventory/goods-receipts/new', sessionFor(['AUDITOR']));
     expect(screen.getByText('Bu ekrana icazəniz yoxdur')).toBeInTheDocument();
   });
 });

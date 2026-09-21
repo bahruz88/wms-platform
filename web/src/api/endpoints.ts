@@ -87,6 +87,13 @@ export type SampleCreate = InventoryComponents['schemas']['SampleCreate'];
 export type StockRequestSummary = InventoryComponents['schemas']['StockRequestSummary'];
 export type StockRequest = InventoryComponents['schemas']['StockRequest'];
 export type StockRequestCreate = InventoryComponents['schemas']['StockRequestCreate'];
+export type ReturnToVendorSummary = InventoryComponents['schemas']['ReturnToVendorSummary'];
+export type ReturnToVendor = InventoryComponents['schemas']['ReturnToVendor'];
+export type ReturnToVendorCreate = InventoryComponents['schemas']['ReturnToVendorCreate'];
+export type RtvStatus = InventoryComponents['schemas']['RtvStatus'];
+export type MoneyDto = InventoryComponents['schemas']['Money'];
+export type ReasonGroup = NonNullable<Query<MasterDataPaths, '/reason-codes'>['reasonGroup']>;
+export type WasteLine = InventoryComponents['schemas']['WasteLine'];
 export type InventorySetting = InventoryComponents['schemas']['InventorySetting'];
 
 export type RequisitionSummary = ProcurementComponents['schemas']['RequisitionSummary'];
@@ -424,6 +431,67 @@ export const cancelStockRequest = async (id: number, rowVersion: number) =>
       body: { rowVersion },
     }),
   );
+
+// --- return to vendor ------------------------------------------------------------------------------
+/**
+ * Screen-map §3.11. The contract writes these operations' permission as `inv.rtv.*`, but the
+ * running service enforces `inv.return.*` (`InventoryPermissions.cs`) — the guards use the
+ * service's spelling, because the server is the only real check.
+ */
+export const listReturnsToVendor = async (query: Query<InventoryPaths, '/return-to-vendor'> = {}) =>
+  unwrap(await inventoryApi.GET('/return-to-vendor', { params: { query } }));
+
+export const getReturnToVendor = async (id: number) =>
+  unwrap(await inventoryApi.GET('/return-to-vendor/{id}', { params: { path: { id } } }));
+
+export const createReturnToVendor = async (body: ReturnToVendorCreate) =>
+  unwrap(
+    await inventoryApi.POST('/return-to-vendor', {
+      params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: withWireClaimAmount(body),
+    }),
+  );
+
+/** `DRAFT → SENT`: the location is credited and `V_SUPPLIER` debited (SPEC §12.3). */
+export const sendReturnToVendor = async (id: number, rowVersion: number) =>
+  unwrap(
+    await inventoryApi.POST('/return-to-vendor/{id}/send', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion },
+    }),
+  );
+
+/** `SENT → ACCEPTED | REJECTED → CLOSED` in one step, with the supplier's final claim amount. */
+export const closeReturnToVendor = async (
+  id: number,
+  rowVersion: number,
+  outcome: 'ACCEPTED' | 'REJECTED',
+  /** `Money` is `{ amount, currency }` and `amount` stays a decimal string (ADR-008). */
+  claimAmount?: MoneyDto | null,
+  outcomeNote?: string | null,
+) =>
+  unwrap(
+    await inventoryApi.POST('/return-to-vendor/{id}/close', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: withWireClaimAmount({ rowVersion, outcome, claimAmount, outcomeNote }),
+    }),
+  );
+
+/**
+ * The return-to-vendor endpoints declare `claimAmount` as `Money { amount, currency }` but the
+ * running service binds it as a bare decimal string: sending the object gets
+ * `400 BAD_REQUEST — Failed to read parameter "ReturnToVendorCreateRequest request" from the
+ * request body as JSON` (verified against the gateway on :5001, both create and close).
+ *
+ * Screens keep working in the contract's shape; the divergence is flattened here and only here,
+ * so it is one line to delete when the service is corrected. The amount is never parsed into a
+ * `number` on the way through (ADR-008).
+ */
+function withWireClaimAmount<T extends { claimAmount?: MoneyDto | null }>(body: T): T {
+  if (body.claimAmount === undefined) return body;
+  const amount = body.claimAmount === null ? null : body.claimAmount.amount;
+  return { ...body, claimAmount: amount } as unknown as T;
+}
 
 // --- batches / reversal ----------------------------------------------------------------------------
 export const getBatch = async (id: number) =>

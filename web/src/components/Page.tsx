@@ -145,8 +145,14 @@ export function Card({
 }
 
 /**
- * Backwards-compatible section wrapper: a titled card. Screens that have not been reworked yet
- * still read as part of the same product because this is the same card the artboards draw.
+ * Backwards-compatible section wrapper: a titled card. It renders the same card the artboards
+ * draw, so a screen that still uses it reads as part of the same product — but it loses the list
+ * rhythm the artboards set out (a filter card, then one flush-framed table with the pager in the
+ * card's footer).
+ *
+ * Every warehouse, master-data and administration screen has been moved off it. What remains are
+ * the consumption, procurement and reporting screens, whose endpoints are mostly unrouted; they
+ * should be reworked when those land and the layouts can be checked against real data.
  */
 export function Section({
   title,

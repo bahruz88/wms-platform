@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Alert,
   Badge,
   Button,
   DataTable,
@@ -20,23 +19,30 @@ import { Pager } from '@/components/Pager';
 /**
  * Goods receipts — the list behind the artboard's «Qəbul» entry.
  *
- * `listGoodsReceipts` is in the contract; while the gateway routes only POST on
- * `/goods-receipts` (it answers 405 on GET) the screen also offers a direct lookup by document
- * id, which `getGoodsReceipt` does serve — so a real receipt opens from here today instead of
- * the screen being a dead end.
+ * `GET /inventory/goods-receipts` is routed and answering, so the "open a document by id"
+ * workaround this screen used to carry — and the notice that told the user the list endpoint was
+ * not open — are gone. What is left is the artboards' list rhythm: a filter card, then one
+ * framed table whose document numbers are the links.
  */
 export function GoodsReceiptsScreen() {
   const navigate = useNavigate();
   const { can } = useAuth();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<'' | 'DRAFT' | 'POSTED' | 'CANCELLED'>('');
-  const [directId, setDirectId] = useState('1');
+  const [supplierName, setSupplierName] = useState('');
 
   const query = { page, size: 50, ...(status ? { status } : {}) };
   const receipts = useApiPage<GoodsReceiptSummary>(
     ['goods-receipts', query],
     () => listGoodsReceipts(query),
     50,
+  );
+
+  // The contract has no supplier-name filter on this operation, so the narrowing is done on the
+  // page that was fetched and the empty state says which filter produced it.
+  const needle = supplierName.trim().toLocaleLowerCase('az');
+  const rows = (receipts.data?.items ?? []).filter((row) =>
+    needle ? (row.supplierName ?? '').toLocaleLowerCase('az').includes(needle) : true,
   );
 
   const columns: Column<GoodsReceiptSummary>[] = [
@@ -123,35 +129,20 @@ export function GoodsReceiptsScreen() {
               setPage(1);
             }}
           />
-          <div className="wms-toolbar__spacer" />
           <TextField
-            label="Sənəd id ilə aç"
-            mono
-            value={directId}
-            hint="`getGoodsReceipt` işləyir; siyahı endpoint-i gateway-də hələ açılmayıb."
-            onChange={(e) => setDirectId(e.target.value)}
+            label="Təchizatçı"
+            value={supplierName}
+            placeholder="Ada görə süz"
+            onChange={(e) => setSupplierName(e.target.value)}
           />
-          <Button
-            disabled={!directId.trim()}
-            title={!directId.trim() ? 'Sənəd id-si yazın' : undefined}
-            onClick={() => navigate(`/inventory/goods-receipts/${directId.trim()}`)}
-          >
-            Aç
-          </Button>
+          <div className="wms-toolbar__spacer" />
         </div>
       </Card>
 
       {receipts.isLoading ? (
         <LoadingState />
       ) : receipts.isError ? (
-        <>
-          <ErrorState error={receipts.error} onRetry={() => void receipts.refetch()} />
-          <Alert tone="info" title="Sənədi birbaşa açın">
-            Siyahı gələnə qədər sənəd id-sini bilirsinizsə yuxarıdakı sahədən açın — məsələn{' '}
-            <span className="wms-doc-no">GR-2026-00001</span> üçün id{' '}
-            <span className="wms-num">1</span>.
-          </Alert>
-        </>
+        <ErrorState error={receipts.error} onRetry={() => void receipts.refetch()} />
       ) : (
         <Card
           title="Qəbul sənədləri"
@@ -160,10 +151,14 @@ export function GoodsReceiptsScreen() {
         >
           <DataTable<GoodsReceiptSummary>
             columns={columns}
-            rows={receipts.data?.items ?? []}
+            rows={rows}
             rowKey={(row) => row.id}
             label="Qəbul siyahısı"
-            empty="Qəbul sənədi yoxdur. «Yeni qəbul» ilə başlayın."
+            empty={
+              supplierName.trim()
+                ? `«${supplierName.trim()}» üçün qəbul sənədi tapılmadı. Süzgəci təmizləyin.`
+                : 'Qəbul sənədi yoxdur. «Yeni qəbul» ilə başlayın.'
+            }
           />
         </Card>
       )}

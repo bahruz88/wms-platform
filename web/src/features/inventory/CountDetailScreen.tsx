@@ -13,18 +13,17 @@ import {
   computeVariance,
   type Column,
 } from '@ds/index';
-import { useApiPage, useApiQuery } from '@api/hooks';
+import { useApiQuery } from '@api/hooks';
 import {
   decideCount,
   freezeCount,
   getCount,
-  listInventorySettings,
   postCount,
   submitCount,
   type Count,
   type CountLine,
-  type InventorySetting,
 } from '@api/endpoints';
+import { useInventorySettings } from '@api/settings';
 import { useAuth } from '@auth/index';
 import { Decimal } from '@core/decimal';
 import { formatDateTime, formatNumber } from '@core/format';
@@ -50,8 +49,6 @@ const COUNT_TYPE_LABELS: Record<string, string> = {
   SPOT: 'Nöqtəvi sayım',
 };
 
-const DEFAULT_VARIANCE_THRESHOLD_PCT = 2;
-
 export function CountDetailScreen() {
   const { id } = useParams();
   const countId = Number(id);
@@ -62,19 +59,13 @@ export function CountDetailScreen() {
   const [confirmOpen, setConfirmOpen] = useState<'freeze' | 'submit' | 'post' | null>(null);
 
   const count = useApiQuery<Count>(['count', countId], () => getCount(countId));
-  const settings = useApiPage<InventorySetting>(['settings', 'count'], listInventorySettings, 50, {
-    retry: false,
-  });
+  // One source for every tenant threshold (TOR §36); it says when it is falling back.
+  const settings = useInventorySettings('count');
 
   const doc = count.data ?? null;
 
-  const thresholdPct = useMemo(() => {
-    const raw = (settings.data?.items ?? []).find(
-      (s) => s.key === 'count_variance_approval_threshold_pct',
-    )?.value;
-    const parsed = raw === undefined ? Number.NaN : Number(raw);
-    return Number.isFinite(parsed) ? parsed : DEFAULT_VARIANCE_THRESHOLD_PCT;
-  }, [settings.data]);
+  const thresholdPct = settings.get('count_variance_approval_threshold_pct');
+  const thresholdIsFallback = settings.isFallback('count_variance_approval_threshold_pct');
 
   const invalidate = () => {
     setConfirmOpen(null);
@@ -325,7 +316,11 @@ export function CountDetailScreen() {
         <KpiCard
           label="Həddi aşan fərq"
           value={overThreshold}
-          hint={`count_variance_approval_threshold_pct = ${thresholdPct}`}
+          hint={
+            thresholdIsFallback
+              ? `count_variance_approval_threshold_pct = ${thresholdPct} (standart dəyər — tenant parametri oxunmadı)`
+              : `count_variance_approval_threshold_pct = ${thresholdPct}`
+          }
         />
         {canViewCost ? (
           <KpiCard

@@ -1,7 +1,7 @@
 import { Badge, DataTable, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listLocations, type Location } from '@api/endpoints';
-import { ErrorState, LoadingState, Page, Section } from '@/components/Page';
+import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 
 /**
  * Locations — docs/ux/screen-map.md §5.3. Virtual locations carry the `virtual` tone so they are
@@ -70,7 +70,7 @@ export function LocationsScreen() {
 
   return (
     <Page title="Lokasiyalar" subtitle="Fiziki və virtual lokasiyalar">
-      <Section>
+      <Card title="Lokasiyalar" flush>
         {locations.isLoading ? (
           <LoadingState />
         ) : locations.isError ? (
@@ -84,7 +84,7 @@ export function LocationsScreen() {
             empty="Lokasiya yoxdur. Master data quraşdırması ilə başlayın."
           />
         )}
-      </Section>
+      </Card>
     </Page>
   );
 }

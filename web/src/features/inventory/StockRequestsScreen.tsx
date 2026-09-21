@@ -12,6 +12,13 @@ import { Pager } from '@/components/Pager';
  * Stock requests — the branch asking the warehouse for goods, which is what an issue is normally
  * raised against. The list is the warehouse's queue: a submitted request is picked, then issued,
  * and the issue document carries the request number in its breadcrumb.
+ *
+ * The header action is the **branch's**: a new request, gated on `inv.request.create`, which is
+ * the permission the operation it navigates to actually needs. It used to be gated on that same
+ * code while navigating to issue creation, which needs `inv.issue.create` — so a branch user saw
+ * an enabled button that led straight to a refusal, and a keeper saw a disabled one for a screen
+ * they may open. Creating an issue against a request is the keeper's per-row action instead,
+ * where the request being fulfilled is unambiguous.
  */
 export function StockRequestsScreen() {
   const navigate = useNavigate();
@@ -35,7 +42,11 @@ export function StockRequestsScreen() {
       key: 'docNo',
       header: 'Sənəd',
       width: '160px',
-      render: (row) => <span className="wms-doc-no">{row.docNo}</span>,
+      render: (row) => (
+        <Link to={`/inventory/stock-requests/${row.id}`}>
+          <span className="wms-doc-no">{row.docNo}</span>
+        </Link>
+      ),
     },
     {
       key: 'docDate',
@@ -91,12 +102,12 @@ export function StockRequestsScreen() {
       subtitle="Filialdan gələn tələblər — məxaric sənədi bu tələbə bağlanır"
       actions={
         can('inv.request.create') ? (
-          <Button variant="primary" onClick={() => navigate('/inventory/issues/new')}>
-            Məxaric yarat
+          <Button variant="primary" onClick={() => navigate('/inventory/stock-requests/new')}>
+            Yeni tələb
           </Button>
         ) : (
           <Button disabled title="`inv.request.create` icazəniz yoxdur">
-            Məxaric yarat
+            Yeni tələb
           </Button>
         )
       }
@@ -123,7 +134,7 @@ export function StockRequestsScreen() {
           />
           <div className="wms-toolbar__spacer" />
           <Badge tone="neutral" variant="outline">
-            Tələb mobil tətbiqdə yaradılır
+            Tələbi filial mobil tətbiqdən və ya buradan göndərir
           </Badge>
         </div>
       </Card>
@@ -143,7 +154,7 @@ export function StockRequestsScreen() {
             rows={requests.data?.items ?? []}
             rowKey={(row) => row.id}
             label="Mal tələbi siyahısı"
-            empty="Açıq mal tələbi yoxdur. Filial tələbi mobil tətbiqdən göndərir."
+            empty="Açıq mal tələbi yoxdur. «Yeni tələb» ilə başlayın və ya filialın mobil tətbiqdən göndərməsini gözləyin."
           />
         </Card>
       )}

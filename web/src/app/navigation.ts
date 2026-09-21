@@ -87,6 +87,13 @@ export const NAV_GROUPS: NavGroup[] = [
         permission: ['inv.waste.view', 'inv.sample.view'],
         match: ['/inventory/samples'],
       },
+      {
+        // Screen-map §3.11. The contract spells the permission `inv.rtv.view`; the running
+        // service enforces `inv.return.view`, so that is what the entry is filtered on.
+        to: '/inventory/returns',
+        labelKey: 'nav.returns',
+        permission: 'inv.return.view',
+      },
       { to: '/inventory/balances', labelKey: 'nav.balances', permission: 'inv.balance.view' },
       { to: '/inventory/batches', labelKey: 'nav.batches', permission: 'inv.batch.view' },
       { to: '/inventory/movements', labelKey: 'nav.movements', permission: 'inv.movement.view' },

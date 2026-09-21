@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import { RequireAuth, RequirePermission } from '@auth/index';
+import { RequireAuth, RequirePermission, useAuth } from '@auth/index';
 import { AppShell } from './AppShell';
+import { visibleNavGroups } from './navigation';
 import { CallbackScreen } from '@features/auth/CallbackScreen';
 import { LoginScreen } from '@features/auth/LoginScreen';
 import { NotFoundScreen } from '@features/auth/NotFoundScreen';
@@ -27,8 +28,15 @@ import { IssuesScreen } from '@features/inventory/IssuesScreen';
 import { IssueCreateScreen } from '@features/inventory/IssueCreateScreen';
 import { IssueDetailScreen } from '@features/inventory/IssueDetailScreen';
 import { StockRequestsScreen } from '@features/inventory/StockRequestsScreen';
+import { StockRequestCreateScreen } from '@features/inventory/StockRequestCreateScreen';
+import { StockRequestDetailScreen } from '@features/inventory/StockRequestDetailScreen';
 import { WasteScreen } from '@features/inventory/WasteScreen';
+import { WasteDetailScreen } from '@features/inventory/WasteDetailScreen';
 import { SamplesScreen } from '@features/inventory/SamplesScreen';
+import { SampleDetailScreen } from '@features/inventory/SampleDetailScreen';
+import { ReturnsScreen } from '@features/inventory/ReturnsScreen';
+import { ReturnCreateScreen } from '@features/inventory/ReturnCreateScreen';
+import { ReturnDetailScreen } from '@features/inventory/ReturnDetailScreen';
 import { ProductsScreen } from '@features/masterdata/ProductsScreen';
 import { SuppliersScreen } from '@features/masterdata/SuppliersScreen';
 import { LocationsScreen } from '@features/masterdata/LocationsScreen';
@@ -57,11 +65,41 @@ import { ExportsScreen } from '@features/reporting/ExportsScreen';
 function Guarded({
   permission,
   children,
+  redirectTo,
 }: {
   permission: string | string[];
   children: ReactElement;
+  redirectTo?: string;
 }) {
-  return <RequirePermission permission={permission}>{children}</RequirePermission>;
+  return (
+    <RequirePermission permission={permission} redirectTo={redirectTo}>
+      {children}
+    </RequirePermission>
+  );
+}
+
+/**
+ * The index route is where sign-in lands, so a user without `rpt.dashboard.view` must not be
+ * met by a refusal: they are sent to the first screen their own navigation offers — the keeper
+ * to «Qəbul», the branch user to «Mal tələbi». The dashboard is still not rendered for them,
+ * which is the point; only the destination is kinder than a dead end.
+ *
+ * A user whose navigation is empty has genuinely nothing to open, and then the refusal with its
+ * `FORBIDDEN` code is the honest answer.
+ */
+function Home() {
+  const { session, can } = useAuth();
+  const first = visibleNavGroups(session?.permissions ?? [])
+    .flatMap((group) => group.items)
+    .find((item) => item.to !== '/');
+
+  if (!can('rpt.dashboard.view') && first) return <Navigate to={first.to} replace />;
+
+  return (
+    <Guarded permission="rpt.dashboard.view">
+      <DashboardScreen />
+    </Guarded>
+  );
 }
 
 export function AppRoutes() {
@@ -77,7 +115,10 @@ export function AppRoutes() {
           </RequireAuth>
         }
       >
-        <Route index element={<DashboardScreen />} />
+        {/* The dashboard is `rpt.dashboard.view` like every other screen: the navigation hides
+            the entry without it, and the route has to refuse it too, or `/` would be the one
+            screen a deep link walks straight into. */}
+        <Route index element={<Home />} />
 
         <Route path="procurement">
           <Route
@@ -236,6 +277,22 @@ export function AppRoutes() {
             }
           />
           <Route
+            path="stock-requests/new"
+            element={
+              <Guarded permission="inv.request.create">
+                <StockRequestCreateScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="stock-requests/:id"
+            element={
+              <Guarded permission="inv.request.view">
+                <StockRequestDetailScreen />
+              </Guarded>
+            }
+          />
+          <Route
             path="counts"
             element={
               <Guarded permission={['inv.count.view', 'inv.count.create']}>
@@ -259,11 +316,56 @@ export function AppRoutes() {
               </Guarded>
             }
           />
+          {/* The dashboard's pending-approval link for a WASTE document points here. Without
+              this route it landed on NotFoundScreen. */}
+          <Route
+            path="waste/:id"
+            element={
+              <Guarded permission="inv.waste.view">
+                <WasteDetailScreen />
+              </Guarded>
+            }
+          />
           <Route
             path="samples"
             element={
               <Guarded permission="inv.sample.view">
                 <SamplesScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="samples/:id"
+            element={
+              <Guarded permission="inv.sample.view">
+                <SampleDetailScreen />
+              </Guarded>
+            }
+          />
+          {/* Return to vendor — screen-map §3.11. The contract writes the permission as
+              `inv.rtv.*`; the service enforces `inv.return.*`, and the guard follows the
+              service, which is the only real check. */}
+          <Route
+            path="returns"
+            element={
+              <Guarded permission="inv.return.view">
+                <ReturnsScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="returns/new"
+            element={
+              <Guarded permission="inv.return.create">
+                <ReturnCreateScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="returns/:id"
+            element={
+              <Guarded permission="inv.return.view">
+                <ReturnDetailScreen />
               </Guarded>
             }
           />

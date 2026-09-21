@@ -1,7 +1,7 @@
 import { Alert, Badge, DataTable, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listReasonCodes, type ReasonCode } from '@api/endpoints';
-import { ErrorState, LoadingState, Page, Section } from '@/components/Page';
+import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 
 /**
  * Reason codes — docs/ux/screen-map.md §5.3. `requiresPhoto` and `requiresApproval` change the
@@ -59,7 +59,7 @@ export function ReasonCodesScreen() {
         <span className="wms-num">SAMPLE</span> qrupu göstərilir — `reasonGroup` sonradan
         dəyişdirilmir.
       </Alert>
-      <Section>
+      <Card title="Səbəb kodları" flush>
         {reasons.isLoading ? (
           <LoadingState />
         ) : reasons.isError ? (
@@ -73,7 +73,7 @@ export function ReasonCodesScreen() {
             empty="Səbəb kodu yoxdur. Tullantı və sayım üçün ən azı bir kod lazımdır."
           />
         )}
-      </Section>
+      </Card>
     </Page>
   );
 }

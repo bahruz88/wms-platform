@@ -60,9 +60,20 @@ export const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
     'inv.issue.dispatch',
     'inv.transfer.create',
     'inv.count.create',
-    'inv.count.count',
+    'inv.count.freeze',
+    'inv.count.enter',
+    'inv.count.post',
+    'inv.count.view',
     'inv.waste.create',
+    'inv.waste.view',
+    'inv.waste.post',
     'inv.sample.create',
+    'inv.sample.view',
+    'inv.return.view',
+    'inv.issue.view',
+    'inv.movement.view',
+    'inv.batch.manage',
+    'inv.transfer.confirm',
     'inv.return.create',
     'inv.balance.view',
     'inv.batch.view',
@@ -78,7 +89,11 @@ export const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
     'inv.request.view',
     'inv.transfer.confirm',
     'inv.waste.create',
-    'inv.count.count',
+    'inv.count.enter',
+    'inv.count.view',
+    'inv.waste.view',
+    'inv.issue.view',
+    'inv.movement.view',
     'inv.balance.view',
     'inv.batch.view',
     'master.product.view',
@@ -90,27 +105,51 @@ export const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
 };
 
 /**
- * Matches dot-separated permission codes where `*` stands for one segment or the whole remainder.
- * Same algorithm as `RolePermissionMap.Matches`, including the trailing length equality — so
- * `inv.*.view` matches `inv.receipt.view` but `*.view` does not match `inv.balance.view`.
+ * Greedy-with-backtracking segment matcher — the port of `RolePermissionMap.IsMatch`.
+ *
+ * `*` stands for **one or more** whole segments, so `*.view` covers `audit.view` as well as
+ * `inv.balance.view`, and `inv.*.view` covers `inv.balance.view` as well as a deeper
+ * `inv.receipt.line.view`. Patterns are a handful of segments long, so the recursion is cheap.
  */
-export function matchesPermission(pattern: string, permission: string): boolean {
-  if (pattern === '*') return true;
+function isMatch(pattern: readonly string[], p: number, permission: readonly string[], s: number) {
+  let pi = p;
+  let si = s;
 
-  const patternParts = pattern.split('.');
-  const permissionParts = permission.split('.');
+  while (pi < pattern.length) {
+    if (pattern[pi] === '*') {
+      // '*' consumes at least one segment; the last '*' swallows the whole remainder.
+      if (pi === pattern.length - 1) return si < permission.length;
 
-  for (let i = 0; i < patternParts.length; i += 1) {
-    if (i >= permissionParts.length) return false;
-    const p = patternParts[i] as string;
-    if (p === '*') {
-      if (i === patternParts.length - 1) return true;
-      continue;
+      for (let take = si + 1; take <= permission.length; take += 1) {
+        if (isMatch(pattern, pi + 1, permission, take)) return true;
+      }
+      return false;
     }
-    if (p.toLowerCase() !== (permissionParts[i] as string).toLowerCase()) return false;
+
+    const segment = permission[si];
+    if (segment === undefined) return false;
+    if ((pattern[pi] as string).toLowerCase() !== segment.toLowerCase()) return false;
+
+    pi += 1;
+    si += 1;
   }
 
-  return patternParts.length === permissionParts.length;
+  return si === permission.length;
+}
+
+/**
+ * Matches dot-separated permission codes exactly as `RolePermissionMap.Matches` does.
+ *
+ * A segment is matched as a whole: `master.product.view` never matches
+ * `master.product.view_cost` (spec §7.1 keeps the two apart).
+ *
+ * The earlier port required the pattern and the permission to have the same number of segments,
+ * which silently reduced `*.view` to two-segment codes only and locked AUDITOR out of every
+ * three-segment read permission. The backend dropped that rule; this follows it.
+ */
+export function matchesPermission(pattern: string, permission: string): boolean {
+  if (pattern.length === 0 || permission.length === 0) return false;
+  return isMatch(pattern.split('.'), 0, permission.split('.'), 0);
 }
 
 /** Role codes are matched case-insensitively, as `RolePermissionMap` does with OrdinalIgnoreCase. */
@@ -126,10 +165,21 @@ export function roleAllows(roles: readonly string[], permission: string): boolea
 }
 
 /**
- * The permission codes used by the interface, harvested from the `x-permission` keys in
- * `contracts/openapi/*.v1.yaml`. Resolving roles against this closed list gives `DataTable` the
- * `permissions` array it expects, without needing an endpoint that does not exist yet
- * (`GET /identity/permissions` is not implemented on the gateway).
+ * The permission codes used by the interface. The base is the `x-permission` keys in
+ * `contracts/openapi/*.v1.yaml`; where the running service enforces a different spelling, the
+ * **service's** code is the one that matters and both are listed, because a guard that disagrees
+ * with the server either hides a screen the user may open or shows one the server will refuse.
+ *
+ * Three such divergences are live today (verified against the gateway on :5001):
+ *
+ *   · return to vendor — contract `inv.rtv.{view,create,post}`,
+ *     service `inv.return.{view,create}` (`InventoryPermissions.cs`);
+ *   · branch confirmation — contract `inv.issue.confirm`, service `inv.transfer.confirm`;
+ *   · count entry — contract and service agree on `inv.count.enter`; the old `inv.count.count`
+ *     this file used existed in neither and is gone.
+ *
+ * Resolving roles against a closed list gives `DataTable` the `permissions` array it expects
+ * without an endpoint that does not exist yet (`GET /identity/permissions` answers 404).
  */
 export const PERMISSION_CATALOGUE: readonly string[] = [
   // identity
@@ -169,6 +219,8 @@ export const PERMISSION_CATALOGUE: readonly string[] = [
   'inv.issue.create',
   'inv.issue.dispatch',
   'inv.issue.confirm',
+  'inv.transfer.create',
+  'inv.transfer.confirm',
   'inv.count.view',
   'inv.count.create',
   'inv.count.freeze',
@@ -185,6 +237,8 @@ export const PERMISSION_CATALOGUE: readonly string[] = [
   'inv.rtv.view',
   'inv.rtv.create',
   'inv.rtv.post',
+  'inv.return.view',
+  'inv.return.create',
   'inv.movement.view',
   'inv.movement.reverse',
   'inv.settings.view',
