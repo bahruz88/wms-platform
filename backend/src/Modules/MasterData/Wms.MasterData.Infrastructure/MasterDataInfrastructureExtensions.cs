@@ -26,6 +26,9 @@ public static class MasterDataInfrastructureExtensions
         services.AddScoped<IMasterDataQueries, MasterDataQueries>();
         services.AddScoped<IProductCatalog, ProductCatalog>();
         services.AddScoped<ILocationCatalog, LocationCatalog>();
+        services.AddScoped<ISupplierCatalog, SupplierCatalog>();
+        services.AddScoped<IUomCatalog, UomCatalog>();
+        services.AddScoped<IReasonCodeCatalog, ReasonCodeCatalog>();
         services.AddScoped<INumberSequenceService, NumberSequenceService>();
         services.AddScoped<ICurrencyRateReader, CurrencyRateReader>();
         return services;
@@ -35,6 +38,9 @@ public static class MasterDataInfrastructureExtensions
     {
         services.AddModuleHttpClient<IProductCatalog, HttpProductCatalog>(configuration, MasterDataRoutes.ModuleName);
         services.AddModuleHttpClient<ILocationCatalog, HttpLocationCatalog>(configuration, MasterDataRoutes.ModuleName);
+        services.AddModuleHttpClient<ISupplierCatalog, HttpSupplierCatalog>(configuration, MasterDataRoutes.ModuleName);
+        services.AddModuleHttpClient<IUomCatalog, HttpUomCatalog>(configuration, MasterDataRoutes.ModuleName);
+        services.AddModuleHttpClient<IReasonCodeCatalog, HttpReasonCodeCatalog>(configuration, MasterDataRoutes.ModuleName);
         services.AddModuleHttpClient<INumberSequenceService, HttpNumberSequenceService>(configuration, MasterDataRoutes.ModuleName);
         services.AddModuleHttpClient<ICurrencyRateReader, HttpCurrencyRateReader>(configuration, MasterDataRoutes.ModuleName);
         return services;

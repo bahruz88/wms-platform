@@ -44,6 +44,41 @@ public sealed class StockBalanceRepository(InventoryDbContext db) : IStockBalanc
     }
 
     [AllowCrossTenant("tenant_id is bound as a parameter inside the raw SQL; IgnoreQueryFilters only keeps EF from wrapping the FOR UPDATE statement in a derived table.")]
+    public async Task<IReadOnlyList<StockBalance>> GetLocationForUpdateAsync(
+        uint tenantId,
+        uint locationId,
+        IReadOnlyCollection<uint> productIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(productIds);
+        if (db.Database.CurrentTransaction is null)
+        {
+            throw new InvalidOperationException("GetLocationForUpdateAsync must be called inside an explicit transaction (spec §12.2).");
+        }
+
+        var rows = await db.Balances
+            .FromSqlInterpolated($"""
+                SELECT * FROM inv_balance
+                WHERE tenant_id = {tenantId} AND location_id = {locationId}
+                ORDER BY product_id, batch_id
+                FOR UPDATE
+                """)
+            .IgnoreQueryFilters()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (productIds.Count == 0)
+        {
+            return rows;
+        }
+
+        // The scope filter is applied in memory on purpose: the FOR UPDATE must cover the whole location so a
+        // concurrent posting cannot slip a row in between the snapshot and the freeze.
+        var scope = productIds.ToHashSet();
+        return rows.Where(r => scope.Contains(r.ProductId)).ToList();
+    }
+
+    [AllowCrossTenant("tenant_id is bound as a parameter inside the raw SQL; IgnoreQueryFilters only keeps EF from wrapping the FOR UPDATE statement in a derived table.")]
     public async Task<IReadOnlyList<StockBalance>> GetAllForUpdateAsync(
         uint tenantId,
         uint productId,

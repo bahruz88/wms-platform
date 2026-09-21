@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Wms.Common.Application.Abstractions;
 using Wms.Common.Infrastructure.Persistence;
 using Wms.Consumption.Infrastructure;
 using Wms.Documents.Infrastructure;
@@ -32,10 +33,16 @@ public static class MigratorServices
         services.AddSingleton(configuration);
         services.AddDbContext<CommonDbContext>(options => options.UseWmsMySql(connectionString, CommonDbContext.MigrationsHistoryTable));
 
-        // Module contexts need a tenant/user/clock; migrations never read them, so the design-time stubs are enough.
-        services.AddSingleton(DesignTimeContext.Tenant);
-        services.AddSingleton(DesignTimeContext.User);
-        services.AddSingleton(DesignTimeContext.Clock);
+        // Migrations never read the tenant/user/clock, but --seed does: the design-time stub reports
+        // HasTenant = false, which would make every global query filter match tenant_id = 0 and hide the rows the
+        // seeder reads back for its idempotency checks. One real context serves both jobs.
+        var seedContext = new SeedContext(
+            configuration.GetValue("tenantId", SeedContext.DefaultTenantId),
+            configuration.GetValue("seedUserId", SeedContext.DefaultUserId));
+        services.AddSingleton(seedContext);
+        services.AddSingleton<ITenantContext>(seedContext);
+        services.AddSingleton<ICurrentUser>(seedContext);
+        services.AddSingleton<IClock>(seedContext);
 
         services.AddIdentityPersistence(connectionString);
         services.AddMasterDataPersistence(connectionString);

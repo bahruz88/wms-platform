@@ -294,7 +294,14 @@ Consumption modulu (ADR-012) üç miqrasiya əlavə etdi:
 Son ikisi yalnız ENUM genişlənməsidir (`ALTER COLUMN`, mövcud dəyərlərə toxunmur); EF onları
 "may result in the loss of data" kimi işarələyir, çünki hər `AlterColumn` üçün belə edir.
 
-Nəticə: **49 biznes cədvəli + 10 history cədvəli + 12 `hangfire_*` = 71**.
+Anbar sənədləri (bu buraxılış) iki miqrasiya əlavə etdi:
+
+| Miqrasiya | Kontekst | Nə edir |
+|---|---|---|
+| `20260921_Inventory_Count` | `InventoryDbContext` | `inv_count`, `inv_count_line` (SPEC §9.6, §12.7) |
+| `20260921_Inventory_WarehouseDocuments` | `InventoryDbContext` | `inv_stock_request(_line)`, `inv_issue(_line)`, `inv_waste(_line)`, `inv_sample(_line)`, `inv_return_to_vendor(_line)` |
+
+Nəticə: **61 biznes cədvəli + 10 history cədvəli + 12 `hangfire_*` = 83**.
 Miqrasiyadan sonra `scripts/db-ledger-grants.sh` yenidən işlədilib: prosedur cədvəlləri
 `information_schema`-dan oxuduğu üçün yeddi `cons_*` cədvəli avtomatik `UPDATE/DELETE` aldı,
 `inv_movement` və `common_audit_log` isə yenə yalnız `SELECT+INSERT`-dədir.
@@ -338,14 +345,56 @@ SELECT TABLE_NAME, INDEX_NAME, GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX) c
 
 ---
 
+### 5.5. Demo datası (`--seed`)
+
+`Wms.Host.Migrator` miqrasiyalardan sonra `--seed` bayrağı ilə anbar ekranlarını doldurmaq üçün təkrarlana bilən
+demo datası yazır. Hər addım təbii açar (kod / SKU / sənəd nömrəsi) üzrə **upsert**-dir: ikinci dəfə işlətmək heç
+nə dəyişmir, yarımçıq bazanı isə tamamlayır.
+
+```bash
+# konteynerdə (wms_default şəbəkəsində)
+docker exec -w /src -e ConnectionStrings__WmsMigrator='Server=mysql;Port=3306;Database=wms;User=wms_migrator;Password=wms_migrator;' \
+  wms-sdk dotnet run --project src/Host/Wms.Host.Migrator -c Release -- --seed
+
+# lokal SDK ilə
+ConnectionStrings__WmsMigrator='Server=localhost;Port=3308;Database=wms;User=wms_migrator;Password=wms_migrator;' \
+  dotnet run --project src/Host/Wms.Host.Migrator -- --seed
+```
+
+Nə yaranır:
+
+| Data | Say / detal |
+|---|---|
+| Ölçü vahidləri | 6 (`G`, `KG`, `PRT`, `PCS`, `L`, `BOX`) |
+| Kateqoriyalar | 7 (qida və qeyri-qida) |
+| Məhsullar | 25, SKU + min/maks ehtiyat + raf ömrü ilə; `G` bazalı olanlara `KG` (×1000), `PCS` bazalı olanlara `BOX` (×24) alış vahidi |
+| Lokasiyalar | 2 anbar + **15 filial** + 6 virtual (`V-SUP`, `V-CONS`, `V-ADJ`, `V-WASTE`, `V-SAMPLE`, `V-TRANSIT`) |
+| Təchizatçılar | 6 (4-ü qida üçün təsdiqli) |
+| Səbəb kodları | 14 — hər qrupdan (`ADJUSTMENT`, `WASTE`, `RETURN`, `SAMPLE`, `TRANSFER`) |
+| Məzənnələr | USD / EUR / TRY üçün 30 günlük tarixçə (deterministik, təsadüfi deyil) |
+| Partiyalar | Hər partiyalı məhsul üçün 3 tranş: **vaxtı keçmiş**, **bu həftə bitən**, **təzə** — FEFO-nun seçəcəyi bir şey olsun |
+| Başlanğıc qalıq | `OPENING` ikili yazılışlı sənədi ilə (504 ledger sətri) 2 anbar + 4 filialda |
+| Sayım | `WH-02`-də dondurulmuş sayım, 42 sətir, **18-i fərqli** — lokasiya bloklanmış vəziyyətdə |
+| Məxaric | 2 sənəd `DISPATCHED` statusunda, filial təsdiqini gözləyir |
+| Tələblər | 3 ədəd (2 `SUBMITTED`, 1 `DRAFT`) |
+
+**Qalıq heç vaxt birbaşa `inv_balance`-a yazılmır** — başlanğıc qalıq da real `OPENING` qrupundan keçir
+(ADR-004), ona görə seed datası canlı data ilə eyni invariantları ödəyir:
+`SELECT group_id, SUM(qty_base) … HAVING SUM(qty_base) <> 0` boş qalır və fiziki lokasiyalarda mənfi qalıq olmur.
+
+Seeder `SeedContext` ilə işləyir (`tenant_id = 1`, `created_by = 1`): design-time stub `HasTenant = false`
+verdiyi üçün query filter-lər `tenant_id = 0`-a baxar və idempotentlik yoxlamaları heç nə tapmazdı.
+
+---
+
 ## 6. Testlər
 
 | Layihə | Nə yoxlayır | Sayı |
 |---|---|---|
-| `Wms.Inventory.UnitTests` | SPEC §12 invariantları: yuvarlaqlaşdırma, ikili yazılış, mənfi qalıq, FEFO/FIFO, hərəkətli orta, tolerans, approval qaydası, AZ əlifba sırası | 93 |
-| `Wms.ArchitectureTests` | SPEC §17.4: modul sərhədləri, tenant query filter, unique index `tenant_id`-dən başlayır, `double`/`float` yoxdur, `inv_balance` public setter-siz, cədvəl prefiksləri, decimal precision | 170 |
+| `Wms.Inventory.UnitTests` | SPEC §12 invariantları: yuvarlaqlaşdırma, ikili yazılış, mənfi qalıq, FEFO/FIFO, hərəkətli orta, tolerans, approval qaydası, AZ əlifba sırası; **sayım aqreqatı** (dondurma, fərq faizi, səbəb kodu məcburiliyi, approval həddi, statuslar), **məxaric/transfer** (IN_TRANSIT, fərqli qəbul, partiya override), **tullantı/nümunə/qaytarma/tələb** status axınları | 154 |
+| `Wms.ArchitectureTests` | SPEC §17.4: modul sərhədləri, tenant query filter, unique index `tenant_id`-dən başlayır, `double`/`float` yoxdur, `inv_balance` public setter-siz, cədvəl prefiksləri, decimal precision; **`RolePermissionMap`** — hər rol üzrə icazə matrisi və wildcard matcher (§8.12) | 293 |
 | `Wms.Api.ContractTests` | Host qalxır, `/health/live`, auth tələbi, qismən deployment davranışı | 7 |
-| `Wms.Inventory.IntegrationTests` | Testcontainers + real MySQL 8.4, sxem **real miqrasiyalardan** (`MigrateAsync`, §5.3): qəbul → balans → ledger sıfıra balanslaşır, idempotency key unikallığı, `inv_movement` partisiyalaşdırma DDL-i | 2 (`Category=Integration`) |
+| `Wms.Inventory.IntegrationTests` | Testcontainers + real MySQL 8.4, sxem **real miqrasiyalardan** (`MigrateAsync`, §5.3): qəbul → balans → ledger sıfıra balanslaşır, idempotency key unikallığı, `inv_movement` partisiyalaşdırma DDL-i; **sayım**: `FOR UPDATE` snapshot → dondurma → `COUNT_ADJUST` qrupu sıfıra balanslaşır → lokasiya açılır | 4 (`Category=Integration`) |
 | `Wms.Consumption.UnitTests` | ADR-012: BOM partlaması (`yield_pct`, `yield_portions`, alt-resept, attach rate, yuvarlaqlaşdırma), dövr aşkarlanması, dərinlik limiti, resept versiyasının tarixə görə seçimi, `posted = min(theoretical, available)`, CSV parse (UTF-8 + Windows-1254 + pozuq sətirlər) | 69 |
 | `Wms.Consumption.IntegrationTests` | Testcontainers + real MySQL 8.4 və üç modulun real DI qrafı: tam dövr (resept → satış → hesablama → post), qrupun sıfıra balanslaşması, filial qalığının düşməsi = `V_CONSUMPTION`-un artması, qəsdən yaradılmış çatışmazlıq mənfi qalıq yaratmır, `DUPLICATE_BUSINESS_DATE` | 3 (`Category=Integration`) |
 
@@ -495,6 +544,74 @@ mühitini öz dəyişən cədvəlindən yenidən qurur və **adı düzgün shell
 `ReverseProxy__Clusters__wms-identity__...` heç vaxt işləməzdi). Yeni konfiqurasiya açarı əlavə edəndə
 bu qaydaya riayət edin.
 
+### 8.11. Anbar sənədlərinin sxemində SPEC DDL-indən kənarlaşmalar
+
+SPEC §9.6 bu sənədlərin yalnız **başlıq** cədvəllərini verir; sətir cədvəlləri kontraktdan (inventory.v1.yaml)
+törədilib. Aşağıdakılar şüurlu əlavələrdir:
+
+| Cədvəl / sütun | Səbəb |
+|---|---|
+| `inv_stock_request_line`, `inv_issue_line`, `inv_waste_line`, `inv_sample_line`, `inv_return_to_vendor_line` | SPEC §9.6 yalnız başlıqları verir, lakin kontraktda hər sənədin `lines[]` massivi var |
+| `inv_count.scope_category_ids`, `inv_count.scope_product_ids` (`VARCHAR(2000)`, vergüllə ayrılmış) | `CYCLE`/`SPOT` sayımın əhatəsi **yaratma** anında verilir, sətirlər isə **dondurma** anında yaranır (kontrakt: "Sətirlər dondurma anında yaradılır"), ona görə əhatə arada saxlanmalıdır. Ayrıca `inv_count_scope` cədvəli əvəzinə iki sütun seçilib: əhatə bir dəfə yazılır, heç vaxt sorğulanmır |
+| `inv_count.requires_approval` | Kontraktdakı `Count.requiresApproval` sahəsi; `submit` anında hesablanıb dondurulur, çünki `count_variance_approval_threshold_pct` sonradan dəyişə bilər |
+| `inv_count_line.counted_by`, `counted_at` | Kontraktda var (`CountLine.countedBy/countedAt`), SPEC DDL-ində yox idi — SoD yoxlaması üçün lazımdır |
+| `inv_count_line.avg_unit_cost` | Fərqin manat dəyəri dondurma anındakı maya dəyəri ilə hesablanır (kontrakt: `varianceValue`); post anında balansı ikinci dəfə oxumamaq üçün snapshot-da saxlanılır |
+| `inv_issue_line.suggested_batch_id` | SPEC §12.4 FEFO/FIFO təklifindən fərqli partiya seçimini `reason_code` ilə tələb edir; təklifin özü saxlanılmasa, sonradan yoxlanıla bilməz |
+| `inv_return_to_vendor.location_id` | SPEC DDL-ində yoxdur, lakin malın **haradan** çıxdığı bilinmədən ikili yazılış qurula bilmir (ADR-003) |
+| `inv_waste.approval_comment`, `inv_return_to_vendor.outcome`/`outcome_note` | Kontraktda var |
+
+`inv_count_line`-ın `uq_cl_line (tenant_id, count_id, product_id, batch_id)` unikal indeksi partiyasız sətirlər
+üçün tam zəmanət vermir: MySQL unikal indeksdə çoxlu `NULL`-a icazə verir. Təkrar sətirin qarşısını aqreqat özü
+alır (`StockCount.CountLine` upsert edir) — indeks partiyalı sətirlər üçün əlavə qoruyucudur.
+
+### 8.12. `RolePermissionMap` wildcard semantikası dəyişdi (buq düzəlişi)
+
+Əvvəlki matcher pattern və icazənin **seqment sayının eyni olmasını** tələb edirdi. Nəticədə `AUDITOR` rolunun
+`*.view` şablonu yalnız iki seqmentli kodlara uyurdu: `audit.view` ✅, `inv.balance.view` ❌. Auditor canlı
+sistemdə `/inventory/balances`-də **403** alırdı — bu, ekran xəritəsindəki "auditor ledger, audit log, hesabat və
+export görür" tələbinə ziddir.
+
+İndi `*` **bir və ya bir neçə** bütöv seqmenti əvəz edir:
+
+| Pattern | Uyur | Uymur |
+|---|---|---|
+| `*.view` | `audit.view`, `inv.balance.view`, `inv.receipt.line.view` | `inv.receipt.post`, `master.product.view_cost` |
+| `inv.*.view` | `inv.balance.view`, `inv.receipt.line.view` | `proc.po.view` |
+| `master.product.view` | `master.product.view` | `master.product.view_cost` |
+
+Seqment bütöv müqayisə olunur, ona görə `view` heç vaxt `view_cost`-a uymur — SPEC §7.1-in anbardarı maya
+dəyərindən kənarda saxlayan qaydası qorunur. `tests/Wms.ArchitectureTests/RolePermissionMapTests.cs` hər rol üçün
+həm verilən, həm verilməyən icazələri yoxlayır.
+
+### 8.13. Minimal API parametr bind xətası 500 əvəzinə 400 verir
+
+`Microsoft.AspNetCore.Http.BadHttpRequestException` (məcburi query/route parametri verilməyib və ya parse
+olunmur) `WmsExceptionHandler`-də xəritələnməmişdi və `INTERNAL_ERROR` 500 kimi çıxırdı. Üç endpoint bu səbəbdən
+500 verirdi: `GET /consumption/variance`, `GET /consumption/portion-compliance` (`periodFrom`/`periodTo` məcburidir),
+`GET /documents/attachments` (`entityType`/`entityId` məcburidir). İndi `400 BAD_REQUEST` + RFC 7807 qaytarılır.
+
+---
+
+### 8.14. Modullararası `/internal/*` çağırışları rate limit-dən kənardır
+
+`RateLimiting:PermitPerMinute` (default 100) partisiyanı JWT `sub` claim-i üzrə qurur. `ModuleTransport=Http`
+rejimində modullararası çağırışlar **çağıranın token-ini** daşıyır (SPEC §4.2), ona görə onlar istifadəçinin öz
+trafiki ilə eyni partisiyaya düşürdü. Bir səhifə açmaq bir neçə daxili çağırışa çevrilir — sənəd siyahısını
+məhsul, lokasiya, vahid və təchizatçı referansları ilə bəzəmək dörd daxili çağırışdır — nəticədə bir aktiv
+ekran özü-özünü rate limit edə bilirdi və `429` çağıran modulda **500** kimi görünürdü.
+
+İki düzəliş:
+
+1. `/api/v1/<modul>/internal/...` yolları `RateLimitPartition.GetNoLimiter` alır. Bu route-lar gateway-dən
+   proxy olunmur (`deploy/docker-compose.yml` yalnız public prefiksləri map edir) və hamısı
+   `ExcludeFromDescription()`-dur, yəni xaricdən əlçatan deyil.
+2. `HttpRequestException` artıq `502 UPSTREAM_MODULE_UNAVAILABLE` kimi xəritələnir — qonşu modulun nasazlığı
+   bu modulun `INTERNAL_ERROR`-u kimi görünmür.
+
+`InProcess` transportda (on-prem, `Modules=*`) daxili çağırış HTTP-dən keçmir, ona görə bu problem yaranmırdı.
+
+---
+
 ### 8.10. JSON-da enum-lar UPPER_SNAKE-dir (platforma səviyyəsində dəyişiklik)
 
 `ConfigureHttpJsonOptions`-da `JsonStringEnumConverter` indi `JsonNamingPolicy.SnakeCaseUpper` ilə
@@ -544,26 +661,99 @@ Dizayn sənədinin açıq buraxdığı və burada həll olunan məsələlər:
 
 ### 8.8. Hələ tam icra olunmamış hissələr (skeleton)
 
-Bunlar SPEC-də var, layihə strukturunda yeri hazırdır, amma məntiqi Faza 1/2-də yazılacaq:
+Bunlar SPEC-də var, layihə strukturunda yeri hazırdır, amma məntiqi növbəti mərhələdə yazılacaq:
 
-- Inventory: `Issue`/`Transfer` (IN_TRANSIT), `Count` (dondurma, §12.7 — `LocationFreezeChecker` hazırda həmişə
-  `false` qaytarır və TODO daşıyır), `Waste`, `Sample`, `ReturnToVendor` aqreqatları.
-  **Nəticə:** Consumption `409 LOCATION_FROZEN` yolunu çağırır (`IStockPostingService.IsLocationFrozenAsync`
-  həm sənəd açılanda, həm post edilən tranzaksiyanın içində), lakin `inv_count` aqreqatı olmadığı üçün
-  bu şərt canlı sistemdə heç vaxt `true` olmur — yalnız unit səviyyəsində sübut olunub.
-- Consumption: `GET /variance` və `GET /portion-compliance` ledger axınlarından (`IStockMovementReader`)
-  hesablanır və işləkdir, lakin `COUNT_ADJUST` sənədi hələ yaradıla bilmədiyi üçün canlı datada fərq
-  həmişə sıfır çıxır (SPEC-dəki Faza 3 işi).
-- Procurement: `Rfq`, `Quotation`, `PriceHistory`, `SplitCheckLog`.
+- **Procurement yazı endpoint-ləri** — `Requisition`, `Rfq`, `Quotation`, `PurchaseOrder` yaratma/təsdiq axınları,
+  `PriceHistory`, `SplitCheckLog`. Oxu tərəfi (`GET /purchase-orders`) işləkdir.
+- **Identity yazı endpoint-ləri** — istifadəçi/rol yaratma, rol-icazə və istifadəçi-lokasiya təyinatı
+  (SoD qaydası ilə). `GET /me`, `GET /users` işləkdir.
+- `PUT /inventory/settings/{key}` — parametrlər hazırda yalnız `inv_setting` cədvəlindən oxunur; dəyişmək üçün
+  SQL lazımdır.
+- `GET /inventory/goods-receipts/{id}` cavabındakı `attachmentIds` həmişə boşdur: `common_attachment` Documents
+  modulunundur və Inventory → Documents asılılığı ADR-001-də icazəli deyil. İnterfeys əlavələri
+  `GET /documents/attachments?entityType=GOODS_RECEIPT&entityId=…` ilə oxuyur.
+- `GoodsReceiptSummary.poDocNo` / `IssueSummary.requestDocNo` siyahı cavablarında `null`-dır (detal cavabında
+  doludur) — siyahı üçün əlavə join hələ yazılmayıb; kontraktda hər ikisi nullable-dır.
+- Notification/Reporting/Integration consumer-ləri: cədvəllər və idempotentlik indeksləri hazırdır,
+  RabbitMQ consumer-ləri Faza 2/3-də əlavə olunacaq.
 - `IdempotencyEndpointFilter` Redis cache-i işləkdir, lakin cavabın tam replay-i sadələşdirilmiş formadadır.
 - `RolePermissionMap` — Identity `iam_role_permission` məlumatı oxunanadək istifadə olunan bootstrap xəritəsidir
   (TODO qeydi ilə). Endpoint-lərdəki `.RequirePermission(...)` artıq işləyir.
-- Notification/Reporting/Integration consumer-ləri: cədvəllər və idempotentlik indeksləri hazırdır,
-  RabbitMQ consumer-ləri Faza 2/3-də əlavə olunacaq.
+
+**Bu buraxılışda bağlananlar** (əvvəl bu siyahıda idi):
+`inv_count` aqreqatı və `LOCATION_FROZEN` (§12.7 — artıq canlı sistemdə də `true` olur),
+`Issue`/`Transfer` (IN_TRANSIT), `StockRequest`, `Waste`, `Sample`, `ReturnToVendor`,
+partiya status dəyişikliyi və hərəkət qrupunun storno-su.
 
 ---
 
-## 9. Kod konvensiyaları (SPEC Əlavə A)
+## 9. Anbar sənədləri (inventory yazı endpoint-ləri)
+
+Kontrakt: [inventory.v1.yaml](../contracts/openapi/inventory.v1.yaml). Bütün POST-lar `Idempotency-Key`
+tələb edir, bütün dəyişdirici çağırışlar `rowVersion` ilə optimistik kilid yoxlayır və cavabda **bütöv sənədi**
+qaytarır ki, client-in əlində həmişə təzə `rowVersion` olsun.
+
+| Endpoint | İcazə | Ledger təsiri |
+|---|---|---|
+| `GET/POST /stock-requests`, `PUT /{id}`, `POST /{id}/submit\|cancel` | `inv.request.view` / `.create` | yoxdur (tələb sənədi) |
+| `GET/POST /issues`, `POST /{id}/dispatch` | `inv.issue.view` / `.create` / `.dispatch` | mənbə −qty / `IN_TRANSIT` +qty |
+| `POST /issues/{id}/confirm-receipt` | `inv.transfer.confirm` | `IN_TRANSIT` −qty / hədəf +qty |
+| `GET/POST /counts`, `POST /{id}/freeze\|lines\|submit\|approve\|post\|cancel` | `inv.count.*`, `inv.adjustment.approve` | post: `COUNT_ADJUST` — `V_ADJUSTMENT` ↔ lokasiya |
+| `GET/POST /waste`, `POST /{id}/submit\|approve\|post` | `inv.waste.*` | post: lokasiya −qty / `V_WASTE` +qty |
+| `GET/POST /samples`, `POST /{id}/post` | `inv.sample.*` | post: lokasiya −qty / `V_SAMPLE` +qty |
+| `GET/POST /return-to-vendor`, `POST /{id}/send\|close` | `inv.return.*` | send: lokasiya −qty / `V_SUPPLIER` +qty |
+| `GET /batches`, `GET /batches/{id}`, `POST /batches/{id}/status` | `inv.batch.view` / `.manage` | yoxdur |
+| `GET /movements`, `GET /movement-groups/{id}`, `POST /{id}/reverse` | `inv.movement.view` / `.reverse` | reverse: `REVERSAL` qrupu (əks işarələr) |
+| `GET /goods-receipts` (siyahı) | `inv.receipt.view` | yoxdur |
+
+### 9.1. Sayım (`inv_count`) — SPEC §12.6, §12.7
+
+```
+DRAFT ──freeze──▶ FROZEN ──lines──▶ COUNTING ──submit──▶ REVIEW ──approve──▶ APPROVED ──post──▶ POSTED
+  └──────────────────────── cancel ────────────────────────────────────────────┘
+```
+
+- **`freeze`** lokasiyanın bütün balans sətirlərini `SELECT … FOR UPDATE` ilə kilidləyir və `book_qty`-ni
+  **həmin an** yazır. Kilid bütün lokasiyanı əhatə edir (əhatə filtri yaddaşda tətbiq olunur), ona görə
+  snapshot ilə blok arasında heç bir post araya girə bilmir.
+- **Blok**: `FROZEN`, `COUNTING`, `REVIEW`, `APPROVED` statuslarında həmin lokasiyada
+  RECEIPT / ISSUE / TRANSFER / WASTE / SAMPLE / CONSUMPTION post-u `409 LOCATION_FROZEN` verir.
+  `inv_setting.block_transactions_during_count = false` ilə söndürülə bilər (TOR §36).
+- **Fərq**: `varianceQty = counted − book`, `variancePct = variance ÷ |book| × 100` (`DECIMAL(9,4)`).
+  `book = 0` halında fərq ±100 % sayılır.
+- **Səbəb kodu**: sıfırdan fərqli hər sətirdə `reasonCodeId` (qrup `ADJUSTMENT`) **məcburidir** — həm sətir
+  daxil ediləndə, həm post anında yoxlanılır (`422 REASON_CODE_REQUIRED`). Excel-dəki izahsız `+510` bu
+  modeldə mümkün deyil.
+- **Approval**: `|variancePct| > count_variance_approval_threshold_pct` olan sətir varsa `requiresApproval`
+  qalxır; təsdiq `inv.adjustment.approve` tələb edir. Sayımı aparan şəxs onu təsdiqləyə bilmir (SoD).
+- **Post**: hər fərqli sətir üçün artıqlıq → `V_ADJUSTMENT` −/lokasiya +, kəsir → lokasiya −/`V_ADJUSTMENT` +,
+  `unitCost` = dondurma anındakı `avg_unit_cost`. Fərq yoxdursa qrup yaranmır (`adjustGroupId = null`) —
+  ikili yazılış ən azı iki sətir tələb edir, boş sənəd isə səs-küydür. Hər iki halda lokasiya açılır və
+  `CountVarianceApproved` outbox-a düşür.
+
+### 9.2. Məxaric və transfer (`inv_issue`) — iki addım
+
+`dispatch` malı `IN_TRANSIT`-ə köçürür, `confirm-receipt` isə oradan hədəfə. Filial göndərilləndən az qəbul
+edərsə fərq **`IN_TRANSIT`-də qalır** və sənəd `DISCREPANCY` statusuna düşür: itki görünən qalır və kimsə onu
+düzəliş sənədi ilə bağlamalıdır — iki lokasiya arasında səssizcə yox olmur. Fərqli sətir `reasonCodeId` **və**
+`note` tələb edir (`422 DISCREPANCY_REASON_REQUIRED`).
+
+FEFO/FIFO təklifindən fərqli partiya seçilərsə `batchOverrideReasonCodeId` məcburidir
+(`422 BATCH_OVERRIDE_REASON_REQUIRED`, SPEC §12.4); təklifin özü `inv_issue_line.suggested_batch_id`-də
+saxlanılır ki, sonradan yoxlana bilsin.
+
+### 9.3. Ortaq post mühərriki
+
+`IDocumentPostingEngine` (Inventory.Application) hər anbar sənədinin ledger-ə çevrilmə yeridir: mənbə
+balanslarını `FOR UPDATE` ilə kilidləyir, FEFO/FIFO ayırmasını işlədir (`BLOCKED`/`EXPIRED`/`QUARANTINE`
+partiyaları buraxır), `−qty` / `+qty` cütünü yazır və balans proyeksiyasını yeniləyir. Consumption yolundan
+fərqi: **miqdarı kəsmir** — çatışmazlıq burada xətadır (`409 INSUFFICIENT_STOCK`), çünki insan "bu qədər
+göndərirəm" deyib. Mühərrik çağıranın tranzaksiyasının içində işləyir, ona görə sənəd statusu və hərəkətlər
+birlikdə commit olunur.
+
+---
+
+## 10. Kod konvensiyaları (SPEC Əlavə A)
 
 - File-scoped namespace, `Result<T>` (biznes xətaları üçün exception atılmır), `private set` + factory metodları.
 - Hər async metodda `CancellationToken`; `DateTimeOffset` (UTC saxlama).
@@ -574,7 +764,7 @@ Bunlar SPEC-də var, layihə strukturunda yeri hazırdır, amma məntiqi Faza 1/
 
 ---
 
-## 10. Consumption modulu (filial istehlakı)
+## 11. Consumption modulu (filial istehlakı)
 
 Qərar: [ADR-012](../docs/adr/ADR-012-branch-consumption-model.md) · Dizayn:
 [branch-operations.md](../docs/architecture/branch-operations.md) · Kontrakt:
@@ -605,7 +795,7 @@ satış (POS | CSV | MANUAL) → cons_sales_import
   `cons.run.post`, `cons.variance.view`. Storno `inv.movement.reverse` tələb edir.
   `unitCost`/`costAmount` sahələri `master.product.view_cost` olmayan istifadəçiyə **göndərilmir**.
 
-### 10.1. Bir istehlak dövrünü əl ilə keçmək
+### 11.1. Bir istehlak dövrünü əl ilə keçmək
 
 Tələb: `master_uom`, `master_product` (+ `master_product_uom` əmsalları), `RESTAURANT` tipli lokasiya,
 **`V_CONSUMPTION` tipli virtual lokasiya** və filialda başlanğıc qalıq. `V_CONSUMPTION` yoxdursa post

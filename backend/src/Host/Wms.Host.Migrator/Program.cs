@@ -9,7 +9,7 @@ var configuration = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: true)
     .AddEnvironmentVariables()
-    .AddCommandLine(args)
+    .AddCommandLine(args.Where(a => !string.Equals(a, "--seed", StringComparison.OrdinalIgnoreCase)).ToArray())
     .Build();
 
 var services = new ServiceCollection();
@@ -25,4 +25,21 @@ Console.CancelKeyPress += (_, eventArgs) =>
 };
 
 var runner = ActivatorUtilities.CreateInstance<MigrationRunner>(provider);
-return await runner.RunAsync(cancellation.Token).ConfigureAwait(false);
+var exitCode = await runner.RunAsync(cancellation.Token).ConfigureAwait(false);
+if (exitCode != 0)
+{
+    return exitCode;
+}
+
+// --seed fills the demo/warehouse data set. It is idempotent: re-running changes nothing.
+// AddCommandLine drops a valueless switch, so the bare "--seed" form is matched against args directly.
+var seedRequested = args.Any(a => string.Equals(a, "--seed", StringComparison.OrdinalIgnoreCase))
+    || configuration.GetValue("seed", defaultValue: false);
+if (!seedRequested)
+{
+    return 0;
+}
+
+using var seedScope = provider.CreateScope();
+var seeder = ActivatorUtilities.CreateInstance<DemoSeeder>(seedScope.ServiceProvider);
+return await seeder.RunAsync(cancellation.Token).ConfigureAwait(false);

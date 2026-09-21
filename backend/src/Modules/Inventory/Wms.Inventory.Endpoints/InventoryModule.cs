@@ -32,6 +32,8 @@ public sealed class InventoryModule : IModule
 
         GoodsReceiptEndpoints.Map(group);
         BalanceEndpoints.Map(group);
+        CountEndpoints.Map(group);
+        DocumentEndpoints.Map(group);
         InternalEndpoints.Map(group);
     }
 }

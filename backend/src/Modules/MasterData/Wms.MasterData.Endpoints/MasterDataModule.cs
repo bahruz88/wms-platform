@@ -74,6 +74,44 @@ public sealed class MasterDataModule : IModule
             .WithName("InternalUomFactor")
             .ExcludeFromDescription();
 
+        group.MapGet("/internal/products", async (string? ids, IProductCatalog catalog, CancellationToken cancellationToken) =>
+                Results.Ok(await catalog.GetManyAsync(IdList.Parse(ids), cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalProducts")
+            .ExcludeFromDescription();
+
+        group.MapGet("/internal/locations", async (string? ids, ILocationCatalog catalog, CancellationToken cancellationToken) =>
+                Results.Ok(await catalog.GetManyAsync(IdList.Parse(ids), cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalLocations")
+            .ExcludeFromDescription();
+
+        group.MapGet("/internal/reason-codes", async (string? ids, IReasonCodeCatalog catalog, CancellationToken cancellationToken) =>
+                Results.Ok(await catalog.GetManyAsync(IdList.Parse(ids).Select(id => (ushort)id).ToArray(), cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalReasonCodes")
+            .ExcludeFromDescription();
+
+        group.MapGet("/internal/categories/products", async (string? ids, IProductCatalog catalog, CancellationToken cancellationToken) =>
+                Results.Ok(await catalog.GetIdsByCategoryAsync(IdList.Parse(ids), cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalCategoryProducts")
+            .ExcludeFromDescription();
+
+        group.MapGet("/internal/uoms", async (string? ids, IUomCatalog catalog, CancellationToken cancellationToken) =>
+                Results.Ok(await catalog.GetManyAsync(IdList.Parse(ids).Select(id => (ushort)id).ToArray(), cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalUoms")
+            .ExcludeFromDescription();
+
+        group.MapGet("/internal/suppliers", async (string? ids, ISupplierCatalog catalog, CancellationToken cancellationToken) =>
+                Results.Ok(await catalog.GetManyAsync(IdList.Parse(ids), cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalSuppliers")
+            .ExcludeFromDescription();
+
+        group.MapGet("/internal/suppliers/{supplierId:long}", async (long supplierId, ISupplierCatalog catalog, CancellationToken cancellationToken) =>
+            {
+                var supplier = await catalog.GetAsync(supplierId, cancellationToken).ConfigureAwait(false);
+                return supplier is null ? Results.NotFound() : Results.Ok(supplier);
+            })
+            .WithName("InternalSupplier")
+            .ExcludeFromDescription();
+
         group.MapGet("/internal/locations/{locationId:long}", async (long locationId, ILocationCatalog catalog, CancellationToken cancellationToken) =>
             {
                 var location = await catalog.GetAsync(locationId, cancellationToken).ConfigureAwait(false);
@@ -108,6 +146,29 @@ public sealed class MasterDataModule : IModule
             })
             .WithName("InternalCurrencyRate")
             .ExcludeFromDescription();
+    }
+}
+
+/// <summary>Parses the <c>?ids=1,2,3</c> query of the internal bulk endpoints.</summary>
+internal static class IdList
+{
+    public static IReadOnlyCollection<uint> Parse(string? ids)
+    {
+        if (string.IsNullOrWhiteSpace(ids))
+        {
+            return [];
+        }
+
+        var parsed = new HashSet<uint>();
+        foreach (var part in ids.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (uint.TryParse(part, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var id))
+            {
+                parsed.Add(id);
+            }
+        }
+
+        return parsed;
     }
 }
 

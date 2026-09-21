@@ -14,6 +14,10 @@ public static class GoodsReceiptEndpoints
     {
         ArgumentNullException.ThrowIfNull(group);
 
+        group.MapGet("/goods-receipts", ListAsync)
+            .RequirePermission(InventoryPermissions.ReceiptView)
+            .WithName("listGoodsReceipts");
+
         group.MapPost("/goods-receipts", CreateAsync)
             .RequirePermission(InventoryPermissions.ReceiptCreate)
             .RequireIdempotencyKey()
@@ -27,6 +31,16 @@ public static class GoodsReceiptEndpoints
             .RequirePermission(InventoryPermissions.ReceiptPost)
             .RequireIdempotencyKey()
             .WithName("PostGoodsReceipt");
+    }
+
+    private static async Task<IResult> ListAsync([AsParameters] GoodsReceiptsRequest request, IDispatcher dispatcher, CancellationToken cancellationToken)
+    {
+        var query = new ListGoodsReceiptsQuery(
+            request.Status, request.SupplierId, request.LocationId, request.PoId,
+            request.DateFrom, request.DateTo, request.Search,
+            new PagingRequest(request.Page, request.Size).ToPageRequest());
+        var result = await dispatcher.QueryAsync(query, cancellationToken).ConfigureAwait(false);
+        return result.ToOk();
     }
 
     private static async Task<IResult> CreateAsync(CreateGoodsReceiptRequest request, IDispatcher dispatcher, CancellationToken cancellationToken)

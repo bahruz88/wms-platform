@@ -21,6 +21,22 @@ public sealed class LocationCatalog(MasterDataDbContext db) : ILocationCatalog
         return Map(location);
     }
 
+    public async Task<IReadOnlyList<LocationDto>> GetManyAsync(IReadOnlyCollection<uint> locationIds, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(locationIds);
+        if (locationIds.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = locationIds.Distinct().ToArray();
+        var rows = await db.Locations.AsNoTracking()
+            .Where(l => ids.Contains(l.Id))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        return rows.Select(l => Map(l)!).ToList();
+    }
+
     public async Task<LocationDto?> GetVirtualAsync(string locationType, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(locationType);

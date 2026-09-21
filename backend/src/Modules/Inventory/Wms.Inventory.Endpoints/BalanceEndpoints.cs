@@ -15,13 +15,26 @@ public static class BalanceEndpoints
 
         group.MapGet("/balances", GetBalancesAsync)
             .RequirePermission(InventoryPermissions.BalanceView)
-            .WithName("GetBalances");
+            .WithName("listBalances");
+
+        group.MapGet("/balances/summary", GetSummaryAsync)
+            .RequirePermission(InventoryPermissions.BalanceView)
+            .WithName("getBalanceSummary");
     }
 
     private static async Task<IResult> GetBalancesAsync([AsParameters] BalancesRequest request, IDispatcher dispatcher, CancellationToken cancellationToken)
     {
         var page = new PageRequest(request.Page ?? 1, request.Size ?? PageRequest.DefaultSize);
-        var result = await dispatcher.QueryAsync(new GetBalancesQuery(request.LocationId, request.ProductId, page), cancellationToken).ConfigureAwait(false);
+        var query = new GetBalancesQuery(
+            request.LocationId, request.ProductId, request.BatchId, request.CategoryId,
+            request.IncludeZero ?? false, request.BelowMin, request.ExpiringWithinDays, request.Search, page);
+        var result = await dispatcher.QueryAsync(query, cancellationToken).ConfigureAwait(false);
+        return result.ToOk();
+    }
+
+    private static async Task<IResult> GetSummaryAsync(uint productId, uint? locationId, IDispatcher dispatcher, CancellationToken cancellationToken)
+    {
+        var result = await dispatcher.QueryAsync(new GetBalanceSummaryQuery(productId, locationId), cancellationToken).ConfigureAwait(false);
         return result.ToOk();
     }
 }

@@ -421,6 +421,213 @@ namespace Wms.Inventory.Infrastructure.Persistence.Migrations
                     b.ToTable("inv_setting", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.Issue", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
+                    b.Property<long?>("DispatchGroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("dispatch_group_id");
+
+                    b.Property<DateTimeOffset?>("DispatchedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("dispatched_at");
+
+                    b.Property<DateOnly>("DocDate")
+                        .HasColumnType("date")
+                        .HasColumnName("doc_date");
+
+                    b.Property<string>("DocNo")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("doc_no");
+
+                    b.Property<uint>("FromLocationId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("from_location_id");
+
+                    b.Property<string>("IssueType")
+                        .IsRequired()
+                        .HasColumnType("enum('BRANCH_ISSUE','WH_TRANSFER','BRANCH_TRANSFER')")
+                        .HasColumnName("issue_type");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<long?>("ReceiptGroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("receipt_group_id");
+
+                    b.Property<DateTimeOffset?>("ReceivedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("received_at");
+
+                    b.Property<uint?>("ReceivedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("received_by");
+
+                    b.Property<long?>("RequestId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("request_id");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("enum('DRAFT','DISPATCHED','RECEIVED','DISCREPANCY','CANCELLED')")
+                        .HasColumnName("status");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<uint>("ToLocationId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("to_location_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint?>("UpdatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_issue");
+
+                    b.HasIndex("TenantId", "DocNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_issue");
+
+                    b.HasIndex("TenantId", "Status", "ToLocationId")
+                        .HasDatabaseName("ix_issue_status");
+
+                    b.ToTable("inv_issue", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.IssueLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BatchId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("batch_id");
+
+                    b.Property<string>("BatchOverrideNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("batch_override_note");
+
+                    b.Property<ushort?>("BatchOverrideReasonCodeId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("batch_override_reason_code_id");
+
+                    b.Property<string>("DiscrepancyNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("discrepancy_note");
+
+                    b.Property<decimal?>("DiscrepancyQty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("discrepancy_qty");
+
+                    b.Property<ushort?>("DiscrepancyReasonCodeId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("discrepancy_reason_code_id");
+
+                    b.Property<long>("IssueId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("issue_id");
+
+                    b.Property<ushort>("LineNo")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("line_no");
+
+                    b.Property<uint>("ProductId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("product_id");
+
+                    b.Property<decimal>("Qty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("qty");
+
+                    b.Property<decimal>("QtyBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("qty_base");
+
+                    b.Property<decimal?>("ReceivedQty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("received_qty");
+
+                    b.Property<long?>("RequestLineId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("request_line_id");
+
+                    b.Property<long?>("SuggestedBatchId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("suggested_batch_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal?>("UnitCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("unit_cost");
+
+                    b.Property<ushort>("UomId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("uom_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_issue_line");
+
+                    b.HasIndex("IssueId")
+                        .HasDatabaseName("ix_inv_issue_line_issue_id");
+
+                    b.HasIndex("TenantId", "IssueId", "LineNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_isl");
+
+                    b.ToTable("inv_issue_line", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Inventory.Domain.Entities.Movement", b =>
                 {
                     b.Property<long>("Id")
@@ -599,6 +806,322 @@ namespace Wms.Inventory.Infrastructure.Persistence.Migrations
                     b.ToTable("inv_movement_group", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.ReturnToVendor", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal?>("ClaimAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("claim_amount");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateOnly>("DocDate")
+                        .HasColumnType("date")
+                        .HasColumnName("doc_date");
+
+                    b.Property<string>("DocNo")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("doc_no");
+
+                    b.Property<uint>("LocationId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("location_id");
+
+                    b.Property<long?>("MovementGroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("movement_group_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("Outcome")
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)")
+                        .HasColumnName("outcome");
+
+                    b.Property<string>("OutcomeNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("outcome_note");
+
+                    b.Property<ushort>("ReasonCodeId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("reason_code_id");
+
+                    b.Property<long?>("ReceiptId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("receipt_id");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("enum('DRAFT','SENT','ACCEPTED','REJECTED','CLOSED')")
+                        .HasColumnName("status");
+
+                    b.Property<uint>("SupplierId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint?>("UpdatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_return_to_vendor");
+
+                    b.HasIndex("TenantId", "DocNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_rtv");
+
+                    b.ToTable("inv_return_to_vendor", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.ReturnToVendorLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BatchId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("batch_id");
+
+                    b.Property<ushort>("LineNo")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("line_no");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<uint>("ProductId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("product_id");
+
+                    b.Property<decimal>("Qty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("qty");
+
+                    b.Property<decimal>("QtyBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("qty_base");
+
+                    b.Property<long>("ReturnId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("return_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal?>("UnitCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("unit_cost");
+
+                    b.Property<ushort>("UomId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("uom_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_return_to_vendor_line");
+
+                    b.HasIndex("ReturnId")
+                        .HasDatabaseName("ix_inv_return_to_vendor_line_return_id");
+
+                    b.HasIndex("TenantId", "ReturnId", "LineNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_rtvl");
+
+                    b.ToTable("inv_return_to_vendor_line", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.Sample", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Authority")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("authority");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateOnly>("DocDate")
+                        .HasColumnType("date")
+                        .HasColumnName("doc_date");
+
+                    b.Property<string>("DocNo")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("doc_no");
+
+                    b.Property<uint>("LocationId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("location_id");
+
+                    b.Property<long?>("MovementGroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("movement_group_id");
+
+                    b.Property<string>("Purpose")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("purpose");
+
+                    b.Property<ushort?>("ReasonCodeId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("reason_code_id");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint?>("UpdatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_sample");
+
+                    b.HasIndex("TenantId", "DocNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_sample");
+
+                    b.ToTable("inv_sample", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.SampleLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BatchId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("batch_id");
+
+                    b.Property<ushort>("LineNo")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("line_no");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<uint>("ProductId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("product_id");
+
+                    b.Property<decimal>("Qty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("qty");
+
+                    b.Property<decimal>("QtyBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("qty_base");
+
+                    b.Property<long>("SampleId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("sample_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal?>("UnitCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("unit_cost");
+
+                    b.Property<ushort>("UomId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("uom_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_sample_line");
+
+                    b.HasIndex("SampleId")
+                        .HasDatabaseName("ix_inv_sample_line_sample_id");
+
+                    b.HasIndex("TenantId", "SampleId", "LineNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_sml");
+
+                    b.ToTable("inv_sample_line", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Inventory.Domain.Entities.StockBalance", b =>
                 {
                     b.Property<uint>("TenantId")
@@ -658,6 +1181,502 @@ namespace Wms.Inventory.Infrastructure.Persistence.Migrations
                     b.ToTable("inv_balance", (string)null);
                 });
 
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.StockCount", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("AdjustGroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("adjust_group_id");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("approved_at");
+
+                    b.Property<uint?>("ApprovedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("approved_by");
+
+                    b.Property<string>("CountType")
+                        .IsRequired()
+                        .HasColumnType("enum('FULL','CYCLE','SPOT')")
+                        .HasColumnName("count_type");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("DocNo")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("doc_no");
+
+                    b.Property<DateTimeOffset?>("FrozenAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("frozen_at");
+
+                    b.Property<uint>("LocationId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("location_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<bool>("RequiresApproval")
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false)
+                        .HasColumnName("requires_approval");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("ScopeCategoryIds")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("scope_category_ids");
+
+                    b.Property<string>("ScopeProductIds")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("scope_product_ids");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("enum('DRAFT','FROZEN','COUNTING','REVIEW','APPROVED','POSTED','CANCELLED')")
+                        .HasColumnName("status");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint?>("UpdatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_count");
+
+                    b.HasIndex("TenantId", "DocNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_count");
+
+                    b.HasIndex("TenantId", "LocationId", "Status")
+                        .HasDatabaseName("ix_count_loc");
+
+                    b.ToTable("inv_count", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.StockCountLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("AvgUnitCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("avg_unit_cost");
+
+                    b.Property<long?>("BatchId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("batch_id");
+
+                    b.Property<decimal>("BookQty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("book_qty");
+
+                    b.Property<long>("CountId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("count_id");
+
+                    b.Property<DateTimeOffset?>("CountedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("counted_at");
+
+                    b.Property<uint?>("CountedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("counted_by");
+
+                    b.Property<decimal?>("CountedQty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("counted_qty");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<uint>("ProductId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("product_id");
+
+                    b.Property<ushort?>("ReasonCodeId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("reason_code_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal?>("VariancePct")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("decimal(9,4)")
+                        .HasColumnName("variance_pct");
+
+                    b.Property<decimal?>("VarianceQty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("variance_qty");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_count_line");
+
+                    b.HasIndex("CountId")
+                        .HasDatabaseName("ix_inv_count_line_count_id");
+
+                    b.HasIndex("TenantId", "CountId", "ProductId")
+                        .HasDatabaseName("ix_cl");
+
+                    b.HasIndex("TenantId", "CountId", "ProductId", "BatchId")
+                        .IsUnique()
+                        .HasDatabaseName("uq_cl_line");
+
+                    b.ToTable("inv_count_line", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.StockRequest", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateOnly>("DocDate")
+                        .HasColumnType("date")
+                        .HasColumnName("doc_date");
+
+                    b.Property<string>("DocNo")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("doc_no");
+
+                    b.Property<uint>("FromLocationId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("from_location_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<DateOnly?>("RequiredDate")
+                        .HasColumnType("date")
+                        .HasColumnName("required_date");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("enum('DRAFT','SUBMITTED','PICKING','PARTIALLY_ISSUED','ISSUED','CANCELLED','CLOSED')")
+                        .HasColumnName("status");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<uint>("ToLocationId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("to_location_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint?>("UpdatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_stock_request");
+
+                    b.HasIndex("TenantId", "DocNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_sr");
+
+                    b.HasIndex("TenantId", "ToLocationId", "Status")
+                        .HasDatabaseName("ix_sr_to");
+
+                    b.ToTable("inv_stock_request", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.StockRequestLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("IssuedQty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("issued_qty");
+
+                    b.Property<ushort>("LineNo")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("line_no");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<uint>("ProductId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("product_id");
+
+                    b.Property<decimal>("Qty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("qty");
+
+                    b.Property<long>("RequestId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("request_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<ushort>("UomId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("uom_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_stock_request_line");
+
+                    b.HasIndex("RequestId")
+                        .HasDatabaseName("ix_inv_stock_request_line_request_id");
+
+                    b.HasIndex("TenantId", "RequestId", "LineNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_srl");
+
+                    b.ToTable("inv_stock_request_line", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.Waste", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("ApprovalComment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("approval_comment");
+
+                    b.Property<DateTimeOffset?>("ApprovedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("approved_at");
+
+                    b.Property<uint?>("ApprovedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("approved_by");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateOnly>("DocDate")
+                        .HasColumnType("date")
+                        .HasColumnName("doc_date");
+
+                    b.Property<string>("DocNo")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("doc_no");
+
+                    b.Property<uint>("LocationId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("location_id");
+
+                    b.Property<long?>("MovementGroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("movement_group_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<ushort>("ReasonCodeId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("reason_code_id");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("enum('DRAFT','PENDING_APPROVAL','APPROVED','POSTED','REJECTED')")
+                        .HasColumnName("status");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint?>("UpdatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_waste");
+
+                    b.HasIndex("TenantId", "DocNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_waste");
+
+                    b.HasIndex("TenantId", "LocationId", "Status")
+                        .HasDatabaseName("ix_waste_loc");
+
+                    b.ToTable("inv_waste", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.WasteLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BatchId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("batch_id");
+
+                    b.Property<ushort>("LineNo")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("line_no");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<uint>("ProductId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("product_id");
+
+                    b.Property<decimal>("Qty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("qty");
+
+                    b.Property<decimal>("QtyBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("qty_base");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal?>("UnitCost")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("unit_cost");
+
+                    b.Property<ushort>("UomId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("uom_id");
+
+                    b.Property<long>("WasteId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("waste_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_inv_waste_line");
+
+                    b.HasIndex("WasteId")
+                        .HasDatabaseName("ix_inv_waste_line_waste_id");
+
+                    b.HasIndex("TenantId", "WasteId", "LineNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_wl");
+
+                    b.ToTable("inv_waste_line", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Inventory.Domain.Entities.GoodsReceiptLine", b =>
                 {
                     b.HasOne("Wms.Inventory.Domain.Entities.GoodsReceipt", null)
@@ -666,6 +1685,16 @@ namespace Wms.Inventory.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_inv_goods_receipt_line_inv_goods_receipt_receipt_id");
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.IssueLine", b =>
+                {
+                    b.HasOne("Wms.Inventory.Domain.Entities.Issue", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("IssueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_inv_issue_line_inv_issue_issue_id");
                 });
 
             modelBuilder.Entity("Wms.Inventory.Domain.Entities.Movement", b =>
@@ -678,12 +1707,92 @@ namespace Wms.Inventory.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_inv_movement_inv_movement_group_group_id");
                 });
 
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.ReturnToVendorLine", b =>
+                {
+                    b.HasOne("Wms.Inventory.Domain.Entities.ReturnToVendor", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("ReturnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_inv_return_to_vendor_line_inv_return_to_vendor_return_id");
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.SampleLine", b =>
+                {
+                    b.HasOne("Wms.Inventory.Domain.Entities.Sample", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("SampleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_inv_sample_line_inv_sample_sample_id");
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.StockCountLine", b =>
+                {
+                    b.HasOne("Wms.Inventory.Domain.Entities.StockCount", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("CountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_inv_count_line_inv_count_count_id");
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.StockRequestLine", b =>
+                {
+                    b.HasOne("Wms.Inventory.Domain.Entities.StockRequest", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_inv_stock_request_line_inv_stock_request_request_id");
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.WasteLine", b =>
+                {
+                    b.HasOne("Wms.Inventory.Domain.Entities.Waste", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("WasteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_inv_waste_line_inv_waste_waste_id");
+                });
+
             modelBuilder.Entity("Wms.Inventory.Domain.Entities.GoodsReceipt", b =>
                 {
                     b.Navigation("Lines");
                 });
 
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.Issue", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("Wms.Inventory.Domain.Entities.MovementGroup", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.ReturnToVendor", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.Sample", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.StockCount", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.StockRequest", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Wms.Inventory.Domain.Entities.Waste", b =>
                 {
                     b.Navigation("Lines");
                 });

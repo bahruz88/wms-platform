@@ -31,6 +31,30 @@ public sealed class InventoryDbContext(
 
     public DbSet<GoodsReceiptLine> GoodsReceiptLines => Set<GoodsReceiptLine>();
 
+    public DbSet<StockCount> Counts => Set<StockCount>();
+
+    public DbSet<StockCountLine> CountLines => Set<StockCountLine>();
+
+    public DbSet<StockRequest> StockRequests => Set<StockRequest>();
+
+    public DbSet<StockRequestLine> StockRequestLines => Set<StockRequestLine>();
+
+    public DbSet<Issue> Issues => Set<Issue>();
+
+    public DbSet<IssueLine> IssueLines => Set<IssueLine>();
+
+    public DbSet<Waste> Wastes => Set<Waste>();
+
+    public DbSet<WasteLine> WasteLines => Set<WasteLine>();
+
+    public DbSet<Sample> Samples => Set<Sample>();
+
+    public DbSet<SampleLine> SampleLines => Set<SampleLine>();
+
+    public DbSet<ReturnToVendor> ReturnsToVendor => Set<ReturnToVendor>();
+
+    public DbSet<ReturnToVendorLine> ReturnToVendorLines => Set<ReturnToVendorLine>();
+
     protected override void ConfigureModule(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(InventoryDbContext).Assembly);
 }

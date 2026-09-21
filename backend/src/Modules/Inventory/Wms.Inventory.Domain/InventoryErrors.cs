@@ -84,4 +84,88 @@ public static class InventoryErrors
 
     public static Error InvalidQuantity(string reason) =>
         new("INVALID_QUANTITY", reason, 422);
+
+    // ---------------------------------------------------------------- Counts (spec §9.6, §12.6, §12.7)
+    public static Error CountNotFound(long countId) =>
+        new("COUNT_NOT_FOUND", $"Inventory count {countId} was not found.", 404);
+
+    public static Error InvalidCount(string reason) =>
+        new("INVALID_COUNT", reason, 422);
+
+    public static Error InvalidCountTransition(CountStatus from, CountStatus to) =>
+        new("INVALID_STATE_TRANSITION", $"An inventory count cannot go from {from} to {to}.", 409);
+
+    public static Error CountAlreadyOpen(uint locationId, string docNo) =>
+        new("COUNT_ALREADY_OPEN", $"Location {locationId} already has an open inventory count ({docNo}).", 422);
+
+    public static Error CountScopeRequired(string countType, string field) =>
+        new("COUNT_SCOPE_REQUIRED", $"A {countType} count needs {field}.", 422);
+
+    public static Error CountLinesIncomplete(IReadOnlyCollection<uint> productIds) =>
+        new(
+            "COUNT_LINES_INCOMPLETE",
+            $"Every line needs a counted quantity before review; {productIds.Count} product(s) are still open: {string.Join(", ", productIds.Take(10))}.",
+            422);
+
+    public static Error CountEmpty(long countId) =>
+        new("COUNT_EMPTY", $"Inventory count {countId} has no lines; freeze it first.", 422);
+
+    /// <summary>Spec §12.6: a non-zero variance must say why.</summary>
+    public static Error ReasonCodeRequired(uint productId) =>
+        new("REASON_CODE_REQUIRED", $"Product {productId} has a non-zero variance; reason_code_id is mandatory (spec §12.6).", 422);
+
+    public static Error ReasonCodeNotFound(ushort reasonCodeId, string expectedGroup) =>
+        new("REASON_CODE_NOT_FOUND", $"Reason code {reasonCodeId} does not exist, is inactive, or is not in the {expectedGroup} group.", 422);
+
+    /// <summary>Spec §7.1 / TOR §21: the person who counted may not approve their own variance.</summary>
+    public static Error SelfApprovalForbidden() =>
+        new("SELF_APPROVAL_FORBIDDEN", "The user who entered the count cannot approve it (segregation of duties).", 403);
+
+    public static Error ApprovalCommentRequired() =>
+        new("APPROVAL_COMMENT_REQUIRED", "A rejection must carry a comment.", 422);
+
+    // ---------------------------------------------------------------- Stock requests, issues, waste, samples, RTV
+    public static Error DocumentNotFound(string document, long id) =>
+        new("NOT_FOUND", $"The {document} {id} was not found.", 404);
+
+    public static Error InvalidDocument(string reason) =>
+        new("INVALID_DOCUMENT", reason, 422);
+
+    public static Error DocumentNotDraft(string document, long id, string status) =>
+        new("INVALID_STATE_TRANSITION", $"The {document} {id} is {status}; only a DRAFT document can be changed.", 409);
+
+    public static Error InvalidDocumentTransition(string document, string from, string to) =>
+        new("INVALID_STATE_TRANSITION", $"A {document} cannot go from {from} to {to}.", 409);
+
+    public static Error SameLocation() =>
+        new("SAME_LOCATION", "The source and target locations must differ.", 422);
+
+    public static Error IssueLineNotFound(long lineId) =>
+        new("ISSUE_LINE_NOT_FOUND", $"Issue line {lineId} does not belong to this document.", 422);
+
+    public static Error IssueLinesUnconfirmed(IReadOnlyCollection<ushort> lineNos) =>
+        new(
+            "ISSUE_LINES_UNCONFIRMED",
+            $"Every dispatched line must be confirmed; line(s) {string.Join(", ", lineNos)} are still open.",
+            422);
+
+    /// <summary>A branch that received something other than what was sent must say why (TOR §17).</summary>
+    public static Error DiscrepancyReasonRequired(ushort lineNo) =>
+        new("DISCREPANCY_REASON_REQUIRED", $"Line {lineNo}: a receipt discrepancy needs a reason code and a note.", 422);
+
+    /// <summary>Spec §12.4: picking a batch other than the FEFO/FIFO suggestion is allowed, but must be explained.</summary>
+    public static Error BatchOverrideReasonRequired(ushort lineNo) =>
+        new("BATCH_OVERRIDE_REASON_REQUIRED", $"Line {lineNo}: choosing a batch other than the suggested one needs a reason code.", 422);
+
+    public static Error PhotoRequired(ushort reasonCodeId) =>
+        new("PHOTO_REQUIRED", $"Reason code {reasonCodeId} requires at least one photo attachment.", 422);
+
+    public static Error MovementGroupNotFound(long groupId) =>
+        new("NOT_FOUND", $"Movement group {groupId} was not found.", 404);
+
+    public static Error AlreadyReversed(long groupId) =>
+        new("INVALID_STATE_TRANSITION", $"Movement group {groupId} is already reversed.", 409);
+
+    public static Error BatchNotFound(long batchId) =>
+        new("BATCH_NOT_FOUND", $"Batch {batchId} was not found.", 404);
 }

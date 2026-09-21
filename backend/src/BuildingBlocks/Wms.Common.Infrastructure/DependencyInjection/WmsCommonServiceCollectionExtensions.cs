@@ -166,6 +166,16 @@ public static class WmsCommonServiceCollectionExtensions
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
             {
+                // Module-to-module calls (ModuleTransport=Http, the /internal/* routes of spec §4.2) carry the
+                // caller's bearer token, so they land in the same partition as that user's own traffic. One user
+                // action can fan out into several of them — decorating a page of documents with product, location,
+                // UoM and supplier refs is four internal calls — so counting them against a per-user quota meant a
+                // single busy screen could rate-limit itself, and the 429 surfaced as an opaque 500.
+                if (IsInternalModuleCall(httpContext))
+                {
+                    return RateLimitPartition.GetNoLimiter("internal");
+                }
+
                 var partitionKey = httpContext.User.FindFirst(ClaimNames.Subject)?.Value
                     ?? httpContext.Connection.RemoteIpAddress?.ToString()
                     ?? "anonymous";
@@ -187,6 +197,15 @@ public static class WmsCommonServiceCollectionExtensions
             };
         });
     }
+
+    /// <summary>
+    /// True for the <c>/api/v1/&lt;module&gt;/internal/...</c> routes, which are only reachable inside the cluster:
+    /// the gateway does not proxy them (<c>deploy/docker-compose.yml</c> maps only the public prefixes) and every
+    /// one of them is <c>ExcludeFromDescription()</c>.
+    /// </summary>
+    private static bool IsInternalModuleCall(HttpContext httpContext) =>
+        httpContext.Request.Path.HasValue
+        && httpContext.Request.Path.Value.Contains("/internal/", StringComparison.OrdinalIgnoreCase);
 
     private static void AddTelemetry(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
