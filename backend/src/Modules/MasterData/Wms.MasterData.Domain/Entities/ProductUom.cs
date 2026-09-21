@@ -15,7 +15,7 @@ public sealed class ProductUom : Entity<uint>, ITenantEntity
 
     public ushort UomId { get; private set; }
 
-    /// <summary>1 CASE = 12 PCS → 12.00000000.</summary>
+    /// <summary>1 CASE = 12 PCS → 12.00000000. Never UPDATEd — a change closes this row and opens a new one (spec §12.1).</summary>
     public decimal FactorToBase { get; private set; }
 
     public bool IsPurchaseDefault { get; private set; }
@@ -25,6 +25,9 @@ public sealed class ProductUom : Entity<uint>, ITenantEntity
     public DateOnly ValidFrom { get; private set; }
 
     public DateOnly? ValidTo { get; private set; }
+
+    /// <summary>True while no <c>valid_to</c> closes the row.</summary>
+    public bool IsOpen => ValidTo is null;
 
     internal static ProductUom CreateBase(uint tenantId, ushort baseUomId, DateOnly validFrom) =>
         new()
@@ -50,5 +53,15 @@ public sealed class ProductUom : Entity<uint>, ITenantEntity
 
     public bool IsValidOn(DateOnly date) => date >= ValidFrom && (ValidTo is null || date <= ValidTo);
 
+    /// <summary>True when a window starting on <paramref name="validFrom"/> would overlap this row.</summary>
+    internal bool OverlapsFrom(DateOnly validFrom) => ValidTo is null ? validFrom <= ValidFrom : validFrom <= ValidTo.Value;
+
     internal void Close(DateOnly validTo) => ValidTo = validTo;
+
+    /// <summary>The purchase/issue defaults are plain flags, not part of the versioned factor (spec §12.1).</summary>
+    internal void SetDefaults(bool isPurchaseDefault, bool isIssueDefault)
+    {
+        IsPurchaseDefault = isPurchaseDefault;
+        IsIssueDefault = isIssueDefault;
+    }
 }

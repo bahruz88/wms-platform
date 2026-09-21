@@ -224,6 +224,12 @@ namespace Wms.MasterData.Infrastructure.Persistence.Migrations
                         .HasColumnType("int unsigned")
                         .HasColumnName("parent_id");
 
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
                     b.Property<uint>("TenantId")
                         .HasColumnType("int unsigned")
                         .HasColumnName("tenant_id");
@@ -330,7 +336,7 @@ namespace Wms.MasterData.Infrastructure.Persistence.Migrations
                         .HasColumnType("int unsigned")
                         .HasColumnName("default_supplier_id");
 
-                    b.Property<string>("ImageKey")
+                    b.Property<string>("ImageAttachmentId")
                         .HasMaxLength(300)
                         .HasColumnType("varchar(300)")
                         .HasColumnName("image_key");
@@ -449,6 +455,15 @@ namespace Wms.MasterData.Infrastructure.Persistence.Migrations
                         .HasColumnType("varchar(32)")
                         .HasColumnName("code");
 
+                    b.Property<string>("DefaultIssueStrategy")
+                        .HasColumnType("enum('FEFO','FIFO')")
+                        .HasColumnName("default_issue_strategy");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -470,6 +485,12 @@ namespace Wms.MasterData.Infrastructure.Persistence.Migrations
                         .HasColumnType("enum('FOOD','NON_FOOD')")
                         .HasColumnName("product_type");
 
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
                     b.Property<uint>("TenantId")
                         .HasColumnType("int unsigned")
                         .HasColumnName("tenant_id");
@@ -480,6 +501,9 @@ namespace Wms.MasterData.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "Code")
                         .IsUnique()
                         .HasDatabaseName("uq_cat");
+
+                    b.HasIndex("TenantId", "Path")
+                        .HasDatabaseName("ix_cat_path");
 
                     b.ToTable("master_product_category", (string)null);
                 });
@@ -577,6 +601,12 @@ namespace Wms.MasterData.Infrastructure.Persistence.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("requires_photo");
 
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
                     b.Property<uint>("TenantId")
                         .HasColumnType("int unsigned")
                         .HasColumnName("tenant_id");
@@ -587,6 +617,9 @@ namespace Wms.MasterData.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "Code")
                         .IsUnique()
                         .HasDatabaseName("uq_reason");
+
+                    b.HasIndex("TenantId", "ReasonGroup")
+                        .HasDatabaseName("ix_reason_group");
 
                     b.ToTable("master_reason_code", (string)null);
                 });

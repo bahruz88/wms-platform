@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Unit tests for the iam schema rules of spec §7: permission catalogue, role grants, segregation of duties, user provisioning.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Identity/Wms.Identity.Domain/Wms.Identity.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Identity/Wms.Identity.Application/Wms.Identity.Application.csproj" />
+  </ItemGroup>
+</Project>

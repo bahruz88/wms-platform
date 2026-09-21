@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Testcontainers.MySql;
 using Wms.Common.Application.Abstractions;
+using Wms.Common.Application.Security;
 using Wms.Common.Application.DependencyInjection;
 using Wms.Common.Application.Messaging;
 using Wms.Common.Infrastructure.Dispatching;
@@ -144,7 +145,14 @@ public sealed class TestCurrentUser(uint userId) : ICurrentUser
 
     public string Username => "integration-test";
 
+    public string FullName => "Integration test";
+
     public IReadOnlyCollection<string> Roles => ["ADMIN"];
+
+    public IReadOnlyCollection<string> Permissions => ["*"];
+
+    /// <summary>The integration fixtures act for the whole tenant; the spec §16 filter is unit-tested separately.</summary>
+    public LocationScope LocationScope => LocationScope.Unrestricted;
 
     public IReadOnlyCollection<uint> LocationIds => [];
 

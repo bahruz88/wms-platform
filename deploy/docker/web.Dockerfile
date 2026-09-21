@@ -12,7 +12,7 @@
 #     --build-context deploy=deploy/docker \
 #     --build-context contracts=contracts/openapi \
 #     --build-context designsystem=docs/design-system \
-#     --build-arg VITE_API_BASE_URL=/api \
+#     --build-arg VITE_API_BASE_URL= \
 #     --build-arg VITE_KEYCLOAK_ISSUER=https://auth.example.com/realms/wms \
 #     -t wms/web web
 # (docker compose does this via build.additional_contexts.)
@@ -24,8 +24,15 @@
 # below are baked into the bundle - they are public values (ADR-009: the OIDC
 # client is public, Authorization Code + PKCE, no secret).
 #
+# VITE_API_BASE_URL MUST stay EMPTY for this image. Each generated client already carries the
+# `/api/v1/<module>` prefix from its spec's servers[0].url (web/src/api/client.ts), so an empty
+# base means same-origin `/api/v1/...` requests, which nginx forwards to the gateway. Setting it
+# to `/api` produces `/api/api/v1/...` (404) and setting it to an absolute URL produces
+# cross-origin requests the gateway rejects - it sends no CORS headers.
+#
 # Runtime args (env): API_UPSTREAM=gateway:8080  -> nginx proxies /api/ there
 #                     DNS_RESOLVER              -> auto-detected from /etc/resolv.conf
+#                     CSP_POLICY                -> optional Content-Security-Policy value
 # -----------------------------------------------------------------------------
 ARG NODE_IMAGE=node:22-alpine
 ARG NGINX_IMAGE=nginxinc/nginx-unprivileged:stable-alpine
@@ -39,7 +46,7 @@ RUN --mount=type=cache,id=npm,target=/root/.npm,sharing=locked \
 
 # ---- 2. build ----
 FROM ${NODE_IMAGE} AS build
-ARG VITE_API_BASE_URL=/api
+ARG VITE_API_BASE_URL=
 ARG VITE_KEYCLOAK_ISSUER=http://localhost:8080/realms/wms
 ARG VITE_KEYCLOAK_CLIENT_ID=wms-web
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL} \
@@ -47,9 +54,9 @@ ENV VITE_API_BASE_URL=${VITE_API_BASE_URL} \
     VITE_KEYCLOAK_CLIENT_ID=${VITE_KEYCLOAK_CLIENT_ID}
 WORKDIR /app
 
-# Source first, then the Linux node_modules on top: web/ has no .dockerignore of its
-# own yet, so a developer's macOS node_modules can ride along in the context - this
-# order guarantees the deps stage wins.
+# Source first, then the Linux node_modules on top. web/.dockerignore keeps the host's
+# macOS node_modules, dist/, caches and .env out of the context; the copy order is kept as a
+# second line of defence so the deps stage always wins.
 COPY . .
 COPY --from=deps /app/node_modules ./node_modules
 
@@ -64,7 +71,8 @@ RUN npm run gen:api && npm run build
 # ---- 3. runtime: nginx (unprivileged flavour of nginx:alpine - same upstream, runs as uid 101 on :8080) ----
 FROM ${NGINX_IMAGE} AS runtime
 ENV API_UPSTREAM=gateway:8080 \
-    DNS_RESOLVER=""
+    DNS_RESOLVER="" \
+    CSP_POLICY=""
 
 # nginx.conf is an envsubst template (official image feature: /etc/nginx/templates/*.template)
 COPY --from=deploy nginx.conf /etc/nginx/templates/default.conf.template

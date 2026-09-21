@@ -1,5 +1,6 @@
 using Wms.Common.Application.Abstractions;
 using Wms.Common.Application.Paging;
+using Wms.Common.Application.Security;
 using Wms.Common.Infrastructure.Persistence;
 using Wms.Inventory.Application.Abstractions;
 using Wms.Inventory.Application.Dtos;
@@ -11,8 +12,9 @@ namespace Wms.Inventory.Infrastructure.Queries;
 
 public sealed class BatchQueries(InventoryDbContext db, IReferenceDataLoader referenceData, IClock clock) : IBatchQueries
 {
-    public async Task<BatchDto?> GetAsync(long batchId, CancellationToken cancellationToken)
+    public async Task<BatchDto?> GetAsync(long batchId, LocationScope visibleLocations, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(visibleLocations);
         var batch = await db.Batches.AsNoTracking()
             .FirstOrDefaultAsync(b => b.Id == batchId, cancellationToken)
             .ConfigureAwait(false);
@@ -21,7 +23,20 @@ public sealed class BatchQueries(InventoryDbContext db, IReferenceDataLoader ref
             return null;
         }
 
-        var page = await MapAsync([batch], cancellationToken).ConfigureAwait(false);
+        // A restricted principal may only see a batch that is actually held in one of its locations.
+        if (visibleLocations.IsRestricted)
+        {
+            var visible = visibleLocations.VisibleIds;
+            var here = await db.Balances.AsNoTracking()
+                .AnyAsync(b => b.BatchId == batchId && b.QtyOnHand != 0m && visible.Contains(b.LocationId), cancellationToken)
+                .ConfigureAwait(false);
+            if (!here)
+            {
+                return null;
+            }
+        }
+
+        var page = await MapAsync([batch], visibleLocations, cancellationToken).ConfigureAwait(false);
         return page[0];
     }
 
@@ -63,6 +78,13 @@ public sealed class BatchQueries(InventoryDbContext db, IReferenceDataLoader ref
             query = query.Where(b => b.BatchNo.Contains(term));
         }
 
+        if (filter.VisibleLocations.IsRestricted)
+        {
+            var visible = filter.VisibleLocations.VisibleIds;
+            query = query.Where(b => db.Balances
+                .Any(bal => bal.BatchId == b.Id && bal.QtyOnHand != 0m && visible.Contains(bal.LocationId)));
+        }
+
         var total = await query.LongCountAsync(cancellationToken).ConfigureAwait(false);
 
         // Default order is FEFO (spec §12.4): earliest expiry first, batches without one last.
@@ -72,10 +94,17 @@ public sealed class BatchQueries(InventoryDbContext db, IReferenceDataLoader ref
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return new PagedResult<BatchDto>(await MapAsync(rows, cancellationToken).ConfigureAwait(false), page.Page, page.Size, total);
+        return new PagedResult<BatchDto>(
+            await MapAsync(rows, filter.VisibleLocations, cancellationToken).ConfigureAwait(false),
+            page.Page,
+            page.Size,
+            total);
     }
 
-    private async Task<List<BatchDto>> MapAsync(IReadOnlyList<Batch> batches, CancellationToken cancellationToken)
+    private async Task<List<BatchDto>> MapAsync(
+        IReadOnlyList<Batch> batches,
+        LocationScope visibleLocations,
+        CancellationToken cancellationToken)
     {
         if (batches.Count == 0)
         {
@@ -83,8 +112,17 @@ public sealed class BatchQueries(InventoryDbContext db, IReferenceDataLoader ref
         }
 
         var ids = batches.Select(b => b.Id).ToArray();
-        var balances = await db.Balances.AsNoTracking()
-            .Where(b => ids.Contains(b.BatchId) && b.QtyOnHand != 0m)
+        var balanceQuery = db.Balances.AsNoTracking().Where(b => ids.Contains(b.BatchId) && b.QtyOnHand != 0m);
+
+        // The per-location breakdown is location-scoped data: a branch must not learn how much of a batch
+        // the central warehouse holds. qtyTotal below is the sum of what is left, i.e. what this principal sees.
+        if (visibleLocations.IsRestricted)
+        {
+            var visible = visibleLocations.VisibleIds;
+            balanceQuery = balanceQuery.Where(b => visible.Contains(b.LocationId));
+        }
+
+        var balances = await balanceQuery
             .Select(b => new { b.BatchId, b.LocationId, b.QtyOnHand })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -169,9 +207,9 @@ public sealed class MovementQueries(InventoryDbContext db, IReferenceDataLoader 
             query = query.Where(x => x.Group.DocDate <= to);
         }
 
-        if (filter.VisibleLocationIds.Count > 0)
+        if (filter.VisibleLocations.IsRestricted)
         {
-            var visible = filter.VisibleLocationIds.ToArray();
+            var visible = filter.VisibleLocations.VisibleIds;
             query = query.Where(x => visible.Contains(x.Movement.LocationId));
         }
 
@@ -201,8 +239,13 @@ public sealed class MovementQueries(InventoryDbContext db, IReferenceDataLoader 
             return null;
         }
 
-        var isReversed = await db.MovementGroups.AsNoTracking()
-            .AnyAsync(g => g.ReversesGroupId == groupId, cancellationToken)
+        // The back-reference the contract declares. It was only ever computed as a bool and then dropped,
+        // so a client could not tell a reversed group from a reversible one without trying the reversal.
+        var reversedByGroupId = await db.MovementGroups.AsNoTracking()
+            .Where(g => g.ReversesGroupId == groupId)
+            .OrderBy(g => g.Id)
+            .Select(g => (long?)g.Id)
+            .FirstOrDefaultAsync(cancellationToken)
             .ConfigureAwait(false);
 
         var refs = await LoadRefsAsync(group.Lines, cancellationToken).ConfigureAwait(false);
@@ -221,7 +264,7 @@ public sealed class MovementQueries(InventoryDbContext db, IReferenceDataLoader 
             group.ReasonCodeId,
             group.Note,
             group.ReversesGroupId,
-            isReversed,
+            reversedByGroupId,
             group.PostedAt,
             group.PostedBy,
             group.SumQtyBase(),

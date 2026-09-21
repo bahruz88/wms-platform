@@ -1,4 +1,5 @@
 using Wms.Common.Application.Abstractions;
+using Wms.Common.Application.Security;
 using Wms.Common.Application.Messaging;
 using Wms.Common.Application.Paging;
 using Wms.Common.Domain;
@@ -37,7 +38,7 @@ public sealed class ListCountsQueryHandler(IStockCountQueries queries, ICurrentU
     public async Task<Result<PagedResult<CountSummaryDto>>> HandleAsync(ListCountsQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        var filter = new CountFilter(query.Status, query.CountType, query.LocationId, query.DateFrom, query.DateTo, currentUser.LocationIds);
+        var filter = new CountFilter(query.Status, query.CountType, query.LocationId, query.DateFrom, query.DateTo, currentUser.LocationScope);
         return await queries.ListAsync(filter, query.Page, cancellationToken).ConfigureAwait(false);
     }
 }

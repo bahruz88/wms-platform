@@ -1,5 +1,6 @@
 using FluentValidation;
 using Wms.Common.Application.Abstractions;
+using Wms.Common.Application.Security;
 using Wms.Common.Application.Messaging;
 using Wms.Common.Application.Paging;
 using Wms.Common.Domain;
@@ -81,7 +82,7 @@ public sealed class GetSalesImportsQueryHandler(IConsumptionQueries queries, ICu
     public async Task<Result<PagedResult<SalesImportDto>>> HandleAsync(GetSalesImportsQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        var filter = new SalesImportFilter(query.LocationId, query.DateFrom, query.DateTo, query.Status, query.Source, currentUser.LocationIds);
+        var filter = new SalesImportFilter(query.LocationId, query.DateFrom, query.DateTo, query.Status, query.Source, currentUser.LocationScope);
         return await queries.GetSalesImportsAsync(filter, query.Page, cancellationToken).ConfigureAwait(false);
     }
 }
@@ -116,7 +117,7 @@ public sealed class GetConsumptionRunsQueryHandler(IConsumptionQueries queries, 
     public async Task<Result<PagedResult<ConsumptionRunDto>>> HandleAsync(GetConsumptionRunsQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        var filter = new ConsumptionRunFilter(query.LocationId, query.DateFrom, query.DateTo, query.Status, query.HasShortfall, currentUser.LocationIds);
+        var filter = new ConsumptionRunFilter(query.LocationId, query.DateFrom, query.DateTo, query.Status, query.HasShortfall, currentUser.LocationScope);
         return await queries.GetRunsAsync(filter, query.Page, cancellationToken).ConfigureAwait(false);
     }
 }

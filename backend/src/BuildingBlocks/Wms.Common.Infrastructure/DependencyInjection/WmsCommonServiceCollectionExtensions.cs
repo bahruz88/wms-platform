@@ -17,6 +17,7 @@ using StackExchange.Redis;
 using Wms.Common.Application.Abstractions;
 using Wms.Common.Application.Messaging;
 using Wms.Common.Domain;
+using Wms.Common.Infrastructure.Auth;
 using Wms.Common.Infrastructure.Dispatching;
 using Wms.Common.Infrastructure.Health;
 using Wms.Common.Infrastructure.Http;
@@ -45,6 +46,7 @@ public static class WmsCommonServiceCollectionExtensions
         services.AddScoped<TenantContext>();
         services.AddScoped<ITenantContext>(sp => sp.GetRequiredService<TenantContext>());
         services.AddScoped<ITenantContextInitializer>(sp => sp.GetRequiredService<TenantContext>());
+        services.AddScoped<PrincipalContext>();
         services.AddScoped<ICurrentUser, CurrentUser>();
         services.AddSingleton<IClock, SystemClock>();
         services.AddScoped<IDispatcher, Dispatcher>();
@@ -63,6 +65,9 @@ public static class WmsCommonServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(environment);
 
         services.AddWmsCore(configuration);
+
+        services.Configure<InternalApiOptions>(configuration.GetSection(InternalApiOptions.SectionName));
+        services.Configure<PrincipalCacheOptions>(configuration.GetSection(PrincipalCacheOptions.SectionName));
 
         AddAuthentication(services, configuration);
         services.AddAuthorization();
@@ -105,6 +110,18 @@ public static class WmsCommonServiceCollectionExtensions
             });
         }
 
+        // Redis is shared by every container, so an iam change made in the Identity container is visible to
+        // Inventory/MasterData/worker at once; the in-memory cache is the `dotnet run` and test fallback.
+        services.AddMemoryCache();
+        if (string.IsNullOrWhiteSpace(redisConnectionString))
+        {
+            services.AddSingleton<IPrincipalCache, MemoryPrincipalCache>();
+        }
+        else
+        {
+            services.AddSingleton<IPrincipalCache, RedisPrincipalCache>();
+        }
+
         services.Configure<RabbitMqOptions>(configuration.GetSection(RabbitMqOptions.SectionName));
         services.AddSingleton<RabbitMqEventBus>();
         services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<RabbitMqEventBus>());
@@ -120,7 +137,17 @@ public static class WmsCommonServiceCollectionExtensions
 
         app.UseExceptionHandler();
         app.UseStatusCodePages();
+
+        // Before authentication: an unauthenticated probe of an /internal/ route must not even reach the
+        // JWT handler, and the answer must not depend on whether the caller happens to hold a valid token.
+        app.UseMiddleware<InternalRouteGuardMiddleware>();
+
         app.UseAuthentication();
+
+        // The token carries no internal identifiers, so the iam_user row (id, permissions, locations) is
+        // resolved here, once, before any endpoint filter reads ICurrentUser (spec §7, §16).
+        app.UseMiddleware<PrincipalResolutionMiddleware>();
+
         app.UseRateLimiter();
         app.UseAuthorization();
 
@@ -199,13 +226,13 @@ public static class WmsCommonServiceCollectionExtensions
     }
 
     /// <summary>
-    /// True for the <c>/api/v1/&lt;module&gt;/internal/...</c> routes, which are only reachable inside the cluster:
-    /// the gateway does not proxy them (<c>deploy/docker-compose.yml</c> maps only the public prefixes) and every
-    /// one of them is <c>ExcludeFromDescription()</c>.
+    /// True for the <c>/api/v1/&lt;module&gt;/internal/...</c> routes. They are reachable only from inside the
+    /// cluster: the gateway refuses the <c>internal</c> path segment outright and every host demands the shared
+    /// module secret (<see cref="InternalApi"/>), so exempting them from the per-user quota cannot be abused
+    /// from outside.
     /// </summary>
     private static bool IsInternalModuleCall(HttpContext httpContext) =>
-        httpContext.Request.Path.HasValue
-        && httpContext.Request.Path.Value.Contains("/internal/", StringComparison.OrdinalIgnoreCase);
+        InternalApi.IsInternalPath(httpContext.Request.Path);
 
     private static void AddTelemetry(IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {

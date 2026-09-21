@@ -121,9 +121,9 @@ public sealed class StockCountQueries(
             query = query.Where(c => c.CreatedAt < toAt);
         }
 
-        if (filter.VisibleLocationIds.Count > 0)
+        if (filter.VisibleLocations.IsRestricted)
         {
-            var visible = filter.VisibleLocationIds.ToArray();
+            var visible = filter.VisibleLocations.VisibleIds;
             query = query.Where(c => visible.Contains(c.LocationId));
         }
 

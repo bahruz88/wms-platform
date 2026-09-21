@@ -123,9 +123,9 @@ public sealed class StockRequestQueries(InventoryDbContext db, IReferenceDataLoa
         }
 
         // A branch sees the requests it raised as well as the ones it is the source of (spec §16).
-        if (filter.VisibleLocationIds.Count > 0)
+        if (filter.VisibleLocations.IsRestricted)
         {
-            var visible = filter.VisibleLocationIds.ToArray();
+            var visible = filter.VisibleLocations.VisibleIds;
             query = query.Where(r => visible.Contains(r.ToLocationId) || visible.Contains(r.FromLocationId));
         }
 
@@ -258,9 +258,9 @@ public sealed class IssueQueries(InventoryDbContext db, IReferenceDataLoader ref
             query = query.Where(i => i.DocNo.Contains(term));
         }
 
-        if (filter.VisibleLocationIds.Count > 0)
+        if (filter.VisibleLocations.IsRestricted)
         {
-            var visible = filter.VisibleLocationIds.ToArray();
+            var visible = filter.VisibleLocations.VisibleIds;
             query = query.Where(i => visible.Contains(i.ToLocationId) || visible.Contains(i.FromLocationId));
         }
 

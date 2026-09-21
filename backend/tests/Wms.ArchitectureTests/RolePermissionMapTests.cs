@@ -100,7 +100,7 @@ public sealed class RolePermissionMapTests
     [InlineData("inv.issue.dispatch")]
     [InlineData("inv.waste.create")]
     [InlineData("inv.sample.create")]
-    [InlineData("inv.return.create")]
+    [InlineData("inv.rtv.create")]
     [InlineData("inv.batch.manage")]
     [InlineData("inv.balance.view")]
     [InlineData("master.product.view")]
@@ -123,11 +123,25 @@ public sealed class RolePermissionMapTests
     public void Warehouse_keeper_cannot_approve_its_own_work(string permission) =>
         Assert.False(Allows(WarehouseKeeper, permission), $"WAREHOUSE_KEEPER must not hold '{permission}' (segregation of duties)");
 
+    [Theory]
+    [InlineData(WarehouseKeeper)]
+    [InlineData(BranchUser)]
+    public void An_operational_role_may_only_delete_its_own_attachments(string role)
+    {
+        // doc.attachment.manage is what lets a holder delete somebody ELSE's upload. The roles below were
+        // granted the doc.attachment.* wildcard, which quietly swept it up the moment the code was added to
+        // the catalogue - a branch user could then delete the warehouse's invoice scan.
+        Assert.False(Allows(role, "doc.attachment.manage"), $"{role} must not hold 'doc.attachment.manage'");
+        Assert.True(Allows(role, "doc.attachment.upload"));
+        Assert.True(Allows(role, "doc.attachment.view"));
+        Assert.True(Allows(role, "doc.attachment.delete"));
+    }
+
     // ================================================================ BRANCH_USER
 
     [Theory]
     [InlineData("inv.request.create")]
-    [InlineData("inv.transfer.confirm")]
+    [InlineData("inv.issue.confirm")]
     [InlineData("inv.waste.create")]
     [InlineData("inv.count.enter")]
     [InlineData("inv.balance.view")]

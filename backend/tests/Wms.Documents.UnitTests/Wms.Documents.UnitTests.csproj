@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Unit tests of the MinIO attachment flow (spec §11): 25 MB cap, allowed content types, checksum and virus-scan gates, tenant-scoped storage keys, pending-row visibility.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Documents/Wms.Documents.Domain/Wms.Documents.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Documents/Wms.Documents.Application/Wms.Documents.Application.csproj" />
+    <ProjectReference Include="../../src/Modules/Documents/Wms.Documents.Infrastructure/Wms.Documents.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

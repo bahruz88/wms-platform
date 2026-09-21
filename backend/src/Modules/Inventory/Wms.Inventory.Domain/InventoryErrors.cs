@@ -118,8 +118,24 @@ public static class InventoryErrors
         new("REASON_CODE_NOT_FOUND", $"Reason code {reasonCodeId} does not exist, is inactive, or is not in the {expectedGroup} group.", 422);
 
     /// <summary>Spec §7.1 / TOR §21: the person who counted may not approve their own variance.</summary>
+    public static Error ClaimCurrencyMismatch(string supplied, string expected) =>
+        new(
+            "CLAIM_CURRENCY_MISMATCH",
+            $"claimAmount.currency '{supplied}' differs from the tenant base currency '{expected}'; inv_return_to_vendor stores the amount in the base currency only.",
+            422);
+
+    public static Error SettingNotFound(string key) =>
+        new("SETTING_NOT_FOUND", $"'{key}' is not an inv_setting key.", 404);
+
+    public static Error InvalidSettingValue(string key, string reason) =>
+        new("INVALID_SETTING_VALUE", $"inv_setting '{key}': {reason}", 422);
+
     public static Error SelfApprovalForbidden() =>
-        new("SELF_APPROVAL_FORBIDDEN", "The user who entered the count cannot approve it (segregation of duties).", 403);
+        new("SELF_APPROVAL_FORBIDDEN", "The user who raised the document cannot approve it (segregation of duties).", 403);
+
+    /// <summary>Fail-closed: without a resolved <c>iam_user</c> row the self-approval rule cannot be evaluated.</summary>
+    public static Error ApproverUnknown() =>
+        new("APPROVER_UNKNOWN", "The approving user could not be resolved to an iam_user row.", 403);
 
     public static Error ApprovalCommentRequired() =>
         new("APPROVAL_COMMENT_REQUIRED", "A rejection must carry a comment.", 422);

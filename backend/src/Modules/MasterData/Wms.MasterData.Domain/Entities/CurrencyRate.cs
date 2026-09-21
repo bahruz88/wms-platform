@@ -7,6 +7,8 @@ public sealed class CurrencyRate : Entity<uint>, ITenantEntity
 {
     public const string DefaultSource = "CBAR";
 
+    public const string ManualSource = "MANUAL";
+
     private CurrencyRate()
     {
     }
@@ -41,5 +43,21 @@ public sealed class CurrencyRate : Entity<uint>, ITenantEntity
             RateToBase = rateToBase,
             Source = source,
         };
+    }
+
+    /// <summary>
+    /// Contract <c>upsertCurrencyRate</c>: an existing <c>(currency, rate_date)</c> row is re-rated and its source
+    /// switches to the caller's (usually <c>MANUAL</c>); the audit trail keeps the previous value.
+    /// </summary>
+    public Result UpdateRate(decimal rateToBase, string source)
+    {
+        if (rateToBase <= 0m)
+        {
+            return MasterDataErrors.InvalidCurrencyRate("rate_to_base must be positive.");
+        }
+
+        RateToBase = rateToBase;
+        Source = string.IsNullOrWhiteSpace(source) ? ManualSource : source.Trim().ToUpperInvariant();
+        return Result.Success();
     }
 }

@@ -1,6 +1,7 @@
 using FluentValidation;
 using Wms.Common.Application.Abstractions;
 using Wms.Common.Application.Auditing;
+using Wms.Common.Application.Dtos;
 using Wms.Common.Application.Messaging;
 using Wms.Common.Domain;
 using Wms.Inventory.Application.Abstractions;
@@ -18,7 +19,7 @@ public sealed record CreateReturnToVendorCommand(
     uint LocationId,
     long? ReceiptId,
     ushort ReasonCodeId,
-    decimal? ClaimAmount,
+    MoneyDto? ClaimAmount,
     string? Note,
     IReadOnlyList<StockOutLineInput> Lines) : ICommand<long>;
 
@@ -30,7 +31,7 @@ public sealed class CreateReturnToVendorCommandValidator : AbstractValidator<Cre
         RuleFor(c => c.SupplierId).GreaterThan(0u);
         RuleFor(c => c.LocationId).GreaterThan(0u);
         RuleFor(c => c.ReasonCodeId).GreaterThan((ushort)0);
-        RuleFor(c => c.ClaimAmount).GreaterThanOrEqualTo(0m).When(c => c.ClaimAmount.HasValue);
+        RuleFor(c => c.ClaimAmount!.Amount).GreaterThanOrEqualTo(0m).When(c => c.ClaimAmount is not null);
         RuleFor(c => c.Note).MaximumLength(ReturnToVendor.NoteMaxLength);
         RuleFor(c => c.Lines).NotEmpty();
         RuleForEach(c => c.Lines).ChildRules(line =>
@@ -49,6 +50,7 @@ public sealed class CreateReturnToVendorCommandHandler(
     ISupplierCatalog suppliers,
     IReasonCodeCatalog reasonCodes,
     INumberSequenceService numberSequences,
+    ICurrencyRateReader currencyRates,
     ITenantContext tenantContext) : ICommandHandler<CreateReturnToVendorCommand, long>
 {
     public async Task<Result<long>> HandleAsync(CreateReturnToVendorCommand command, CancellationToken cancellationToken)
@@ -77,10 +79,16 @@ public sealed class CreateReturnToVendorCommandHandler(
             return InventoryErrors.ReasonCodeNotFound(command.ReasonCodeId, ReasonGroups.Return);
         }
 
+        var claimAmount = await ClaimAmountPolicy.ResolveAsync(command.ClaimAmount, currencyRates, cancellationToken).ConfigureAwait(false);
+        if (claimAmount.IsFailure)
+        {
+            return claimAmount.Error;
+        }
+
         var docNo = await numberSequences.NextAsync(DocumentNumberTypes.ReturnToVendor, command.DocDate, cancellationToken).ConfigureAwait(false);
         var document = ReturnToVendor.CreateDraft(
             tenantContext.TenantId, docNo, command.DocDate, command.SupplierId, command.LocationId,
-            command.ReceiptId, command.ReasonCodeId, command.ClaimAmount, command.Note);
+            command.ReceiptId, command.ReasonCodeId, claimAmount.Value, command.Note);
         if (document.IsFailure)
         {
             return document.Error;
@@ -195,11 +203,12 @@ public sealed class SendReturnToVendorCommandHandler(
 }
 
 /// <summary><c>POST /api/v1/inventory/return-to-vendor/{id}/close</c> — records the supplier's answer; no stock moves.</summary>
-public sealed record CloseReturnToVendorCommand(long ReturnId, uint RowVersion, string Outcome, decimal? ClaimAmount, string? OutcomeNote) : ICommand<long>;
+public sealed record CloseReturnToVendorCommand(long ReturnId, uint RowVersion, string Outcome, MoneyDto? ClaimAmount, string? OutcomeNote) : ICommand<long>;
 
 public sealed class CloseReturnToVendorCommandHandler(
     IInventoryUnitOfWork unitOfWork,
     IReturnToVendorRepository returns,
+    ICurrencyRateReader currencyRates,
     ITenantContext tenantContext) : ICommandHandler<CloseReturnToVendorCommand, long>
 {
     public async Task<Result<long>> HandleAsync(CloseReturnToVendorCommand command, CancellationToken cancellationToken)
@@ -221,7 +230,13 @@ public sealed class CloseReturnToVendorCommandHandler(
             return CommonErrors.StaleVersion();
         }
 
-        var closed = document.Close(command.Outcome ?? string.Empty, command.ClaimAmount, command.OutcomeNote);
+        var claim = await ClaimAmountPolicy.ResolveAsync(command.ClaimAmount, currencyRates, cancellationToken).ConfigureAwait(false);
+        if (claim.IsFailure)
+        {
+            return claim.Error;
+        }
+
+        var closed = document.Close(command.Outcome ?? string.Empty, claim.Value, command.OutcomeNote);
         if (closed.IsFailure)
         {
             return closed.Error;
@@ -233,5 +248,32 @@ public sealed class CloseReturnToVendorCommandHandler(
         await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 
         return document.Id;
+    }
+}
+
+/// <summary>
+/// <c>claimAmount</c> is declared as <c>Money</c> in inventory.v1.yaml, but <c>inv_return_to_vendor</c> keeps
+/// only the amount: the currency is the tenant's base currency (spec §12.5). A body that names a different
+/// currency is refused rather than silently stored at the wrong rate.
+/// </summary>
+internal static class ClaimAmountPolicy
+{
+    public static async Task<Result<decimal?>> ResolveAsync(
+        MoneyDto? claimAmount,
+        ICurrencyRateReader currencyRates,
+        CancellationToken cancellationToken)
+    {
+        if (claimAmount is null)
+        {
+            return Result.Success<decimal?>(null);
+        }
+
+        var baseCurrency = await currencyRates.GetBaseCurrencyAsync(cancellationToken).ConfigureAwait(false);
+        if (!string.Equals(claimAmount.Currency, baseCurrency, StringComparison.OrdinalIgnoreCase))
+        {
+            return InventoryErrors.ClaimCurrencyMismatch(claimAmount.Currency, baseCurrency);
+        }
+
+        return Result.Success<decimal?>(Quantity.Round(claimAmount.Amount, Money.StorageDecimals));
     }
 }

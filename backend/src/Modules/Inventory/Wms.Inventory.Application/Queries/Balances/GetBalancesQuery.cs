@@ -1,5 +1,6 @@
 using FluentValidation;
 using Wms.Common.Application.Abstractions;
+using Wms.Common.Application.Security;
 using Wms.Common.Application.Messaging;
 using Wms.Common.Application.Paging;
 using Wms.Common.Domain;
@@ -39,7 +40,7 @@ public sealed class GetBalancesQueryHandler(IStockBalanceQueries queries, ICurre
         // Branch users only see their own locations (spec §16); an empty set means unrestricted.
         var filter = new BalanceFilter(
             query.LocationId, query.ProductId, query.BatchId, query.CategoryId,
-            query.IncludeZero, query.BelowMin, query.ExpiringWithinDays, query.Search, currentUser.LocationIds);
+            query.IncludeZero, query.BelowMin, query.ExpiringWithinDays, query.Search, currentUser.LocationScope);
         var includeCost = currentUser.HasPermission(InventoryPermissions.ViewCost);
         return await queries.GetBalancesAsync(filter, query.Page, includeCost, cancellationToken).ConfigureAwait(false);
     }
@@ -60,7 +61,7 @@ public sealed class GetBalanceSummaryQueryHandler(IStockBalanceQueries queries, 
         ArgumentNullException.ThrowIfNull(query);
         var includeCost = currentUser.HasPermission(InventoryPermissions.ViewCost);
         var dto = await queries
-            .GetSummaryAsync(query.ProductId, query.LocationId, currentUser.LocationIds, includeCost, cancellationToken)
+            .GetSummaryAsync(query.ProductId, query.LocationId, currentUser.LocationScope, includeCost, cancellationToken)
             .ConfigureAwait(false);
         return dto is null ? InventoryErrors.ProductNotFound(query.ProductId) : dto;
     }

@@ -82,5 +82,109 @@ public sealed class User : AuditableAggregateRoot<uint>, ITenantEntity
         _locations.Add(UserLocation.Create(Id, locationId));
     }
 
+    /// <summary><c>PUT /identity/users/{id}/roles</c> — replaces the whole <c>iam_user_role</c> set.</summary>
+    public void ReplaceRoles(IEnumerable<uint> roleIds)
+    {
+        ArgumentNullException.ThrowIfNull(roleIds);
+        _roles.Clear();
+        foreach (var roleId in roleIds.Distinct())
+        {
+            _roles.Add(UserRole.Create(Id, roleId));
+        }
+    }
+
+    /// <summary><c>PUT /identity/users/{id}/locations</c> — replaces the whole <c>iam_user_location</c> set.</summary>
+    public void ReplaceLocations(IEnumerable<uint> locationIds)
+    {
+        ArgumentNullException.ThrowIfNull(locationIds);
+        _locations.Clear();
+        foreach (var locationId in locationIds.Distinct())
+        {
+            _locations.Add(UserLocation.Create(Id, locationId));
+        }
+    }
+
+    public Result Update(string fullName, string? email, string? phone, bool isActive)
+    {
+        var normalizedFullName = (fullName ?? string.Empty).Trim();
+        if (normalizedFullName.Length is 0 or > 200)
+        {
+            return IdentityErrors.InvalidUser("full_name must be 1..200 characters.");
+        }
+
+        if (email is { Length: > 200 })
+        {
+            return IdentityErrors.InvalidUser("email must be at most 200 characters.");
+        }
+
+        if (phone is { Length: > 32 })
+        {
+            return IdentityErrors.InvalidUser("phone must be at most 32 characters.");
+        }
+
+        FullName = normalizedFullName;
+        Email = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+        Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
+        IsActive = isActive;
+        return Result.Success();
+    }
+
+    /// <summary>Keeps the row in step with Keycloak when the token shows a renamed or re-mailed account.</summary>
+    public bool SyncFromToken(string username, string fullName, string? email)
+    {
+        var changed = false;
+        var normalizedUsername = (username ?? string.Empty).Trim();
+        if (normalizedUsername.Length is > 0 and <= 100 && !string.Equals(Username, normalizedUsername, StringComparison.Ordinal))
+        {
+            Username = normalizedUsername;
+            changed = true;
+        }
+
+        var normalizedFullName = (fullName ?? string.Empty).Trim();
+        if (normalizedFullName.Length is > 0 and <= 200 && !string.Equals(FullName, normalizedFullName, StringComparison.Ordinal))
+        {
+            FullName = normalizedFullName;
+            changed = true;
+        }
+
+        var normalizedEmail = string.IsNullOrWhiteSpace(email) ? null : email.Trim();
+        if (normalizedEmail is { Length: <= 200 } && !string.Equals(Email, normalizedEmail, StringComparison.Ordinal))
+        {
+            Email = normalizedEmail;
+            changed = true;
+        }
+
+        return changed;
+    }
+
+    /// <summary>
+    /// Links a pre-provisioned row (seeded with the <see cref="UnclaimedExternalIdPrefix"/> placeholder) to the
+    /// Keycloak subject that logs in with the matching username. This is what lets the operator prepare users,
+    /// roles and location grants before anyone has ever signed in; Keycloak stays the authority for the
+    /// username, so matching on it is exactly the intended link.
+    /// </summary>
+    public bool ClaimExternalId(string externalId)
+    {
+        if (!IsUnclaimed)
+        {
+            return false;
+        }
+
+        var normalized = (externalId ?? string.Empty).Trim();
+        if (normalized.Length is 0 or > 64)
+        {
+            return false;
+        }
+
+        ExternalId = normalized;
+        return true;
+    }
+
+    public const string UnclaimedExternalIdPrefix = "pending:";
+
+    public bool IsUnclaimed => ExternalId.StartsWith(UnclaimedExternalIdPrefix, StringComparison.Ordinal);
+
     public void Deactivate() => IsActive = false;
+
+    public void Activate() => IsActive = true;
 }

@@ -51,4 +51,12 @@ public sealed class Delegation : Entity<uint>, ITenantEntity
     }
 
     public bool IsActiveOn(DateOnly date) => date >= ValidFrom && date <= ValidTo;
+
+    /// <summary>
+    /// Contract <c>revokeDelegation</c>: "pulls <c>validTo</c> back to today; the row is not deleted so the
+    /// history survives". Revoking a delegation that has not started yet closes it before it opens.
+    /// </summary>
+    public void Revoke(DateOnly today) => ValidTo = today < ValidFrom ? ValidFrom.AddDays(-1) : today;
+
+    public bool Overlaps(DateOnly from, DateOnly to) => from <= ValidTo && to >= ValidFrom;
 }

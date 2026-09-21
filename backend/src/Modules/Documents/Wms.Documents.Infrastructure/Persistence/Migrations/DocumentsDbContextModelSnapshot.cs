@@ -177,9 +177,19 @@ namespace Wms.Documents.Infrastructure.Persistence.Migrations
                         .HasColumnType("varchar(300)")
                         .HasColumnName("file_name");
 
+                    b.Property<string>("ScanResult")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("scan_result");
+
                     b.Property<ulong>("SizeBytes")
                         .HasColumnType("bigint unsigned")
                         .HasColumnName("size_bytes");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("enum('PENDING','SCANNING','READY','REJECTED')")
+                        .HasColumnName("status");
 
                     b.Property<string>("StorageKey")
                         .IsRequired()
@@ -205,6 +215,9 @@ namespace Wms.Documents.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "EntityType", "EntityId")
                         .HasDatabaseName("ix_att");
+
+                    b.HasIndex("TenantId", "Status", "UploadedAt")
+                        .HasDatabaseName("ix_att_status");
 
                     b.ToTable("common_attachment", (string)null);
                 });

@@ -1,5 +1,6 @@
 using FluentValidation;
 using Wms.Common.Application.Abstractions;
+using Wms.Common.Application.Security;
 using Wms.Common.Application.Messaging;
 using Wms.Common.Application.Paging;
 using Wms.Common.Domain;
@@ -52,14 +53,14 @@ public sealed class GetConsumptionVarianceQueryHandler(
             .GetPeriodFlowsAsync(query.LocationId, query.ProductId, query.PeriodFrom, query.PeriodTo, cancellationToken)
             .ConfigureAwait(false);
 
-        var visible = currentUser.LocationIds;
+        var visible = currentUser.LocationScope;
         var rows = new List<VarianceLineDto>();
         var productNames = new Dictionary<uint, ProductDto?>();
         var locationNames = new Dictionary<uint, string>();
 
         foreach (var flow in flows)
         {
-            if (visible.Count > 0 && !visible.Contains(flow.LocationId))
+            if (!visible.Allows(flow.LocationId))
             {
                 continue;
             }

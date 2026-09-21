@@ -50,8 +50,13 @@ public sealed class NumberSequence : Entity<uint>, ITenantEntity
         }
 
         LastNumber = next;
-        return string.Create(
-            CultureInfo.InvariantCulture,
-            $"{Prefix}-{Period}-{next.ToString(CultureInfo.InvariantCulture).PadLeft(Padding, '0')}");
+        return Format(next);
     }
+
+    /// <summary>What <see cref="Next"/> would hand out, without reserving it (contract <c>nextNumberPreview</c>).</summary>
+    public string PreviewNext() => Format(LastNumber + 1);
+
+    private string Format(uint number) => string.Create(
+        CultureInfo.InvariantCulture,
+        $"{Prefix}-{Period}-{number.ToString(CultureInfo.InvariantCulture).PadLeft(Padding, '0')}");
 }

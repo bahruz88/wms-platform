@@ -40,7 +40,9 @@ public static class InventoryInfrastructureExtensions
         services.AddScoped<IReturnToVendorRepository, ReturnToVendorRepository>();
         services.AddScoped<IDocumentPostingEngine, DocumentPostingEngine>();
         services.AddScoped<IStockBalanceRepository, StockBalanceRepository>();
-        services.AddScoped<IInventorySettings, InventorySettings>();
+        services.AddScoped<InventorySettings>();
+        services.AddScoped<IInventorySettings>(sp => sp.GetRequiredService<InventorySettings>());
+        services.AddScoped<IInventorySettingWriter>(sp => sp.GetRequiredService<InventorySettings>());
         services.AddScoped<ILocationFreezeChecker, LocationFreezeChecker>();
         services.AddScoped<IReferenceDataLoader, ReferenceDataLoader>();
         services.AddScoped<IStockBalanceQueries, StockBalanceQueries>();

@@ -1,4 +1,5 @@
 using Wms.Common.Application.Abstractions;
+using Wms.Common.Application.Security;
 using Wms.Common.Application.Messaging;
 using Wms.Common.Application.Paging;
 using Wms.Common.Domain;
@@ -20,8 +21,8 @@ public sealed record DocumentListQuery(
     string? Search,
     PageRequest Page)
 {
-    public DocumentFilter ToFilter(IReadOnlyCollection<uint> visibleLocationIds) =>
-        new(Status, LocationId, DateFrom, DateTo, Search, visibleLocationIds)
+    public DocumentFilter ToFilter(LocationScope visibleLocations) =>
+        new(Status, LocationId, DateFrom, DateTo, Search, visibleLocations)
         {
             Kind = Kind,
             SecondaryLocationId = SecondaryLocationId,
@@ -50,7 +51,7 @@ public sealed class StockRequestQueryHandlers(IStockRequestQueries queries, ICur
     {
         ArgumentNullException.ThrowIfNull(query);
         return await queries
-            .ListAsync(query.Criteria.ToFilter(currentUser.LocationIds), query.Criteria.Page, cancellationToken)
+            .ListAsync(query.Criteria.ToFilter(currentUser.LocationScope), query.Criteria.Page, cancellationToken)
             .ConfigureAwait(false);
     }
 }
@@ -78,7 +79,7 @@ public sealed class IssueQueryHandlers(IIssueQueries queries, ICurrentUser curre
     {
         ArgumentNullException.ThrowIfNull(query);
         return await queries
-            .ListAsync(query.Criteria.ToFilter(currentUser.LocationIds), query.Criteria.Page, cancellationToken)
+            .ListAsync(query.Criteria.ToFilter(currentUser.LocationScope), query.Criteria.Page, cancellationToken)
             .ConfigureAwait(false);
     }
 }
@@ -106,7 +107,7 @@ public sealed class WasteQueryHandlers(IWasteQueries queries, ICurrentUser curre
     {
         ArgumentNullException.ThrowIfNull(query);
         return await queries.ListAsync(
-            query.Criteria.ToFilter(currentUser.LocationIds),
+            query.Criteria.ToFilter(currentUser.LocationScope),
             query.Criteria.Page,
             currentUser.HasPermission(InventoryPermissions.ViewCost),
             cancellationToken).ConfigureAwait(false);
@@ -136,7 +137,7 @@ public sealed class SampleQueryHandlers(ISampleQueries queries, ICurrentUser cur
     {
         ArgumentNullException.ThrowIfNull(query);
         return await queries
-            .ListAsync(query.Criteria.ToFilter(currentUser.LocationIds), query.Criteria.Page, cancellationToken)
+            .ListAsync(query.Criteria.ToFilter(currentUser.LocationScope), query.Criteria.Page, cancellationToken)
             .ConfigureAwait(false);
     }
 }
@@ -164,7 +165,7 @@ public sealed class ReturnToVendorQueryHandlers(IReturnToVendorQueries queries, 
     {
         ArgumentNullException.ThrowIfNull(query);
         return await queries.ListAsync(
-            query.Criteria.ToFilter(currentUser.LocationIds),
+            query.Criteria.ToFilter(currentUser.LocationScope),
             query.Criteria.Page,
             currentUser.HasPermission(InventoryPermissions.ViewCost),
             cancellationToken).ConfigureAwait(false);
@@ -177,21 +178,22 @@ public sealed record GetBatchQuery(long BatchId) : IQuery<BatchDto>;
 
 public sealed record ListBatchesQuery(BatchFilter Filter, PageRequest Page) : IQuery<PagedResult<BatchDto>>;
 
-public sealed class BatchQueryHandlers(IBatchQueries queries) :
+public sealed class BatchQueryHandlers(IBatchQueries queries, ICurrentUser currentUser) :
     IQueryHandler<GetBatchQuery, BatchDto>,
     IQueryHandler<ListBatchesQuery, PagedResult<BatchDto>>
 {
     public async Task<Result<BatchDto>> HandleAsync(GetBatchQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        var dto = await queries.GetAsync(query.BatchId, cancellationToken).ConfigureAwait(false);
+        var dto = await queries.GetAsync(query.BatchId, currentUser.LocationScope, cancellationToken).ConfigureAwait(false);
         return dto is null ? InventoryErrors.BatchNotFound(query.BatchId) : dto;
     }
 
     public async Task<Result<PagedResult<BatchDto>>> HandleAsync(ListBatchesQuery query, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(query);
-        return await queries.ListAsync(query.Filter, query.Page, cancellationToken).ConfigureAwait(false);
+        var filter = query.Filter with { VisibleLocations = currentUser.LocationScope };
+        return await queries.ListAsync(filter, query.Page, cancellationToken).ConfigureAwait(false);
     }
 }
 
@@ -216,7 +218,7 @@ public sealed class MovementQueryHandlers(IMovementQueries queries, ICurrentUser
         ArgumentNullException.ThrowIfNull(query);
         var filter = new MovementFilter(
             query.ProductId, query.LocationId, query.BatchId, query.DocType, query.GroupId,
-            query.DateFrom, query.DateTo, currentUser.LocationIds);
+            query.DateFrom, query.DateTo, currentUser.LocationScope);
         return await queries
             .ListAsync(filter, query.Page, currentUser.HasPermission(InventoryPermissions.ViewCost), cancellationToken)
             .ConfigureAwait(false);

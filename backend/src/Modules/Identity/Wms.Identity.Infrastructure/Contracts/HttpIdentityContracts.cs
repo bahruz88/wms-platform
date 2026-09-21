@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using Wms.Common.Application.Abstractions;
 using Wms.Identity.Contracts;
 
 namespace Wms.Identity.Infrastructure.Contracts;
@@ -37,5 +38,27 @@ public sealed class HttpTenantDirectory(HttpClient httpClient) : ITenantDirector
 
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<TenantDto>(cancellationToken).ConfigureAwait(false);
+    }
+}
+
+/// <summary>
+/// HTTP implementation for the containers that do not host Identity. The resolution result is cached per
+/// request by <c>PrincipalResolutionMiddleware</c> and across requests by <c>IPrincipalCache</c>, so a busy
+/// screen costs one call, not one per endpoint.
+/// </summary>
+public sealed class HttpPrincipalDirectory(HttpClient httpClient) : IPrincipalDirectory
+{
+    public async Task<PrincipalSnapshot?> ResolveAsync(PrincipalClaims claims, CancellationToken cancellationToken)
+    {
+        using var response = await httpClient
+            .PostAsJsonAsync(new Uri(IdentityRoutes.InternalPrincipal, UriKind.Relative), claims, cancellationToken)
+            .ConfigureAwait(false);
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<PrincipalSnapshot>(cancellationToken).ConfigureAwait(false);
     }
 }

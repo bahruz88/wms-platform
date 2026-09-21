@@ -17,7 +17,14 @@ data:
   RabbitMq__Host: rabbitmq.wms-infra.svc.cluster.local
   RabbitMq__Exchange: wms.events
   Minio__Endpoint: minio.wms-infra.svc.cluster.local:9000
+  # Public address presigned attachment URLs are signed for (what the browser resolves).
+  Minio__PublicEndpoint: files.example.com
+  Minio__UseSsl: "true"
   Minio__Bucket: wms-attachments
+  Antivirus__Enabled: "true"
+  Antivirus__Host: clamav.wms-infra.svc.cluster.local
+  Antivirus__Port: "3310"
+  Antivirus__TimeoutSeconds: "30"
   Keycloak__Authority: https://auth.example.com/realms/wms
   Keycloak__Audience: wms-api
   Seq__Url: http://seq.wms-infra.svc.cluster.local:5341

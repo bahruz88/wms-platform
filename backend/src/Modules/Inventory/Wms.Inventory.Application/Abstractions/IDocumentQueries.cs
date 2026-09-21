@@ -1,16 +1,20 @@
 using Wms.Common.Application.Paging;
 using Wms.Inventory.Application.Dtos;
+using Wms.Common.Application.Security;
 
 namespace Wms.Inventory.Application.Abstractions;
 
-/// <summary>Shared filter of the document list endpoints. <c>VisibleLocationIds</c> is empty for unrestricted users.</summary>
+/// <summary>
+/// Shared filter of the document list endpoints. <c>VisibleLocations</c> carries the spec §16 location
+/// restriction: a restricted scope with no ids matches nothing, it is never read as "every location".
+/// </summary>
 public sealed record DocumentFilter(
     string? Status,
     uint? LocationId,
     DateOnly? DateFrom,
     DateOnly? DateTo,
     string? Search,
-    IReadOnlyCollection<uint> VisibleLocationIds)
+    LocationScope VisibleLocations)
 {
     /// <summary>Extra discriminators used by individual lists (issue type, supplier, product …).</summary>
     public string? Kind { get; init; }
@@ -57,17 +61,22 @@ public interface IReturnToVendorQueries
     Task<PagedResult<ReturnToVendorSummaryDto>> ListAsync(DocumentFilter filter, PageRequest page, bool includeCost, CancellationToken cancellationToken);
 }
 
-/// <summary>Filters of <c>GET /inventory/batches</c>.</summary>
+/// <summary>
+/// Filters of <c>GET /inventory/batches</c>. A batch row itself carries no location, but the DTO breaks the
+/// quantity down per location, so the spec §16 scope still applies: a restricted principal sees only the
+/// batches that sit in one of its own locations, and only those locations in the breakdown.
+/// </summary>
 public sealed record BatchFilter(
     uint? ProductId,
     uint? SupplierId,
     string? Status,
     DateOnly? ExpiryBefore,
-    string? BatchNo);
+    string? BatchNo,
+    LocationScope VisibleLocations);
 
 public interface IBatchQueries
 {
-    Task<BatchDto?> GetAsync(long batchId, CancellationToken cancellationToken);
+    Task<BatchDto?> GetAsync(long batchId, LocationScope visibleLocations, CancellationToken cancellationToken);
 
     Task<PagedResult<BatchDto>> ListAsync(BatchFilter filter, PageRequest page, CancellationToken cancellationToken);
 }
@@ -81,7 +90,7 @@ public sealed record MovementFilter(
     long? GroupId,
     DateOnly? DateFrom,
     DateOnly? DateTo,
-    IReadOnlyCollection<uint> VisibleLocationIds);
+    LocationScope VisibleLocations);
 
 public interface IMovementQueries
 {

@@ -23,6 +23,24 @@ public sealed class Role : Entity<uint>, ITenantEntity
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
         return new Role { TenantId = tenantId, Code = code.Trim().ToUpperInvariant(), Name = name.Trim(), IsSystem = isSystem };
     }
+
+    /// <summary>A system role keeps its code and name; only its permission set may be curated.</summary>
+    public Result Rename(string name)
+    {
+        if (IsSystem)
+        {
+            return IdentityErrors.SystemRoleImmutable(Code);
+        }
+
+        var normalized = (name ?? string.Empty).Trim();
+        if (normalized.Length is 0 or > 120)
+        {
+            return IdentityErrors.InvalidRole("name must be 1..120 characters.");
+        }
+
+        Name = normalized;
+        return Result.Success();
+    }
 }
 
 /// <summary><c>iam_permission</c> — a global catalogue shared by all tenants (spec §7).</summary>

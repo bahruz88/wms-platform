@@ -31,6 +31,19 @@ if (exitCode != 0)
     return exitCode;
 }
 
+// The iam catalogue (tenant, roles, the permission catalogue, role -> permission) is system reference data,
+// not demo data: without it no request can be authorized and every audit column would have nobody to point
+// at, so it is written on every migrator run. It is idempotent.
+using (var catalogueScope = provider.CreateScope())
+{
+    var iamSeeder = ActivatorUtilities.CreateInstance<IamSeeder>(catalogueScope.ServiceProvider);
+    var catalogueExit = await iamSeeder.SeedCatalogueAsync(cancellation.Token).ConfigureAwait(false);
+    if (catalogueExit != 0)
+    {
+        return catalogueExit;
+    }
+}
+
 // --seed fills the demo/warehouse data set. It is idempotent: re-running changes nothing.
 // AddCommandLine drops a valueless switch, so the bare "--seed" form is matched against args directly.
 var seedRequested = args.Any(a => string.Equals(a, "--seed", StringComparison.OrdinalIgnoreCase))
@@ -42,4 +55,12 @@ if (!seedRequested)
 
 using var seedScope = provider.CreateScope();
 var seeder = ActivatorUtilities.CreateInstance<DemoSeeder>(seedScope.ServiceProvider);
-return await seeder.RunAsync(cancellation.Token).ConfigureAwait(false);
+var demoExit = await seeder.RunAsync(cancellation.Token).ConfigureAwait(false);
+if (demoExit != 0)
+{
+    return demoExit;
+}
+
+// Dev users come last: their location grants reference master_location rows the demo seeder creates.
+var devUserSeeder = ActivatorUtilities.CreateInstance<IamSeeder>(seedScope.ServiceProvider);
+return await devUserSeeder.SeedDevUsersAsync(cancellation.Token).ConfigureAwait(false);

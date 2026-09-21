@@ -33,6 +33,9 @@
     <PackageVersion Include="StackExchange.Redis" Version="2.13.17" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
 
+    <!-- Object storage: official MinIO .NET client (Documents attachment flow, spec §3/§11). -->
+    <PackageVersion Include="Minio" Version="6.0.5" />
+
     <!-- Observability -->
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Sinks.Seq" Version="9.1.0" />

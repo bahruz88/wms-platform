@@ -1,9 +1,13 @@
 using Wms.Common.Application.Paging;
 using Wms.Inventory.Application.Dtos;
+using Wms.Common.Application.Security;
 
 namespace Wms.Inventory.Application.Abstractions;
 
-/// <summary>Filters of <c>GET /inventory/balances</c> (inventory.v1.yaml). <c>VisibleLocationIds</c> is empty for unrestricted users.</summary>
+/// <summary>
+/// Filters of <c>GET /inventory/balances</c> (inventory.v1.yaml). <c>VisibleLocations</c> carries the spec §16
+/// location restriction; a restricted scope with no ids matches nothing.
+/// </summary>
 public sealed record BalanceFilter(
     uint? LocationId,
     uint? ProductId,
@@ -13,7 +17,7 @@ public sealed record BalanceFilter(
     bool? BelowMin,
     int? ExpiringWithinDays,
     string? Search,
-    IReadOnlyCollection<uint> VisibleLocationIds);
+    LocationScope VisibleLocations);
 
 /// <summary>Filters of <c>GET /inventory/goods-receipts</c> (inventory.v1.yaml).</summary>
 public sealed record GoodsReceiptFilter(
@@ -24,14 +28,14 @@ public sealed record GoodsReceiptFilter(
     DateOnly? DateFrom,
     DateOnly? DateTo,
     string? Search,
-    IReadOnlyCollection<uint> VisibleLocationIds);
+    LocationScope VisibleLocations);
 
 /// <summary>Read side (<c>AsNoTracking</c>). Cost fields are dropped when <paramref name="includeCost"/> is false (spec §16).</summary>
 public interface IStockBalanceQueries
 {
     Task<PagedResult<StockBalanceDto>> GetBalancesAsync(BalanceFilter filter, PageRequest page, bool includeCost, CancellationToken cancellationToken);
 
-    Task<BalanceSummaryDto?> GetSummaryAsync(uint productId, uint? locationId, IReadOnlyCollection<uint> visibleLocationIds, bool includeCost, CancellationToken cancellationToken);
+    Task<BalanceSummaryDto?> GetSummaryAsync(uint productId, uint? locationId, LocationScope visibleLocations, bool includeCost, CancellationToken cancellationToken);
 }
 
 /// <summary>Filters of <c>GET /inventory/counts</c>.</summary>
@@ -41,7 +45,7 @@ public sealed record CountFilter(
     uint? LocationId,
     DateOnly? DateFrom,
     DateOnly? DateTo,
-    IReadOnlyCollection<uint> VisibleLocationIds);
+    LocationScope VisibleLocations);
 
 public interface IStockCountQueries
 {

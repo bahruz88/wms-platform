@@ -1,6 +1,7 @@
 using Wms.Common.Application.Paging;
 using Wms.Consumption.Application.Dtos;
 using Wms.Consumption.Domain.Enums;
+using Wms.Common.Application.Security;
 
 namespace Wms.Consumption.Application.Abstractions;
 
@@ -12,7 +13,7 @@ public sealed record SalesImportFilter(
     DateOnly? DateTo,
     SalesImportStatus? Status,
     SalesSource? Source,
-    IReadOnlyCollection<uint> VisibleLocationIds);
+    LocationScope VisibleLocations);
 
 public sealed record ConsumptionRunFilter(
     uint? LocationId,
@@ -20,7 +21,7 @@ public sealed record ConsumptionRunFilter(
     DateOnly? DateTo,
     ConsumptionRunStatus? Status,
     bool? HasShortfall,
-    IReadOnlyCollection<uint> VisibleLocationIds);
+    LocationScope VisibleLocations);
 
 /// <summary>Read side of the module (<c>AsNoTracking</c>). Cost fields are dropped when <c>includeCost</c> is false (spec §16).</summary>
 public interface IConsumptionQueries

@@ -1,4 +1,5 @@
 using Wms.Common.Application.Abstractions;
+using Wms.Common.Application.Security;
 
 namespace Wms.Common.Infrastructure.Persistence;
 
@@ -28,7 +29,13 @@ public static class DesignTimeContext
 
         public string Username => "design-time";
 
+        public string FullName => "design-time";
+
         public IReadOnlyCollection<string> Roles => [];
+
+        public IReadOnlyCollection<string> Permissions => [];
+
+        public LocationScope LocationScope => LocationScope.Unrestricted;
 
         public IReadOnlyCollection<uint> LocationIds => [];
 

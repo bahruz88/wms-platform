@@ -176,9 +176,9 @@ public sealed class ConsumptionQueries(ConsumptionDbContext db, IProductCatalog 
             query = query.Where(i => i.LocationId == locationId);
         }
 
-        if (filter.VisibleLocationIds.Count > 0)
+        if (filter.VisibleLocations.IsRestricted)
         {
-            var visible = filter.VisibleLocationIds.ToArray();
+            var visible = filter.VisibleLocations.VisibleIds;
             query = query.Where(i => visible.Contains(i.LocationId));
         }
 
@@ -282,9 +282,9 @@ public sealed class ConsumptionQueries(ConsumptionDbContext db, IProductCatalog 
             query = query.Where(r => r.LocationId == locationId);
         }
 
-        if (filter.VisibleLocationIds.Count > 0)
+        if (filter.VisibleLocations.IsRestricted)
         {
-            var visible = filter.VisibleLocationIds.ToArray();
+            var visible = filter.VisibleLocations.VisibleIds;
             query = query.Where(r => visible.Contains(r.LocationId));
         }
 

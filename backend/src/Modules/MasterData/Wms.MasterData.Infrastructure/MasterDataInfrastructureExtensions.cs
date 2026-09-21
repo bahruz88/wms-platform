@@ -4,6 +4,7 @@ using Wms.MasterData.Application.Abstractions;
 using Wms.MasterData.Contracts;
 using Wms.MasterData.Infrastructure.Contracts;
 using Wms.MasterData.Infrastructure.Persistence;
+using Wms.MasterData.Infrastructure.Persistence.Repositories;
 using Wms.MasterData.Infrastructure.Queries;
 
 namespace Wms.MasterData.Infrastructure;
@@ -24,6 +25,14 @@ public static class MasterDataInfrastructureExtensions
     public static IServiceCollection AddMasterDataServices(this IServiceCollection services)
     {
         services.AddScoped<IMasterDataQueries, MasterDataQueries>();
+        services.AddScoped<IMasterDataUnitOfWork, MasterDataUnitOfWork>();
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>();
+        services.AddScoped<IUomRepository, UomRepository>();
+        services.AddScoped<ISupplierRepository, SupplierRepository>();
+        services.AddScoped<ILocationRepository, LocationRepository>();
+        services.AddScoped<ICurrencyRateRepository, CurrencyRateRepository>();
+        services.AddScoped<IReasonCodeRepository, ReasonCodeRepository>();
         services.AddScoped<IProductCatalog, ProductCatalog>();
         services.AddScoped<ILocationCatalog, LocationCatalog>();
         services.AddScoped<ISupplierCatalog, SupplierCatalog>();

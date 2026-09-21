@@ -1,4 +1,6 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Wms.Common.Domain;
 using Wms.Common.Infrastructure.Persistence;
 using Wms.MasterData.Domain.Entities;
@@ -30,26 +32,44 @@ public sealed class ProductCategoryConfiguration : IEntityTypeConfiguration<Prod
         builder.Property(x => x.Code).HasMaxLength(32).IsRequired();
         builder.Property(x => x.Name).HasMaxLength(150).IsRequired();
         builder.Property(x => x.ProductType).HasMySqlEnum<ProductType>();
-        builder.Property(x => x.Path).HasMaxLength(500).IsRequired();
+        builder.Property(x => x.Path).HasMaxLength(ProductCategory.PathMaxLength).IsRequired();
+
+        // Contract Category: defaultIssueStrategy (spec §12.4) and isActive/rowVersion for the edit screen.
+        builder.Property(x => x.DefaultIssueStrategy).HasMySqlEnum<IssueStrategy>();
+        builder.Property(x => x.IsActive).HasDefaultValue(true).ValueGeneratedNever();
+
         builder.HasIndex(x => new { x.TenantId, x.Code }).IsUnique().HasDatabaseName("uq_cat");
+        builder.HasIndex(x => new { x.TenantId, x.Path }).HasDatabaseName("ix_cat_path");
     }
 }
 
 public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 {
+    /// <summary>
+    /// Spec §8 keeps one column for the product image (<c>image_key VARCHAR(300)</c>) and the contract exposes it as
+    /// <c>imageAttachmentId</c>; the id is stored as its invariant decimal text. A legacy non-numeric MinIO key reads
+    /// back as <c>null</c> instead of throwing, so old rows stay loadable.
+    /// </summary>
+    private static readonly ValueConverter<long, string> ImageAttachmentConverter = new(
+        id => id.ToString(CultureInfo.InvariantCulture),
+        key => ParseAttachmentId(key));
+
     public void Configure(EntityTypeBuilder<Product> builder)
     {
         builder.ToTable("master_product");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedOnAdd();
-        builder.Property(x => x.Sku).HasMaxLength(48).IsRequired();
-        builder.Property(x => x.Name).HasMaxLength(250).IsRequired();
+        builder.Property(x => x.Sku).HasMaxLength(Product.SkuMaxLength).IsRequired();
+        builder.Property(x => x.Name).HasMaxLength(Product.NameMaxLength).IsRequired();
         builder.Property(x => x.NameSortKey).HasMaxLength(AzerbaijaniSortKey.MaxLength).IsRequired();
-        builder.Property(x => x.Barcode).HasMaxLength(64);
-        builder.Property(x => x.Brand).HasMaxLength(120);
+        builder.Property(x => x.Barcode).HasMaxLength(Product.BarcodeMaxLength);
+        builder.Property(x => x.Brand).HasMaxLength(Product.BrandMaxLength);
         builder.Property(x => x.VatRate).HasPrecision(9, 4);
         builder.Property(x => x.IssueStrategy).HasMySqlEnum<IssueStrategy>();
-        builder.Property(x => x.ImageKey).HasMaxLength(300);
+        builder.Property(x => x.ImageAttachmentId)
+            .HasColumnName("image_key")
+            .HasMaxLength(300)
+            .HasConversion(ImageAttachmentConverter);
         builder.HasIndex(x => new { x.TenantId, x.Sku }).IsUnique().HasDatabaseName("uq_product_sku");
         builder.HasIndex(x => new { x.TenantId, x.CategoryId }).HasDatabaseName("ix_product_cat");
         builder.HasIndex(x => new { x.TenantId, x.NameSortKey }).HasDatabaseName("ix_product_name");
@@ -57,6 +77,9 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasMany(x => x.Uoms).WithOne().HasForeignKey(u => u.ProductId).OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(x => x.Uoms).HasField("_uoms").UsePropertyAccessMode(PropertyAccessMode.Field);
     }
+
+    private static long ParseAttachmentId(string? key) =>
+        long.TryParse(key, NumberStyles.None, CultureInfo.InvariantCulture, out var id) ? id : 0L;
 }
 
 public sealed class ProductUomConfiguration : IEntityTypeConfiguration<ProductUom>
@@ -104,7 +127,7 @@ public sealed class SupplierCertificateConfiguration : IEntityTypeConfiguration<
         builder.ToTable("master_supplier_certificate");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedOnAdd();
-        builder.Property(x => x.CertType).HasMaxLength(80).IsRequired();
+        builder.Property(x => x.CertType).HasMaxLength(SupplierCertificate.CertTypeMaxLength).IsRequired();
         builder.Property(x => x.CertNumber).HasMaxLength(80);
         builder.HasIndex(x => new { x.TenantId, x.ExpiryDate }).HasDatabaseName("ix_cert_exp");
     }
@@ -117,8 +140,8 @@ public sealed class LocationConfiguration : IEntityTypeConfiguration<Location>
         builder.ToTable("master_location");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedOnAdd();
-        builder.Property(x => x.Code).HasMaxLength(32).IsRequired();
-        builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.Code).HasMaxLength(Location.CodeMaxLength).IsRequired();
+        builder.Property(x => x.Name).HasMaxLength(Location.NameMaxLength).IsRequired();
         builder.Property(x => x.LocationType).HasMySqlEnum<LocationType>();
         builder.HasIndex(x => new { x.TenantId, x.Code }).IsUnique().HasDatabaseName("uq_loc_code");
         builder.HasIndex(x => new { x.TenantId, x.ParentId }).HasDatabaseName("ix_loc_parent");
@@ -146,10 +169,11 @@ public sealed class ReasonCodeConfiguration : IEntityTypeConfiguration<ReasonCod
         builder.ToTable("master_reason_code");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).ValueGeneratedOnAdd();
-        builder.Property(x => x.Code).HasMaxLength(32).IsRequired();
-        builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.Code).HasMaxLength(ReasonCode.CodeMaxLength).IsRequired();
+        builder.Property(x => x.Name).HasMaxLength(ReasonCode.NameMaxLength).IsRequired();
         builder.Property(x => x.ReasonGroup).HasMySqlEnum<ReasonGroup>();
         builder.HasIndex(x => new { x.TenantId, x.Code }).IsUnique().HasDatabaseName("uq_reason");
+        builder.HasIndex(x => new { x.TenantId, x.ReasonGroup }).HasDatabaseName("ix_reason_group");
     }
 }
 

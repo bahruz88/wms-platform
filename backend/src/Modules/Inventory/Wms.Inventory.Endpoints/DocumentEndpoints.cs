@@ -161,7 +161,7 @@ public static class DocumentEndpoints
 
                 return (await dispatcher.QueryAsync(new GetIssueQuery(result.Value.IssueId), ct).ConfigureAwait(false)).ToOk();
             })
-            .RequirePermission(InventoryPermissions.TransferConfirm)
+            .RequirePermission(InventoryPermissions.IssueConfirm)
             .RequireIdempotencyKey()
             .WithName("confirmIssueReceipt");
 
@@ -291,7 +291,7 @@ public static class DocumentEndpoints
 
                 return (await dispatcher.QueryAsync(new GetSampleQuery(result.Value.SampleId), ct).ConfigureAwait(false)).ToOk();
             })
-            .RequirePermission(InventoryPermissions.SampleCreate)
+            .RequirePermission(InventoryPermissions.SamplePost)
             .RequireIdempotencyKey()
             .WithName("postSample");
     }
@@ -342,7 +342,7 @@ public static class DocumentEndpoints
 
                 return (await dispatcher.QueryAsync(new GetReturnToVendorQuery(result.Value.ReturnId), ct).ConfigureAwait(false)).ToOk();
             })
-            .RequirePermission(InventoryPermissions.ReturnCreate)
+            .RequirePermission(InventoryPermissions.ReturnPost)
             .RequireIdempotencyKey()
             .WithName("sendReturnToVendor");
 

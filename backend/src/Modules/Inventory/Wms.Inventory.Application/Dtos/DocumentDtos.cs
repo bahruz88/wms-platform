@@ -1,3 +1,5 @@
+using Wms.Common.Application.Dtos;
+
 namespace Wms.Inventory.Application.Dtos;
 
 // ==================================================================== stock requests
@@ -191,7 +193,7 @@ public sealed record ReturnToVendorSummaryDto(
     long? ReceiptId,
     string? ReceiptDocNo,
     ushort ReasonCodeId,
-    decimal? ClaimAmount,
+    MoneyDto? ClaimAmount,
     string Status,
     uint RowVersion);
 
@@ -206,7 +208,7 @@ public sealed record ReturnToVendorDto(
     long? ReceiptId,
     string? ReceiptDocNo,
     ushort ReasonCodeId,
-    decimal? ClaimAmount,
+    MoneyDto? ClaimAmount,
     string Status,
     uint RowVersion,
     long? MovementGroupId,
@@ -271,7 +273,9 @@ public sealed record MovementGroupDto(
     ushort? ReasonCodeId,
     string? Note,
     long? ReversesGroupId,
-    bool IsReversed,
+    /// <summary>The REVERSAL group that cancelled this one, or null. Lets a client see up front that a
+    /// group is already reversed instead of discovering it from INVALID_STATE_TRANSITION.</summary>
+    long? ReversedByGroupId,
     DateTimeOffset PostedAt,
     uint PostedBy,
     decimal SumQtyBase,

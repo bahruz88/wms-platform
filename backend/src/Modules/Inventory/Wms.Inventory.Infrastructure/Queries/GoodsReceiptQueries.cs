@@ -169,9 +169,9 @@ public sealed class GoodsReceiptQueries(
         }
 
         // Branch users only see receipts for their own locations (spec §16).
-        if (filter.VisibleLocationIds.Count > 0)
+        if (filter.VisibleLocations.IsRestricted)
         {
-            var visible = filter.VisibleLocationIds.ToArray();
+            var visible = filter.VisibleLocations.VisibleIds;
             query = query.Where(r => visible.Contains(r.LocationId));
         }
 

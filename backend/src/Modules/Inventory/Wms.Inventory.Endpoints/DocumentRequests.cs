@@ -1,4 +1,6 @@
+using Wms.Common.Application.Dtos;
 using Wms.Common.Application.Paging;
+using Wms.Common.Application.Security;
 using Wms.Common.Infrastructure.Http;
 using Wms.Inventory.Application.Abstractions;
 using Wms.Inventory.Application.Queries.Documents;
@@ -116,12 +118,12 @@ public sealed record ReturnToVendorCreateRequest(
     uint LocationId,
     long? ReceiptId,
     ushort ReasonCodeId,
-    decimal? ClaimAmount,
+    MoneyDto? ClaimAmount,
     string? Note,
     List<StockOutLineRequest>? Lines,
     List<long>? AttachmentIds);
 
-public sealed record ReturnToVendorCloseRequest(uint RowVersion, string Outcome, decimal? ClaimAmount, string? OutcomeNote);
+public sealed record ReturnToVendorCloseRequest(uint RowVersion, string Outcome, MoneyDto? ClaimAmount, string? OutcomeNote);
 
 // ==================================================================== batches and the ledger
 
@@ -135,7 +137,8 @@ public sealed record BatchesRequest(
     int? Size)
 {
     public ListBatchesQuery ToQuery() => new(
-        new BatchFilter(ProductId, SupplierId, Status, ExpiryBefore, BatchNo),
+        // The scope is filled in by the handler from ICurrentUser; the query string cannot widen it.
+        new BatchFilter(ProductId, SupplierId, Status, ExpiryBefore, BatchNo, LocationScope.Nothing),
         new PagingRequest(Page, Size).ToPageRequest());
 }
 

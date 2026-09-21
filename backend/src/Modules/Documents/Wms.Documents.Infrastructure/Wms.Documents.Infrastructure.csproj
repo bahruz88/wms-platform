@@ -6,4 +6,8 @@
     <ProjectReference Include="../Wms.Documents.Application/Wms.Documents.Application.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Infrastructure/Wms.Common.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Official MinIO .NET client: presigned PUT/GET, StatObject, GetObject, RemoveObject. -->
+    <PackageReference Include="Minio" />
+  </ItemGroup>
 </Project>

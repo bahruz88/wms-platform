@@ -1,3 +1,5 @@
+using Wms.Common.Infrastructure.Auth;
+
 namespace Wms.Common.Infrastructure.Modules;
 
 /// <summary>How modules call each other (spec §4.2): in-process (default) or over HTTP.</summary>
@@ -38,5 +40,23 @@ public static class ModuleTransportConfiguration
         }
 
         return new Uri(raw, UriKind.Absolute);
+    }
+
+    /// <summary>
+    /// <c>ModuleTransport=Http</c> means the module-to-module calls leave the process, so the shared secret of
+    /// <see cref="Wms.Common.Infrastructure.Auth.InternalApi"/> must be configured on both ends. Missing it is a
+    /// deployment error, not a runtime one: fail at startup rather than answer 403 on the first internal call.
+    /// </summary>
+    public static void RequireInternalApiKey(IConfiguration configuration, string moduleName)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+        var key = configuration[$"{InternalApiOptions.SectionName}:{nameof(InternalApiOptions.Key)}"];
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new InvalidOperationException(
+                $"{Key}=Http needs {InternalApiOptions.SectionName}:{nameof(InternalApiOptions.Key)} "
+                + $"(env var {InternalApiOptions.SectionName}__{nameof(InternalApiOptions.Key)}) to be the same secret on every "
+                + $"container; without it module '{moduleName}' answers 403 INTERNAL_ROUTE_FORBIDDEN on every internal call.");
+        }
     }
 }

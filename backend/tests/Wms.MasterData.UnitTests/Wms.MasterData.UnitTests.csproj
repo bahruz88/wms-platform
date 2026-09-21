@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Unit tests for the MasterData invariants of spec §8 and §12.1: immutable columns, versioned conversion factors, uniqueness conflicts, Azerbaijani ordering and cost-field visibility.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+    <ProjectReference Include="../../src/BuildingBlocks/Wms.Common.Application/Wms.Common.Application.csproj" />
+    <ProjectReference Include="../../src/Modules/MasterData/Wms.MasterData.Domain/Wms.MasterData.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/MasterData/Wms.MasterData.Application/Wms.MasterData.Application.csproj" />
+    <ProjectReference Include="../../src/Modules/MasterData/Wms.MasterData.Endpoints/Wms.MasterData.Endpoints.csproj" />
+  </ItemGroup>
+</Project>

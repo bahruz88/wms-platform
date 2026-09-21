@@ -16,16 +16,23 @@ public static class InventorySettingKeys
     public const string CostingMovingAverage = "MOVING_AVERAGE";
     public const string CostingFifo = "FIFO";
 
-    public static IReadOnlyDictionary<string, string> Defaults { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
-    {
-        [ExpiryWarningDays] = "30",
-        [ExpiryCriticalDays] = "7",
-        [ReceiptOverTolerancePct] = "0",
-        [ReceiptUnderTolerancePct] = "0",
-        [CostingMethod] = CostingMovingAverage,
-        [CountVarianceApprovalThresholdPct] = "2",
-        [BlockTransactionsDuringCount] = "true",
-        [RequireBranchReceiptConfirmation] = "true",
-        [AllowNegativeStock] = "false",
-    };
+    /// <summary>The nine keys of spec §9.1 with their type, default and accepted range.</summary>
+    public static IReadOnlyList<InventorySettingDefinition> Definitions { get; } =
+    [
+        new(ExpiryWarningDays, SettingValueType.Int, "30", "Bitmə tarixi xəbərdarlığı (gün)", Minimum: 0, Maximum: 3650),
+        new(ExpiryCriticalDays, SettingValueType.Int, "7", "Kritik bitmə həddi (gün)", Minimum: 0, Maximum: 3650),
+        new(ReceiptOverTolerancePct, SettingValueType.Decimal, "0", "Qəbulda artıq tolerans (%)", Minimum: 0m, Maximum: 100m),
+        new(ReceiptUnderTolerancePct, SettingValueType.Decimal, "0", "Qəbulda əskik tolerans (%)", Minimum: 0m, Maximum: 100m),
+        new(CostingMethod, SettingValueType.Enum, CostingMovingAverage, "Maya dəyəri metodu", [CostingMovingAverage, CostingFifo]),
+        new(CountVarianceApprovalThresholdPct, SettingValueType.Decimal, "2", "Sayım fərqi təsdiq həddi (%)", Minimum: 0m, Maximum: 100m),
+        new(BlockTransactionsDuringCount, SettingValueType.Bool, "true", "Sayım zamanı əməliyyatları bloklamaq"),
+        new(RequireBranchReceiptConfirmation, SettingValueType.Bool, "true", "Filial qəbulunun təsdiqi məcburidir"),
+        new(AllowNegativeStock, SettingValueType.Bool, "false", "Mənfi qalığa icazə"),
+    ];
+
+    public static IReadOnlyDictionary<string, InventorySettingDefinition> ByKey { get; } =
+        Definitions.ToDictionary(d => d.Key, StringComparer.Ordinal);
+
+    public static IReadOnlyDictionary<string, string> Defaults { get; } =
+        Definitions.ToDictionary(d => d.Key, d => d.DefaultValue, StringComparer.Ordinal);
 }

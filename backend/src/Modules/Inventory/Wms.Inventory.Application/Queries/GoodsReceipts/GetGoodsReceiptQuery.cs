@@ -1,4 +1,5 @@
 using Wms.Common.Application.Abstractions;
+using Wms.Common.Application.Security;
 using Wms.Common.Application.Messaging;
 using Wms.Common.Application.Paging;
 using Wms.Common.Domain;
@@ -41,7 +42,7 @@ public sealed class ListGoodsReceiptsQueryHandler(IGoodsReceiptQueries queries, 
         ArgumentNullException.ThrowIfNull(query);
         var filter = new GoodsReceiptFilter(
             query.Status, query.SupplierId, query.LocationId, query.PoId,
-            query.DateFrom, query.DateTo, query.Search, currentUser.LocationIds);
+            query.DateFrom, query.DateTo, query.Search, currentUser.LocationScope);
         return await queries.ListAsync(filter, query.Page, cancellationToken).ConfigureAwait(false);
     }
 }

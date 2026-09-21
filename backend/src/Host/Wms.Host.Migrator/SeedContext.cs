@@ -1,4 +1,5 @@
 using Wms.Common.Application.Abstractions;
+using Wms.Common.Application.Security;
 
 namespace Wms.Host.Migrator;
 
@@ -26,7 +27,14 @@ public sealed class SeedContext(uint tenantId, uint userId) : ITenantContext, IC
 
     public string Username => "seeder";
 
+    public string FullName => "Seeder";
+
     public IReadOnlyCollection<string> Roles => ["ADMIN"];
+
+    public IReadOnlyCollection<string> Permissions => ["*"];
+
+    /// <summary>The seeder writes for every location, so it is not location-scoped.</summary>
+    public LocationScope LocationScope => LocationScope.Unrestricted;
 
     public IReadOnlyCollection<uint> LocationIds => [];
 

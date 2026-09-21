@@ -1,6 +1,8 @@
+using Wms.Common.Application.Security;
+
 namespace Wms.Common.Application.Abstractions;
 
-/// <summary>Current principal resolved from Keycloak claims (spec §16).</summary>
+/// <summary>Current principal: Keycloak claims joined with the <c>iam</c> row they resolve to (spec §7, §16).</summary>
 public interface ICurrentUser
 {
     bool IsAuthenticated { get; }
@@ -13,9 +15,20 @@ public interface ICurrentUser
 
     string Username { get; }
 
+    string FullName { get; }
+
     IReadOnlyCollection<string> Roles { get; }
 
-    /// <summary>Locations visible to a branch user (<c>iam_user_location</c>). Empty = unrestricted.</summary>
+    /// <summary>Effective permission codes (<c>iam_role_permission</c>).</summary>
+    IReadOnlyCollection<string> Permissions { get; }
+
+    /// <summary>
+    /// Which physical locations this principal may see (spec §16). An empty <b>restricted</b> scope means no
+    /// locations at all — it is never read as "everything".
+    /// </summary>
+    LocationScope LocationScope { get; }
+
+    /// <summary>Rows of <c>iam_user_location</c>; see <see cref="LocationScope"/> for how they are applied.</summary>
     IReadOnlyCollection<uint> LocationIds { get; }
 
     bool HasPermission(string permission);

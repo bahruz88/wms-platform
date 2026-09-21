@@ -374,10 +374,21 @@ public sealed class ApproveCountCommandHandler(
             return InventoryErrors.ApprovalCommentRequired();
         }
 
-        // Segregation of duties (spec §7.1, TOR §21): whoever entered the numbers may not sign them off.
-        if (command.Approved && currentUser.UserId != 0 && count.Lines.Any(l => l.CountedBy == currentUser.UserId))
+        // Segregation of duties (spec §12.6, §7.1, TOR §21): whoever entered the numbers may not sign them off.
+        // The check used to be guarded by `currentUser.UserId != 0`, and because the token carried no internal
+        // identifier UserId was ALWAYS 0 - so the control silently disabled itself. It is now fail-closed: an
+        // approval by a principal that cannot be resolved to an iam_user row is refused outright.
+        if (command.Approved)
         {
-            return InventoryErrors.SelfApprovalForbidden();
+            if (currentUser.UserId == 0)
+            {
+                return InventoryErrors.ApproverUnknown();
+            }
+
+            if (count.CreatedBy == currentUser.UserId || count.Lines.Any(l => l.CountedBy == currentUser.UserId))
+            {
+                return InventoryErrors.SelfApprovalForbidden();
+            }
         }
 
         var result = command.Approved ? count.Approve(currentUser.UserId, clock.UtcNow) : count.Reject();

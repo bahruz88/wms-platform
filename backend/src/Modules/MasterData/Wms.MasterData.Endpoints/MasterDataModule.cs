@@ -1,10 +1,6 @@
 using Wms.Common.Application.Abstractions;
-using Wms.Common.Application.Messaging;
-using Wms.Common.Infrastructure.Auth;
-using Wms.Common.Infrastructure.Http;
 using Wms.Common.Infrastructure.Modules;
 using Wms.MasterData.Application;
-using Wms.MasterData.Application.Queries;
 using Wms.MasterData.Contracts;
 using Wms.MasterData.Infrastructure;
 
@@ -34,22 +30,11 @@ public sealed class MasterDataModule : IModule
                 TypedResults.Ok(new ModulePing(ModuleName, tenant.TenantId, user.Username, clock.UtcNow)))
             .WithName("MasterDataPing");
 
-        group.MapGet("/products", async ([AsParameters] ProductsRequest request, IDispatcher dispatcher, CancellationToken cancellationToken) =>
-            {
-                var query = new GetProductsQuery(request.Search, request.CategoryId, request.IsActive, new PagingRequest(request.Page, request.Size).ToPageRequest());
-                var result = await dispatcher.QueryAsync(query, cancellationToken).ConfigureAwait(false);
-                return result.ToOk();
-            })
-            .RequirePermission(MasterDataPermissions.ProductView)
-            .WithName("GetProducts");
-
-        group.MapGet("/locations", async ([AsParameters] PagingRequest paging, IDispatcher dispatcher, CancellationToken cancellationToken) =>
-            {
-                var result = await dispatcher.QueryAsync(new GetLocationsQuery(paging.ToPageRequest()), cancellationToken).ConfigureAwait(false);
-                return result.ToOk();
-            })
-            .RequirePermission(MasterDataPermissions.LocationView)
-            .WithName("GetLocations");
+        // The 29 operations of contracts/openapi/masterdata.v1.yaml.
+        ProductEndpoints.Map(group);
+        CatalogEndpoints.Map(group);
+        PartnerEndpoints.Map(group);
+        ReferenceEndpoints.Map(group);
 
         MapInternalEndpoints(group);
     }
@@ -171,6 +156,3 @@ internal static class IdList
         return parsed;
     }
 }
-
-/// <summary>Query string of <c>GET /api/v1/masterdata/products</c>.</summary>
-public sealed record ProductsRequest(string? Search, uint? CategoryId, bool? IsActive, int? Page, int? Size);

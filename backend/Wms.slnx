@@ -86,9 +86,12 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Wms.ArchitectureTests/Wms.ArchitectureTests.csproj" />
+    <Project Path="tests/Wms.MasterData.UnitTests/Wms.MasterData.UnitTests.csproj" />
     <Project Path="tests/Wms.Inventory.UnitTests/Wms.Inventory.UnitTests.csproj" />
+    <Project Path="tests/Wms.Identity.UnitTests/Wms.Identity.UnitTests.csproj" />
     <Project Path="tests/Wms.Inventory.IntegrationTests/Wms.Inventory.IntegrationTests.csproj" />
     <Project Path="tests/Wms.Consumption.UnitTests/Wms.Consumption.UnitTests.csproj" />
+    <Project Path="tests/Wms.Documents.UnitTests/Wms.Documents.UnitTests.csproj" />
     <Project Path="tests/Wms.Consumption.IntegrationTests/Wms.Consumption.IntegrationTests.csproj" />
     <Project Path="tests/Wms.Api.ContractTests/Wms.Api.ContractTests.csproj" />
   </Folder>

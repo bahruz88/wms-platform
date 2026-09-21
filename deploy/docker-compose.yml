@@ -31,12 +31,28 @@ x-backend-env: &backend-env
   RabbitMq__Password: ${RABBITMQ_PASSWORD:-wms}
   RabbitMq__Exchange: wms.events
   Minio__Endpoint: minio:9000
+  # A SigV4 presigned URL is bound to the host it was signed for, so the link handed to a browser must be
+  # signed for the address the BROWSER can reach (localhost:9000), not the compose-internal one. Stat,
+  # download and delete keep using Minio__Endpoint.
+  Minio__PublicEndpoint: ${MINIO_PUBLIC_ENDPOINT:-localhost:${MINIO_PORT:-9000}}
   Minio__AccessKey: ${MINIO_ROOT_USER:-minioadmin}
   Minio__SecretKey: ${MINIO_ROOT_PASSWORD:-minioadmin}
   Minio__Bucket: ${MINIO_BUCKET:-wms-attachments}
+  # ClamAV (spec §11). No clamd container in the dev stack, so scanning is off and attachments record
+  # scan_result=SKIPPED. Turn it on for any real deployment: with Enabled=true an unreachable clamd fails
+  # the upload closed (503 VIRUS_SCAN_UNAVAILABLE) instead of accepting an unscanned file.
+  Antivirus__Enabled: ${ANTIVIRUS_ENABLED:-false}
+  Antivirus__Host: ${ANTIVIRUS_HOST:-clamav}
+  Antivirus__Port: ${ANTIVIRUS_PORT:-3310}
+  Antivirus__TimeoutSeconds: ${ANTIVIRUS_TIMEOUT_SECONDS:-30}
   Keycloak__Authority: http://keycloak:8080/realms/wms
   Keycloak__Audience: wms-api
   Seq__Url: http://seq:5341
+  # Shared secret for the /api/v1/<module>/internal/* routes (spec §4.2). The gateway refuses the
+  # `internal` path segment outright and every host demands this header, so the module-to-module routes
+  # are unreachable from a browser or a phone even if someone points one straight at a module container.
+  # MUST be the same value in every container and MUST be replaced outside dev.
+  InternalApi__Key: ${INTERNAL_API_KEY:-dev-internal-shared-secret}
   # ModuleTransport=Http: every module NOT hosted in a given container is reached over HTTP, so each
   # container needs the address of the container that does host it (CONVENTIONS.md "Konteyner (cloud)").
   # These MUST be set here: ASPNETCORE_ENVIRONMENT=Development loads appsettings.Development.json, whose
@@ -157,6 +173,10 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      # The attachment flow uploads straight from the browser to a presigned PUT URL, so MinIO - not the
+      # gateway - answers that request and has to allow the web origin. Dev only: narrow this to the real
+      # web origin on-prem.
+      MINIO_API_CORS_ALLOW_ORIGIN: ${MINIO_CORS_ALLOW_ORIGIN:-*}
     ports:
       - "${MINIO_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
@@ -387,7 +407,13 @@ services:
         contracts: ../contracts/openapi
         designsystem: ../docs/design-system
       args:
-        VITE_API_BASE_URL: ${API_BASE_URL:-http://localhost:5000}
+        # EMPTY ON PURPOSE. Each generated client already carries its `/api/v1/<module>` prefix,
+        # so an empty base makes the bundle issue same-origin `/api/v1/...` requests, which this
+        # container's own nginx forwards to the gateway (API_UPSTREAM below) - exactly what the
+        # Vite dev server does with its `/api` proxy. Baking the gateway's absolute URL here
+        # instead produces cross-origin XHR and the gateway sends no CORS headers, so every call
+        # fails in the browser. WEB_API_BASE_URL is only an escape hatch for a CORS-enabled gateway.
+        VITE_API_BASE_URL: ${WEB_API_BASE_URL-}
         VITE_KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:-http://localhost:8080/realms/wms}
         VITE_KEYCLOAK_CLIENT_ID: wms-web
     image: ${IMAGE_PREFIX:-wms}/web:${IMAGE_TAG:-dev}

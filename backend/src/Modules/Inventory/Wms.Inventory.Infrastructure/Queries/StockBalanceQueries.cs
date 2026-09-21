@@ -1,4 +1,5 @@
 using Wms.Common.Application.Abstractions;
+using Wms.Common.Application.Security;
 using Wms.Common.Application.Paging;
 using Wms.Common.Domain;
 using Wms.Inventory.Application.Abstractions;
@@ -52,11 +53,11 @@ public sealed class StockBalanceQueries(InventoryDbContext db, IReferenceDataLoa
     public async Task<BalanceSummaryDto?> GetSummaryAsync(
         uint productId,
         uint? locationId,
-        IReadOnlyCollection<uint> visibleLocationIds,
+        LocationScope visibleLocations,
         bool includeCost,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(visibleLocationIds);
+        ArgumentNullException.ThrowIfNull(visibleLocations);
 
         var query = db.Balances.AsNoTracking().Where(b => b.ProductId == productId);
         if (locationId is { } location)
@@ -64,9 +65,9 @@ public sealed class StockBalanceQueries(InventoryDbContext db, IReferenceDataLoa
             query = query.Where(b => b.LocationId == location);
         }
 
-        if (visibleLocationIds.Count > 0)
+        if (visibleLocations.IsRestricted)
         {
-            var visible = visibleLocationIds.ToArray();
+            var visible = visibleLocations.VisibleIds;
             query = query.Where(b => visible.Contains(b.LocationId));
         }
 
@@ -120,9 +121,9 @@ public sealed class StockBalanceQueries(InventoryDbContext db, IReferenceDataLoa
             query = query.Where(b => b.QtyOnHand != 0m || b.QtyReserved != 0m);
         }
 
-        if (filter.VisibleLocationIds.Count > 0)
+        if (filter.VisibleLocations.IsRestricted)
         {
-            var visible = filter.VisibleLocationIds.ToArray();
+            var visible = filter.VisibleLocations.VisibleIds;
             query = query.Where(b => visible.Contains(b.LocationId));
         }
 

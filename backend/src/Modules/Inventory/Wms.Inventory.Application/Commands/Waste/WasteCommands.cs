@@ -128,6 +128,11 @@ public sealed class WasteStateHandler(
 
         var now = clock.UtcNow;
         var userId = currentUser.UserId;
+        if (command.Approved && userId == 0)
+        {
+            return Task.FromResult(Result.Failure<long>(InventoryErrors.ApproverUnknown()));
+        }
+
         return ApplyAsync(
             command.WasteId,
             command.RowVersion,
@@ -161,6 +166,14 @@ public sealed class WasteStateHandler(
         if (waste.RowVersion != rowVersion)
         {
             return CommonErrors.StaleVersion();
+        }
+
+        // Segregation of duties (spec §12.6, §7.1): the person who raised the waste document may not approve
+        // it. The rule was missing here entirely - only the count had it - and it was inert there anyway
+        // because ICurrentUser.UserId was always 0.
+        if (auditAction == AuditAction.Approve && waste.CreatedBy == currentUser.UserId)
+        {
+            return InventoryErrors.SelfApprovalForbidden();
         }
 
         var result = action(waste);

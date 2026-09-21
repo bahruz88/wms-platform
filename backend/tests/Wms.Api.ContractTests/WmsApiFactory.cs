@@ -17,6 +17,9 @@ public sealed class WmsApiFactory : WebApplicationFactory<Program>
     /// <summary><c>InProcess</c> or <c>Http</c> (spec §4.2).</summary>
     public string ModuleTransport { get; init; } = "InProcess";
 
+    /// <summary>Shared secret of the <c>/internal/*</c> routes; empty to prove the host fails closed without it.</summary>
+    public string InternalApiKey { get; init; } = "contract-test-internal-key";
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
@@ -30,6 +33,7 @@ public sealed class WmsApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Keycloak:Authority", "http://localhost:8080/realms/wms");
         builder.UseSetting("Keycloak:Audience", "wms-api");
         builder.UseSetting("Keycloak:RequireHttpsMetadata", "false");
+        builder.UseSetting("InternalApi:Key", InternalApiKey);
         builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["ConnectionStrings:Wms"] = "Server=localhost;Port=3306;Database=wms_contract_tests;User=wms_app;Password=wms_app;",

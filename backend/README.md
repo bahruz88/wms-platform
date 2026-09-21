@@ -13,23 +13,30 @@ bütün modullarla (on-prem), həm də modul başına ayrıca konteynerlə (clou
 
 Lokal `dotnet` SDK tələb olunmur — hər şey Docker-də işləyə bilər.
 
+> ⚠️ **Repo kökünü mount edin, yalnız `backend/`-i yox.** `.editorconfig` repo kökündədir və
+> `EnforceCodeStyleInBuild` sayəsində build-in bir hissəsidir. Yalnız `backend/` mount edilsə o fayl
+> konteynerdə olmur, kod stili qaydaları heç işləmir və build lokalda yaşıl, CI-da qırmızı görünür —
+> backend workflow-unun heç vaxt keçməməsinin səbəbi məhz bu idi (§8.19).
+
 ```bash
-# Build (Release, TreatWarningsAsErrors=true)
-docker run --rm -v "$PWD":/src -w /src mcr.microsoft.com/dotnet/sdk:10.0 \
-  dotnet build Wms.slnx -c Release
+cd "$(git rev-parse --show-toplevel)"
+
+# Build (Release, TreatWarningsAsErrors=true) — CI-dakı əmrin eynisi
+docker run --rm -v "$PWD":/repo -w /repo/backend mcr.microsoft.com/dotnet/sdk:10.0 \
+  dotnet build Wms.slnx -c Release -warnaserror
 
 # Unit + arxitektura + contract testləri (integration testlər kənarda)
-docker run --rm -v "$PWD":/src -w /src mcr.microsoft.com/dotnet/sdk:10.0 \
-  dotnet test Wms.slnx -c Release --filter "Category!=Integration"
+docker run --rm -v "$PWD":/repo -w /repo/backend mcr.microsoft.com/dotnet/sdk:10.0 \
+  dotnet test Wms.slnx -c Release --filter "FullyQualifiedName!~IntegrationTests"
 
 # Integration testlər (Testcontainers — real MySQL 8.4 konteyneri qaldırır)
-docker run --rm -v "$PWD":/src -w /src \
+docker run --rm -v "$PWD":/repo \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -e TESTCONTAINERS_RYUK_DISABLED=true \
   -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal \
   --add-host=host.docker.internal:host-gateway \
-  mcr.microsoft.com/dotnet/sdk:10.0 \
-  dotnet test tests/Wms.Inventory.IntegrationTests -c Release
+  -w /repo/backend mcr.microsoft.com/dotnet/sdk:10.0 \
+  dotnet test Wms.slnx -c Release --filter "FullyQualifiedName~IntegrationTests"
 ```
 
 > `TESTCONTAINERS_HOST_OVERRIDE` yalnız testləri **SDK konteynerinin içindən** işlədəndə lazımdır:
@@ -37,7 +44,8 @@ docker run --rm -v "$PWD":/src -w /src \
 > başqadır. Lokal SDK ilə (`dotnet test tests/Wms.Inventory.IntegrationTests`) bu dəyişənlər lazım deyil.
 
 NuGet paketlərini təkrar yükləməmək üçün cache-i mount edin:
-`-v "$HOME/.nuget/packages":/root/.nuget/packages`.
+`-v "$HOME/.nuget/packages":/root/.nuget/packages`. Eyni iş qovluğunda paralel build-lər `obj/`-də
+toqquşur — hər birinə `-p:ArtifactsPath=/artifacts` verib ayrı qovluq mount edin.
 
 Lokal SDK varsa eyni əmrlər birbaşa işləyir:
 
@@ -161,6 +169,10 @@ Açarlar CONVENTIONS.md-dəki adlarla eynidir (env var formatı `A__B`):
 | `Redis__ConnectionString`, `RabbitMq__*`, `Minio__*` | infrastruktur |
 | `Keycloak__Authority`, `Keycloak__Audience` | JWT bearer |
 | `Keycloak__ValidIssuers__0…` | yalnız lazım olduqda: discovery sənədindəki `issuer` token-dəki `iss`-dən fərqlənirsə |
+| `InternalApi__Key` | **məcburi** — modullararası `/internal/*` marşrutlarının ortaq sirri (§8.15). Hər konteynerdə eyni dəyər; `ModuleTransport=Http` ilə host bu açar olmadan **qalxmır** |
+| `PrincipalCache__TtlSeconds` | default `30` — `iam_user` + icazə + lokasiya snapshot-unun yaşı (§8.16). Identity-dəki yazılar entry-ni dərhal invalidasiya edir |
+| `Minio__PublicEndpoint` | brauzerin gördüyü MinIO ünvanı; presigned URL məhz bu host üçün imzalanır (default: `Minio__Endpoint`) |
+| `Antivirus__Enabled` / `__Host` / `__Port` / `__TimeoutSeconds` | ClamAV (SPEC §11). Dev-də `false`; `true` olduqda əlçatmaz clamd yükləməni **fail-closed** dayandırır (`503 VIRUS_SCAN_UNAVAILABLE`) |
 | `Seq__Url`, `Otel__Endpoint` | log və telemetriya |
 | `RateLimiting__PermitPerMinute` | default `100` req/dəq/istifadəçi |
 
@@ -301,6 +313,13 @@ Anbar sənədləri (bu buraxılış) iki miqrasiya əlavə etdi:
 | `20260921_Inventory_Count` | `InventoryDbContext` | `inv_count`, `inv_count_line` (SPEC §9.6, §12.7) |
 | `20260921_Inventory_WarehouseDocuments` | `InventoryDbContext` | `inv_stock_request(_line)`, `inv_issue(_line)`, `inv_waste(_line)`, `inv_sample(_line)`, `inv_return_to_vendor(_line)` |
 
+Bu buraxılış (Faza 1) iki miqrasiya əlavə etdi:
+
+| Miqrasiya | Kontekst | Nə edir |
+|---|---|---|
+| `20260922_MasterData_ContractAlignment` | `MasterDataDbContext` | `master_product_category`-yə `is_active`, `row_version`, `default_issue_strategy`, `ix_cat_path`; `master_location` və `master_reason_code`-a `row_version`; `ix_reason_group`. Hamısı additiv — kontrakt bu üç cədvəlin update əməliyyatında `rowVersion` + `409 STALE_VERSION` tələb edir, SPEC §8 DDL-ində isə sütun yox idi |
+| `20260922_Documents_AttachmentUpload` | `DocumentsDbContext` | `common_attachment`-ə `status ENUM('PENDING','SCANNING','READY','REJECTED') DEFAULT 'READY'`, `scan_result`, `ix_att_status`. Presign/complete axını üçün (§8.18) |
+
 Nəticə: **61 biznes cədvəli + 10 history cədvəli + 12 `hangfire_*` = 83**.
 Miqrasiyadan sonra `scripts/db-ledger-grants.sh` yenidən işlədilib: prosedur cədvəlləri
 `information_schema`-dan oxuduğu üçün yeddi `cons_*` cədvəli avtomatik `UPDATE/DELETE` aldı,
@@ -345,10 +364,24 @@ SELECT TABLE_NAME, INDEX_NAME, GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX) c
 
 ---
 
-### 5.5. Demo datası (`--seed`)
+### 5.5. `iam` kataloqu (həmişə) və demo datası (`--seed`)
 
-`Wms.Host.Migrator` miqrasiyalardan sonra `--seed` bayrağı ilə anbar ekranlarını doldurmaq üçün təkrarlana bilən
-demo datası yazır. Hər addım təbii açar (kod / SKU / sənəd nömrəsi) üzrə **upsert**-dir: ikinci dəfə işlətmək heç
+`Wms.Host.Migrator` miqrasiyalardan sonra **hər dəfə** `iam` kataloqunu yazır (`IamSeeder.SeedCatalogueAsync`):
+tenant, altı sistem rolu, `iam_permission` kataloqu (**101 kod**) və sistem rollarının
+`iam_role_permission` sətirləri. Bu, demo datası deyil — onsuz heç bir sorğu avtorizasiya oluna bilmir
+və hər audit sütununun göstərəcəyi sətir yoxdur, ona görə `--seed` bayrağından asılı deyil.
+
+- **Mənbə:** `Wms.Identity.Domain/PermissionCatalog.cs`. Kod siyahısı ilə endpoint-lərdəki
+  `.RequirePermission(...)` arasındakı uyğunluğu arxitektura testi saxlayır
+  (`PermissionCatalogConsistencyTests`).
+- **Dəqiq uzlaşdırma:** sistem rolları platformanındır — buraxılış bir rolu **daraltdıqda** (məsələn
+  `doc.attachment.*` → `view/upload/delete`, §8.15) köhnə sətirlər silinir, genişləndikdə yenisi əlavə olunur.
+  Kataloqdan çıxarılan icazə kodu (`inv.return.*` → `inv.rtv.*`) `iam_permission`-dan da silinir.
+  **Nəticə:** sistem rolunun icazə dəstini `PUT /identity/roles/{id}/permissions` ilə dəyişmək **davamlı
+  deyil** — növbəti migrator qaçışı onu geri qaytarır. Fərqli dəst lazımdırsa custom rol yaradın;
+  custom rollara seeder heç vaxt toxunmur.
+
+`--seed` bayrağı ilə əlavə olaraq anbar ekranlarını doldurmaq üçün təkrarlana bilən demo datası yazılır. Hər addım təbii açar (kod / SKU / sənəd nömrəsi) üzrə **upsert**-dir: ikinci dəfə işlətmək heç
 nə dəyişmir, yarımçıq bazanı isə tamamlayır.
 
 ```bash
@@ -377,6 +410,12 @@ Nə yaranır:
 | Sayım | `WH-02`-də dondurulmuş sayım, 42 sətir, **18-i fərqli** — lokasiya bloklanmış vəziyyətdə |
 | Məxaric | 2 sənəd `DISPATCHED` statusunda, filial təsdiqini gözləyir |
 | Tələblər | 3 ədəd (2 `SUBMITTED`, 1 `DRAFT`) |
+| `iam_user` | CONVENTIONS.md-dəki altı dev istifadəçisi, rolları və **lokasiya icazələri** ilə: `keeper` → WH-01 + WH-02, `branch1` → BR-NIZ, qalanları məhdudiyyətsiz (`iam.location.view_all`) |
+
+Dev istifadəçiləri `external_id = pending:<username>` ilə yazılır: Keycloak subject-ini seeder bilmir.
+Həmin istifadəçinin **ilk real token-i** sətri "sahiblənir" (`preferred_username` üzrə tapılır və
+`external_id` real `sub` ilə əvəzlənir), ona görə rollar və lokasiya icazələri o istifadəçinin ilk
+sorğusundan etibarən qüvvədədir. Bax §8.16.
 
 **Qalıq heç vaxt birbaşa `inv_balance`-a yazılmır** — başlanğıc qalıq da real `OPENING` qrupundan keçir
 (ADR-004), ona görə seed datası canlı data ilə eyni invariantları ödəyir:
@@ -391,12 +430,17 @@ verdiyi üçün query filter-lər `tenant_id = 0`-a baxar və idempotentlik yoxl
 
 | Layihə | Nə yoxlayır | Sayı |
 |---|---|---|
-| `Wms.Inventory.UnitTests` | SPEC §12 invariantları: yuvarlaqlaşdırma, ikili yazılış, mənfi qalıq, FEFO/FIFO, hərəkətli orta, tolerans, approval qaydası, AZ əlifba sırası; **sayım aqreqatı** (dondurma, fərq faizi, səbəb kodu məcburiliyi, approval həddi, statuslar), **məxaric/transfer** (IN_TRANSIT, fərqli qəbul, partiya override), **tullantı/nümunə/qaytarma/tələb** status axınları | 154 |
-| `Wms.ArchitectureTests` | SPEC §17.4: modul sərhədləri, tenant query filter, unique index `tenant_id`-dən başlayır, `double`/`float` yoxdur, `inv_balance` public setter-siz, cədvəl prefiksləri, decimal precision; **`RolePermissionMap`** — hər rol üzrə icazə matrisi və wildcard matcher (§8.12) | 293 |
-| `Wms.Api.ContractTests` | Host qalxır, `/health/live`, auth tələbi, qismən deployment davranışı | 7 |
+| `Wms.Inventory.UnitTests` | SPEC §12 invariantları: yuvarlaqlaşdırma, ikili yazılış, mənfi qalıq, FEFO/FIFO, hərəkətli orta, tolerans, approval qaydası, AZ əlifba sırası; **sayım aqreqatı** (dondurma, fərq faizi, səbəb kodu məcburiliyi, approval həddi, statuslar), **məxaric/transfer** (IN_TRANSIT, fərqli qəbul, partiya override), **tullantı/nümunə/qaytarma/tələb** status axınları; **§12.6 öz-özünü təsdiq** (sayım və tullantı, həm handler səviyyəsində, həm fail-closed halı), **`LocationScope`** (§16 fail-closed semantikası), **`inv_setting` tip validasiyası** | 194 |
+| `Wms.Identity.UnitTests` | SPEC §7: icazə kataloqu və default rol qrantları, §7.1 SoD (rol icazəsi + rol kombinasiyası), `iam_user` rol/lokasiya dəstləri, pre-provisioning sahiblənməsi, delegasiya qaydaları | 27 |
+| `Wms.MasterData.UnitTests` | Dəyişməzlik qaydaları (`sku`, `base_uom_id`, `location_type`, `reason_group`), `factor_to_base` versiyalanması, unikallıq 409-ları, kateqoriya yolu və dövr, AZ sıralama, maya sahəsinin JSON-dan çıxarılması | 69 |
+| `Wms.Documents.UnitTests` | 25 MB limiti (presign + complete), beş icazəli tip, content-type uyğunsuzluğu, checksum, virus skanı (yoluxmuş + əlçatmaz), storage key forması, tenant izolyasiyası | 140 |
+| `Wms.ArchitectureTests` | SPEC §17.4: modul sərhədləri, tenant query filter, unique index `tenant_id`-dən başlayır, `double`/`float` yoxdur, `inv_balance` public setter-siz, cədvəl prefiksləri, decimal precision; **`RolePermissionMap`** — hər rol üzrə icazə matrisi və wildcard matcher (§8.12); **icazə kataloqunun uzlaşması** (hər `.RequirePermission(...)` kodu kataloqdadır, bootstrap xəritəsi `PermissionCatalog` ilə eynidir) **`/internal/*` yol/sirr uyğunlaşdırması** və **lokasiya scope-unun filtrlərdə mövcudluğu** | 391 |
+| `Wms.Api.ContractTests` | Host qalxır, `/health/live`, auth tələbi, qismən deployment davranışı; **`/internal/*` qorunması** (10 marşrut sirrsiz 403, yanlış sirr 403, düz sirr keçir, `ModuleTransport=Http` sirrsiz startup-da fail edir) | 22 |
 | `Wms.Inventory.IntegrationTests` | Testcontainers + real MySQL 8.4, sxem **real miqrasiyalardan** (`MigrateAsync`, §5.3): qəbul → balans → ledger sıfıra balanslaşır, idempotency key unikallığı, `inv_movement` partisiyalaşdırma DDL-i; **sayım**: `FOR UPDATE` snapshot → dondurma → `COUNT_ADJUST` qrupu sıfıra balanslaşır → lokasiya açılır | 4 (`Category=Integration`) |
 | `Wms.Consumption.UnitTests` | ADR-012: BOM partlaması (`yield_pct`, `yield_portions`, alt-resept, attach rate, yuvarlaqlaşdırma), dövr aşkarlanması, dərinlik limiti, resept versiyasının tarixə görə seçimi, `posted = min(theoretical, available)`, CSV parse (UTF-8 + Windows-1254 + pozuq sətirlər) | 69 |
 | `Wms.Consumption.IntegrationTests` | Testcontainers + real MySQL 8.4 və üç modulun real DI qrafı: tam dövr (resept → satış → hesablama → post), qrupun sıfıra balanslaşması, filial qalığının düşməsi = `V_CONSUMPTION`-un artması, qəsdən yaradılmış çatışmazlıq mənfi qalıq yaratmır, `DUPLICATE_BUSINESS_DATE` | 3 (`Category=Integration`) |
+
+**Cəmi 919 test** (912 sürətli + 7 Testcontainers), 0 xəbərdarlıq.
 
 Integration testlər `[Trait("Category","Integration")]` ilə işarələnib və
 `--filter "Category!=Integration"` ilə kənarlaşdırılır.
@@ -602,15 +646,124 @@ ekran özü-özünü rate limit edə bilirdi və `429` çağıran modulda **500*
 
 İki düzəliş:
 
-1. `/api/v1/<modul>/internal/...` yolları `RateLimitPartition.GetNoLimiter` alır. Bu route-lar gateway-dən
-   proxy olunmur (`deploy/docker-compose.yml` yalnız public prefiksləri map edir) və hamısı
-   `ExcludeFromDescription()`-dur, yəni xaricdən əlçatan deyil.
+1. `/api/v1/<modul>/internal/...` yolları `RateLimitPartition.GetNoLimiter` alır.
+
+> ⚠️ Bu bəndin ilkin əsaslandırması **səhv idi**: "bu route-lar gateway-dən proxy olunmur" yazılmışdı,
+> halbuki gateway-in route cədvəli modul başına `{**catch-all}`-dur və hamısını olduğu kimi ötürürdü.
+> Rate limit-dən azad etmək ona görə real risk idi. İndi marşrutlar həqiqətən bağlıdır (§8.15), ona görə
+> istisna təhlükəsizdir.
 2. `HttpRequestException` artıq `502 UPSTREAM_MODULE_UNAVAILABLE` kimi xəritələnir — qonşu modulun nasazlığı
    bu modulun `INTERNAL_ERROR`-u kimi görünmür.
 
 `InProcess` transportda (on-prem, `Modules=*`) daxili çağırış HTTP-dən keçmir, ona görə bu problem yaranmırdı.
 
 ---
+
+### 8.15. `/internal/*` marşrutları: gateway rədd edir + ortaq sirr (təhlükəsizlik düzəlişi)
+
+**Nə səhv idi.** 24 modullararası marşrutun hamısı gateway-dən adi istifadəçi token-i ilə çağırıla bilirdi
+(`branch1` tokeni ilə `GET /api/v1/masterdata/internal/products?ids=1` → **200**), üzərlərində heç bir
+`.RequirePermission(...)` yox idi və üçü yazma əməliyyatıdır: ledger storno-su
+(`/inventory/internal/reversals`), istehlak post-u (`/inventory/internal/consumption-postings`) və nömrə
+seriyası (`/masterdata/internal/number-sequences/{docType}/next`). `ExcludeFromDescription()` yalnız OpenAPI
+sənədindən gizlədir, marşrutu bağlamır.
+
+**Nə edilib — iki müstəqil qat, hər ikisi fail-closed:**
+
+1. **Gateway** (`Wms.Gateway/Program.cs`): yolunda bütöv `internal` seqmenti olan hər sorğu `MapReverseProxy`-dən
+   əvvəl **404** alır. Kənar dünya üçün bu marşrutlar mövcud deyil. Seqment bütöv müqayisə olunur, ona görə
+   `/masterdata/products/internal-code` kimi real resurs zədələnmir.
+2. **Hər API host** (`InternalRouteGuardMiddleware`, `UseAuthentication`-dan **əvvəl**): `X-Wms-Internal-Key`
+   header-i `InternalApi:Key` ilə üst-üstə düşməlidir (`CryptographicOperations.FixedTimeEquals`), əks halda
+   **403 `INTERNAL_ROUTE_FORBIDDEN`**. Beləliklə gateway-i yan keçib modul konteynerinə birbaşa çıxan çağırış
+   da rədd olunur. Açar konfiqurasiya olunmayıbsa **heç nə qəbul edilmir**.
+
+`ModuleTransport=Http` rejimində `AddModuleHttpClient<>` həmin header-i `InternalApiKeyHandler` ilə əlavə edir
+və açar yoxdursa host **startup-da** `InvalidOperationException` ilə dayanır — səhv konfiqurasiya ilk
+modullararası çağırışda 403 kimi deyil, dərhal görünür. `InProcess` (on-prem, `Modules=*`) rejimində
+modullararası çağırış HTTP-dən keçmir, ona görə bu qat sadəcə xaricdən gələni bağlayır.
+
+**Əlaqəli daraltma:** `doc.attachment.*` wildcard-ı `doc.attachment.manage` kodu kataloqa əlavə olunan
+kimi onu da verməyə başlamışdı — nəticədə filial istifadəçisi anbarın əlavəsini silə bilirdi.
+`WAREHOUSE_KEEPER` və `BRANCH_USER` indi açıq şəkildə `doc.attachment.view|upload|delete` alır; silmək
+yalnız öz yüklədiyinə şamildir.
+
+### 8.16. Token-dəki identifikatorlar əvəzinə `iam_user`-in server tərəfində həlli
+
+**Nə səhv idi.** Keycloak token-i daxili identifikator daşımır, `iam_*` cədvəlləri isə boş idi. Nəticə:
+`ICurrentUser.UserId` həmişə **0**, yəni hər `created_by` / `posted_by` / `approved_by` / `uploaded_by` və
+hər `common_audit_log.user_id` sıfır; SPEC §12.6-dakı öz-özünü təsdiq qadağası `userId != 0` şərti ilə
+qorunduğu üçün **səssizcə söndürülmüşdü**; avtorizasiya `iam_role_permission`-dan deyil, kompilyasiya olunmuş
+xəritədən işləyirdi.
+
+**Niyə Keycloak mapper-i yox, server tərəfində həll.** Mapper daxili id-ni token-ə yazmalı olardı: bunun üçün
+Keycloak-a WMS bazasına yazma hüququ və ya xüsusi SPI lazımdır, id token-in ömrü boyu donur, və mapper hər
+mühitdə eyni qurulmasa audit jurnalı **səssizcə** yenidən sıfıra qayıdır. İndiki model: Keycloak
+**autentifikasiyanın**, WMS bazası isə **identikliyin** yeganə mənbəyidir.
+
+- `PrincipalResolutionMiddleware` (`UseAuthentication`-dan sonra) sorğu başına bir dəfə `IPrincipalDirectory`
+  ilə `iam_user` sətrini tapır; ilk görüşdə sətri yaradır və realm rollarını `iam_user_role`-a köçürür.
+- Seeder və ya operator tərəfindən **əvvəlcədən hazırlanmış** sətir (`external_id = pending:<username>`)
+  eyni `preferred_username` ilə gələn ilk real token tərəfindən sahiblənilir — rol və lokasiya icazələri
+  istifadəçinin ilk sorğusundan qüvvədədir.
+- Nəticə `IPrincipalCache`-də saxlanılır: Redis varsa **bütün konteynerlər arasında** (default TTL 30 s),
+  yoxdursa yaddaşda. Identity-nin yazma endpoint-ləri entry-ni dərhal invalidasiya edir, ona görə rol və ya
+  lokasiya dəyişikliyi növbəti sorğuda qüvvəyə minir — yenidən login lazım deyil.
+- `ICurrentUser.HasPermission` artıq **yalnız** `iam_role_permission`-dan oxunan dəstə baxır.
+  `RolePermissionMap` bootstrap mənbəyi kimi qalır: seeder onu `iam_role_permission`-a açır və sətirləri
+  hələ yazılmamış sistem rolu üçün fallback olur (loglanır) — boş bazada məhsul yenə qalxır.
+- Identity əlçatmazdırsa `HttpRequestException` → **502 `UPSTREAM_MODULE_UNAVAILABLE`**; icazə səssizcə
+  verilmir. Deaktiv istifadəçi **403 `USER_DISABLED`** alır.
+
+### 8.17. Lokasiya filtri fail-open idi — `LocationScope` ilə fail-closed oldu
+
+**Nə səhv idi.** Filtr `IReadOnlyCollection<uint>` daşıyırdı və **boş = məhdudiyyət yoxdur** demək idi.
+`iam_user_location` bütün istifadəçilər üçün boş olduğundan filtr heç vaxt tətbiq olunmurdu: `branch1`
+tokeni ilə `GET /inventory/balances?size=200` hər iki mərkəzi anbarı və başqa filialı qaytarırdı.
+
+**Nə edilib.** `Wms.Common.Application/Security/LocationScope.cs` iki vəziyyəti açıq ayırır:
+
+| Scope | Nə deməkdir |
+|---|---|
+| `LocationScope.Unrestricted` | filtr yoxdur — **yalnız** `iam.location.view_all` icazəsi ilə |
+| `LocationScope.RestrictedTo([...])` | yalnız sadalanan lokasiyalar |
+| `LocationScope.Nothing` (boş restricted) | **heç bir fiziki lokasiya** — heç vaxt "hamısı" kimi oxunmur |
+
+`iam.location.view_all` ADMIN, AUDITOR, PROCUREMENT_MANAGER, PROCUREMENT_OFFICER və WAREHOUSE_KEEPER
+rollarına verilir, BRANCH_USER-ə **verilmir**. Yeni rol heç bir icazə ilə başladığı üçün defolt
+məhdudiyyətlidir — fail-closed. Filtr bütün lokasiyaya bağlı oxumalara şamildir: balanslar, hərəkətlər,
+partiyalar, qəbullar, məxariclər, sayımlar, tullantı, nümunə, qaytarma, tələblər, istehlak satış/qaçışları
+və fərq hesabatı. Məxaric və tələb sənədləri **hər iki ucu** ilə görünür (mənbə və ya hədəf filialdırsa),
+əks halda filial ona gələn məxarici görə bilməzdi.
+
+> **Kontraktla fərq:** `identity.v1.yaml` `Me.locationIds` üçün "boş = məhdudiyyət yoxdur" yazır. Bu, mərkəzi
+> rollar üçün **doğru qalır** (onlarda `iam.location.view_all` var). Filial istifadəçisi üçün boş siyahı indi
+> "heç nə" deməkdir. Kontraktın mətni yenilənməlidir; JSON forması dəyişmir.
+
+### 8.18. `common_attachment`-ə `status` və `scan_result` sütunları
+
+SPEC §11-in DDL-ində əlavələr tək addımda yazılır, halbuki presign → yükləmə → complete axınında sətir
+obyektdən **əvvəl** yaranır. `status ENUM('PENDING','SCANNING','READY','REJECTED')` və `scan_result`
+əlavə edilib; `PENDING` sətir siyahıda və `GET /attachments/{id}`-də görünmür, `download-url` isə
+`409 ATTACHMENT_NOT_READY` verir. `entity_id = 0` kontraktdakı `entityId: null` üçün sentineldir
+(sütun `NOT NULL` qalır).
+
+Tamamlama zamanı iki fərqli uyğunsuzluq ayrılır: **presign anında imzalanmış** checksum ilə saxlanan
+baytlar uyuşmursa sənəd `REJECTED` olur və obyekt silinir (icazə verilən məzmun deyil), amma
+`complete` gövdəsində client-in **təkrar yazdığı** checksum/ETag səhvdirsə cavab `422`-dir və sətir
+`PENDING` qalır — bir yazı səhvi düzgün yükləməni məhv etməməlidir.
+
+### 8.19. Backend CI-ın heç vaxt keçməməsi: repo kökündəki `.editorconfig`
+
+`.editorconfig` repo kökündədir və `csharp_style_namespace_declarations = file_scoped:warning` qoyur;
+`Directory.Build.props`-dakı `TreatWarningsAsErrors` + `EnforceCodeStyleInBuild` ilə birlikdə EF-in
+generasiya etdiyi hər miqrasiya (blok namespace) **`error IDE0161`** verirdi. CI tam checkout edir, ona görə
+qırmızı idi; README-dəki lokal əmr isə yalnız `backend/`-i mount edirdi, yəni o fayl konteynerdə yox idi və
+build yaşıl görünürdü — nasazlıq lokalda **görünməz** idi.
+
+Düzəliş: `backend/.editorconfig` (root **deyil**, kökün üstünə qatlanır) `src/**/Persistence/Migrations/*.cs`
+üçün `generated_code = true` və IDE stil qaydalarını söndürür. Bunlar generasiya olunmuş kod-dur; əl ilə
+yazılmış koda heç nə dəyişmir. §1-dəki əmr indi repo kökünü mount edir, yəni lokal build CI ilə eynidir.
 
 ### 8.10. JSON-da enum-lar UPPER_SNAKE-dir (platforma səviyyəsində dəyişiklik)
 
@@ -664,26 +817,29 @@ Dizayn sənədinin açıq buraxdığı və burada həll olunan məsələlər:
 Bunlar SPEC-də var, layihə strukturunda yeri hazırdır, amma məntiqi növbəti mərhələdə yazılacaq:
 
 - **Procurement yazı endpoint-ləri** — `Requisition`, `Rfq`, `Quotation`, `PurchaseOrder` yaratma/təsdiq axınları,
-  `PriceHistory`, `SplitCheckLog`. Oxu tərəfi (`GET /purchase-orders`) işləkdir.
-- **Identity yazı endpoint-ləri** — istifadəçi/rol yaratma, rol-icazə və istifadəçi-lokasiya təyinatı
-  (SoD qaydası ilə). `GET /me`, `GET /users` işləkdir.
-- `PUT /inventory/settings/{key}` — parametrlər hazırda yalnız `inv_setting` cədvəlindən oxunur; dəyişmək üçün
-  SQL lazımdır.
+  `PriceHistory`, `SplitCheckLog`. Oxu tərəfi (`GET /purchase-orders`) işləkdir. (Faza 2)
 - `GET /inventory/goods-receipts/{id}` cavabındakı `attachmentIds` həmişə boşdur: `common_attachment` Documents
   modulunundur və Inventory → Documents asılılığı ADR-001-də icazəli deyil. İnterfeys əlavələri
   `GET /documents/attachments?entityType=GOODS_RECEIPT&entityId=…` ilə oxuyur.
 - `GoodsReceiptSummary.poDocNo` / `IssueSummary.requestDocNo` siyahı cavablarında `null`-dır (detal cavabında
   doludur) — siyahı üçün əlavə join hələ yazılmayıb; kontraktda hər ikisi nullable-dır.
 - Notification/Reporting/Integration consumer-ləri: cədvəllər və idempotentlik indeksləri hazırdır,
-  RabbitMQ consumer-ləri Faza 2/3-də əlavə olunacaq.
+  RabbitMQ consumer-ləri Faza 3-də əlavə olunacaq.
 - `IdempotencyEndpointFilter` Redis cache-i işləkdir, lakin cavabın tam replay-i sadələşdirilmiş formadadır.
-- `RolePermissionMap` — Identity `iam_role_permission` məlumatı oxunanadək istifadə olunan bootstrap xəritəsidir
-  (TODO qeydi ilə). Endpoint-lərdəki `.RequirePermission(...)` artıq işləyir.
+- **Əlavələr:** `AttachmentOrphanCleaner` (SPEC §15) job-u yoxdur — silinmə və rədd anında obyekt onsuz da
+  best-effort silinir; `thumbnailAvailable` həmişə `false`; POSTED sənədə bağlı əlavənin silinməsində
+  `409 INVALID_STATE_TRANSITION` yoxdur, çünki Documents modulu sahib sənədin statusunu görə bilmir
+  (spec §5 ona heç bir modul kontraktı vermir) — sahib tərəfdə yoxlama və ya hadisə lazımdır.
+- **Identity:** `setUserLocations` virtual lokasiyanı rədd etmir (kontrakt `422` istəyir): Identity-nin
+  MasterData-ya kontrakt asılılığı yoxdur və `masterdata → identity` istiqaməti onsuz da mövcud olduğu üçün
+  əks asılılıq dövrə yaradardı. Yoxlama ya MasterData tərəfdən, ya da hadisə ilə əlavə edilməlidir.
 
-**Bu buraxılışda bağlananlar** (əvvəl bu siyahıda idi):
-`inv_count` aqreqatı və `LOCATION_FROZEN` (§12.7 — artıq canlı sistemdə də `true` olur),
-`Issue`/`Transfer` (IN_TRANSIT), `StockRequest`, `Waste`, `Sample`, `ReturnToVendor`,
-partiya status dəyişikliyi və hərəkət qrupunun storno-su.
+**Bu buraxılışda bağlananlar** (əvvəl bu siyahıda idi): Identity yazı endpoint-ləri (15 əməliyyat) və
+`iam` sxeminin doldurulması, MasterData-nın 27 əməliyyatı, fayl əlavələri (MinIO presign/complete/download),
+`GET /inventory/settings` + `PUT /inventory/settings/{key}`, `GET /identity/me`-nin kontrakt forması,
+`RolePermissionMap`-in avtorizasiya mənbəyi olmaqdan çıxıb yalnız bootstrap qalması.
+Əvvəlki buraxılışdan: `inv_count` aqreqatı və `LOCATION_FROZEN`, `Issue`/`Transfer` (IN_TRANSIT),
+`StockRequest`, `Waste`, `Sample`, `ReturnToVendor`, partiya status dəyişikliyi və hərəkət qrupunun storno-su.
 
 ---
 
@@ -697,14 +853,15 @@ qaytarır ki, client-in əlində həmişə təzə `rowVersion` olsun.
 |---|---|---|
 | `GET/POST /stock-requests`, `PUT /{id}`, `POST /{id}/submit\|cancel` | `inv.request.view` / `.create` | yoxdur (tələb sənədi) |
 | `GET/POST /issues`, `POST /{id}/dispatch` | `inv.issue.view` / `.create` / `.dispatch` | mənbə −qty / `IN_TRANSIT` +qty |
-| `POST /issues/{id}/confirm-receipt` | `inv.transfer.confirm` | `IN_TRANSIT` −qty / hədəf +qty |
+| `POST /issues/{id}/confirm-receipt` | `inv.issue.confirm` | `IN_TRANSIT` −qty / hədəf +qty |
 | `GET/POST /counts`, `POST /{id}/freeze\|lines\|submit\|approve\|post\|cancel` | `inv.count.*`, `inv.adjustment.approve` | post: `COUNT_ADJUST` — `V_ADJUSTMENT` ↔ lokasiya |
 | `GET/POST /waste`, `POST /{id}/submit\|approve\|post` | `inv.waste.*` | post: lokasiya −qty / `V_WASTE` +qty |
-| `GET/POST /samples`, `POST /{id}/post` | `inv.sample.*` | post: lokasiya −qty / `V_SAMPLE` +qty |
-| `GET/POST /return-to-vendor`, `POST /{id}/send\|close` | `inv.return.*` | send: lokasiya −qty / `V_SUPPLIER` +qty |
+| `GET/POST /samples`, `POST /{id}/post` | `inv.sample.view` / `.create` / `.post` | post: lokasiya −qty / `V_SAMPLE` +qty |
+| `GET/POST /return-to-vendor`, `POST /{id}/send\|close` | `inv.rtv.view` / `.create` / `.post` | send: lokasiya −qty / `V_SUPPLIER` +qty |
 | `GET /batches`, `GET /batches/{id}`, `POST /batches/{id}/status` | `inv.batch.view` / `.manage` | yoxdur |
 | `GET /movements`, `GET /movement-groups/{id}`, `POST /{id}/reverse` | `inv.movement.view` / `.reverse` | reverse: `REVERSAL` qrupu (əks işarələr) |
 | `GET /goods-receipts` (siyahı) | `inv.receipt.view` | yoxdur |
+| `GET /settings`, `PUT /settings/{key}` | `inv.settings.view` / `.manage` | yoxdur (§12.4) |
 
 ### 9.1. Sayım (`inv_count`) — SPEC §12.6, §12.7
 
@@ -858,3 +1015,75 @@ SELECT product_id, theoretical_qty_base, posted_qty_base, shortfall_qty_base FRO
 Düzəliş yalnız storno ilə: `POST /runs/{id}/reverse` (`reasonCodeId` məcburidir) sənədi `REVERSED`
 edir və Inventory-də `REVERSAL` qrupu yaradır; həmin gün `POST /runs/{id}/calculate` + `/post` ilə
 yenidən hesablanır.
+
+---
+
+## 12. Identity, MasterData, əlavələr və parametrlər (Faza 1)
+
+Bu dörd sahə birlikdə "sistemin real tenant üçün qurula bilməsi" deməkdir: rol və icazə olmadan heç nə
+avtorizasiya olunmur, səbəb kodu olmadan heç bir ləğv/tullantı/düzəliş sənədi yazıla bilmir.
+
+### 12.1. Identity (`/api/v1/identity`) — 17/17 əməliyyat
+
+| Endpoint | İcazə | Qeyd |
+|---|---|---|
+| `GET /me` | `iam.me.view` | kontraktdakı `Me`: `user`, `tenant`, `roles`, **`permissions`**, `locationIds`, `canViewCost`, `activeDelegations` |
+| `GET /tenant` | `iam.me.view` | valyuta, timezone, locale — client formatlaşdırmanı buradan alır |
+| `GET /users` | `iam.user.view` | `q`, `isActive`, `roleCode`, `locationId` filtrləri + səhifələmə |
+| `POST /users` · `GET/PUT /users/{id}` | `iam.user.manage` / `.view` | `PUT` `rowVersion` tələb edir |
+| `PUT /users/{id}/roles` · `PUT /users/{id}/locations` | `iam.user.manage` | tam əvəzləmə; cache dərhal invalidasiya olunur |
+| `GET /roles` · `POST /roles` · `GET /roles/{id}` | `iam.role.view` / `.manage` | sistem rolları `isSystem=true` |
+| `PUT /roles/{id}/permissions` | `iam.role.manage` | naməlum kod → `422 UNKNOWN_PERMISSION` |
+| `GET /permissions` | `iam.role.view` | 101 kodluq kataloq, `module` filtri, `isCritical` bayrağı |
+| `GET/POST /delegations`, `GET/DELETE /delegations/{id}` | `iam.delegation.view` / `.create` | `DELETE` sətri silmir, `validTo`-nu bu günə çəkir |
+
+**SoD (SPEC §7.1)** iki yerdə də tətbiq olunur və hər ikisi `422 SEGREGATION_OF_DUTIES` verir:
+`WAREHOUSE_KEEPER` roluna `master.product.view_cost` əlavə etmək, **və** həmin rolu maya dəyərini verən
+başqa rolla eyni istifadəçidə birləşdirmək (`createUser`, `setUserRoles`).
+
+### 12.2. MasterData (`/api/v1/masterdata`) — 29/29 əməliyyat
+
+`GET /reason-codes` artıq işləyir — bu, bütün ləğv/tullantı/düzəliş gövdələrinin bloklayıcısı idi.
+
+Dəyişməzlik qaydaları (yaradıldıqdan sonra dəyişmir, hər biri öz kodu ilə **422**):
+`sku` → `SKU_IMMUTABLE`, `base_uom_id` → `BASE_UOM_IMMUTABLE`, `location_type` →
+`LOCATION_TYPE_IMMUTABLE`, `reason_group` → `REASON_GROUP_IMMUTABLE`, kateqoriyanın `product_type` →
+`PRODUCT_TYPE_IMMUTABLE`. Qayda **domen entity-sindədir**, endpoint-də deyil.
+
+`master_product_uom.factor_to_base` **heç vaxt UPDATE edilmir** (SPEC §12.1): yeni əmsal köhnə sətri
+`valid_to = validFrom − 1` ilə bağlayır və yeni sətir açır; üst-üstə düşən interval
+`422 UOM_VALIDITY_OVERLAP` verir.
+
+Unikallıq pozuntuları DB constraint-inə çatmadan **409** olur (`SKU_ALREADY_EXISTS`,
+`REASON_CODE_ALREADY_EXISTS`, …). Silmə yoxdur — `isActive` ilə deaktivasiya.
+
+> ⚠️ Seeder-in yaratdığı səbəb kodları defis daşıyır (`WST-EXP`), kontraktdakı `ReasonCodeCreate.code`
+> nümunəsi isə `^[A-Z0-9_]{1,32}$`-dir. Mövcud sətirlər işləyir, amma API vasitəsilə eyni formada yenisini
+> yaratmaq olmur. Ya seeder alt-xəttə keçməli, ya kontrakt defisi qəbul etməlidir.
+
+### 12.3. Fayl əlavələri (`/api/v1/documents`) — 6/6 əməliyyat
+
+```
+POST /attachments/presign  → PENDING sətir + presigned PUT URL (25 MB, 5 tip)
+      ↓ client birbaşa MinIO-ya PUT edir (uploadHeaders ilə)
+POST /attachments/{id}/complete → StatObject (ölçü + content-type) → SHA-256 → ClamAV → READY
+GET  /attachments/{id}/download-url → qısa ömürlü presigned GET
+```
+
+- **25 MB** həm presign-da (elan edilən ölçü), həm complete-də (MinIO-nun bildirdiyi real ölçü) yoxlanılır.
+- **Beş tip:** PDF, JPEG, PNG, XLSX, DOCX. Complete-də saxlanan content-type presign-dakı ilə tutuşdurulur —
+  presigned PUT yalnız `host`-u imzalayır, ona görə client başqa tiplə yükləyə bilər; bu yoxlama onu bağlayır.
+- **Virus skanı** `Antivirus__Enabled=true` olduqda ClamAV INSTREAM ilə; yoluxmuş fayl silinir və
+  `422 ATTACHMENT_INFECTED`, clamd əlçatmazsa `503 VIRUS_SCAN_UNAVAILABLE` (fail-closed).
+- **Storage key** həmişə serverdə qurulur: `{tenantId}/{entityType}/{entityId}/{guid}/{təmizlənmiş ad}`.
+- Brauzerdən yükləmə üçün MinIO CORS lazımdır (`MINIO_API_CORS_ALLOW_ORIGIN`, dev-də `*`) və presigned URL
+  `Minio__PublicEndpoint` üçün imzalanır.
+
+### 12.4. `inv_setting` (`/api/v1/inventory/settings`)
+
+`GET` doqquz açarı tipi, defoltu və `ENUM` üçün icazəli dəyərləri ilə qaytarır (sətir hələ yoxdursa
+default görünür). `PUT /settings/{key}` dəyəri **açarın tipinə görə** yoxlayır: `INT` (diapazonla),
+`DECIMAL` (0–100 %, min ayırıcı qəbul edilmir — `2,5` `2.5`-in yazı səhvidir), `BOOL`
+(`true/1/yes` → `true`), `ENUM` (`MOVING_AVERAGE` | `FIFO`). Səhv dəyər `422 INVALID_SETTING_VALUE`,
+naməlum açar `404 SETTING_NOT_FOUND`. Dəyişiklik `common_audit_log`-a köhnə/yeni dəyərlə düşür.
+`inv.settings.manage` kritik icazədir: defolt qrantlarda yalnız ADMIN-dədir.

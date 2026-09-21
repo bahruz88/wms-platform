@@ -1,3 +1,4 @@
+using Wms.Common.Application.Dtos;
 using Wms.Common.Application.Paging;
 using Wms.Common.Infrastructure.Persistence;
 using Wms.Inventory.Application.Abstractions;
@@ -116,9 +117,9 @@ public sealed class WasteQueries(
             query = query.Where(w => w.DocNo.Contains(term));
         }
 
-        if (filter.VisibleLocationIds.Count > 0)
+        if (filter.VisibleLocations.IsRestricted)
         {
-            var visible = filter.VisibleLocationIds.ToArray();
+            var visible = filter.VisibleLocations.VisibleIds;
             query = query.Where(w => visible.Contains(w.LocationId));
         }
 
@@ -187,9 +188,9 @@ public sealed class SampleQueries(InventoryDbContext db, IReferenceDataLoader re
             query = query.Where(s => s.DocNo.Contains(term) || s.Authority.Contains(term));
         }
 
-        if (filter.VisibleLocationIds.Count > 0)
+        if (filter.VisibleLocations.IsRestricted)
         {
-            var visible = filter.VisibleLocationIds.ToArray();
+            var visible = filter.VisibleLocations.VisibleIds;
             query = query.Where(s => visible.Contains(s.LocationId));
         }
 
@@ -227,7 +228,8 @@ public sealed class SampleQueries(InventoryDbContext db, IReferenceDataLoader re
 
 public sealed class ReturnToVendorQueries(
     InventoryDbContext db,
-    IReferenceDataLoader referenceData) : IReturnToVendorQueries
+    IReferenceDataLoader referenceData,
+    ICurrencyRateReader currencyRates) : IReturnToVendorQueries
 {
     public async Task<ReturnToVendorDto?> GetAsync(long returnId, bool includeCost, CancellationToken cancellationToken)
     {
@@ -258,10 +260,14 @@ public sealed class ReturnToVendorQueries(
             refs.UomCode(l.UomId), l.QtyBase, includeCost ? l.UnitCost : null,
             QueryHelpers.Value(l.QtyBase, l.UnitCost, includeCost), l.Note)).ToList();
 
+        // claimAmount is declared as Money in inventory.v1.yaml; inv_return_to_vendor stores only the amount,
+        // so the currency is the tenant's base currency (spec §12.5).
+        var currency = await currencyRates.GetBaseCurrencyAsync(cancellationToken).ConfigureAwait(false);
+
         return new ReturnToVendorDto(
             document.Id, document.DocNo, document.DocDate, document.SupplierId, refs.SupplierName(document.SupplierId),
             refs.LocationRef(document.LocationId), document.ReceiptId, receiptDocNo, document.ReasonCodeId,
-            includeCost ? document.ClaimAmount : null, UpperSnakeCaseEnum.Format(document.Status), document.RowVersion,
+            MoneyDto.From(includeCost ? document.ClaimAmount : null, currency), UpperSnakeCaseEnum.Format(document.Status), document.RowVersion,
             document.MovementGroupId, document.Outcome, document.OutcomeNote, document.Note,
             lines, [], QueryHelpers.Audit(document, document.RowVersion));
     }
@@ -309,9 +315,9 @@ public sealed class ReturnToVendorQueries(
             query = query.Where(r => r.DocNo.Contains(term));
         }
 
-        if (filter.VisibleLocationIds.Count > 0)
+        if (filter.VisibleLocations.IsRestricted)
         {
-            var visible = filter.VisibleLocationIds.ToArray();
+            var visible = filter.VisibleLocations.VisibleIds;
             query = query.Where(r => visible.Contains(r.LocationId));
         }
 
@@ -328,10 +334,11 @@ public sealed class ReturnToVendorQueries(
                 supplierIds: rows.Select(r => r.SupplierId)),
             cancellationToken).ConfigureAwait(false);
 
+        var currency = await currencyRates.GetBaseCurrencyAsync(cancellationToken).ConfigureAwait(false);
         var items = rows.Select(r => new ReturnToVendorSummaryDto(
             r.Id, r.DocNo, r.DocDate, r.SupplierId, refs.SupplierName(r.SupplierId),
             refs.LocationRef(r.LocationId), r.ReceiptId, null, r.ReasonCodeId,
-            includeCost ? r.ClaimAmount : null, UpperSnakeCaseEnum.Format(r.Status), r.RowVersion)).ToList();
+            MoneyDto.From(includeCost ? r.ClaimAmount : null, currency), UpperSnakeCaseEnum.Format(r.Status), r.RowVersion)).ToList();
 
         return new PagedResult<ReturnToVendorSummaryDto>(items, page.Page, page.Size, total);
     }

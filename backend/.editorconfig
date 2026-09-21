@@ -1,0 +1,18 @@
+# Layers on top of the repository-root .editorconfig (no `root = true` here on purpose).
+#
+# EF Core writes migrations and model snapshots itself (`dotnet-ef migrations add`, README §5.2) and its
+# templates are fixed: block-scoped namespaces, `#nullable disable`, its own member ordering. The root
+# .editorconfig raises `csharp_style_namespace_declarations = file_scoped:warning`, and with
+# TreatWarningsAsErrors + EnforceCodeStyleInBuild (Directory.Build.props) every generated migration turned
+# IDE0161 into a build error. That is exactly what kept the backend workflow red: the documented local build
+# mounts only `backend/` into the SDK container, so the root .editorconfig was never loaded and the failure
+# was invisible outside CI.
+#
+# These files are generated code, so code-style rules do not apply to them. Hand-written code is unaffected.
+[src/**/Persistence/Migrations/*.cs]
+generated_code = true
+dotnet_diagnostic.IDE0161.severity = none
+dotnet_diagnostic.IDE0055.severity = none
+dotnet_diagnostic.IDE0300.severity = none
+dotnet_diagnostic.IDE0301.severity = none
+dotnet_diagnostic.IDE0028.severity = none

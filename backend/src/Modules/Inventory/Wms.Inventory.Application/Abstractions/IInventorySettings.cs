@@ -11,3 +11,9 @@ public interface IInventorySettings
 
     Task<int> GetIntAsync(string key, CancellationToken cancellationToken);
 }
+
+/// <summary>Write side of <c>inv_setting</c>; returns the previous value (or the default) for the audit row.</summary>
+public interface IInventorySettingWriter
+{
+    Task<string> SetAsync(string key, string value, CancellationToken cancellationToken);
+}
