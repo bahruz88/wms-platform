@@ -1,0 +1,47 @@
+# prod cluster: replica counts of SPEC §18.1, pinned release tag, PodDisruptionBudgets.
+# Replace the example secrets: keep `secret-wms.example.yaml` out of prod by managing
+# `wms-secrets` / `wms-db-admin` with ESO/SealedSecrets and adding a strategic-merge patch here,
+# or delete them from the base resources list in your fork.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: wms
+resources:
+  - ../../base
+  - pdb.yaml
+images:
+  - name: ghcr.io/example/wms-api
+    newTag: 1.0.0
+  - name: ghcr.io/example/wms-gateway
+    newTag: 1.0.0
+  - name: ghcr.io/example/wms-migrator
+    newTag: 1.0.0
+  - name: ghcr.io/example/wms-web
+    newTag: 1.0.0
+replicas:
+  - name: wms-gateway
+    count: 2
+  - name: wms-identity
+    count: 2
+  - name: wms-masterdata
+    count: 2
+  - name: wms-inventory
+    count: 3
+  - name: wms-procurement
+    count: 2
+  - name: wms-reporting
+    count: 2
+  - name: wms-worker
+    count: 1
+  - name: wms-web
+    count: 2
+patches:
+  - target:
+      kind: Ingress
+      name: wms
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: wms.example.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: wms.example.com

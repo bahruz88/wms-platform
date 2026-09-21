@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Unit tests for the domain invariants of spec §12 (one test group per invariant, spec §17.1).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Inventory/Wms.Inventory.Domain/Wms.Inventory.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Procurement/Wms.Procurement.Domain/Wms.Procurement.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/MasterData/Wms.MasterData.Domain/Wms.MasterData.Domain.csproj" />
+  </ItemGroup>
+</Project>

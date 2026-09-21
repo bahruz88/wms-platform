@@ -1,0 +1,3745 @@
+openapi: 3.1.0
+info:
+  title: WMS Inventory API
+  version: 1.0.0
+  summary: Partiya, ledger, balans, qəbul, məxaric/transfer, sayım, tullantı, nümunə, qaytarma, storno (SPEC §9, §12).
+  description: |
+    Inventory modulu **bölünmür** (ADR-002): bütün sənədlər eyni balans/partiya cədvəllərinə tək ACID
+    tranzaksiyada toxunur. Hər post edilən sənəd bir `movement_group` yaradır, hər qrupun `qty_base` cəmi
+    sıfırdır (ADR-003), balans yalnız ledger-dən törəyir (ADR-004).
+
+    Ortaq qaydalar:
+    * Miqdarlar **string** `Decimal`-dır. İstifadəçinin daxil etdiyi miqdar `Quantity {value, uomId}`,
+      server `qtyBase`-i `factorToBase` ilə hesablayıb əmsalı hərəkətdə dondurur (SPEC §12.1).
+    * Maya dəyəri sahələri (`unitCost`, `avgUnitCost`, `totalValue`, `unitPrice`) **yalnız**
+      `master.product.view_cost` icazəsi olan istifadəçiyə qaytarılır; icazə yoxdursa sahə JSON-da
+      **olmur** (SPEC §16). Sxemdə bu sahələr nullable və qeyri-məcburidir.
+    * `FROZEN` sayımı olan lokasiyada `RECEIPT/ISSUE/TRANSFER/WASTE/SAMPLE` post-u `409 LOCATION_FROZEN` (SPEC §12.7).
+    * Mənfi balans qadağandır → `409 INSUFFICIENT_STOCK`; `BLOCKED/EXPIRED/QUARANTINE` partiya → `409 BATCH_BLOCKED`.
+    * Ledger `UPDATE/DELETE` yoxdur — səhv yalnız `POST /movement-groups/{id}/reverse` ilə düzəlir (SPEC §9.4).
+
+    Route prefiksi: `/api/v1/inventory`. Cədvəl prefiksi: `inv_`.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: /api/v1/inventory
+    description: Gateway (YARP) arxasında Inventory modulu
+
+security:
+  - bearer: []
+  - oidc: []
+
+tags:
+  - name: GoodsReceipts
+    description: Anbara qəbul (`inv_goods_receipt`), TOR §12. Post → `RECEIPT` qrupu (`V_SUPPLIER` − / anbar +).
+  - name: Balances
+    description: Balans proyeksiyası (`inv_balance`), yalnız oxunur.
+  - name: Batches
+    description: Partiyalar (`inv_batch`) — FEFO/FIFO, expiry, blok.
+  - name: StockRequests
+    description: Filial qida/mal tələbi (`inv_stock_request`), TOR §16.
+  - name: Issues
+    description: Məxaric və transfer (`inv_issue`) — `IN_TRANSIT` mexanizmi ilə iki addımlı.
+  - name: Counts
+    description: İnventarizasiya (`inv_count`), TOR §21 — dondurma, sayım, fərq, təsdiq, `COUNT_ADJUST`.
+  - name: Waste
+    description: Tullantı (`inv_waste`), TOR §22 — səbəb kodu, foto, approval, `V_WASTE`.
+  - name: Samples
+    description: AQTA nümunəsi (`inv_sample`), TOR §23 — `V_SAMPLE`.
+  - name: ReturnToVendor
+    description: Təchizatçıya qaytarma (`inv_return_to_vendor`) — `RETURN` qrupu.
+  - name: Movements
+    description: Ledger (`inv_movement`) və hərəkət qrupları (`inv_movement_group`); storno.
+  - name: Settings
+    description: Inventory parametrləri (`inv_setting`), SPEC §9.1.
+
+paths:
+  # ================================================================ Goods receipts
+  /goods-receipts:
+    get:
+      operationId: listGoodsReceipts
+      summary: Qəbul sənədləri
+      description: Filial istifadəçisi yalnız öz lokasiyalarına aid qəbulları görür.
+      tags: [GoodsReceipts]
+      x-permission: inv.receipt.view
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ReceiptStatus'
+        - $ref: '#/components/parameters/SupplierIdFilter'
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - name: poId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Qəbullar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoodsReceiptPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createGoodsReceipt
+      summary: Qəbul sənədi yarat (DRAFT)
+      description: |
+        PO-dan (`poId`) və ya PO-suz qəbul. `poId` verildikdə sətirlər `poLineId` ilə bağlanır və `orderedQty`
+        PO-dan doldurulur. Sənəd nömrəsi (`GR-2026-00311`) server tərəfindən verilir.
+
+        Validasiya (`422`):
+        * `product.requiresBatch` → `batchNo` məcburi; `product.requiresExpiry` → `expiryDate` məcburi;
+        * `receivedQty < orderedQty × (1 − under_tolerance_pct/100)` → `varianceNote` məcburi (`VARIANCE_NOTE_REQUIRED`, SPEC §12.8);
+        * `rejectedQty ≤ receivedQty`; `qualityStatus=REJECTED` olduqda bütün sətirlərdə `rejectedQty = receivedQty`;
+        * qida məhsulu üçün supplier `isApprovedFoodSupplier=true` olmalıdır (TOR §7).
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [GoodsReceipts]
+      x-permission: inv.receipt.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoodsReceiptCreate'
+      responses:
+        '201':
+          description: Yaradıldı (DRAFT).
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoodsReceipt'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /goods-receipts/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getGoodsReceipt
+      summary: Qəbul sənədi
+      description: Sətirlər daxil. `unitPrice`/`currency` yalnız `master.product.view_cost` ilə.
+      tags: [GoodsReceipts]
+      x-permission: inv.receipt.view
+      responses:
+        '200':
+          description: Qəbul.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoodsReceipt'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateGoodsReceipt
+      summary: DRAFT qəbulu yenilə
+      description: |
+        Yalnız `DRAFT` statusunda; sətirlər tam əvəz olunur. Eyni validasiya `createGoodsReceipt` kimi.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`.
+      tags: [GoodsReceipts]
+      x-permission: inv.receipt.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoodsReceiptUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoodsReceipt'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /goods-receipts/{id}/post:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: postGoodsReceipt
+      summary: Qəbulu post et (ledger-ə yaz)
+      description: |
+        `DRAFT → POSTED`. Tək tranzaksiyada (SPEC §12.2): partiya yaradılır/tapılır, `RECEIPT` qrupu və
+        sətirləri (`V_SUPPLIER` −qty, anbar +qty) yazılır, balans `FOR UPDATE` ilə yenilənir, moving average
+        yenidən hesablanır, `GoodsReceiptPosted` (+ fərq varsa `ReceiptVarianceDetected`) outbox-a düşür.
+
+        `409` kodları:
+        * `LOCATION_FROZEN` — lokasiyada FROZEN sayım var (SPEC §12.7);
+        * `FX_RATE_MISSING` — xarici valyutada qəbul, PO tarixinə məzənnə yoxdur (SPEC §12.5);
+        * `APPROVAL_REQUIRED` — `receivedQty > orderedQty × (1 + over_tolerance_pct/100)`, əvvəl approval lazımdır (SPEC §12.8);
+        * `BATCH_BLOCKED` — mövcud partiya `BLOCKED/QUARANTINE` statusundadır;
+        * `STALE_VERSION`, `INVALID_STATE_TRANSITION` (artıq POSTED/CANCELLED), `IDEMPOTENT_REPLAY`.
+      tags: [GoodsReceipts]
+      x-permission: inv.receipt.post
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Post edildi; `movementGroupId` dolu.
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoodsReceipt'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /goods-receipts/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: cancelGoodsReceipt
+      summary: DRAFT qəbulu ləğv et
+      description: '`DRAFT → CANCELLED`. POSTED sənəd ləğv edilmir — storno (`reverseMovementGroup`) istifadə olunur. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [GoodsReceipts]
+      x-permission: inv.receipt.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Ləğv edildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoodsReceipt'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ================================================================ Balances
+  /balances:
+    get:
+      operationId: listBalances
+      summary: Balans (qalıq) sorğusu
+      description: |
+        `inv_balance` proyeksiyası. `qtyAvailable = qtyOnHand − qtyReserved`. Default olaraq sıfır qalıqlar
+        gizlədilir (`includeZero=false`). Filial istifadəçisi üçün `locationId` filtri `iam_user_location` ilə
+        məhdudlaşdırılır; virtual lokasiyalar yalnız `inv.balance.view_virtual` icazəsi ilə görünür.
+
+        **Maya dəyəri:** `avgUnitCost`, `totalValue` yalnız `master.product.view_cost` ilə qaytarılır;
+        əks halda JSON-da yoxdur.
+      tags: [Balances]
+      x-permission: inv.balance.view
+      parameters:
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - $ref: '#/components/parameters/ProductIdFilter'
+        - $ref: '#/components/parameters/BatchIdFilter'
+        - name: categoryId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: includeZero
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: belowMin
+          in: query
+          required: false
+          description: Yalnız `qtyOnHand < product.minStock` olanlar (lokasiya üzrə cəm).
+          schema:
+            type: boolean
+        - name: expiringWithinDays
+          in: query
+          required: false
+          description: Partiyanın son istifadə tarixi N gün içində olanlar.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Balans sətirləri.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalancePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /balances/summary:
+    get:
+      operationId: getBalanceSummary
+      summary: Məhsul üzrə cəmlənmiş balans
+      description: Bir məhsulun bütün (görünən) lokasiyalar və partiyalar üzrə cəmi — məxaric formasında "mövcud" göstəricisi üçün.
+      tags: [Balances]
+      x-permission: inv.balance.view
+      parameters:
+        - name: productId
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Id'
+        - $ref: '#/components/parameters/LocationIdFilter'
+      responses:
+        '200':
+          description: Cəm.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ================================================================ Batches
+  /batches:
+    get:
+      operationId: listBatches
+      summary: Partiyalar
+      description: '`status`, `productId`, `expiryBefore` filtrləri. Default sıralama FEFO (`expiryDate`, `receivedAt`).'
+      tags: [Batches]
+      x-permission: inv.batch.view
+      parameters:
+        - $ref: '#/components/parameters/ProductIdFilter'
+        - $ref: '#/components/parameters/SupplierIdFilter'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/BatchStatus'
+        - name: expiryBefore
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/DateOnly'
+        - name: batchNo
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 64
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Partiyalar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /batches/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getBatch
+      summary: Partiya
+      description: Partiya və lokasiyalar üzrə qalıqları.
+      tags: [Batches]
+      x-permission: inv.batch.view
+      responses:
+        '200':
+          description: Partiya.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Batch'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /batches/{id}/status:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: changeBatchStatus
+      summary: Partiya statusunu dəyiş (blok / karantin / aktiv)
+      description: |
+        `ACTIVE ↔ BLOCKED ↔ QUARANTINE`. `EXPIRED` yalnız `ExpiryScanner` job-u tərəfindən verilir və əl ilə
+        geri qaytarıla bilmir (`409 INVALID_STATE_TRANSITION`). Səbəb kodu məcburidir, audit-ə düşür.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Batches]
+      x-permission: inv.batch.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchStatusChange'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Batch'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ================================================================ Stock requests
+  /stock-requests:
+    get:
+      operationId: listStockRequests
+      summary: Filial tələbləri
+      description: Filial istifadəçisi yalnız `toLocationId` öz lokasiyası olanları görür; anbardar hamısını.
+      tags: [StockRequests]
+      x-permission: inv.request.view
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/StockRequestStatus'
+        - name: fromLocationId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: toLocationId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Tələblər.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockRequestPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createStockRequest
+      summary: Tələb yarat (DRAFT)
+      description: |
+        Filial (`toLocationId`) mərkəzi anbardan (`fromLocationId`) mal tələb edir. `toLocationId` istifadəçinin
+        lokasiya siyahısında olmalıdır. Sənəd nömrəsi `SR-2026-01204`.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [StockRequests]
+      x-permission: inv.request.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockRequestCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /stock-requests/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getStockRequest
+      summary: Tələb
+      description: Tələb və sətirləri (`issuedQty` ilə).
+      tags: [StockRequests]
+      x-permission: inv.request.view
+      responses:
+        '200':
+          description: Tələb.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateStockRequest
+      summary: DRAFT tələbi yenilə
+      description: 'Yalnız `DRAFT`. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`.'
+      tags: [StockRequests]
+      x-permission: inv.request.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockRequestUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /stock-requests/{id}/submit:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: submitStockRequest
+      summary: Tələbi göndər
+      description: '`DRAFT → SUBMITTED`; anbardara bildiriş gedir. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [StockRequests]
+      x-permission: inv.request.submit
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Göndərildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /stock-requests/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: cancelStockRequest
+      summary: Tələbi ləğv et
+      description: '`DRAFT/SUBMITTED → CANCELLED`; `PICKING` və sonrası ləğv edilmir. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [StockRequests]
+      x-permission: inv.request.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Ləğv edildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ================================================================ Issues / transfers
+  /issues:
+    get:
+      operationId: listIssues
+      summary: Məxaric və transfer sənədləri
+      description: Filial istifadəçisi `fromLocationId` və ya `toLocationId` öz lokasiyası olanları görür.
+      tags: [Issues]
+      x-permission: inv.issue.view
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/IssueStatus'
+        - name: issueType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/IssueType'
+        - name: fromLocationId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: toLocationId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: requestId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Sənədlər.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createIssue
+      summary: Məxaric/transfer yarat (DRAFT)
+      description: |
+        `requestId` verildikdə sətirlər tələbdən doldurulur (qismən məxaric mümkündür). Hər sətirdə server
+        FEFO/FIFO ilə **təklif olunan partiyanı** (`suggestedBatchId`) qaytarır (SPEC §12.4). Client başqa
+        partiya seçərsə `batchId` + `reasonCodeId` + `note` məcburidir (`422 REASON_CODE_REQUIRED`).
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Issues]
+      x-permission: inv.issue.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /issues/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getIssue
+      summary: Məxaric/transfer sənədi
+      description: Sətirlər, partiya, göndərilən və qəbul edilən miqdar.
+      tags: [Issues]
+      x-permission: inv.issue.view
+      responses:
+        '200':
+          description: Sənəd.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateIssue
+      summary: DRAFT məxarici yenilə
+      description: 'Yalnız `DRAFT`. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`.'
+      tags: [Issues]
+      x-permission: inv.issue.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /issues/{id}/dispatch:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: dispatchIssue
+      summary: Göndər (mənbə → IN_TRANSIT)
+      description: |
+        `DRAFT → DISPATCHED`. `ISSUE`/`TRANSFER` qrupu: mənbə lokasiya −qty, `IN_TRANSIT` +qty (SPEC §12.3).
+        Partiya ayırması `FOR UPDATE SKIP LOCKED` ilə (SPEC §12.4). Məxaricdə `unitCost` = cari `avgUnitCost`.
+        `require_branch_receipt_confirmation=false` olduqda server dərhal qəbulu da yazır (`RECEIVED`).
+
+        `409` kodları:
+        * `INSUFFICIENT_STOCK` — `qtyAvailable` çatmır (mənfi balans qadağandır);
+        * `BATCH_BLOCKED` — seçilmiş partiya `BLOCKED/EXPIRED/QUARANTINE`;
+        * `LOCATION_FROZEN` — mənbə və ya hədəf lokasiyada FROZEN sayım;
+        * `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Issues]
+      x-permission: inv.issue.dispatch
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Göndərildi; `dispatchGroupId` dolu.
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /issues/{id}/confirm-receipt:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: confirmIssueReceipt
+      summary: Hədəf lokasiya qəbulu təsdiqləyir (IN_TRANSIT → hədəf)
+      description: |
+        `DISPATCHED → RECEIVED` (miqdarlar üst-üstə düşür) və ya `DISPATCHED → DISCREPANCY` (ən azı bir sətirdə
+        `receivedQty ≠ dispatchedQty`). Hər halda ikinci qrup yazılır: `IN_TRANSIT` −receivedQty, hədəf +receivedQty.
+        Fərq olan sətirdə `reasonCodeId` + `note` **məcburidir** (`422 REASON_CODE_REQUIRED`); çatışmayan hissə
+        `IN_TRANSIT`-də qalır və anbardar tərəfindən ayrıca sənədlə (tullantı / storno / düzəliş) bağlanır.
+        `receivedQty > dispatchedQty` qadağandır (`422`).
+
+        Yalnız hədəf lokasiyanın istifadəçisi (və ya `inv.issue.confirm_any`) çağıra bilər. `TransferCompleted`
+        event-i outbox-a düşür.
+
+        `409` kodları: `LOCATION_FROZEN` (hədəf), `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Issues]
+      x-permission: inv.issue.confirm
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueConfirmReceipt'
+      responses:
+        '200':
+          description: Təsdiqləndi; `receiptGroupId` dolu.
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /issues/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: cancelIssue
+      summary: DRAFT məxarici ləğv et
+      description: '`DRAFT → CANCELLED`. DISPATCHED sənəd üçün storno lazımdır. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [Issues]
+      x-permission: inv.issue.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Ləğv edildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ================================================================ Counts
+  /counts:
+    get:
+      operationId: listCounts
+      summary: Sayım sənədləri
+      description: Lokasiya, status və tip üzrə.
+      tags: [Counts]
+      x-permission: inv.count.view
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CountStatus'
+        - name: countType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CountType'
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Sayımlar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CountPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createCount
+      summary: Sayım yarat (DRAFT)
+      description: |
+        `FULL` — lokasiyadakı bütün məhsullar; `CYCLE` — `categoryIds`/`productIds` ilə seçilmiş alt çoxluq;
+        `SPOT` — bir neçə məhsul. Sətirlər dondurma anında (`freezeCount`) yaradılır. Eyni lokasiyada
+        açıq (`DRAFT..APPROVED`) sayım varsa `422`.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Counts]
+      x-permission: inv.count.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CountCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Count'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /counts/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getCount
+      summary: Sayım sənədi
+      description: |
+        Sətirlər `bookQty`, `countedQty`, `varianceQty`, `variancePct` ilə. `bookQty` **dondurma anındakı** qalıqdır.
+        `varianceValue` (manatla) yalnız `master.product.view_cost` ilə.
+      tags: [Counts]
+      x-permission: inv.count.view
+      responses:
+        '200':
+          description: Sayım.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Count'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /counts/{id}/freeze:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: freezeCount
+      summary: Lokasiyanı dondur və book qty-ni yaz
+      description: |
+        `DRAFT → FROZEN`. `frozenAt` yazılır; bu andan lokasiya üzrə `RECEIPT/ISSUE/TRANSFER/WASTE/SAMPLE`
+        post-u `409 LOCATION_FROZEN` verir (`block_transactions_during_count=true`, SPEC §12.7). Hər
+        məhsul/partiya üçün `bookQty` = cari `qtyOnHand` (batch səviyyəsində) snapshot alınır.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Counts]
+      x-permission: inv.count.freeze
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Donduruldu; sətirlər yaradıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Count'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /counts/{id}/lines:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: submitCountLines
+      summary: Sayılmış miqdarları göndər (hissə-hissə mümkündür)
+      description: |
+        `FROZEN/COUNTING` statusunda; ilk çağırış `COUNTING`-ə keçirir. Göndərilən sətirlər `countId + productId +
+        batchId` üzrə **upsert** olunur — mobil tətbiq rəf-rəf göndərə bilər. Server `varianceQty = counted − book`
+        və `variancePct` hesablayır. `varianceQty ≠ 0` olan sətirdə `reasonCodeId` (qrup `ADJUSTMENT`) məcburidir
+        (`422 REASON_CODE_REQUIRED`, SPEC §12.6). Dondurma anında olmayan məhsul/partiya (`bookQty = 0`) əlavə edilə bilər.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Counts]
+      x-permission: inv.count.enter
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CountLinesSubmit'
+      responses:
+        '200':
+          description: Sətirlər yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Count'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /counts/{id}/submit:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: submitCount
+      summary: Sayımı yoxlamaya göndər
+      description: |
+        `COUNTING → REVIEW`. Bütün sətirlərdə `countedQty` dolu olmalıdır (`422`). `variancePct` üzrə
+        `count_variance_approval_threshold_pct`-dən yuxarı sətir varsa `requiresApproval=true` işarələnir və
+        approval instansı (`doc_type=COUNT_ADJUST`) yaradılır (SPEC §12.6).
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Counts]
+      x-permission: inv.count.enter
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Yoxlamaya göndərildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Count'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /counts/{id}/approve:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: approveCount
+      summary: Sayım fərqini təsdiqlə
+      description: |
+        `REVIEW → APPROVED`. `inv.adjustment.approve` icazəsi tələb olunur (SPEC §7.1). Delegasiya varsa
+        `delegatedFromUserId` audit-ə yazılır. Anbardar öz sayımını təsdiqləyə bilməz (SoD, `403`).
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Counts]
+      x-permission: inv.adjustment.approve
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalDecisionBody'
+      responses:
+        '200':
+          description: Təsdiqləndi (və ya rədd edildi — `decision=REJECTED` → `COUNTING`-ə qayıdır).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Count'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /counts/{id}/post:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: postCount
+      summary: COUNT_ADJUST qrupunu yaz və lokasiyanı aç
+      description: |
+        `APPROVED → POSTED`. Hər `varianceQty ≠ 0` sətri üçün `COUNT_ADJUST` hərəkəti: artıqlıq → `V_ADJUSTMENT` −,
+        lokasiya +; kəsir → lokasiya −, `V_ADJUSTMENT` + (SPEC §12.3). Kəsirdə `unitCost` = `avgUnitCost`.
+        Post-dan sonra lokasiya bloku götürülür, `CountVarianceApproved` event-i outbox-a düşür.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Counts]
+      x-permission: inv.count.post
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Post edildi; `adjustGroupId` dolu.
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Count'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /counts/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: cancelCount
+      summary: Sayımı ləğv et (lokasiyanı aç)
+      description: '`DRAFT..APPROVED → CANCELLED`; dondurma götürülür, heç bir hərəkət yazılmır. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [Counts]
+      x-permission: inv.count.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonedVersionedAction'
+      responses:
+        '200':
+          description: Ləğv edildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Count'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ================================================================ Waste
+  /waste:
+    get:
+      operationId: listWaste
+      summary: Tullantı sənədləri
+      description: '`wasteValue` (manatla) yalnız `master.product.view_cost` ilə.'
+      tags: [Waste]
+      x-permission: inv.waste.view
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/WasteStatus'
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - name: reasonCodeId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Tullantılar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WastePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createWaste
+      summary: Tullantı sənədi yarat (DRAFT)
+      description: |
+        `reasonCodeId` (qrup `WASTE`) məcburidir. Səbəb kodu `requiresPhoto=true` isə `attachmentIds` boş ola bilməz
+        (`422`). Sətirdə partiya seçilməzsə server FEFO ilə təklif edir.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Waste]
+      x-permission: inv.waste.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WasteCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Waste'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /waste/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getWaste
+      summary: Tullantı sənədi
+      description: Sətirlər və attachment-lər.
+      tags: [Waste]
+      x-permission: inv.waste.view
+      responses:
+        '200':
+          description: Tullantı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Waste'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /waste/{id}/submit:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: submitWaste
+      summary: Təsdiqə göndər
+      description: |
+        `DRAFT → PENDING_APPROVAL`. Səbəb kodu `requiresApproval=false` olduqda birbaşa `APPROVED`.
+        Approval qaydası `doc_type=WASTE`, məbləğ = `avgUnitCost × qty` (AZN) ilə seçilir.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Waste]
+      x-permission: inv.waste.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Göndərildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Waste'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /waste/{id}/approve:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: approveWaste
+      summary: Tullantını təsdiqlə / rədd et
+      description: |
+        `PENDING_APPROVAL → APPROVED` (`decision=APPROVED`) və ya `→ REJECTED`. `inv.waste.approve` icazəsi (SPEC §7.1).
+        Sənədi yaradan özü təsdiqləyə bilməz (`403`).
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Waste]
+      x-permission: inv.waste.approve
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalDecisionBody'
+      responses:
+        '200':
+          description: Qərar verildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Waste'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /waste/{id}/post:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: postWaste
+      summary: Tullantını ledger-ə yaz
+      description: |
+        `APPROVED → POSTED`. `WASTE` qrupu: lokasiya −qty, `V_WASTE` +qty; `unitCost` = `avgUnitCost` — beləliklə
+        tullantının manat dəyəri ledger-də qalır (SPEC §12.5). `WastePosted` event-i.
+
+        `409` kodları: `INSUFFICIENT_STOCK`, `BATCH_BLOCKED`, `LOCATION_FROZEN`, `STALE_VERSION`,
+        `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Waste]
+      x-permission: inv.waste.post
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Post edildi; `movementGroupId` dolu.
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Waste'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ================================================================ Samples
+  /samples:
+    get:
+      operationId: listSamples
+      summary: AQTA nümunə sənədləri
+      description: Nümunə götürmə sənədləri.
+      tags: [Samples]
+      x-permission: inv.sample.view
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/SimpleDocStatus'
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Nümunələr.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SamplePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createSample
+      summary: Nümunə sənədi yarat (DRAFT)
+      description: '`authority` default `AQTA`. Səbəb kodu qrupu `SAMPLE`. `409` kodları: `IDEMPOTENT_REPLAY`.'
+      tags: [Samples]
+      x-permission: inv.sample.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SampleCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sample'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /samples/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getSample
+      summary: Nümunə sənədi
+      description: Sətirlər daxil.
+      tags: [Samples]
+      x-permission: inv.sample.view
+      responses:
+        '200':
+          description: Nümunə.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /samples/{id}/post:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: postSample
+      summary: Nümunəni ledger-ə yaz
+      description: |
+        `DRAFT → POSTED`. `SAMPLE` qrupu: lokasiya −qty, `V_SAMPLE` +qty (SPEC §12.3).
+
+        `409` kodları: `INSUFFICIENT_STOCK`, `BATCH_BLOCKED`, `LOCATION_FROZEN`, `STALE_VERSION`,
+        `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [Samples]
+      x-permission: inv.sample.post
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Post edildi.
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ================================================================ Return to vendor
+  /return-to-vendor:
+    get:
+      operationId: listReturnsToVendor
+      summary: Təchizatçıya qaytarma sənədləri
+      description: Qaytarmalar; `claimAmount` yalnız `master.product.view_cost` ilə.
+      tags: [ReturnToVendor]
+      x-permission: inv.rtv.view
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/RtvStatus'
+        - $ref: '#/components/parameters/SupplierIdFilter'
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Qaytarmalar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnToVendorPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createReturnToVendor
+      summary: Qaytarma sənədi yarat (DRAFT)
+      description: |
+        `receiptId` verildikdə sətirlər həmin qəbulun partiyaları ilə məhdudlaşır. Səbəb kodu qrupu `RETURN`.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [ReturnToVendor]
+      x-permission: inv.rtv.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReturnToVendorCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnToVendor'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /return-to-vendor/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getReturnToVendor
+      summary: Qaytarma sənədi
+      description: Sətirlər daxil.
+      tags: [ReturnToVendor]
+      x-permission: inv.rtv.view
+      responses:
+        '200':
+          description: Qaytarma.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnToVendor'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /return-to-vendor/{id}/send:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: sendReturnToVendor
+      summary: Malı təchizatçıya göndər (ledger-ə yaz)
+      description: |
+        `DRAFT → SENT`. `RETURN` qrupu: lokasiya −qty, `V_SUPPLIER` +qty (SPEC §12.3); `unitCost` = `avgUnitCost`.
+
+        `409` kodları: `INSUFFICIENT_STOCK`, `BATCH_BLOCKED`, `LOCATION_FROZEN`, `STALE_VERSION`,
+        `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [ReturnToVendor]
+      x-permission: inv.rtv.post
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Göndərildi; `movementGroupId` dolu.
+          headers:
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnToVendor'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /return-to-vendor/{id}/close:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: closeReturnToVendor
+      summary: Təchizatçı cavabını qeyd et və bağla
+      description: |
+        `SENT → ACCEPTED | REJECTED → CLOSED` (bir addımda: `outcome` + yekun `claimAmount`). `REJECTED`
+        olduqda mal geri qəbul edilirsə ayrıca qəbul sənədi yaradılır.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [ReturnToVendor]
+      x-permission: inv.rtv.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReturnToVendorClose'
+      responses:
+        '200':
+          description: Bağlandı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnToVendor'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ================================================================ Ledger
+  /movements:
+    get:
+      operationId: listMovements
+      summary: Ledger sorğusu (yalnız oxunur)
+      description: |
+        `inv_movement` append-only ledger. Hər sətir işarəli `qtyBase` daşıyır (+ mədaxil / − məxaric),
+        `conversionRate` hərəkət anında dondurulmuş dəyərdir. Bir qrupun bütün sətirlərini görmək üçün
+        `groupId` filtri və ya `getMovementGroup`.
+
+        `unitCost`, `fxRate`, `currency` yalnız `master.product.view_cost` ilə. Auditor bütün lokasiyaları görür.
+      tags: [Movements]
+      x-permission: inv.movement.view
+      parameters:
+        - $ref: '#/components/parameters/ProductIdFilter'
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - $ref: '#/components/parameters/BatchIdFilter'
+        - name: groupId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: docType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/MovementDocType'
+        - name: docNo
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 32
+        - name: postedFrom
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/DateTimeUtc'
+        - name: postedTo
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/DateTimeUtc'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Hərəkət sətirləri.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovementPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /movement-groups/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getMovementGroup
+      summary: Hərəkət qrupu (sənəd başlığı + sətirlər)
+      description: '`lines` cəmi həmişə `0`-dır (ADR-003). `reversedByGroupId` dolu olduqda qrup storno edilib.'
+      tags: [Movements]
+      x-permission: inv.movement.view
+      responses:
+        '200':
+          description: Qrup.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovementGroup'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /movement-groups/{id}/reverse:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: reverseMovementGroup
+      summary: Storno — qrupu əks işarə ilə təkrarla
+      description: |
+        Yeni `REVERSAL` qrupu yaradır: orijinalın hər sətri əks işarə ilə (`−qty_base`), eyni `conversionRate` və
+        `unitCost` ilə. `reasonCodeId` **məcburidir** (SPEC §12.6), `common_audit_log`-a `REVERSE` yazılır.
+        Ledger-də `UPDATE/DELETE` yoxdur — bu, yeganə düzəliş yoludur (SPEC §9.4).
+
+        Mənbə sənədin statusu dəyişmir; `Issue` üçün yalnız `RECEIVED` olmayan `dispatchGroupId` storno edilə bilər.
+
+        `409` kodları:
+        * `INSUFFICIENT_STOCK` — mal artıq məxaric olunub, storno mənfi balans yaradar;
+        * `LOCATION_FROZEN`; `BATCH_BLOCKED`;
+        * `INVALID_STATE_TRANSITION` — qrup artıq storno edilib və ya özü `REVERSAL`-dır;
+        * `IDEMPOTENT_REPLAY`.
+      tags: [Movements]
+      x-permission: inv.movement.reverse
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovementGroupReverse'
+      responses:
+        '201':
+          description: Storno qrupu yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+            Idempotent-Replayed:
+              $ref: '#/components/headers/IdempotentReplayed'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovementGroup'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ================================================================ Settings
+  /settings:
+    get:
+      operationId: listInventorySettings
+      summary: Inventory parametrləri
+      description: '`inv_setting` açar/dəyər siyahısı (expiry günləri, tolerans faizləri, costing metodu...) — SPEC §9.1.'
+      tags: [Settings]
+      x-permission: inv.settings.view
+      responses:
+        '200':
+          description: Parametrlər.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventorySetting'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /settings/{key}:
+    parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/InventorySettingKey'
+    put:
+      operationId: updateInventorySetting
+      summary: Parametri dəyiş
+      description: Dəyər açarın tipinə görə validasiya olunur (`422`); dəyişiklik audit-ə düşür.
+      tags: [Settings]
+      x-permission: inv.settings.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventorySettingUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventorySetting'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+components:
+  securitySchemes:
+    bearer:
+      $ref: './common.v1.yaml#/components/securitySchemes/bearer'
+    oidc:
+      $ref: './common.v1.yaml#/components/securitySchemes/oidc'
+
+  parameters:
+    IdempotencyKey:
+      $ref: './common.v1.yaml#/components/parameters/IdempotencyKey'
+    PathId:
+      $ref: './common.v1.yaml#/components/parameters/PathId'
+    Page:
+      $ref: './common.v1.yaml#/components/parameters/Page'
+    Size:
+      $ref: './common.v1.yaml#/components/parameters/Size'
+    Sort:
+      $ref: './common.v1.yaml#/components/parameters/Sort'
+    Search:
+      $ref: './common.v1.yaml#/components/parameters/Search'
+    DateFrom:
+      $ref: './common.v1.yaml#/components/parameters/DateFrom'
+    DateTo:
+      $ref: './common.v1.yaml#/components/parameters/DateTo'
+    LocationIdFilter:
+      $ref: './common.v1.yaml#/components/parameters/LocationIdFilter'
+    ProductIdFilter:
+      $ref: './common.v1.yaml#/components/parameters/ProductIdFilter'
+    SupplierIdFilter:
+      $ref: './common.v1.yaml#/components/parameters/SupplierIdFilter'
+    BatchIdFilter:
+      $ref: './common.v1.yaml#/components/parameters/BatchIdFilter'
+
+  headers:
+    Location:
+      $ref: './common.v1.yaml#/components/headers/Location'
+    IdempotentReplayed:
+      $ref: './common.v1.yaml#/components/headers/IdempotentReplayed'
+
+  responses:
+    BadRequest:
+      $ref: './common.v1.yaml#/components/responses/BadRequest'
+    Unauthorized:
+      $ref: './common.v1.yaml#/components/responses/Unauthorized'
+    Forbidden:
+      $ref: './common.v1.yaml#/components/responses/Forbidden'
+    NotFound:
+      $ref: './common.v1.yaml#/components/responses/NotFound'
+    Conflict:
+      $ref: './common.v1.yaml#/components/responses/Conflict'
+    UnprocessableEntity:
+      $ref: './common.v1.yaml#/components/responses/UnprocessableEntity'
+
+  schemas:
+    # --- aliases into common ---
+    Id:
+      $ref: './common.v1.yaml#/components/schemas/Id'
+    Decimal:
+      $ref: './common.v1.yaml#/components/schemas/Decimal'
+    Percent:
+      $ref: './common.v1.yaml#/components/schemas/Percent'
+    CurrencyCode:
+      $ref: './common.v1.yaml#/components/schemas/CurrencyCode'
+    Money:
+      $ref: './common.v1.yaml#/components/schemas/Money'
+    Quantity:
+      $ref: './common.v1.yaml#/components/schemas/Quantity'
+    DateOnly:
+      $ref: './common.v1.yaml#/components/schemas/DateOnly'
+    DateTimeUtc:
+      $ref: './common.v1.yaml#/components/schemas/DateTimeUtc'
+    RowVersion:
+      $ref: './common.v1.yaml#/components/schemas/RowVersion'
+    AuditFields:
+      $ref: './common.v1.yaml#/components/schemas/AuditFields'
+    PageMeta:
+      $ref: './common.v1.yaml#/components/schemas/PageMeta'
+    ProblemDetails:
+      $ref: './common.v1.yaml#/components/schemas/ProblemDetails'
+    VersionedAction:
+      $ref: './common.v1.yaml#/components/schemas/VersionedAction'
+
+    # --- shared action bodies ---
+    ReasonedVersionedAction:
+      type: object
+      required: [rowVersion, reasonCodeId]
+      properties:
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+        reasonCodeId:
+          $ref: '#/components/schemas/Id'
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+
+    ApprovalDecisionBody:
+      type: object
+      required: [rowVersion, decision]
+      properties:
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+        decision:
+          type: string
+          enum: [APPROVED, REJECTED]
+        comment:
+          type: [string, 'null']
+          maxLength: 1000
+          description: '`REJECTED` olduqda məcburidir (`422`).'
+
+    # --- enums ---
+    ReceiptStatus:
+      type: string
+      enum: [DRAFT, POSTED, CANCELLED]
+    QualityStatus:
+      type: string
+      enum: [ACCEPTED, PARTIALLY_ACCEPTED, REJECTED]
+    BatchStatus:
+      type: string
+      enum: [ACTIVE, BLOCKED, EXPIRED, QUARANTINE]
+      description: '`ACTIVE` olmayan partiya məxaricə ayrılmır (SPEC §12.4).'
+    StockRequestStatus:
+      type: string
+      enum: [DRAFT, SUBMITTED, PICKING, PARTIALLY_ISSUED, ISSUED, CANCELLED, CLOSED]
+    IssueType:
+      type: string
+      enum: [BRANCH_ISSUE, WH_TRANSFER, BRANCH_TRANSFER]
+      description: '`BRANCH_ISSUE` — anbar → filial; `WH_TRANSFER` — anbar → anbar/alt lokasiya; `BRANCH_TRANSFER` — filial → filial.'
+    IssueStatus:
+      type: string
+      enum: [DRAFT, DISPATCHED, RECEIVED, DISCREPANCY, CANCELLED]
+    CountType:
+      type: string
+      enum: [FULL, CYCLE, SPOT]
+    CountStatus:
+      type: string
+      enum: [DRAFT, FROZEN, COUNTING, REVIEW, APPROVED, POSTED, CANCELLED]
+    WasteStatus:
+      type: string
+      enum: [DRAFT, PENDING_APPROVAL, APPROVED, POSTED, REJECTED]
+    SimpleDocStatus:
+      type: string
+      enum: [DRAFT, POSTED, CANCELLED]
+      description: Status sütunu olmayan sənədlər (nümunə) üçün `movementGroupId`-dən törəyən status.
+    RtvStatus:
+      type: string
+      enum: [DRAFT, SENT, ACCEPTED, REJECTED, CLOSED]
+    MovementDocType:
+      type: string
+      enum: [RECEIPT, ISSUE, TRANSFER, COUNT_ADJUST, WASTE, SAMPLE, RETURN, OPENING, REVERSAL]
+    SourceDocType:
+      type: string
+      enum: [PO, GOODS_RECEIPT, STOCK_REQUEST, ISSUE, COUNT, WASTE, SAMPLE, RTV, MOVEMENT_GROUP]
+    InventorySettingKey:
+      type: string
+      enum:
+        - expiry_warning_days
+        - expiry_critical_days
+        - receipt_over_tolerance_pct
+        - receipt_under_tolerance_pct
+        - costing_method
+        - count_variance_approval_threshold_pct
+        - block_transactions_during_count
+        - require_branch_receipt_confirmation
+        - allow_negative_stock
+
+    # --- shared line fragments ---
+    ProductRef:
+      type: object
+      description: Sətirlərdə məhsulun qısa görünüşü (MasterData `ProductSummary`-nin alt çoxluğu).
+      required: [id, sku, name, baseUomId, baseUomCode]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        sku:
+          type: string
+        name:
+          type: string
+        baseUomId:
+          $ref: '#/components/schemas/Id'
+        baseUomCode:
+          type: string
+        requiresBatch:
+          type: boolean
+        requiresExpiry:
+          type: boolean
+
+    BatchRef:
+      type: object
+      required: [id, batchNo, status]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        batchNo:
+          type: string
+          maxLength: 64
+        expiryDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        status:
+          $ref: '#/components/schemas/BatchStatus'
+
+    LocationRef:
+      type: object
+      required: [id, code, name]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        code:
+          type: string
+        name:
+          type: string
+        isVirtual:
+          type: boolean
+
+    CostFields:
+      type: object
+      description: |
+        Maya dəyəri sahələri. **Yalnız `master.product.view_cost` icazəsi ilə qaytarılır** — icazəsiz istifadəçi üçün
+        bu sahələr cavabda mövcud deyil (SPEC §16). Client `null`/yox halını "gizli" kimi göstərməlidir.
+      properties:
+        unitCost:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Base UoM üzrə, tenant valyutasında (AZN).
+        totalValue:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: '`qtyBase × unitCost`, AZN.'
+
+    # ================================================================ Goods receipt
+    GoodsReceiptSummary:
+      type: object
+      required: [id, docNo, docDate, supplierId, locationId, qualityStatus, status, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+          examples: [GR-2026-00311]
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        poId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        poDocNo:
+          type: [string, 'null']
+        supplierId:
+          $ref: '#/components/schemas/Id'
+        supplierName:
+          type: string
+        locationId:
+          $ref: '#/components/schemas/Id'
+        locationName:
+          type: string
+        qualityStatus:
+          $ref: '#/components/schemas/QualityStatus'
+        status:
+          $ref: '#/components/schemas/ReceiptStatus'
+        hasVariance:
+          type: boolean
+          description: Ən azı bir sətirdə `receivedQty ≠ orderedQty`.
+        lineCount:
+          type: integer
+          format: int32
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    GoodsReceipt:
+      allOf:
+        - $ref: '#/components/schemas/GoodsReceiptSummary'
+        - type: object
+          required: [lines, attachmentIds, audit]
+          properties:
+            temperatureC:
+              oneOf:
+                - $ref: '#/components/schemas/Decimal'
+                - type: 'null'
+              description: Qəbul zamanı ölçülən temperatur (°C).
+            packagingNote:
+              type: [string, 'null']
+              maxLength: 500
+            movementGroupId:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+              description: POSTED olduqda `RECEIPT` qrupunun id-si.
+            postedAt:
+              oneOf:
+                - $ref: '#/components/schemas/DateTimeUtc'
+                - type: 'null'
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/GoodsReceiptLine'
+            attachmentIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+              description: Qaimə, sertifikat, foto (Documents modulu).
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    GoodsReceiptLine:
+      type: object
+      required: [id, lineNo, product, receivedQty, rejectedQty, uomId, uomCode, acceptedQtyBase]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        lineNo:
+          type: integer
+          format: int32
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        poLineId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        orderedQty:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: PO-dan; PO-suz qəbulda `null`. `uomId` vahidində.
+        receivedQty:
+          $ref: '#/components/schemas/Decimal'
+          description: Faktiki qəbul edilən (rədd daxil), `uomId` vahidində.
+        rejectedQty:
+          $ref: '#/components/schemas/Decimal'
+          description: Keyfiyyətə görə rədd edilən hissə; ledger-ə yalnız `receivedQty − rejectedQty` düşür.
+        uomId:
+          $ref: '#/components/schemas/Id'
+        uomCode:
+          type: string
+        acceptedQtyBase:
+          $ref: '#/components/schemas/Decimal'
+          description: '`(receivedQty − rejectedQty) × conversionRate`, base UoM-da — server hesablayır.'
+        batchNo:
+          type: [string, 'null']
+          maxLength: 64
+        batchId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: POSTED sonra yaradılan/tapılan partiya.
+        productionDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        expiryDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        unitPrice:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: '`uomId` vahidi üzrə, `currency`-də. **Yalnız `master.product.view_cost` ilə.**'
+        currency:
+          oneOf:
+            - $ref: '#/components/schemas/CurrencyCode'
+            - type: 'null'
+          description: Yalnız `master.product.view_cost` ilə.
+        varianceNote:
+          type: [string, 'null']
+          maxLength: 500
+          description: '`receivedQty` toleransdan kənar olduqda **məcburi** (SPEC §12.8).'
+        varianceQty:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: '`receivedQty − orderedQty` (server).'
+
+    GoodsReceiptLineCreate:
+      type: object
+      required: [productId, receivedQty, uomId]
+      properties:
+        productId:
+          $ref: '#/components/schemas/Id'
+        poLineId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        receivedQty:
+          $ref: '#/components/schemas/Decimal'
+        rejectedQty:
+          $ref: '#/components/schemas/Decimal'
+          default: "0"
+        uomId:
+          $ref: '#/components/schemas/Id'
+        batchNo:
+          type: [string, 'null']
+          maxLength: 64
+          description: '`product.requiresBatch` → məcburi.'
+        productionDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        expiryDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+          description: '`product.requiresExpiry` → məcburi; keçmiş tarix `422`.'
+        unitPrice:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: PO-dan gəlirsə boş buraxılır (server PO qiymətini götürür).
+        currency:
+          oneOf:
+            - $ref: '#/components/schemas/CurrencyCode'
+            - type: 'null'
+        varianceNote:
+          type: [string, 'null']
+          maxLength: 500
+
+    GoodsReceiptCreate:
+      type: object
+      required: [docDate, supplierId, locationId, qualityStatus, lines]
+      properties:
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        poId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        supplierId:
+          $ref: '#/components/schemas/Id'
+        locationId:
+          $ref: '#/components/schemas/Id'
+        temperatureC:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        qualityStatus:
+          $ref: '#/components/schemas/QualityStatus'
+        packagingNote:
+          type: [string, 'null']
+          maxLength: 500
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/GoodsReceiptLineCreate'
+        attachmentIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+
+    GoodsReceiptUpdate:
+      allOf:
+        - $ref: '#/components/schemas/GoodsReceiptCreate'
+        - type: object
+          required: [rowVersion]
+          properties:
+            rowVersion:
+              $ref: '#/components/schemas/RowVersion'
+
+    GoodsReceiptPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/GoodsReceiptSummary'
+
+    # ================================================================ Balance
+    Balance:
+      type: object
+      required: [product, location, qtyOnHand, qtyReserved, qtyAvailable, baseUomId, baseUomCode, updatedAt]
+      properties:
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        location:
+          $ref: '#/components/schemas/LocationRef'
+        batch:
+          oneOf:
+            - $ref: '#/components/schemas/BatchRef'
+            - type: 'null'
+          description: '`null` = partiyasız qalıq (`batch_id = 0`).'
+        qtyOnHand:
+          $ref: '#/components/schemas/Decimal'
+          description: Base UoM-da.
+        qtyReserved:
+          $ref: '#/components/schemas/Decimal'
+        qtyAvailable:
+          $ref: '#/components/schemas/Decimal'
+          description: '`qtyOnHand − qtyReserved`.'
+        baseUomId:
+          $ref: '#/components/schemas/Id'
+        baseUomCode:
+          type: string
+        avgUnitCost:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Moving average, AZN. **Yalnız `master.product.view_cost` ilə; əks halda sahə yoxdur.**
+        totalValue:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: '`qtyOnHand × avgUnitCost`. **Yalnız `master.product.view_cost` ilə.**'
+        minStock:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        isBelowMin:
+          type: boolean
+        daysToExpiry:
+          type: [integer, 'null']
+          format: int32
+        lastMovementId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        updatedAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+
+    BalancePage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Balance'
+
+    BalanceSummary:
+      type: object
+      required: [product, qtyOnHand, qtyReserved, qtyAvailable, byLocation]
+      properties:
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        qtyOnHand:
+          $ref: '#/components/schemas/Decimal'
+        qtyReserved:
+          $ref: '#/components/schemas/Decimal'
+        qtyAvailable:
+          $ref: '#/components/schemas/Decimal'
+        totalValue:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Yalnız `master.product.view_cost` ilə.
+        byLocation:
+          type: array
+          items:
+            type: object
+            required: [location, qtyOnHand, qtyAvailable]
+            properties:
+              location:
+                $ref: '#/components/schemas/LocationRef'
+              qtyOnHand:
+                $ref: '#/components/schemas/Decimal'
+              qtyAvailable:
+                $ref: '#/components/schemas/Decimal'
+
+    # ================================================================ Batch
+    Batch:
+      type: object
+      required: [id, product, batchNo, receivedAt, status, qtyOnHand, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        batchNo:
+          type: string
+          maxLength: 64
+        productionDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        expiryDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        supplierId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        receivedAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+          description: FIFO sırası üçün.
+        status:
+          $ref: '#/components/schemas/BatchStatus'
+        daysToExpiry:
+          type: [integer, 'null']
+          format: int32
+        qtyOnHand:
+          $ref: '#/components/schemas/Decimal'
+          description: Bütün (görünən) lokasiyalar üzrə cəm, base UoM.
+        balances:
+          type: array
+          items:
+            $ref: '#/components/schemas/Balance'
+          description: Yalnız `getBatch`-də dolu.
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    BatchPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Batch'
+
+    BatchStatusChange:
+      type: object
+      required: [rowVersion, status, reasonCodeId]
+      properties:
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+        status:
+          type: string
+          enum: [ACTIVE, BLOCKED, QUARANTINE]
+        reasonCodeId:
+          $ref: '#/components/schemas/Id'
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+
+    # ================================================================ Stock request
+    StockRequestSummary:
+      type: object
+      required: [id, docNo, docDate, fromLocation, toLocation, status, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+          examples: [SR-2026-01204]
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        fromLocation:
+          $ref: '#/components/schemas/LocationRef'
+        toLocation:
+          $ref: '#/components/schemas/LocationRef'
+        requiredDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        status:
+          $ref: '#/components/schemas/StockRequestStatus'
+        lineCount:
+          type: integer
+          format: int32
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    StockRequest:
+      allOf:
+        - $ref: '#/components/schemas/StockRequestSummary'
+        - type: object
+          required: [lines, audit]
+          properties:
+            note:
+              type: [string, 'null']
+              maxLength: 1000
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/StockRequestLine'
+            issueIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+              description: Bu tələb üzrə yaradılmış məxaric sənədləri.
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    StockRequestLine:
+      type: object
+      required: [id, lineNo, product, qty, uomId, uomCode, issuedQty]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        lineNo:
+          type: integer
+          format: int32
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        uomCode:
+          type: string
+        issuedQty:
+          $ref: '#/components/schemas/Decimal'
+          description: İndiyədək məxaric edilmiş hissə (eyni vahiddə).
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    StockRequestLineCreate:
+      type: object
+      required: [productId, qty, uomId]
+      properties:
+        productId:
+          $ref: '#/components/schemas/Id'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    StockRequestCreate:
+      type: object
+      required: [docDate, fromLocationId, toLocationId, lines]
+      properties:
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        fromLocationId:
+          $ref: '#/components/schemas/Id'
+        toLocationId:
+          $ref: '#/components/schemas/Id'
+        requiredDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/StockRequestLineCreate'
+
+    StockRequestUpdate:
+      allOf:
+        - $ref: '#/components/schemas/StockRequestCreate'
+        - type: object
+          required: [rowVersion]
+          properties:
+            rowVersion:
+              $ref: '#/components/schemas/RowVersion'
+
+    StockRequestPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/StockRequestSummary'
+
+    # ================================================================ Issue
+    IssueSummary:
+      type: object
+      required: [id, docNo, docDate, issueType, fromLocation, toLocation, status, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+          examples: [IS-2026-00998]
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        issueType:
+          $ref: '#/components/schemas/IssueType'
+        fromLocation:
+          $ref: '#/components/schemas/LocationRef'
+        toLocation:
+          $ref: '#/components/schemas/LocationRef'
+        requestId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        requestDocNo:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/IssueStatus'
+        dispatchedAt:
+          oneOf:
+            - $ref: '#/components/schemas/DateTimeUtc'
+            - type: 'null'
+        receivedAt:
+          oneOf:
+            - $ref: '#/components/schemas/DateTimeUtc'
+            - type: 'null'
+        lineCount:
+          type: integer
+          format: int32
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    Issue:
+      allOf:
+        - $ref: '#/components/schemas/IssueSummary'
+        - type: object
+          required: [lines, audit]
+          properties:
+            dispatchGroupId:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+              description: 'mənbə → `IN_TRANSIT` qrupu.'
+            receiptGroupId:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+              description: '`IN_TRANSIT` → hədəf qrupu.'
+            receivedBy:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+            note:
+              type: [string, 'null']
+              maxLength: 1000
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/IssueLine'
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    IssueLine:
+      type: object
+      required: [id, lineNo, product, qty, uomId, uomCode, qtyBase]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        lineNo:
+          type: integer
+          format: int32
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        requestLineId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+          description: Göndərilən miqdar, `uomId` vahidində.
+        uomId:
+          $ref: '#/components/schemas/Id'
+        uomCode:
+          type: string
+        qtyBase:
+          $ref: '#/components/schemas/Decimal'
+        batch:
+          oneOf:
+            - $ref: '#/components/schemas/BatchRef'
+            - type: 'null'
+          description: Ayrılmış partiya.
+        suggestedBatch:
+          oneOf:
+            - $ref: '#/components/schemas/BatchRef'
+            - type: 'null'
+          description: FEFO/FIFO ilə server təklifi (SPEC §12.4).
+        batchOverrideReasonCodeId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Təklifdən fərqli partiya seçildikdə məcburi səbəb.
+        receivedQty:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Hədəf lokasiyanın təsdiqlədiyi miqdar (`uomId` vahidində); təsdiqdən əvvəl `null`.
+        discrepancyQty:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: '`qty − receivedQty`; `0` deyilsə sətir fərqlidir.'
+        discrepancyReasonCodeId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        discrepancyNote:
+          type: [string, 'null']
+          maxLength: 500
+        unitCost:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Məxaric anındakı `avgUnitCost`. **Yalnız `master.product.view_cost` ilə.**
+
+    IssueLineCreate:
+      type: object
+      required: [productId, qty, uomId]
+      properties:
+        productId:
+          $ref: '#/components/schemas/Id'
+        requestLineId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        batchId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Boş = server FEFO/FIFO təklifini götürür.
+        batchOverrideReasonCodeId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: '`batchId` təklifdən fərqlidirsə **məcburi** (qrup `TRANSFER`).'
+        batchOverrideNote:
+          type: [string, 'null']
+          maxLength: 500
+
+    IssueCreate:
+      type: object
+      required: [docDate, issueType, fromLocationId, toLocationId, lines]
+      properties:
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        issueType:
+          $ref: '#/components/schemas/IssueType'
+        fromLocationId:
+          $ref: '#/components/schemas/Id'
+        toLocationId:
+          $ref: '#/components/schemas/Id'
+        requestId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/IssueLineCreate'
+
+    IssueUpdate:
+      allOf:
+        - $ref: '#/components/schemas/IssueCreate'
+        - type: object
+          required: [rowVersion]
+          properties:
+            rowVersion:
+              $ref: '#/components/schemas/RowVersion'
+
+    IssueConfirmLine:
+      type: object
+      required: [lineId, receivedQty]
+      properties:
+        lineId:
+          $ref: '#/components/schemas/Id'
+        receivedQty:
+          $ref: '#/components/schemas/Decimal'
+          description: Sətirin `uomId` vahidində; `0 ≤ receivedQty ≤ qty`.
+        reasonCodeId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: '`receivedQty ≠ qty` olduqda **məcburi** (qrup `TRANSFER`).'
+        note:
+          type: [string, 'null']
+          maxLength: 500
+          description: Fərq olduqda **məcburi**.
+
+    IssueConfirmReceipt:
+      type: object
+      required: [rowVersion, lines]
+      properties:
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/IssueConfirmLine'
+        attachmentIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+          description: Fərq fotoları.
+
+    IssuePage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/IssueSummary'
+
+    # ================================================================ Count
+    CountSummary:
+      type: object
+      required: [id, docNo, location, countType, status, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+          examples: [IC-2026-00012]
+        location:
+          $ref: '#/components/schemas/LocationRef'
+        countType:
+          $ref: '#/components/schemas/CountType'
+        status:
+          $ref: '#/components/schemas/CountStatus'
+        frozenAt:
+          oneOf:
+            - $ref: '#/components/schemas/DateTimeUtc'
+            - type: 'null'
+        requiresApproval:
+          type: boolean
+          description: Ən azı bir sətirdə `|variancePct| > count_variance_approval_threshold_pct`.
+        lineCount:
+          type: integer
+          format: int32
+        countedLineCount:
+          type: integer
+          format: int32
+        varianceLineCount:
+          type: integer
+          format: int32
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    Count:
+      allOf:
+        - $ref: '#/components/schemas/CountSummary'
+        - type: object
+          required: [lines, audit]
+          properties:
+            approvedBy:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+            approvedAt:
+              oneOf:
+                - $ref: '#/components/schemas/DateTimeUtc'
+                - type: 'null'
+            adjustGroupId:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+              description: POSTED olduqda `COUNT_ADJUST` qrupu.
+            totalVarianceValue:
+              oneOf:
+                - $ref: '#/components/schemas/Decimal'
+                - type: 'null'
+              description: Fərqlərin manat dəyəri cəmi. **Yalnız `master.product.view_cost` ilə.**
+            note:
+              type: [string, 'null']
+              maxLength: 1000
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/CountLine'
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    CountLine:
+      type: object
+      required: [id, product, bookQty, baseUomCode]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        batch:
+          oneOf:
+            - $ref: '#/components/schemas/BatchRef'
+            - type: 'null'
+        bookQty:
+          $ref: '#/components/schemas/Decimal'
+          description: Dondurma anındakı sistem qalığı, base UoM.
+        baseUomCode:
+          type: string
+        countedQty:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Base UoM-da (client daxil edilən vahidi özü çevirmir — `countedQuantity` göndərir, server çevirir).
+        varianceQty:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: '`countedQty − bookQty`.'
+        variancePct:
+          oneOf:
+            - $ref: '#/components/schemas/Percent'
+            - type: 'null'
+        varianceValue:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: '`varianceQty × avgUnitCost`. **Yalnız `master.product.view_cost` ilə.**'
+        exceedsThreshold:
+          type: boolean
+        reasonCodeId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: '`varianceQty ≠ 0` → **məcburi** (qrup `ADJUSTMENT`).'
+        note:
+          type: [string, 'null']
+          maxLength: 500
+        countedBy:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        countedAt:
+          oneOf:
+            - $ref: '#/components/schemas/DateTimeUtc'
+            - type: 'null'
+
+    CountLineInput:
+      type: object
+      required: [productId, countedQuantity]
+      properties:
+        productId:
+          $ref: '#/components/schemas/Id'
+        batchId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Partiyalı məhsul üçün məcburi; `null` = partiyasız sətir.
+        countedQuantity:
+          $ref: '#/components/schemas/Quantity'
+          description: İstifadəçinin daxil etdiyi vahiddə; server base-ə çevirir.
+        reasonCodeId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    CountLinesSubmit:
+      type: object
+      required: [rowVersion, lines]
+      properties:
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+        lines:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/CountLineInput'
+
+    CountCreate:
+      type: object
+      required: [locationId, countType]
+      properties:
+        locationId:
+          $ref: '#/components/schemas/Id'
+        countType:
+          $ref: '#/components/schemas/CountType'
+        categoryIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+          description: '`CYCLE` üçün əhatə.'
+        productIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+          description: '`SPOT`/`CYCLE` üçün əhatə.'
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+
+    CountPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/CountSummary'
+
+    # ================================================================ Waste
+    WasteSummary:
+      type: object
+      required: [id, docNo, docDate, location, reasonCodeId, reasonCodeName, status, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+          examples: [WS-2026-00067]
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        location:
+          $ref: '#/components/schemas/LocationRef'
+        reasonCodeId:
+          $ref: '#/components/schemas/Id'
+        reasonCodeName:
+          type: string
+        status:
+          $ref: '#/components/schemas/WasteStatus'
+        totalValue:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Tullantının manat dəyəri. **Yalnız `master.product.view_cost` ilə.**
+        lineCount:
+          type: integer
+          format: int32
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    Waste:
+      allOf:
+        - $ref: '#/components/schemas/WasteSummary'
+        - type: object
+          required: [lines, attachmentIds, audit]
+          properties:
+            approvedBy:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+            approvedAt:
+              oneOf:
+                - $ref: '#/components/schemas/DateTimeUtc'
+                - type: 'null'
+            approvalComment:
+              type: [string, 'null']
+              maxLength: 1000
+            movementGroupId:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+            note:
+              type: [string, 'null']
+              maxLength: 1000
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/WasteLine'
+            attachmentIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+              description: Foto — səbəb kodu `requiresPhoto` olduqda ≥ 1.
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    WasteLine:
+      allOf:
+        - type: object
+          required: [id, lineNo, product, qty, uomId, uomCode, qtyBase]
+          properties:
+            id:
+              $ref: '#/components/schemas/Id'
+            lineNo:
+              type: integer
+              format: int32
+            product:
+              $ref: '#/components/schemas/ProductRef'
+            batch:
+              oneOf:
+                - $ref: '#/components/schemas/BatchRef'
+                - type: 'null'
+            qty:
+              $ref: '#/components/schemas/Decimal'
+            uomId:
+              $ref: '#/components/schemas/Id'
+            uomCode:
+              type: string
+            qtyBase:
+              $ref: '#/components/schemas/Decimal'
+            note:
+              type: [string, 'null']
+              maxLength: 500
+        - $ref: '#/components/schemas/CostFields'
+
+    WasteLineCreate:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId:
+          $ref: '#/components/schemas/Id'
+        batchId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        quantity:
+          $ref: '#/components/schemas/Quantity'
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    WasteCreate:
+      type: object
+      required: [docDate, locationId, reasonCodeId, lines]
+      properties:
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        locationId:
+          $ref: '#/components/schemas/Id'
+        reasonCodeId:
+          $ref: '#/components/schemas/Id'
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/WasteLineCreate'
+        attachmentIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+
+    WastePage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/WasteSummary'
+
+    # ================================================================ Sample
+    SampleSummary:
+      type: object
+      required: [id, docNo, docDate, location, authority, status, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+          examples: [SM-2026-00009]
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        location:
+          $ref: '#/components/schemas/LocationRef'
+        authority:
+          type: string
+          maxLength: 150
+          examples: [AQTA]
+        purpose:
+          type: [string, 'null']
+          maxLength: 500
+        status:
+          $ref: '#/components/schemas/SimpleDocStatus'
+        lineCount:
+          type: integer
+          format: int32
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    Sample:
+      allOf:
+        - $ref: '#/components/schemas/SampleSummary'
+        - type: object
+          required: [lines, audit]
+          properties:
+            reasonCodeId:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+            movementGroupId:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/WasteLine'
+            attachmentIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+              description: Akt / protokol.
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    SampleCreate:
+      type: object
+      required: [docDate, locationId, lines]
+      properties:
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        locationId:
+          $ref: '#/components/schemas/Id'
+        authority:
+          type: string
+          maxLength: 150
+          default: AQTA
+        purpose:
+          type: [string, 'null']
+          maxLength: 500
+        reasonCodeId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Qrup `SAMPLE`.
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/WasteLineCreate'
+        attachmentIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+
+    SamplePage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/SampleSummary'
+
+    # ================================================================ Return to vendor
+    ReturnToVendorSummary:
+      type: object
+      required: [id, docNo, docDate, supplierId, supplierName, location, reasonCodeId, status, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+          examples: [RV-2026-00004]
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        supplierId:
+          $ref: '#/components/schemas/Id'
+        supplierName:
+          type: string
+        location:
+          $ref: '#/components/schemas/LocationRef'
+        receiptId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        receiptDocNo:
+          type: [string, 'null']
+        reasonCodeId:
+          $ref: '#/components/schemas/Id'
+        claimAmount:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+          description: Təchizatçıya iddia məbləği. **Yalnız `master.product.view_cost` ilə.**
+        status:
+          $ref: '#/components/schemas/RtvStatus'
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    ReturnToVendor:
+      allOf:
+        - $ref: '#/components/schemas/ReturnToVendorSummary'
+        - type: object
+          required: [lines, audit]
+          properties:
+            movementGroupId:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+            outcome:
+              type: [string, 'null']
+              enum: [ACCEPTED, REJECTED, null]
+            outcomeNote:
+              type: [string, 'null']
+              maxLength: 1000
+            note:
+              type: [string, 'null']
+              maxLength: 1000
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/WasteLine'
+            attachmentIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    ReturnToVendorCreate:
+      type: object
+      required: [docDate, supplierId, locationId, reasonCodeId, lines]
+      properties:
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        supplierId:
+          $ref: '#/components/schemas/Id'
+        locationId:
+          $ref: '#/components/schemas/Id'
+        receiptId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        reasonCodeId:
+          $ref: '#/components/schemas/Id'
+          description: Qrup `RETURN`.
+        claimAmount:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/WasteLineCreate'
+        attachmentIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+
+    ReturnToVendorClose:
+      type: object
+      required: [rowVersion, outcome]
+      properties:
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+        outcome:
+          type: string
+          enum: [ACCEPTED, REJECTED]
+        claimAmount:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+          description: Təchizatçının qəbul etdiyi yekun məbləğ.
+        outcomeNote:
+          type: [string, 'null']
+          maxLength: 1000
+
+    ReturnToVendorPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReturnToVendorSummary'
+
+    # ================================================================ Ledger
+    Movement:
+      type: object
+      required: [id, groupId, lineNo, docType, docNo, product, location, qtyBase, baseUomId, enteredQty, enteredUomId, conversionRate, postedAt, postedBy]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        groupId:
+          $ref: '#/components/schemas/Id'
+        lineNo:
+          type: integer
+          format: int32
+        docType:
+          $ref: '#/components/schemas/MovementDocType'
+        docNo:
+          type: string
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        batch:
+          oneOf:
+            - $ref: '#/components/schemas/BatchRef'
+            - type: 'null'
+        location:
+          $ref: '#/components/schemas/LocationRef'
+        qtyBase:
+          $ref: '#/components/schemas/Decimal'
+          description: İşarəli — `+` mədaxil, `−` məxaric.
+        baseUomId:
+          $ref: '#/components/schemas/Id'
+        enteredQty:
+          $ref: '#/components/schemas/Decimal'
+        enteredUomId:
+          $ref: '#/components/schemas/Id'
+        conversionRate:
+          $ref: '#/components/schemas/Decimal'
+          description: Hərəkət anında dondurulmuş `factorToBase`.
+        unitCost:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Base UoM üzrə, AZN. **Yalnız `master.product.view_cost` ilə.**
+        currency:
+          oneOf:
+            - $ref: '#/components/schemas/CurrencyCode'
+            - type: 'null'
+          description: Yalnız `master.product.view_cost` ilə.
+        fxRate:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Yalnız `master.product.view_cost` ilə.
+        postedAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+        postedBy:
+          $ref: '#/components/schemas/Id'
+
+    MovementPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Movement'
+
+    MovementGroup:
+      type: object
+      required: [id, docType, docNo, docDate, postedAt, postedBy, lines]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docType:
+          $ref: '#/components/schemas/MovementDocType'
+        docNo:
+          type: string
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        sourceDocType:
+          oneOf:
+            - $ref: '#/components/schemas/SourceDocType'
+            - type: 'null'
+        sourceDocId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        reasonCodeId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+        reversesGroupId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Bu qrup `REVERSAL`-dırsa storno etdiyi qrup.
+        reversedByGroupId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Bu qrup storno edilibsə storno qrupu.
+        postedAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+        postedBy:
+          $ref: '#/components/schemas/Id'
+        idempotencyKey:
+          type: string
+          format: uuid
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/Movement'
+
+    MovementGroupReverse:
+      type: object
+      required: [reasonCodeId]
+      properties:
+        reasonCodeId:
+          $ref: '#/components/schemas/Id'
+          description: Qrup `ADJUSTMENT`.
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+        docDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+          description: Boş = bu gün.
+
+    # ================================================================ Settings
+    InventorySetting:
+      type: object
+      required: [key, value, valueType]
+      properties:
+        key:
+          $ref: '#/components/schemas/InventorySettingKey'
+        value:
+          type: string
+          maxLength: 500
+        valueType:
+          type: string
+          enum: [INT, DECIMAL, BOOL, ENUM]
+        allowedValues:
+          type: array
+          items:
+            type: string
+          description: '`ENUM` tipli açar üçün (`MOVING_AVERAGE`, `FIFO`).'
+        description:
+          type: string
+
+    InventorySettingUpdate:
+      type: object
+      required: [value]
+      properties:
+        value:
+          type: string
+          maxLength: 500

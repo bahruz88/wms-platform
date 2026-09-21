@@ -1,0 +1,16 @@
+name: wms_core
+description: Pure Dart core for WMS - Result/Failure, Quantity/Money (decimal), ProblemDetails, Page, enums, permissions, env.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+resolution: workspace
+
+dependencies:
+  decimal: ^3.2.6
+  json_annotation: ^4.12.0
+  meta: ^1.16.0
+
+dev_dependencies:
+  test: ^1.25.6

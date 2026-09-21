@@ -1,0 +1,426 @@
+# =============================================================================
+# WMS - local development stack (Docker Compose v2.24+ / v5)
+#
+# Profiles (always pass the ones you need, e.g. `--profile infra --profile app`):
+#   infra    mysql redis rabbitmq(+init) minio(+init) keycloak seq        scripts/dev-up.sh
+#   app      gateway wms-identity wms-masterdata wms-inventory wms-procurement
+#            wms-reporting wms-worker web                                 docker compose --profile infra --profile app up -d --build
+#   migrate  migrator (run-once, SPEC §18.3)                              scripts/db-migrate.sh
+#
+# Ports / credentials follow docs/CONVENTIONS.md and can be overridden in
+# deploy/.env (copy .env.example). Service names double as DNS names inside the
+# compose network, which is why the backend env below uses mysql / redis / ...
+# =============================================================================
+name: wms
+
+# ---- shared fragments ---------------------------------------------------------
+x-backend-build: &backend-build
+  context: ../backend
+  dockerfile: ../deploy/docker/backend.Dockerfile
+
+# Backend configuration keys EXACTLY as in docs/CONVENTIONS.md (env format A__B).
+x-backend-env: &backend-env
+  ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+  ASPNETCORE_URLS: http://+:8080
+  ModuleTransport: Http
+  Jobs__Enabled: "false"
+  ConnectionStrings__Wms: Server=mysql;Port=3306;Database=wms;User=wms_app;Password=${MYSQL_APP_PASSWORD:-wms_app};
+  Redis__ConnectionString: redis:6379
+  RabbitMq__Host: rabbitmq
+  RabbitMq__User: ${RABBITMQ_USER:-wms}
+  RabbitMq__Password: ${RABBITMQ_PASSWORD:-wms}
+  RabbitMq__Exchange: wms.events
+  Minio__Endpoint: minio:9000
+  Minio__AccessKey: ${MINIO_ROOT_USER:-minioadmin}
+  Minio__SecretKey: ${MINIO_ROOT_PASSWORD:-minioadmin}
+  Minio__Bucket: ${MINIO_BUCKET:-wms-attachments}
+  Keycloak__Authority: http://keycloak:8080/realms/wms
+  Keycloak__Audience: wms-api
+  Seq__Url: http://seq:5341
+  # ModuleTransport=Http: every module NOT hosted in a given container is reached over HTTP, so each
+  # container needs the address of the container that does host it (CONVENTIONS.md "Konteyner (cloud)").
+  # These MUST be set here: ASPNETCORE_ENVIRONMENT=Development loads appsettings.Development.json, whose
+  # ModuleEndpoints point at localhost:508x (correct for `dotnet run` on the host, dead inside a container).
+  ModuleEndpoints__Identity: http://wms-identity:8080
+  ModuleEndpoints__MasterData: http://wms-masterdata:8080
+  ModuleEndpoints__Inventory: http://wms-inventory:8080
+  ModuleEndpoints__Consumption: http://wms-inventory:8080
+  ModuleEndpoints__Procurement: http://wms-procurement:8080
+  ModuleEndpoints__Documents: http://wms-masterdata:8080
+
+# aspnet images ship no curl/wget; bash + /dev/tcp is enough for GET /health/live
+x-backend-healthcheck: &backend-healthcheck
+  test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf \"GET /health/live HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
+  interval: 15s
+  timeout: 5s
+  retries: 5
+  start_period: 40s
+
+x-backend-depends: &backend-depends
+  mysql:         { condition: service_healthy }
+  redis:         { condition: service_healthy }
+  rabbitmq:      { condition: service_healthy }
+  rabbitmq-init: { condition: service_completed_successfully }
+  minio:         { condition: service_healthy }
+  minio-init:    { condition: service_completed_successfully }
+  keycloak:      { condition: service_healthy }
+  seq:           { condition: service_healthy }
+
+services:
+  # ===========================================================================
+  # profile: infra
+  # ===========================================================================
+  mysql:
+    image: mysql:8.4
+    profiles: [infra]
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-wms_root}
+      TZ: UTC
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/conf.d:/etc/mysql/conf.d:ro
+      - ./mysql/init:/docker-entrypoint-initdb.d:ro   # runs once on an empty volume
+    healthcheck:
+      # TCP ping: the temporary init server is socket-only, so this stays red until init has finished
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysqladmin ping -h 127.0.0.1 -uroot --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    cap_add: [SYS_NICE]
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    profiles: [infra]
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    profiles: [infra]
+    hostname: rabbitmq          # stable node name -> the data volume survives container recreation
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-wms}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-wms}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/20-wms.conf:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    restart: unless-stopped
+
+  # one-shot: imports deploy/rabbitmq/definitions.json (exchange wms.events, queues, bindings)
+  rabbitmq-init:
+    image: rabbitmq:4-management-alpine
+    profiles: [infra]
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+    environment:
+      RABBITMQ_USER: ${RABBITMQ_USER:-wms}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-wms}
+    volumes:
+      - ./rabbitmq/definitions.json:/definitions.json:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        auth="$$(printf '%s:%s' "$$RABBITMQ_USER" "$$RABBITMQ_PASSWORD" | base64 | tr -d '\n')"
+        wget -qO- --header="Authorization: Basic $$auth" --header='Content-Type: application/json' \
+             --post-file=/definitions.json http://rabbitmq:15672/api/definitions
+        echo "RabbitMQ topology imported (exchange wms.events, queues wms.notification/wms.reporting/wms.integration)"
+    restart: "no"
+
+  minio:
+    # Docker Hub `minio/minio` was retired by MinIO in 2025; quay.io keeps the final community releases.
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    profiles: [infra]
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  # one-shot: bucket wms-attachments with versioning (SPEC §18.4)
+  minio-init:
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    profiles: [infra]
+    depends_on:
+      minio: { condition: service_healthy }
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-wms-attachments}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"
+        mc mb --ignore-existing "local/$$MINIO_BUCKET"
+        mc version enable "local/$$MINIO_BUCKET"
+        mc version info "local/$$MINIO_BUCKET"
+        echo "MinIO bucket $$MINIO_BUCKET ready (versioning enabled)"
+    restart: "no"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION:-26.7}
+    profiles: [infra]
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KC_HTTP_ENABLED: "true"
+      # Fixed issuer for BOTH browser (localhost:${KEYCLOAK_PORT}) and containers (keycloak:8080):
+      # tokens always say iss=http://localhost:<port>/realms/wms, while the API discovers
+      # metadata/JWKS through http://keycloak:8080 (backchannel-dynamic). No issuer special-casing needed.
+      KC_HOSTNAME: http://localhost:${KEYCLOAK_PORT:-8080}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HOSTNAME_STRICT: "false"
+      KC_LOG_LEVEL: ${KEYCLOAK_LOG_LEVEL:-info}
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data               # dev H2 database (dir is owned by uid 1000 in the image); `dev-down.sh -v` wipes it -> realm re-imported
+      - ./keycloak/realm-wms.json:/opt/keycloak/data/import/realm-wms.json:ro
+    healthcheck:
+      # no curl in the image; management port 9000 serves /health/ready (KC_HEALTH_ENABLED)
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9000 && printf \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && grep -q \"\\\"status\\\": *\\\"UP\\\"\" <&3'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    restart: unless-stopped
+
+  seq:
+    image: datalust/seq:${SEQ_VERSION:-2026.1}
+    profiles: [infra]
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"     # dev only
+    ports:
+      - "${SEQ_PORT:-5341}:80"                  # UI + ingestion on one host port
+    volumes:
+      - seq_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1/health >/dev/null || wget -qO- http://127.0.0.1/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    restart: unless-stopped
+
+  # ===========================================================================
+  # profile: app  (images are built from ../backend and ../frontend)
+  # ===========================================================================
+  gateway:
+    build:
+      <<: *backend-build
+      args: { HOST_PROJECT: Wms.Gateway }
+    image: ${IMAGE_PREFIX:-wms}/gateway:${IMAGE_TAG:-dev}
+    profiles: [app]
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_URLS: http://+:8080
+      Keycloak__Authority: http://keycloak:8080/realms/wms
+      Keycloak__Audience: wms-api
+      Redis__ConnectionString: redis:6379
+      Seq__Url: http://seq:5341
+      # YARP destinations. appsettings.json already names the compose services, but
+      # ASPNETCORE_ENVIRONMENT=Development layers appsettings.Development.json on top, which points the
+      # clusters at localhost:508x for `dotnet run` on the host. Inside the container that is a dead end
+      # (every route 502), so the container addresses are restored here.
+      # The cluster ids (identity, masterdata, ...) carry no '-' on purpose: the image entrypoint is a
+      # /bin/sh script and dash silently drops env vars whose names are not valid shell identifiers.
+      ReverseProxy__Clusters__identity__Destinations__d1__Address: http://wms-identity:8080/
+      ReverseProxy__Clusters__masterdata__Destinations__d1__Address: http://wms-masterdata:8080/
+      ReverseProxy__Clusters__inventory__Destinations__d1__Address: http://wms-inventory:8080/
+      ReverseProxy__Clusters__consumption__Destinations__d1__Address: http://wms-inventory:8080/
+      ReverseProxy__Clusters__procurement__Destinations__d1__Address: http://wms-procurement:8080/
+      ReverseProxy__Clusters__reporting__Destinations__d1__Address: http://wms-reporting:8080/
+      ReverseProxy__Clusters__worker__Destinations__d1__Address: http://wms-worker:8080/
+    ports:
+      - "${GATEWAY_PORT:-5000}:8080"
+    depends_on:
+      keycloak:        { condition: service_healthy }
+      redis:           { condition: service_healthy }
+      seq:             { condition: service_healthy }
+      wms-identity:    { condition: service_started }
+      wms-masterdata:  { condition: service_started }
+      wms-inventory:   { condition: service_started }
+      wms-procurement: { condition: service_started }
+      wms-reporting:   { condition: service_started }
+    healthcheck: *backend-healthcheck
+    restart: unless-stopped
+
+  wms-identity:
+    build:
+      <<: *backend-build
+      args: { HOST_PROJECT: Wms.Host.Api }
+    image: ${IMAGE_PREFIX:-wms}/api:${IMAGE_TAG:-dev}
+    profiles: [app]
+    environment:
+      <<: *backend-env
+      Modules: identity
+    ports:
+      - "${IDENTITY_PORT:-5081}:8080"
+    depends_on: *backend-depends
+    healthcheck: *backend-healthcheck
+    restart: unless-stopped
+
+  wms-masterdata:
+    build:
+      <<: *backend-build
+      args: { HOST_PROJECT: Wms.Host.Api }
+    image: ${IMAGE_PREFIX:-wms}/api:${IMAGE_TAG:-dev}
+    profiles: [app]
+    environment:
+      <<: *backend-env
+      Modules: masterdata,identity,documents
+    ports:
+      - "${MASTERDATA_PORT:-5082}:8080"
+    depends_on: *backend-depends
+    healthcheck: *backend-healthcheck
+    restart: unless-stopped
+
+  # Consumption ships with Inventory (ADR-012 / CONVENTIONS.md): the engine is tightly coupled to the ledger
+  # and runs on the same nightly schedule, so it gets no container of its own.
+  wms-inventory:
+    build:
+      <<: *backend-build
+      args: { HOST_PROJECT: Wms.Host.Api }
+    image: ${IMAGE_PREFIX:-wms}/api:${IMAGE_TAG:-dev}
+    profiles: [app]
+    environment:
+      <<: *backend-env
+      Modules: inventory,consumption
+    ports:
+      - "${INVENTORY_PORT:-5083}:8080"
+    depends_on: *backend-depends
+    healthcheck: *backend-healthcheck
+    restart: unless-stopped
+
+  wms-procurement:
+    build:
+      <<: *backend-build
+      args: { HOST_PROJECT: Wms.Host.Api }
+    image: ${IMAGE_PREFIX:-wms}/api:${IMAGE_TAG:-dev}
+    profiles: [app]
+    environment:
+      <<: *backend-env
+      Modules: procurement
+    ports:
+      - "${PROCUREMENT_PORT:-5084}:8080"
+    depends_on: *backend-depends
+    healthcheck: *backend-healthcheck
+    restart: unless-stopped
+
+  wms-reporting:
+    build:
+      <<: *backend-build
+      args: { HOST_PROJECT: Wms.Host.Api }
+    image: ${IMAGE_PREFIX:-wms}/api:${IMAGE_TAG:-dev}
+    profiles: [app]
+    environment:
+      <<: *backend-env
+      Modules: reporting
+    ports:
+      - "${REPORTING_PORT:-5085}:8080"
+    depends_on: *backend-depends
+    healthcheck: *backend-healthcheck
+    restart: unless-stopped
+
+  # Hangfire jobs (SPEC §15) + notification/integration consumers. Exactly ONE instance.
+  wms-worker:
+    build:
+      <<: *backend-build
+      args: { HOST_PROJECT: Wms.Host.Api }
+    image: ${IMAGE_PREFIX:-wms}/api:${IMAGE_TAG:-dev}
+    profiles: [app]
+    environment:
+      <<: *backend-env
+      Modules: "*"
+      Jobs__Enabled: "true"
+      ModuleTransport: InProcess
+    ports:
+      - "${WORKER_PORT:-5086}:8080"            # Hangfire dashboard: http://localhost:5086/hangfire
+    depends_on: *backend-depends
+    healthcheck: *backend-healthcheck
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../frontend
+      dockerfile: ../deploy/docker/web.Dockerfile
+      additional_contexts:
+        deploy: ./docker
+      args:
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:5000}
+        KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:-http://localhost:8080/realms/wms}
+        KEYCLOAK_CLIENT_ID: wms-web
+    image: ${IMAGE_PREFIX:-wms}/web:${IMAGE_TAG:-dev}
+    profiles: [app]
+    environment:
+      API_UPSTREAM: gateway:8080
+    ports:
+      - "${WEB_PORT:-3000}:8080"
+    depends_on:
+      gateway: { condition: service_started }
+    restart: unless-stopped
+
+  # ===========================================================================
+  # profile: migrate  (SPEC §18.3 - never migrate at API startup)
+  # ===========================================================================
+  migrator:
+    build:
+      <<: *backend-build
+      args: { HOST_PROJECT: Wms.Host.Migrator }
+    image: ${IMAGE_PREFIX:-wms}/migrator:${IMAGE_TAG:-dev}
+    profiles: [migrate]
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      Modules: "*"
+      ConnectionStrings__WmsMigrator: Server=mysql;Port=3306;Database=wms;User=wms_migrator;Password=${MYSQL_MIGRATOR_PASSWORD:-wms_migrator};
+      ConnectionStrings__Wms: Server=mysql;Port=3306;Database=wms;User=wms_app;Password=${MYSQL_APP_PASSWORD:-wms_app};
+      Seq__Url: http://seq:5341
+    depends_on:
+      mysql: { condition: service_healthy }
+    restart: "no"
+
+volumes:
+  mysql_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:
+  keycloak_data:
+  seq_data:

@@ -1,0 +1,33 @@
+/// Flutter implementation of the "WMS Enterprise" design system.
+library;
+
+export 'src/components/wms_alert.dart';
+export 'src/components/wms_approval_chain.dart';
+export 'src/components/wms_badge.dart';
+export 'src/components/wms_batch_picker.dart';
+export 'src/components/wms_button.dart';
+export 'src/components/wms_data_table.dart';
+export 'src/components/wms_dialog.dart';
+export 'src/components/wms_doc_status_badge.dart';
+export 'src/components/wms_empty_state.dart';
+export 'src/components/wms_field.dart';
+export 'src/components/wms_focus_ring.dart';
+export 'src/components/wms_icon_button.dart';
+export 'src/components/wms_kpi_card.dart';
+export 'src/components/wms_ledger_table.dart';
+export 'src/components/wms_loading_overlay.dart';
+export 'src/components/wms_qty_uom_input.dart';
+export 'src/components/wms_select.dart';
+export 'src/components/wms_spinner.dart';
+export 'src/components/wms_text_field.dart';
+export 'src/components/wms_variance_indicator.dart';
+export 'src/format/wms_format.dart';
+export 'src/layout/wms_adaptive_scaffold.dart';
+export 'src/theme/wms_theme.dart';
+export 'src/tokens/wms_breakpoints.dart';
+export 'src/tokens/wms_colors.dart';
+export 'src/tokens/wms_opacity.dart';
+export 'src/tokens/wms_radius.dart';
+export 'src/tokens/wms_shadows.dart';
+export 'src/tokens/wms_spacing.dart';
+export 'src/tokens/wms_typography.dart';

@@ -1,0 +1,54 @@
+# dev cluster: 1 replica each, `dev` image tag, dev hostnames, Development environment.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: wms-dev
+resources:
+  - ../../base
+images:
+  - name: ghcr.io/example/wms-api
+    newTag: dev
+  - name: ghcr.io/example/wms-gateway
+    newTag: dev
+  - name: ghcr.io/example/wms-migrator
+    newTag: dev
+  - name: ghcr.io/example/wms-web
+    newTag: dev
+replicas:
+  - name: wms-gateway
+    count: 1
+  - name: wms-identity
+    count: 1
+  - name: wms-masterdata
+    count: 1
+  - name: wms-inventory
+    count: 1
+  - name: wms-procurement
+    count: 1
+  - name: wms-reporting
+    count: 1
+  - name: wms-worker
+    count: 1
+  - name: wms-web
+    count: 1
+patches:
+  - target:
+      kind: Ingress
+      name: wms
+    patch: |-
+      - op: replace
+        path: /spec/rules/0/host
+        value: wms-dev.example.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: wms-dev.example.com
+      - op: replace
+        path: /metadata/annotations/cert-manager.io~1cluster-issuer
+        value: letsencrypt-staging
+  - patch: |-
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: wms-config
+      data:
+        ASPNETCORE_ENVIRONMENT: Development
+        Keycloak__Authority: https://auth-dev.example.com/realms/wms

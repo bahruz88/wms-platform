@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Inventory use cases: goods receipt posting (the single allowed balance-changing path), balance queries.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Inventory.Domain/Wms.Inventory.Domain.csproj" />
+    <ProjectReference Include="../Wms.Inventory.Contracts/Wms.Inventory.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Application/Wms.Common.Application.csproj" />
+    <!-- Allowed cross-module dependency (spec §5): Inventory → MasterData.Contracts only. -->
+    <ProjectReference Include="../../MasterData/Wms.MasterData.Contracts/Wms.MasterData.Contracts.csproj" />
+  </ItemGroup>
+</Project>

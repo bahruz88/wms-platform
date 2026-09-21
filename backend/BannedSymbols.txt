@@ -1,0 +1,2 @@
+T:System.Double;Spec Əlavə A / §6.3: use decimal for quantities, money, rates and percentages.
+T:System.Single;Spec Əlavə A / §6.3: use decimal for quantities, money, rates and percentages.

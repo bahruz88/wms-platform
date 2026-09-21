@@ -1,0 +1,1755 @@
+openapi: 3.1.0
+info:
+  title: WMS Consumption API
+  version: 1.0.0
+  summary: Filial istehlakı — resept/BOM, satış importu, nəzəri məxaric və fərq analizi (ADR-012).
+  description: |
+    SPEC §20.1-dəki bloklayıcı açıq qərarın həlli. Filial stoku indiyədək yalnız artırdı; bu modul
+    satılan menyu maddəsini reseptə vuraraq **nəzəri məxaric** hesablayır və onu adi ikili yazılışlı
+    sənəd kimi post edir: `RESTAURANT −qty` / `V_CONSUMPTION +qty`, `doc_type = CONSUMPTION`.
+
+    Axın üç addımdır:
+
+    1. **Satış** sistemə `POST /sales-imports` ilə daxil olur. Mənbə `POS` (adapter, Faza 4),
+       `CSV` (fayl yükləmə) və ya `MANUAL` (filialın əl ilə girişi) ola bilər — aşağı axın eynidir.
+    2. **Hesablama** (`POST /runs/{id}/calculate`) satış tarixinə düşən resept versiyasını götürür,
+       BOM-u rekursiv açır (alt-resept dərinliyi ≤ 5, dövr rədd edilir), emal itkisini (`yieldPct`)
+       tətbiq edir və məhsul üzrə cəmləyir.
+    3. **Post** (`POST /runs/{id}/post`) Inventory-də tək tranzaksiyada hərəkət qrupu yaradır.
+       Partiya seçimi avtomatikdir və `master_product.issue_strategy` (FEFO/FIFO) qaydasına tabedir.
+
+    **Mənfi qalıq yaranmır.** `postedQtyBase = min(theoreticalQtyBase, available)`; çatışmayan hissə
+    `shortfallQtyBase` kimi qeyd olunur və gizlədilmir — o, qəbulun qeyd olunmadığının ən erkən
+    siqnalıdır. Resepti tapılmayan satış sətri `raw_pos_code` ilə saxlanılır və `unmappedCount`-a düşür.
+
+    **Bir gün, bir sənəd.** `(location, businessDate)` cütü həm `sales-imports`, həm `runs` üçün
+    unikaldır. Post edilmiş sənəd redaktə olunmur; düzəliş yalnız `POST /runs/{id}/reverse` ilə.
+
+    Qiymət sahələri (`unitCost`, `costAmount`) `master.product.view_cost` icazəsi olmayan istifadəçiyə
+    **cavabda ümumiyyətlə göndərilmir** (SPEC §16) — maskalanmır, sahə JSON-da mövcud olmur.
+
+    Route prefiksi: `/api/v1/consumption`. Cədvəllər: `cons_menu_item`, `cons_recipe`,
+    `cons_recipe_line`, `cons_sales_import`, `cons_sales_line`, `cons_run`, `cons_run_line`.
+    Dizayn: `docs/architecture/branch-operations.md`.
+  contact:
+    name: WMS Platform
+    url: https://example.invalid/wms
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: /api/v1/consumption
+    description: Gateway (YARP) arxasında Consumption modulu (`wms-inventory` konteyneri ilə birgə)
+
+security:
+  - bearer: []
+  - oidc: []
+
+tags:
+  - name: MenuItems
+    description: Satılan menyu maddələri və filialda hazırlanan yarımfabrikatlar.
+  - name: Recipes
+    description: Resept versiyaları, tərkib sətirləri və BOM partlaması.
+  - name: SalesImports
+    description: Günlük satış məlumatının qəbulu — POS, CSV və ya əl ilə.
+  - name: ConsumptionRuns
+    description: Nəzəri məxaricin hesablanması, post edilməsi və stornosu.
+  - name: Variance
+    description: Nəzəri və faktiki istehlakın müqayisəsi.
+
+paths:
+  /menu-items:
+    get:
+      operationId: listMenuItems
+      summary: Menyu maddələri
+      description: Əlifba sırası `name_sort_key` üzrədir (Azərbaycan əlifbası brauzerin müqayisəsindən fərqlidir).
+      tags: [MenuItems]
+      x-permission: cons.recipe.view
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/IsActiveFilter'
+        - name: isSubRecipe
+          in: query
+          required: false
+          description: Yalnız yarımfabrikatlar (`true`) və ya yalnız satılan maddələr (`false`).
+          schema:
+            type: boolean
+        - name: hasActiveRecipe
+          in: query
+          required: false
+          description: '`false` — resepti olmayan maddələr; satış gəldikdə bunlar `unmapped` olur.'
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Səhifələnmiş siyahı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItemPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createMenuItem
+      summary: Menyu maddəsi yarat
+      description: '`code` tenant daxilində unikaldır. `posCode` verilirsə o da unikaldır və import onunla uyğunlaşdırır.'
+      tags: [MenuItems]
+      x-permission: cons.recipe.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuItemCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /menu-items/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getMenuItem
+      summary: Menyu maddəsi
+      description: Maddə və onun aktiv resept versiyasının qısa məlumatı.
+      tags: [MenuItems]
+      x-permission: cons.recipe.view
+      responses:
+        '200':
+          description: Tapıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItemDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateMenuItem
+      summary: Menyu maddəsini yenilə
+      description: '`rowVersion` uyğun gəlməzsə `409 STALE_VERSION`.'
+      tags: [MenuItems]
+      x-permission: cons.recipe.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuItemUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /menu-items/{id}/recipes:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: listRecipeVersions
+      summary: Resept versiyaları
+      description: Bütün versiyalar, `validFrom` üzrə azalan sırada. Keçmiş hesablamalar öz versiyasına bağlıdır.
+      tags: [Recipes]
+      x-permission: cons.recipe.view
+      responses:
+        '200':
+          description: Versiyalar.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipeSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: createRecipeVersion
+      summary: Yeni resept versiyası yarat
+      description: |
+        Versiya `DRAFT` yaradılır. Mövcud versiyanın surətini götürmək üçün `copyFromRecipeId` verin.
+        Aktivləşdirmə ayrıca əməliyyatdır (`POST /recipes/{id}/activate`) — bu, köhnə versiyanı bağlayır.
+      tags: [Recipes]
+      x-permission: cons.recipe.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeVersionCreate'
+      responses:
+        '201':
+          description: Yaradıldı (`DRAFT`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /recipes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getRecipe
+      summary: Resept
+      description: Versiya və bütün tərkib sətirləri.
+      tags: [Recipes]
+      x-permission: cons.recipe.view
+      responses:
+        '200':
+          description: Tapıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateRecipe
+      summary: Resepti redaktə et
+      description: |
+        Yalnız `DRAFT` versiya redaktə olunur. `ACTIVE` və ya `ARCHIVED` versiyaya `PUT` →
+        `409 INVALID_STATE_TRANSITION`; dəyişiklik üçün yeni versiya açılır.
+
+        Sətirlər bütöv göndərilir (replace semantikası). Dövr aşkarlanarsa `422 RECIPE_CYCLE`.
+      tags: [Recipes]
+      x-permission: cons.recipe.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /recipes/{id}/activate:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: activateRecipe
+      summary: Resept versiyasını aktivləşdir
+      description: |
+        `DRAFT` → `ACTIVE`. Eyni menyu maddəsinin əvvəlki aktiv versiyası `validTo = validFrom − 1 gün`
+        ilə bağlanır və `ARCHIVED` olur. `validFrom` keçmişdə ola bilər, lakin **post edilmiş** istehlak
+        sənədi olan tarixdən əvvəl ola bilməz → `409 PERIOD_CLOSED`.
+
+        Boş tərkibli resept aktivləşdirilə bilməz → `422 RECIPE_EMPTY`.
+
+        `409` kodları: `INVALID_STATE_TRANSITION`, `PERIOD_CLOSED`, `IDEMPOTENT_REPLAY`.
+      tags: [Recipes]
+      x-permission: cons.recipe.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeActivate'
+      responses:
+        '200':
+          description: Aktivləşdirildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /recipes/{id}/explosion:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: explodeRecipe
+      summary: BOM partlaması (önizləmə)
+      description: |
+        Reseptin verilmiş porsiya sayı üçün inqrediyent tələbini hesablayır — stokdan heç nə çıxarmır.
+        Alt-reseptlər rekursiv açılır. Resept redaktorunda və test məqsədilə istifadə olunur.
+
+        Düstur: `tələb_base = porsiya × qtyPerPortion × conversionToBase ÷ (yieldPct ÷ 100)`.
+      tags: [Recipes]
+      x-permission: cons.recipe.view
+      parameters:
+        - name: portions
+          in: query
+          required: false
+          description: Porsiya sayı (default 1).
+          schema:
+            $ref: '#/components/schemas/Decimal'
+        - name: asOfDate
+          in: query
+          required: false
+          description: Bu tarixə aid vahid əmsallarını götür (default — bu gün).
+          schema:
+            $ref: '#/components/schemas/DateOnly'
+      responses:
+        '200':
+          description: İnqrediyent tələbi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeExplosion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /sales-imports:
+    get:
+      operationId: listSalesImports
+      summary: Satış importları
+      description: Filial istifadəçisi yalnız öz lokasiyalarını görür (`iam_user_location`, server filtri).
+      tags: [SalesImports]
+      x-permission: cons.sales.import
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/SalesImportStatus'
+        - name: source
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/SalesSource'
+      responses:
+        '200':
+          description: Səhifələnmiş siyahı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesImportPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createSalesImport
+      summary: Günlük satışı daxil et
+      description: |
+        `(location, businessDate)` üzrə **bir sənəd**. Təkrar çağırış `409 DUPLICATE_BUSINESS_DATE`
+        qaytarır — mövcud sənədi `PUT` ilə yeniləyin və ya `cancel` edin.
+
+        Sətirlər `menuItemId` və ya `posCode` ilə verilə bilər. `posCode` tanınmazsa sətir
+        `rawPosCode` ilə saxlanılır və `unmappedCount`-a düşür — səssizcə atılmır.
+
+        `businessDate` gələcəkdə ola bilməz → `422`.
+
+        `409` kodları: `DUPLICATE_BUSINESS_DATE`, `IDEMPOTENT_REPLAY`.
+      tags: [SalesImports]
+      x-permission: cons.sales.import
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesImportCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesImport'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /sales-imports/upload-csv:
+    post:
+      operationId: uploadSalesCsv
+      summary: POS hesabatını CSV kimi yüklə
+      description: |
+        Faylı parse edir və `DRAFT` sənəd yaradır. Sütun xəritəsi `columnMapping` ilə verilir
+        (`posCode`, `qtySold`, `grossAmount` sütunlarının adları). Ayırıcı və kodlaşdırma avtomatik
+        aşkarlanır; `UTF-8` və `Windows-1254` dəstəklənir.
+
+        Fayl 5 MB-dan böyük ola bilməz → `422 FILE_TOO_LARGE`. Parse xətası olan sətirlər
+        `parseErrors` massivində qaytarılır, qalanı sənədə yazılır.
+      tags: [SalesImports]
+      x-permission: cons.sales.import
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SalesCsvUpload'
+      responses:
+        '201':
+          description: Parse edildi və `DRAFT` yaradıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesImportParseResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /sales-imports/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getSalesImport
+      summary: Satış importu
+      description: Başlıq və bütün satış sətirləri, tanınmayanlar daxil.
+      tags: [SalesImports]
+      x-permission: cons.sales.import
+      responses:
+        '200':
+          description: Tapıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesImportDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateSalesImport
+      summary: Satış sətirlərini yenilə
+      description: 'Yalnız `DRAFT`. Sətirlər bütöv göndərilir. `CONSUMED` sənəd dəyişdirilə bilməz → `409 INVALID_STATE_TRANSITION`.'
+      tags: [SalesImports]
+      x-permission: cons.sales.import
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesImportUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesImportDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /sales-imports/{id}/submit:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: submitSalesImport
+      summary: Satışı təsdiqlə
+      description: |
+        `DRAFT` → `SUBMITTED`. Bundan sonra `ConsumptionRunner` job-u və ya `POST /runs` onu götürə bilər.
+        Tanınmayan sətir varsa təsdiq bloklanmır, lakin cavabda `unmappedCount` görünür və menecerə
+        `SalesItemUnmapped` bildirişi gedir.
+
+        `409` kodları: `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [SalesImports]
+      x-permission: cons.sales.import
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Təsdiqləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalesImport'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /runs:
+    get:
+      operationId: listConsumptionRuns
+      summary: İstehlak sənədləri
+      description: Filial × gün. Filial istifadəçisi yalnız öz lokasiyalarını görür.
+      tags: [ConsumptionRuns]
+      x-permission: cons.run.calculate
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ConsumptionRunStatus'
+        - name: hasShortfall
+          in: query
+          required: false
+          description: Yalnız çatışmazlığı olan sənədlər.
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Səhifələnmiş siyahı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionRunPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createConsumptionRun
+      summary: İstehlak sənədi yarat və hesabla
+      description: |
+        Verilmiş `salesImportId` üçün sənəd açır və dərhal hesablayır (`DRAFT` → `CALCULATED`).
+        Satış sənədi `SUBMITTED` olmalıdır → əks halda `422`.
+
+        `(location, businessDate)` üzrə unikaldır → təkrar `409 DUPLICATE_BUSINESS_DATE`.
+
+        `409` kodları: `DUPLICATE_BUSINESS_DATE`, `LOCATION_FROZEN`, `IDEMPOTENT_REPLAY`.
+      tags: [ConsumptionRuns]
+      x-permission: cons.run.calculate
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumptionRunCreate'
+      responses:
+        '201':
+          description: Yaradıldı və hesablandı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionRunDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /runs/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getConsumptionRun
+      summary: İstehlak sənədi
+      description: |
+        Başlıq və məhsul üzrə sətirlər: nəzəri miqdar, post edilən miqdar, çatışmazlıq.
+        `unitCost` və `costAmount` yalnız `master.product.view_cost` icazəsi ilə göndərilir.
+      tags: [ConsumptionRuns]
+      x-permission: cons.run.calculate
+      responses:
+        '200':
+          description: Tapıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionRunDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /runs/{id}/calculate:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: calculateConsumptionRun
+      summary: Yenidən hesabla
+      description: |
+        `DRAFT` və ya `CALCULATED` sənədi yenidən hesablayır — məsələn satış sətri düzəldildikdən
+        və ya çatışmayan resept əlavə edildikdən sonra. `POSTED` sənəd yenidən hesablanmır →
+        `409 INVALID_STATE_TRANSITION`.
+
+        Hesablama satış tarixinə düşən resept versiyasını götürür, cari versiyanı yox.
+
+        `422` kodları: `RECIPE_CYCLE`, `RECIPE_DEPTH_EXCEEDED`, `UOM_FACTOR_MISSING`.
+      tags: [ConsumptionRuns]
+      x-permission: cons.run.calculate
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Hesablandı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionRunDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /runs/{id}/post:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: postConsumptionRun
+      summary: İstehlakı post et
+      description: |
+        `CALCULATED` → `POSTED`. Inventory-də tək tranzaksiyada `doc_type = CONSUMPTION` hərəkət qrupu
+        yaradır: hər məhsul üçün `RESTAURANT −postedQty` və `V_CONSUMPTION +postedQty`. Qrupun cəmi sıfırdır.
+
+        Partiya seçimi avtomatikdir (FEFO/FIFO); `BLOCKED`, `EXPIRED`, `QUARANTINE` partiyalar daxil edilmir.
+
+        **Mənfi qalıq yaranmır:** qalıq çatmayan məhsul üçün mövcud qədəri post edilir, qalan hissə
+        `shortfallQtyBase` kimi qeyd olunur və `ConsumptionShortfallDetected` hadisəsi yaranır.
+        Çatışmazlıq post etməyə mane olmur — o, xəbərdarlıqdır, xəta deyil.
+
+        Lokasiya sayım üçün dondurulubsa `409 LOCATION_FROZEN`.
+
+        `409` kodları: `INVALID_STATE_TRANSITION`, `LOCATION_FROZEN`, `STALE_VERSION`, `IDEMPOTENT_REPLAY`.
+      tags: [ConsumptionRuns]
+      x-permission: cons.run.post
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Post edildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionRunDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /runs/{id}/reverse:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: reverseConsumptionRun
+      summary: İstehlakı storno et
+      description: |
+        Post edilmiş sənəd redaktə olunmur (`inv_movement` append-only). Storno Inventory-də
+        `REVERSAL` qrupu yaradır və bu sənədi `REVERSED` statusuna keçirir; həmin gün üçün yeni
+        sənəd açıla bilər.
+
+        `reasonCodeId` **məcburidir** (SPEC §12.6). Artıq storno edilmiş sənəd →
+        `409 INVALID_STATE_TRANSITION`.
+      tags: [ConsumptionRuns]
+      x-permission: inv.movement.reverse
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonedAction'
+      responses:
+        '200':
+          description: Storno edildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsumptionRunDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /variance:
+    get:
+      operationId: getConsumptionVariance
+      summary: Nəzəri vs faktiki istehlak
+      description: |
+        İki sayım arasındakı dövr üçün məhsul və lokasiya üzrə fərq:
+
+        ```
+        gözlənilən = əvvəlki_sayım + qəbullar − nəzəri_istehlak − tullantı − nümunə ± transferlər
+        fərq       = faktiki_sayım − gözlənilən
+        ```
+
+        Mənfi fərqin üç səbəbi var: porsiya normadan böyükdür, tullantı qeyd olunmayıb, mal itib.
+        Hesabat üçüncüsünü sübut etmir, ilk ikisini istisna etməklə sualı kəskinləşdirir.
+
+        `varianceValue` yalnız `master.product.view_cost` icazəsi ilə göndərilir.
+      tags: [Variance]
+      x-permission: cons.variance.view
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - $ref: '#/components/parameters/ProductIdFilter'
+        - name: periodFrom
+          in: query
+          required: true
+          description: Dövrün başlanğıcı — adətən əvvəlki sayımın tarixi.
+          schema:
+            $ref: '#/components/schemas/DateOnly'
+        - name: periodTo
+          in: query
+          required: true
+          description: Dövrün sonu — adətən son sayımın tarixi.
+          schema:
+            $ref: '#/components/schemas/DateOnly'
+        - name: minAbsVariancePct
+          in: query
+          required: false
+          description: Yalnız bu faizdən böyük mütləq fərqlər.
+          schema:
+            $ref: '#/components/schemas/Percent'
+      responses:
+        '200':
+          description: Fərq sətirləri.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariancePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /portion-compliance:
+    get:
+      operationId: getPortionCompliance
+      summary: Porsiya uyğunluğu
+      description: |
+        Menyu maddəsi üzrə bir porsiyaya düşən **faktiki** sərfiyyatı reseptlə müqayisə edir.
+        Faktiki sərfiyyat fərq analizindən törəyir və satılan porsiya sayına bölünür.
+
+        `compliancePct = reseptQty ÷ faktikiQty × 100`. 100-dən aşağı dəyər porsiyanın normadan
+        böyük olduğunu göstərir.
+      tags: [Variance]
+      x-permission: cons.variance.view
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - name: menuItemId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: periodFrom
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/DateOnly'
+        - name: periodTo
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/DateOnly'
+      responses:
+        '200':
+          description: Uyğunluq sətirləri.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortionCompliancePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+components:
+  securitySchemes:
+    bearer:
+      $ref: './common.v1.yaml#/components/securitySchemes/bearer'
+    oidc:
+      $ref: './common.v1.yaml#/components/securitySchemes/oidc'
+
+  parameters:
+    IdempotencyKey:
+      $ref: './common.v1.yaml#/components/parameters/IdempotencyKey'
+    PathId:
+      $ref: './common.v1.yaml#/components/parameters/PathId'
+    Page:
+      $ref: './common.v1.yaml#/components/parameters/Page'
+    Size:
+      $ref: './common.v1.yaml#/components/parameters/Size'
+    Search:
+      $ref: './common.v1.yaml#/components/parameters/Search'
+    DateFrom:
+      $ref: './common.v1.yaml#/components/parameters/DateFrom'
+    DateTo:
+      $ref: './common.v1.yaml#/components/parameters/DateTo'
+    LocationIdFilter:
+      $ref: './common.v1.yaml#/components/parameters/LocationIdFilter'
+    ProductIdFilter:
+      $ref: './common.v1.yaml#/components/parameters/ProductIdFilter'
+    IsActiveFilter:
+      $ref: './common.v1.yaml#/components/parameters/IsActiveFilter'
+
+  responses:
+    BadRequest:
+      $ref: './common.v1.yaml#/components/responses/BadRequest'
+    Unauthorized:
+      $ref: './common.v1.yaml#/components/responses/Unauthorized'
+    Forbidden:
+      $ref: './common.v1.yaml#/components/responses/Forbidden'
+    NotFound:
+      $ref: './common.v1.yaml#/components/responses/NotFound'
+    Conflict:
+      $ref: './common.v1.yaml#/components/responses/Conflict'
+    UnprocessableEntity:
+      $ref: './common.v1.yaml#/components/responses/UnprocessableEntity'
+
+  schemas:
+    Id:
+      $ref: './common.v1.yaml#/components/schemas/Id'
+    Decimal:
+      $ref: './common.v1.yaml#/components/schemas/Decimal'
+    Percent:
+      $ref: './common.v1.yaml#/components/schemas/Percent'
+    Money:
+      $ref: './common.v1.yaml#/components/schemas/Money'
+    Quantity:
+      $ref: './common.v1.yaml#/components/schemas/Quantity'
+    RowVersion:
+      $ref: './common.v1.yaml#/components/schemas/RowVersion'
+    DateOnly:
+      $ref: './common.v1.yaml#/components/schemas/DateOnly'
+    DateTimeUtc:
+      $ref: './common.v1.yaml#/components/schemas/DateTimeUtc'
+    AuditFields:
+      $ref: './common.v1.yaml#/components/schemas/AuditFields'
+    PageMeta:
+      $ref: './common.v1.yaml#/components/schemas/PageMeta'
+    ReasonedAction:
+      $ref: './common.v1.yaml#/components/schemas/ReasonedAction'
+    VersionedAction:
+      $ref: './common.v1.yaml#/components/schemas/VersionedAction'
+
+    RecipeStatus:
+      type: string
+      description: Resept versiyasının vəziyyəti.
+      enum: [DRAFT, ACTIVE, ARCHIVED]
+
+    ComponentType:
+      type: string
+      description: Tərkib sətrinin növü — anbar məhsulu, yoxsa filialda hazırlanan alt-resept.
+      enum: [FOOD_PRODUCT, SUB_RECIPE]
+
+    SalesSource:
+      type: string
+      description: Satış məlumatının mənbəyi. Aşağı axın hər üçü üçün eynidir.
+      enum: [POS, CSV, MANUAL]
+
+    SalesImportStatus:
+      type: string
+      description: '`CONSUMED` — bu satışa görə istehlak sənədi post edilib.'
+      enum: [DRAFT, SUBMITTED, CONSUMED, CANCELLED]
+
+    ConsumptionRunStatus:
+      type: string
+      description: '`FAILED` — hesablama xətası; sənəd saxlanılır ki, səbəb araşdırıla bilsin.'
+      enum: [DRAFT, CALCULATED, POSTED, FAILED, REVERSED]
+
+    MenuItemCreate:
+      type: object
+      additionalProperties: false
+      required: [code, name]
+      properties:
+        code:
+          type: string
+          maxLength: 48
+          description: Daxili kod, tenant daxilində unikal.
+        posCode:
+          type: [string, 'null']
+          maxLength: 64
+          description: POS-dakı kod. Import sətirləri bununla uyğunlaşdırılır.
+        name:
+          type: string
+          maxLength: 250
+        category:
+          type: [string, 'null']
+          maxLength: 120
+          description: 'Sandwich, Salad, Drink, Cookie və s.'
+        isSubRecipe:
+          type: boolean
+          default: false
+          description: Filialda hazırlanan yarımfabrikat — satılmır, başqa reseptin tərkibinə girir.
+
+    MenuItemUpdate:
+      allOf:
+        - $ref: '#/components/schemas/MenuItemCreate'
+        - type: object
+          required: [rowVersion]
+          properties:
+            rowVersion:
+              $ref: '#/components/schemas/RowVersion'
+            isActive:
+              type: boolean
+
+    MenuItem:
+      type: object
+      required: [id, code, name, isSubRecipe, isActive, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        code:
+          type: string
+        posCode:
+          type: [string, 'null']
+        name:
+          type: string
+        category:
+          type: [string, 'null']
+        isSubRecipe:
+          type: boolean
+        isActive:
+          type: boolean
+        activeRecipeId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Bu gün etibarlı olan resept versiyası. `null` — resept yoxdur, satış `unmapped` olacaq.
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+        audit:
+          $ref: '#/components/schemas/AuditFields'
+
+    MenuItemDetail:
+      allOf:
+        - $ref: '#/components/schemas/MenuItem'
+        - type: object
+          properties:
+            recipeVersionCount:
+              type: integer
+              minimum: 0
+            usedInRecipes:
+              type: array
+              description: Bu yarımfabrikatın daxil olduğu reseptlər.
+              items:
+                $ref: '#/components/schemas/RecipeSummary'
+
+    MenuItemPage:
+      type: object
+      required: [items, page, size, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MenuItem'
+        page:
+          type: integer
+        size:
+          type: integer
+        total:
+          type: integer
+
+    RecipeLineInput:
+      type: object
+      additionalProperties: false
+      required: [lineNo, componentType, qtyPerPortion, uomId]
+      properties:
+        lineNo:
+          type: integer
+          minimum: 1
+        componentType:
+          $ref: '#/components/schemas/ComponentType'
+        productId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: '`componentType = FOOD_PRODUCT` olduqda məcburidir.'
+        subMenuItemId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: '`componentType = SUB_RECIPE` olduqda məcburidir; `isSubRecipe = true` olan maddə olmalıdır.'
+        qtyPerPortion:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        yieldPct:
+          allOf:
+            - $ref: '#/components/schemas/Percent'
+          description: |
+            Emal itkisi. Kahının 8 %-i kəsilirsə `92`. Stokdan çıxan miqdar
+            `qtyPerPortion ÷ (yieldPct ÷ 100)` olur. Default `100`.
+          default: '100.0000'
+        isOptional:
+          type: boolean
+          default: false
+          description: Müştəri istəyi ilə əlavə olunan tərkib.
+        attachRatePct:
+          allOf:
+            - $ref: '#/components/schemas/Percent'
+          description: Opsional tərkibin neçə faiz hallarda götürüldüyü. `isOptional = false` olduqda nəzərə alınmır.
+          default: '100.0000'
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    RecipeVersionCreate:
+      type: object
+      additionalProperties: false
+      required: [validFrom]
+      properties:
+        validFrom:
+          $ref: '#/components/schemas/DateOnly'
+        yieldPortions:
+          allOf:
+            - $ref: '#/components/schemas/Decimal'
+          description: Bir hazırlanışdan çıxan porsiya sayı. Sous kimi yarımfabrikatlar üçün 1-dən böyük olur.
+          default: '1.0000'
+        copyFromRecipeId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Verilirsə həmin versiyanın tərkibi surətlənir.
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeLineInput'
+
+    RecipeUpdate:
+      type: object
+      additionalProperties: false
+      required: [rowVersion, lines]
+      properties:
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+        yieldPortions:
+          $ref: '#/components/schemas/Decimal'
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+        lines:
+          type: array
+          description: Bütöv göndərilir — köhnə sətirlər əvəz olunur.
+          items:
+            $ref: '#/components/schemas/RecipeLineInput'
+
+    RecipeActivate:
+      type: object
+      additionalProperties: false
+      required: [validFrom, rowVersion]
+      properties:
+        validFrom:
+          $ref: '#/components/schemas/DateOnly'
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    RecipeLine:
+      type: object
+      required: [lineNo, componentType, qtyPerPortion, uomId, yieldPct]
+      properties:
+        lineNo:
+          type: integer
+        componentType:
+          $ref: '#/components/schemas/ComponentType'
+        productId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        productSku:
+          type: [string, 'null']
+        productName:
+          type: [string, 'null']
+        subMenuItemId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        subMenuItemName:
+          type: [string, 'null']
+        qtyPerPortion:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        uomCode:
+          type: string
+        yieldPct:
+          $ref: '#/components/schemas/Percent'
+        isOptional:
+          type: boolean
+        attachRatePct:
+          $ref: '#/components/schemas/Percent'
+        note:
+          type: [string, 'null']
+
+    RecipeSummary:
+      type: object
+      required: [id, menuItemId, versionNo, status, validFrom]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        menuItemId:
+          $ref: '#/components/schemas/Id'
+        menuItemName:
+          type: string
+        versionNo:
+          type: integer
+        status:
+          $ref: '#/components/schemas/RecipeStatus'
+        validFrom:
+          $ref: '#/components/schemas/DateOnly'
+        validTo:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        lineCount:
+          type: integer
+
+    Recipe:
+      allOf:
+        - $ref: '#/components/schemas/RecipeSummary'
+        - type: object
+          required: [yieldPortions, lines, rowVersion]
+          properties:
+            yieldPortions:
+              $ref: '#/components/schemas/Decimal'
+            note:
+              type: [string, 'null']
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/RecipeLine'
+            rowVersion:
+              $ref: '#/components/schemas/RowVersion'
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    RecipeExplosionLine:
+      type: object
+      required: [productId, requiredQtyBase, baseUomId, baseUomCode]
+      properties:
+        productId:
+          $ref: '#/components/schemas/Id'
+        productSku:
+          type: string
+        productName:
+          type: string
+        requiredQtyBase:
+          allOf:
+            - $ref: '#/components/schemas/Decimal'
+          description: Emal itkisi tətbiq edildikdən sonrakı miqdar, base vahiddə.
+        baseUomId:
+          $ref: '#/components/schemas/Id'
+        baseUomCode:
+          type: string
+        viaSubRecipe:
+          type: [string, 'null']
+          description: Bu inqrediyent alt-resept vasitəsilə gəlibsə həmin alt-reseptin adı.
+        depth:
+          type: integer
+          minimum: 0
+          description: Partlama dərinliyi. Kök resept 0.
+
+    RecipeExplosion:
+      type: object
+      required: [recipeId, portions, lines]
+      properties:
+        recipeId:
+          $ref: '#/components/schemas/Id'
+        menuItemName:
+          type: string
+        portions:
+          $ref: '#/components/schemas/Decimal'
+        maxDepth:
+          type: integer
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeExplosionLine'
+
+    SalesLineInput:
+      type: object
+      additionalProperties: false
+      required: [qtySold]
+      properties:
+        menuItemId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: '`posCode` verilmirsə məcburidir.'
+        posCode:
+          type: [string, 'null']
+          maxLength: 64
+          description: Tanınmazsa sətir `rawPosCode` ilə saxlanılır və `unmapped` sayılır.
+        qtySold:
+          $ref: '#/components/schemas/Decimal'
+        grossAmount:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+
+    SalesImportCreate:
+      type: object
+      additionalProperties: false
+      required: [locationId, businessDate, source, lines]
+      properties:
+        locationId:
+          $ref: '#/components/schemas/Id'
+        businessDate:
+          $ref: '#/components/schemas/DateOnly'
+        source:
+          $ref: '#/components/schemas/SalesSource'
+        externalRef:
+          type: [string, 'null']
+          maxLength: 120
+          description: POS batch və ya smena nömrəsi.
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SalesLineInput'
+
+    SalesImportUpdate:
+      type: object
+      additionalProperties: false
+      required: [rowVersion, lines]
+      properties:
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesLineInput'
+
+    SalesCsvUpload:
+      type: object
+      required: [locationId, businessDate, file]
+      properties:
+        locationId:
+          $ref: '#/components/schemas/Id'
+        businessDate:
+          $ref: '#/components/schemas/DateOnly'
+        externalRef:
+          type: [string, 'null']
+        columnMapping:
+          type: [string, 'null']
+          description: 'JSON: sütun adlarının xəritəsi, məs. `{"posCode":"PLU","qtySold":"Qty"}`. Verilməzsə standart adlar axtarılır.'
+        file:
+          type: string
+          contentMediaType: text/csv
+          description: CSV faylı, maksimum 5 MB.
+
+    SalesLine:
+      type: object
+      required: [qtySold]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        menuItemId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        menuItemName:
+          type: [string, 'null']
+        rawPosCode:
+          type: [string, 'null']
+          description: Tanınmayan sətirdə POS kodu burada saxlanılır.
+        isMapped:
+          type: boolean
+        hasRecipe:
+          type: boolean
+          description: Maddə tanınsa da resepti yoxdursa `false` — istehlak yaranmır.
+        qtySold:
+          $ref: '#/components/schemas/Decimal'
+        grossAmount:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+
+    SalesImport:
+      type: object
+      required: [id, locationId, businessDate, source, status, lineCount, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        locationId:
+          $ref: '#/components/schemas/Id'
+        locationName:
+          type: string
+        businessDate:
+          $ref: '#/components/schemas/DateOnly'
+        source:
+          $ref: '#/components/schemas/SalesSource'
+        externalRef:
+          type: [string, 'null']
+        status:
+          $ref: '#/components/schemas/SalesImportStatus'
+        lineCount:
+          type: integer
+        unmappedCount:
+          type: integer
+          description: Tanınmayan və ya resepti olmayan sətirlərin sayı.
+        grossAmount:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        importedAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+        consumptionRunId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    SalesImportDetail:
+      allOf:
+        - $ref: '#/components/schemas/SalesImport'
+        - type: object
+          required: [lines]
+          properties:
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/SalesLine'
+
+    SalesImportParseResult:
+      type: object
+      required: [salesImport, parsedRows, parseErrors]
+      properties:
+        salesImport:
+          $ref: '#/components/schemas/SalesImportDetail'
+        parsedRows:
+          type: integer
+        parseErrors:
+          type: array
+          description: Oxuna bilməyən sətirlər. Qalan sətirlər sənədə yazılır.
+          items:
+            type: object
+            required: [rowNumber, message]
+            properties:
+              rowNumber:
+                type: integer
+              rawLine:
+                type: [string, 'null']
+              message:
+                type: string
+
+    ConsumptionRunCreate:
+      type: object
+      additionalProperties: false
+      required: [salesImportId]
+      properties:
+        salesImportId:
+          $ref: '#/components/schemas/Id'
+        postImmediately:
+          type: boolean
+          default: false
+          description: '`true` — hesablamadan sonra dərhal post edilir. `cons.run.post` icazəsi tələb olunur.'
+
+    ConsumptionRunLine:
+      type: object
+      required: [productId, theoreticalQtyBase, postedQtyBase, shortfallQtyBase, baseUomId]
+      properties:
+        productId:
+          $ref: '#/components/schemas/Id'
+        productSku:
+          type: string
+        productName:
+          type: string
+        theoreticalQtyBase:
+          allOf:
+            - $ref: '#/components/schemas/Decimal'
+          description: Resept partlamasının nəticəsi.
+        postedQtyBase:
+          allOf:
+            - $ref: '#/components/schemas/Decimal'
+          description: '`min(theoretical, available)` — faktiki stokdan çıxarılan.'
+        shortfallQtyBase:
+          allOf:
+            - $ref: '#/components/schemas/Decimal'
+          description: Qalıq çatmadığı üçün çıxarıla bilməyən hissə. Sıfırdan böyükdürsə qəbul qeyd olunmayıb.
+        baseUomId:
+          $ref: '#/components/schemas/Id'
+        baseUomCode:
+          type: string
+        unitCost:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: '`master.product.view_cost` icazəsi olmayan istifadəçiyə **göndərilmir** (sahə JSON-da olmur).'
+        costAmount:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Eyni icazəyə bağlıdır.
+
+    ConsumptionRun:
+      type: object
+      required: [id, docNo, locationId, businessDate, status, shortfallCount, unmappedCount, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+          description: 'Format `CN-{YYYY}-{00000}`, məs. `CN-2026-00042`.'
+        locationId:
+          $ref: '#/components/schemas/Id'
+        locationName:
+          type: string
+        businessDate:
+          $ref: '#/components/schemas/DateOnly'
+        salesImportId:
+          $ref: '#/components/schemas/Id'
+        status:
+          $ref: '#/components/schemas/ConsumptionRunStatus'
+        movementGroupId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Post edildikdən sonra `inv_movement_group` istinadı.
+        shortfallCount:
+          type: integer
+        unmappedCount:
+          type: integer
+        failureReason:
+          type: [string, 'null']
+          description: '`status = FAILED` olduqda səbəb.'
+        calculatedAt:
+          oneOf:
+            - $ref: '#/components/schemas/DateTimeUtc'
+            - type: 'null'
+        postedAt:
+          oneOf:
+            - $ref: '#/components/schemas/DateTimeUtc'
+            - type: 'null'
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    ConsumptionRunDetail:
+      allOf:
+        - $ref: '#/components/schemas/ConsumptionRun'
+        - type: object
+          required: [lines]
+          properties:
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/ConsumptionRunLine'
+            totalCostAmount:
+              oneOf:
+                - $ref: '#/components/schemas/Decimal'
+                - type: 'null'
+              description: '`master.product.view_cost` icazəsinə bağlıdır.'
+
+    ConsumptionRunPage:
+      type: object
+      required: [items, page, size, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsumptionRun'
+        page:
+          type: integer
+        size:
+          type: integer
+        total:
+          type: integer
+
+    SalesImportPage:
+      type: object
+      required: [items, page, size, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SalesImport'
+        page:
+          type: integer
+        size:
+          type: integer
+        total:
+          type: integer
+
+    VarianceLine:
+      type: object
+      required: [productId, locationId, openingQty, receivedQty, theoreticalConsumedQty, wasteQty, expectedQty, countedQty, varianceQty]
+      properties:
+        productId:
+          $ref: '#/components/schemas/Id'
+        productSku:
+          type: string
+        productName:
+          type: string
+        locationId:
+          $ref: '#/components/schemas/Id'
+        locationName:
+          type: string
+        baseUomCode:
+          type: string
+        openingQty:
+          allOf:
+            - $ref: '#/components/schemas/Decimal'
+          description: Dövrün əvvəlindəki sayım nəticəsi.
+        receivedQty:
+          $ref: '#/components/schemas/Decimal'
+        theoreticalConsumedQty:
+          $ref: '#/components/schemas/Decimal'
+        wasteQty:
+          $ref: '#/components/schemas/Decimal'
+        sampleQty:
+          $ref: '#/components/schemas/Decimal'
+        transferNetQty:
+          allOf:
+            - $ref: '#/components/schemas/Decimal'
+          description: Filiallararası transferin xalis təsiri (işarəli).
+        expectedQty:
+          allOf:
+            - $ref: '#/components/schemas/Decimal'
+          description: 'opening + received − theoretical − waste − sample ± transfer.'
+        countedQty:
+          allOf:
+            - $ref: '#/components/schemas/Decimal'
+          description: Dövrün sonundakı sayım nəticəsi.
+        varianceQty:
+          allOf:
+            - $ref: '#/components/schemas/Decimal'
+          description: '`counted − expected`. İşarəli göstərilir.'
+        variancePct:
+          $ref: '#/components/schemas/Percent'
+        varianceValue:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Fərqin manatla dəyəri. `master.product.view_cost` icazəsinə bağlıdır.
+
+    VariancePage:
+      type: object
+      required: [items, page, size, total, periodFrom, periodTo]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VarianceLine'
+        page:
+          type: integer
+        size:
+          type: integer
+        total:
+          type: integer
+        periodFrom:
+          $ref: '#/components/schemas/DateOnly'
+        periodTo:
+          $ref: '#/components/schemas/DateOnly'
+
+    PortionComplianceLine:
+      type: object
+      required: [menuItemId, productId, recipeQtyPerPortion, actualQtyPerPortion, compliancePct, portionsSold]
+      properties:
+        menuItemId:
+          $ref: '#/components/schemas/Id'
+        menuItemName:
+          type: string
+        productId:
+          $ref: '#/components/schemas/Id'
+        productName:
+          type: string
+        baseUomCode:
+          type: string
+        portionsSold:
+          $ref: '#/components/schemas/Decimal'
+        recipeQtyPerPortion:
+          $ref: '#/components/schemas/Decimal'
+        actualQtyPerPortion:
+          allOf:
+            - $ref: '#/components/schemas/Decimal'
+          description: Fərq analizindən törəyən faktiki sərfiyyatın porsiyaya bölünməsi.
+        compliancePct:
+          allOf:
+            - $ref: '#/components/schemas/Percent'
+          description: '`recipeQty ÷ actualQty × 100`. 100-dən aşağı — porsiya normadan böyükdür.'
+
+    PortionCompliancePage:
+      type: object
+      required: [items, page, size, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortionComplianceLine'
+        page:
+          type: integer
+        size:
+          type: integer
+        total:
+          type: integer

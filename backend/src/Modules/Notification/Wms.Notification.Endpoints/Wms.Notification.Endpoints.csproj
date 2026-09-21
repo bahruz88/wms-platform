@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Notification Minimal API endpoints and the IModule entry point.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Notification.Application/Wms.Notification.Application.csproj" />
+    <ProjectReference Include="../Wms.Notification.Infrastructure/Wms.Notification.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

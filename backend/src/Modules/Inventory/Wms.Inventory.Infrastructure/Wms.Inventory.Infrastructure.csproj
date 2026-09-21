@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Inventory persistence (InventoryDbContext, inv_* mappings), repositories, jobs and contract implementations.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Inventory.Application/Wms.Inventory.Application.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Infrastructure/Wms.Common.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

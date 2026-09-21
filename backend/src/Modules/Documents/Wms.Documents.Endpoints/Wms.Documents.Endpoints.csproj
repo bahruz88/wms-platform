@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Documents Minimal API endpoints and the IModule entry point.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Documents.Application/Wms.Documents.Application.csproj" />
+    <ProjectReference Include="../Wms.Documents.Infrastructure/Wms.Documents.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

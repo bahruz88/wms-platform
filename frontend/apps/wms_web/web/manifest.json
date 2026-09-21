@@ -1,0 +1,35 @@
+{
+    "name": "WMS — Satınalma və Anbar",
+    "short_name": "WMS",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#f6f7f9",
+    "theme_color": "#1a5fd0",
+    "description": "Satınalma və Anbar İdarəetmə Platforması",
+    "orientation": "any",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

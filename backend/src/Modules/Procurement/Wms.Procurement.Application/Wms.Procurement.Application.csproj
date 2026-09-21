@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Procurement use cases (commands, queries, handlers).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Procurement.Domain/Wms.Procurement.Domain.csproj" />
+    <ProjectReference Include="../Wms.Procurement.Contracts/Wms.Procurement.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Application/Wms.Common.Application.csproj" />
+    <!-- Allowed cross-module dependencies (spec §5): Procurement → MasterData.Contracts + Inventory.Contracts. -->
+    <ProjectReference Include="../../MasterData/Wms.MasterData.Contracts/Wms.MasterData.Contracts.csproj" />
+    <ProjectReference Include="../../Inventory/Wms.Inventory.Contracts/Wms.Inventory.Contracts.csproj" />
+  </ItemGroup>
+</Project>

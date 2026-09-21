@@ -1,0 +1,70 @@
+# Keep at least one pod of every multi-replica service during node drains / upgrades.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wms-gateway
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wms-gateway
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wms-identity
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wms-identity
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wms-masterdata
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wms-masterdata
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wms-inventory
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wms-inventory
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wms-procurement
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wms-procurement
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wms-reporting
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wms-reporting
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: wms-web
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wms-web

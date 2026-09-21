@@ -1,0 +1,20 @@
+name: wms_design_system
+description: WMS design system - Material 3 theme, tokens (spacing/radius/breakpoints), AdaptiveScaffold and shared widgets.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
+resolution: workspace
+
+dependencies:
+  decimal: ^3.2.6
+  flutter:
+    sdk: flutter
+  intl: ^0.20.3
+  wms_core: ^0.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

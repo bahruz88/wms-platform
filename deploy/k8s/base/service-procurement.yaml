@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wms-procurement
+  labels:
+    app.kubernetes.io/name: wms-procurement
+    app.kubernetes.io/part-of: wms
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: wms-procurement
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

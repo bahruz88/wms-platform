@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Documents persistence, contract implementations and jobs.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Documents.Application/Wms.Documents.Application.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Infrastructure/Wms.Common.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

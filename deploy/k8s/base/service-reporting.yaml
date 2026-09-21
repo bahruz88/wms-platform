@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wms-reporting
+  labels:
+    app.kubernetes.io/name: wms-reporting
+    app.kubernetes.io/part-of: wms
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: wms-reporting
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

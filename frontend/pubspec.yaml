@@ -1,0 +1,50 @@
+name: wms_frontend
+description: Pub workspace root for the WMS Flutter monorepo (apps + shared packages).
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+
+workspace:
+  - packages/wms_core
+  - packages/wms_api_client
+  - packages/wms_auth
+  - packages/wms_design_system
+  - packages/wms_l10n
+  - packages/features/feature_consumption
+  - packages/features/feature_identity
+  - packages/features/feature_master_data
+  - packages/features/feature_inventory
+  - packages/features/feature_procurement
+  - packages/features/feature_reporting
+  - packages/features/feature_notifications
+  - apps/wms_mobile
+  - apps/wms_web
+
+dev_dependencies:
+  melos: ^7.0.0
+
+# Melos >= 7 (workspace mode) reads its configuration from this `melos:` key.
+# `melos.yaml` at the root only documents the scripts; keep both in sync.
+melos:
+  name: wms_frontend
+  command:
+    bootstrap:
+      hooks:
+        post: dart run melos run l10n
+  scripts:
+    analyze:
+      description: Static analysis for the whole workspace (must report no issues).
+      run: flutter analyze --no-pub
+    test:
+      description: Run unit/widget tests in every package and app that has a test/ dir.
+      run: melos exec --dir-exists=test --concurrency=1 -- flutter test --no-pub
+    gen:
+      description: Run build_runner (freezed, json_serializable, riverpod_generator) where configured.
+      run: melos exec --depends-on=build_runner --concurrency=1 -- dart run build_runner build
+    l10n:
+      description: Regenerate AppLocalizations from ARB files (packages/wms_l10n).
+      run: melos exec --scope=wms_l10n -- flutter gen-l10n
+    format:
+      description: Format all Dart sources (fails on diff in CI).
+      run: dart format --set-exit-if-changed .

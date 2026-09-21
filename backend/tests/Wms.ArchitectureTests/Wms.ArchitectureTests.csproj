@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Architecture tests of spec §17.4: module boundaries, tenant filters, unique keys, no double/float, inv_balance immutability.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Host/Wms.Host.Api/Wms.Host.Api.csproj" />
+    <ProjectReference Include="../../src/Host/Wms.Host.Migrator/Wms.Host.Migrator.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NetArchTest.Rules" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
+  </ItemGroup>
+</Project>

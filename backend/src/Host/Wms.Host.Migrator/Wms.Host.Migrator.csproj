@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Description>Runs the EF Core migrations of every module DbContext. Startup migration in the API is forbidden (spec §18.3).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../BuildingBlocks/Wms.Common.Infrastructure/Wms.Common.Infrastructure.csproj" />
+    <ProjectReference Include="../../Modules/Identity/Wms.Identity.Infrastructure/Wms.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="../../Modules/MasterData/Wms.MasterData.Infrastructure/Wms.MasterData.Infrastructure.csproj" />
+    <ProjectReference Include="../../Modules/Inventory/Wms.Inventory.Infrastructure/Wms.Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="../../Modules/Consumption/Wms.Consumption.Infrastructure/Wms.Consumption.Infrastructure.csproj" />
+    <ProjectReference Include="../../Modules/Procurement/Wms.Procurement.Infrastructure/Wms.Procurement.Infrastructure.csproj" />
+    <ProjectReference Include="../../Modules/Documents/Wms.Documents.Infrastructure/Wms.Documents.Infrastructure.csproj" />
+    <ProjectReference Include="../../Modules/Notification/Wms.Notification.Infrastructure/Wms.Notification.Infrastructure.csproj" />
+    <ProjectReference Include="../../Modules/Reporting/Wms.Reporting.Infrastructure/Wms.Reporting.Infrastructure.csproj" />
+    <ProjectReference Include="../../Modules/Integration/Wms.Integration.Infrastructure/Wms.Integration.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+</Project>

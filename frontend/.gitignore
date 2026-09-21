@@ -1,0 +1,33 @@
+# Dart / Flutter workspace
+.dart_tool/
+.packages
+build/
+coverage/
+**/doc/api/
+.flutter-plugins-dependencies
+**/ios/Flutter/.last_build_id
+
+# Per-package lockfiles are not used in a pub workspace; only the root one is committed.
+packages/**/pubspec.lock
+apps/**/pubspec.lock
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/settings.json
+
+# OS
+.DS_Store
+*.log
+*.swp
+
+# Symbolication / obfuscation
+app.*.symbols
+app.*.map.json
+
+# openapi-generator output (see packages/wms_api_client/lib/src/generated/README.md)
+packages/wms_api_client/lib/src/generated/*
+!packages/wms_api_client/lib/src/generated/README.md
+!packages/wms_api_client/lib/src/generated/.gitignore

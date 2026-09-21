@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>MasterData persistence, contract implementations and jobs.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.MasterData.Application/Wms.MasterData.Application.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Infrastructure/Wms.Common.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

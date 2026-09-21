@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Integration events published through the outbox to RabbitMQ (spec §14.2).</Description>
+  </PropertyGroup>
+</Project>

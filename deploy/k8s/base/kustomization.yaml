@@ -1,0 +1,45 @@
+# Base: cloud profile of SPEC §18.1. Infra (MySQL, Redis, RabbitMQ, MinIO, Keycloak, Seq)
+# is external/managed - see configmap-wms.yaml and deploy/README.md.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: wms
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/managed-by: kustomize
+resources:
+  - namespace.yaml
+  - configmap-wms.yaml
+  - secret-wms.example.yaml
+  - job-migrator.yaml
+  - deployment-gateway.yaml
+  - service-gateway.yaml
+  - deployment-identity.yaml
+  - service-identity.yaml
+  - deployment-masterdata.yaml
+  - service-masterdata.yaml
+  - deployment-inventory.yaml
+  - service-inventory.yaml
+  - deployment-procurement.yaml
+  - service-procurement.yaml
+  - deployment-reporting.yaml
+  - service-reporting.yaml
+  - deployment-worker.yaml
+  - service-worker.yaml
+  - deployment-web.yaml
+  - service-web.yaml
+  - ingress.yaml
+# Image names used in the manifests -> real registry. Overlays only change the tag.
+images:
+  - name: wms/api
+    newName: ghcr.io/example/wms-api
+    newTag: latest
+  - name: wms/gateway
+    newName: ghcr.io/example/wms-gateway
+    newTag: latest
+  - name: wms/migrator
+    newName: ghcr.io/example/wms-migrator
+    newTag: latest
+  - name: wms/web
+    newName: ghcr.io/example/wms-web
+    newTag: latest

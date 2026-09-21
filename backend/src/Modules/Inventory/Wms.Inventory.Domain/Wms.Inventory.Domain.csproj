@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Inventory domain: batch, double-entry ledger (movement group + movement), balance projection, documents (spec §9, §12).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+  </ItemGroup>
+</Project>

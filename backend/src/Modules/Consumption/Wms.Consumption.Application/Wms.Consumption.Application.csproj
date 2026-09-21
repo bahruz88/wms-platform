@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Consumption use cases: recipe versioning, sales import, BOM explosion, theoretical consumption and posting through Inventory.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Consumption.Domain/Wms.Consumption.Domain.csproj" />
+    <ProjectReference Include="../Wms.Consumption.Contracts/Wms.Consumption.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Application/Wms.Common.Application.csproj" />
+    <!-- Allowed cross-module dependencies (ADR-012, CONVENTIONS.md): MasterData.Contracts + Inventory.Contracts only. -->
+    <ProjectReference Include="../../MasterData/Wms.MasterData.Contracts/Wms.MasterData.Contracts.csproj" />
+    <ProjectReference Include="../../Inventory/Wms.Inventory.Contracts/Wms.Inventory.Contracts.csproj" />
+  </ItemGroup>
+</Project>

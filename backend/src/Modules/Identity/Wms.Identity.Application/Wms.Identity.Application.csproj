@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Identity use cases (commands, queries, handlers).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Identity.Domain/Wms.Identity.Domain.csproj" />
+    <ProjectReference Include="../Wms.Identity.Contracts/Wms.Identity.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Application/Wms.Common.Application.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Procurement Minimal API endpoints and the IModule entry point.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Procurement.Application/Wms.Procurement.Application.csproj" />
+    <ProjectReference Include="../Wms.Procurement.Infrastructure/Wms.Procurement.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,167 @@
+name: backend
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - 'contracts/openapi/**'
+      - 'deploy/docker/backend.Dockerfile'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'contracts/openapi/**'
+      - 'deploy/docker/backend.Dockerfile'
+      - '.github/workflows/backend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
+  # docs/CONVENTIONS.md: Directory.Build.props already sets TreatWarningsAsErrors;
+  # this makes a misconfigured props file fail the build too.
+  BUILD_CONFIGURATION: Release
+
+jobs:
+  build-and-test:
+    name: build + unit/architecture tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('backend/Directory.Packages.props', 'backend/**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        working-directory: backend
+        run: dotnet restore Wms.slnx
+
+      - name: Build (warnings as errors)
+        working-directory: backend
+        run: >
+          dotnet build Wms.slnx
+          --configuration "$BUILD_CONFIGURATION"
+          --no-restore
+          -warnaserror
+
+      - name: Unit tests
+        working-directory: backend
+        run: >
+          dotnet test Wms.slnx
+          --configuration "$BUILD_CONFIGURATION"
+          --no-build
+          --filter "FullyQualifiedName!~IntegrationTests"
+          --logger "trx;LogFileName=unit.trx"
+          --results-directory ../artifacts/test-results/unit
+          -- --report-trx
+
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-unit-test-results
+          path: artifacts/test-results/unit
+          if-no-files-found: warn
+          retention-days: 14
+
+  integration-tests:
+    name: integration tests (Testcontainers + real MySQL)
+    runs-on: ubuntu-24.04
+    # ubuntu runners ship with Docker, which Testcontainers needs (SPEC §17.2:
+    # in-memory DB is not acceptable for stock logic - FOR UPDATE / SKIP LOCKED).
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('backend/Directory.Packages.props', 'backend/**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Verify Docker is available
+        run: docker version
+
+      - name: Pre-pull MySQL image
+        run: docker pull mysql:8.4
+
+      - name: Restore
+        working-directory: backend
+        run: dotnet restore Wms.slnx
+
+      - name: Build
+        working-directory: backend
+        run: dotnet build Wms.slnx --configuration "$BUILD_CONFIGURATION" --no-restore
+
+      - name: Integration + contract tests
+        working-directory: backend
+        env:
+          TESTCONTAINERS_RYUK_DISABLED: 'false'
+        run: >
+          dotnet test Wms.slnx
+          --configuration "$BUILD_CONFIGURATION"
+          --no-build
+          --filter "FullyQualifiedName~IntegrationTests|FullyQualifiedName~ContractTests"
+          --logger "trx;LogFileName=integration.trx"
+          --results-directory ../artifacts/test-results/integration
+          -- --report-trx
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-integration-test-results
+          path: artifacts/test-results/integration
+          if-no-files-found: warn
+          retention-days: 14
+
+  docker-image:
+    name: docker build (API image)
+    runs-on: ubuntu-24.04
+    needs: [build-and-test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Context is `backend` and the Dockerfile lives in deploy/ (docs/CONVENTIONS.md).
+      # Build only - publishing happens in deploy.yml.
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          file: deploy/docker/backend.Dockerfile
+          build-args: |
+            HOST_PROJECT=Wms.Host.Api
+          push: false
+          load: false
+          tags: wms/api:ci-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

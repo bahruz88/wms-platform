@@ -1,0 +1,2527 @@
+openapi: 3.1.0
+info:
+  title: WMS Procurement API
+  version: 1.0.0
+  summary: PR → RFQ → Quotation → Comparison → PO → Approval; qiymət tarixçəsi (SPEC §10).
+  description: |
+    Procurement modulu satınalma axınını idarə edir. Əsas qaydalar:
+
+    * PR avtomatik PO-ya çevrilmir (TOR §9); bir PO bir neçə PR sətrindən yığıla bilər,
+      `RequisitionLine.convertedQty` qismən çevrilməni izləyir (SPEC §12.8).
+    * Ən ucuz təklif seçilmədikdə `selectionNote` **məcburidir** (`422 SELECTION_NOTE_REQUIRED`).
+    * PO approval-ı parametrik qaydalarla (`proc_approval_rule`: sənəd tipi, məhsul tipi, AZN məbləğ intervalı,
+      addım, təsdiqləyən rol) və delegasiya (`iam_delegation`) ilə işləyir (TOR §10, §36).
+    * `totalAmountBase` (AZN) PO tarixindəki CBAR məzənnəsi ilə hesablanır; məzənnə yoxdursa `409 FX_RATE_MISSING`.
+    * Bütün məbləğlər **string** `Decimal`-dır.
+
+    Route prefiksi: `/api/v1/procurement`. Cədvəl prefiksi: `proc_`.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: /api/v1/procurement
+    description: Gateway (YARP) arxasında Procurement modulu
+
+security:
+  - bearer: []
+  - oidc: []
+
+tags:
+  - name: Requisitions
+    description: Satınalma tələbi — PR (`proc_requisition`).
+  - name: Rfqs
+    description: Qiymət sorğusu — RFQ (`proc_rfq`) və təchizatçılara göndərilməsi.
+  - name: Quotations
+    description: Təchizatçı təklifləri (`proc_quotation`) və müqayisə cədvəli.
+  - name: PurchaseOrders
+    description: Sifariş — PO (`proc_purchase_order`), TOR §10.
+  - name: Approvals
+    description: Approval instansları və addımları (`proc_approval_instance/step`); gözləyən qərarlar.
+  - name: ApprovalRules
+    description: Parametrik approval qaydaları (`proc_approval_rule`).
+  - name: PriceHistory
+    description: Qiymət tarixçəsi (`proc_price_history`), TOR §25.
+
+paths:
+  # ================================================================ Requisitions
+  /requisitions:
+    get:
+      operationId: listRequisitions
+      summary: PR siyahısı
+      description: Filial istifadəçisi yalnız `requesterLocationId` öz lokasiyası olanları görür.
+      tags: [Requisitions]
+      x-permission: proc.pr.view
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/RequisitionStatus'
+        - name: productType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+        - name: priority
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Priority'
+        - name: requesterLocationId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: PR-lar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequisitionPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createRequisition
+      summary: PR yarat (DRAFT)
+      description: |
+        Bir PR yalnız bir `productType` (FOOD / NON_FOOD) daşıyır — sətirlərdəki məhsullar uyğun gəlməlidir (`422`).
+        Sənəd nömrəsi `PR-2026-00142`.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Requisitions]
+      x-permission: proc.pr.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequisitionCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Requisition'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /requisitions/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getRequisition
+      summary: PR
+      description: Sətirlər `convertedQty` ilə.
+      tags: [Requisitions]
+      x-permission: proc.pr.view
+      responses:
+        '200':
+          description: PR.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Requisition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateRequisition
+      summary: DRAFT PR-ı yenilə
+      description: 'Yalnız `DRAFT`. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`.'
+      tags: [Requisitions]
+      x-permission: proc.pr.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequisitionUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Requisition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /requisitions/{id}/submit:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: submitRequisition
+      summary: PR-ı satınalmaya göndər
+      description: '`DRAFT → SUBMITTED`; satınalma mütəxəssisinə bildiriş. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [Requisitions]
+      x-permission: proc.pr.submit
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Göndərildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Requisition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /requisitions/{id}/reject:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: rejectRequisition
+      summary: PR-ı rədd et
+      description: '`SUBMITTED/IN_PROCUREMENT → REJECTED`; `comment` məcburidir (`422`). `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [Requisitions]
+      x-permission: proc.pr.reject
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedComment'
+      responses:
+        '200':
+          description: Rədd edildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Requisition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /requisitions/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: cancelRequisition
+      summary: PR-ı ləğv et
+      description: '`DRAFT/SUBMITTED → CANCELLED` (tələbçi tərəfindən). `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [Requisitions]
+      x-permission: proc.pr.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedComment'
+      responses:
+        '200':
+          description: Ləğv edildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Requisition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ================================================================ RFQs
+  /rfqs:
+    get:
+      operationId: listRfqs
+      summary: RFQ siyahısı
+      description: Qiymət sorğuları.
+      tags: [Rfqs]
+      x-permission: proc.rfq.view
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/RfqStatus'
+        - $ref: '#/components/parameters/SupplierIdFilter'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: RFQ-lar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RfqPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createRfq
+      summary: RFQ yarat (DRAFT)
+      description: |
+        Sətirlər PR sətirlərindən (`requisitionLineIds`) və/yaxud əl ilə. Ən azı **iki** təchizatçı seçilməlidir
+        (TOR: müqayisə tələbi) — əks halda `422`. Bağlanan PR-lar `IN_PROCUREMENT` statusuna keçir.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Rfqs]
+      x-permission: proc.rfq.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RfqCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rfq'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /rfqs/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getRfq
+      summary: RFQ
+      description: Sətirlər, dəvət olunan təchizatçılar və daxil olan təkliflərin sayı.
+      tags: [Rfqs]
+      x-permission: proc.rfq.view
+      responses:
+        '200':
+          description: RFQ.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rfq'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /rfqs/{id}/send:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: sendRfq
+      summary: RFQ-nu təchizatçılara göndər
+      description: '`DRAFT → SENT`; e-mail göndərişi Notification modulunun işidir (event). `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [Rfqs]
+      x-permission: proc.rfq.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Göndərildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rfq'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /rfqs/{id}/close:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: closeRfq
+      summary: RFQ-nu bağla
+      description: '`SENT → CLOSED`; bundan sonra yeni təklif qəbul edilmir. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [Rfqs]
+      x-permission: proc.rfq.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Bağlandı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rfq'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /rfqs/{id}/comparison:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getRfqComparison
+      summary: Təkliflərin müqayisə cədvəli
+      description: |
+        RFQ sətirləri × təchizatçı matrisi: hər hüceyrədə qiymət, AZN-ə çevrilmiş qiymət, çatdırılma günü.
+        `cheapestQuotationId` — ümumi AZN cəmi ən aşağı olan təklif; `selectQuotation` bu id-dən fərqli seçim
+        üçün `selectionNote` tələb edir. Əvvəlki qiymət (`prevPriceBase`) və fərq faizi qiymət tarixçəsindən gəlir.
+      tags: [Quotations]
+      x-permission: proc.quotation.view
+      responses:
+        '200':
+          description: Müqayisə.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RfqComparison'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ================================================================ Quotations
+  /quotations:
+    get:
+      operationId: listQuotations
+      summary: Təklif siyahısı
+      description: RFQ və/yaxud təchizatçı üzrə.
+      tags: [Quotations]
+      x-permission: proc.quotation.view
+      parameters:
+        - name: rfqId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - $ref: '#/components/parameters/SupplierIdFilter'
+        - name: isSelected
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Təkliflər.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotationPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createQuotation
+      summary: Təchizatçı təklifini daxil et
+      description: |
+        Satınalma mütəxəssisi təchizatçıdan gələn təklifi (PDF `attachmentIds` ilə) daxil edir. `rfqId` verildikdə
+        sətirlər RFQ sətirlərinə (`rfqLineId`) bağlanır və RFQ `SENT` statusunda olmalıdır. `totalAmount` server
+        tərəfindən sətirlərdən hesablanır; `totalAmountBase` üçün `quoteDate` məzənnəsi lazımdır.
+
+        `409` kodları: `FX_RATE_MISSING`, `INVALID_STATE_TRANSITION` (RFQ bağlıdır), `IDEMPOTENT_REPLAY`.
+      tags: [Quotations]
+      x-permission: proc.quotation.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuotationCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quotation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /quotations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getQuotation
+      summary: Təklif
+      description: Sətirlər daxil.
+      tags: [Quotations]
+      x-permission: proc.quotation.view
+      responses:
+        '200':
+          description: Təklif.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quotation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateQuotation
+      summary: Təklifi yenilə
+      description: 'Yalnız seçilməmiş (`isSelected=false`) və RFQ bağlanmamış təklif. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `FX_RATE_MISSING`.'
+      tags: [Quotations]
+      x-permission: proc.quotation.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuotationUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quotation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /quotations/{id}/select:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: selectQuotation
+      summary: Təklifi seç (PO üçün əsas)
+      description: |
+        Eyni RFQ-da əvvəl seçilmiş təklif varsa seçim ondan götürülür. **Bu təklif ən ucuz deyilsə
+        `selectionNote` məcburidir** — boşdursa `422 SELECTION_NOTE_REQUIRED` (SPEC §10, `proc_quotation.selection_note`).
+        Seçim `common_audit_log`-a yazılır.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION` (RFQ `CLOSED`/`CANCELLED`), `IDEMPOTENT_REPLAY`.
+      tags: [Quotations]
+      x-permission: proc.quotation.select
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuotationSelect'
+      responses:
+        '200':
+          description: Seçildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quotation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ================================================================ Purchase orders
+  /purchase-orders:
+    get:
+      operationId: listPurchaseOrders
+      summary: PO siyahısı
+      description: Məbləğlər (`totalAmount`, `totalAmountBase`) `proc.po.view` ilə görünür (satınalma rolları); anbardar PO-nu yalnız qəbul üçün `listOpenPurchaseOrdersForReceipt` ilə görür.
+      tags: [PurchaseOrders]
+      x-permission: proc.po.view
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/PurchaseOrderStatus'
+        - $ref: '#/components/parameters/SupplierIdFilter'
+        - name: deliveryLocationId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: productType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: PO-lar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrderPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createPurchaseOrder
+      summary: PO yarat (DRAFT)
+      description: |
+        Mənbə: seçilmiş təklif (`quotationId` — sətirlər və qiymətlər ondan), PR sətirləri (`requisitionLineIds`)
+        və ya əl ilə. `fxRate` PO tarixindəki `master_currency_rate`-dən götürülüb **dondurulur**; AZN üçün `1`.
+        `subtotal`, `vatAmount`, `totalAmount`, `totalAmountBase` server hesablayır.
+
+        Qida məhsulu üçün supplier `isApprovedFoodSupplier=true` olmalıdır (`422`). Bir PO bir `productType`.
+        PR bölünməsinə nəzarət: eyni təchizatçı üzrə pəncərədəki kumulyativ məbləğ approval limitini aşırsa
+        `splitCheckWarning` doldurulur (SoD, `proc_split_check_log`).
+
+        `409` kodları: `FX_RATE_MISSING`, `IDEMPOTENT_REPLAY`.
+      tags: [PurchaseOrders]
+      x-permission: proc.po.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /purchase-orders/open-for-receipt:
+    get:
+      operationId: listOpenPurchaseOrdersForReceipt
+      summary: Qəbul üçün açıq PO-lar (anbardar görünüşü)
+      description: |
+        `SENT_TO_SUPPLIER` / `PARTIALLY_RECEIVED` statuslu PO-lar, qalıq miqdarla (`qty − receivedQty`).
+        **Qiymət sahələri yoxdur** — anbardar üçün nəzərdə tutulub (`master.product.view_cost` tələb olunmur).
+      tags: [PurchaseOrders]
+      x-permission: proc.po.view_for_receipt
+      parameters:
+        - $ref: '#/components/parameters/SupplierIdFilter'
+        - name: deliveryLocationId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Açıq PO-lar (qiymətsiz).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenPurchaseOrderPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /purchase-orders/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getPurchaseOrder
+      summary: PO
+      description: Sətirlər, approval vəziyyəti, qəbul tarixçəsi.
+      tags: [PurchaseOrders]
+      x-permission: proc.po.view
+      responses:
+        '200':
+          description: PO.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updatePurchaseOrder
+      summary: DRAFT PO-nu yenilə
+      description: 'Yalnız `DRAFT` (rədd edildikdən sonra da `DRAFT`-a qayıdır). `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `FX_RATE_MISSING`.'
+      tags: [PurchaseOrders]
+      x-permission: proc.po.create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseOrderUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /purchase-orders/{id}/submit:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: submitPurchaseOrder
+      summary: PO-nu təsdiqə göndər
+      description: |
+        `DRAFT → PENDING_APPROVAL`. Server `proc_approval_rule`-dan `doc_type=PO`, `productType`, `totalAmountBase`
+        intervalına uyğun addımları seçir və `ApprovalInstance` yaradır; hər addım üçün təsdiqləyən rol və
+        (delegasiya varsa) əvəzedici istifadəçi təyin olunur. Uyğun qayda tapılmazsa `422`
+        (`errors.approval: ["Qayda tapılmadı"]`). Məbləğ 0-dan böyük olmalıdır.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `FX_RATE_MISSING`, `IDEMPOTENT_REPLAY`.
+      tags: [PurchaseOrders]
+      x-permission: proc.po.submit
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Təsdiqə göndərildi; `approval` dolu.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /purchase-orders/{id}/approve:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: approvePurchaseOrder
+      summary: Cari approval addımını təsdiqlə
+      description: |
+        `decideApproval`-ın PO üçün qısa yolu. Cari addımın təsdiqləyəni (rol üzrə) və ya ona delegasiya
+        edilmiş istifadəçi çağıra bilər; PO-nu yaradan özü təsdiqləyə bilməz (SoD, `403`).
+        Son addım təsdiqlənəndə `PENDING_APPROVAL → APPROVED`, `PurchaseOrderApproved` event-i.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [PurchaseOrders]
+      x-permission: proc.po.approve
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedComment'
+      responses:
+        '200':
+          description: Addım təsdiqləndi (və ya PO tam təsdiqləndi).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /purchase-orders/{id}/reject:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: rejectPurchaseOrder
+      summary: PO-nu rədd et
+      description: '`PENDING_APPROVAL → REJECTED`; `comment` məcburidir (`422`). Yaradan sonra `DRAFT`-a qaytarıb düzəldə bilər. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [PurchaseOrders]
+      x-permission: proc.po.approve
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedComment'
+      responses:
+        '200':
+          description: Rədd edildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /purchase-orders/{id}/send:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: sendPurchaseOrder
+      summary: PO-nu təchizatçıya göndər
+      description: |
+        `APPROVED → SENT_TO_SUPPLIER`; `sentAt` yazılır, PDF generasiyası və e-mail Notification/Documents ilə.
+        Təsdiqlənməmiş PO göndərilə bilməz — `409 APPROVAL_REQUIRED`.
+
+        `409` kodları: `APPROVAL_REQUIRED`, `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [PurchaseOrders]
+      x-permission: proc.po.send
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAction'
+      responses:
+        '200':
+          description: Göndərildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /purchase-orders/{id}/close:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: closePurchaseOrder
+      summary: PO-nu bağla
+      description: |
+        `PARTIALLY_RECEIVED / FULLY_RECEIVED → CLOSED` (qalan miqdar gözlənilmir). `SENT_TO_SUPPLIER`-dən
+        birbaşa bağlamaq üçün `comment` məcburidir. Bağlı PO-ya qəbul yaradıla bilməz.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.
+      tags: [PurchaseOrders]
+      x-permission: proc.po.close
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedComment'
+      responses:
+        '200':
+          description: Bağlandı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /purchase-orders/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: cancelPurchaseOrder
+      summary: PO-nu ləğv et
+      description: '`DRAFT / REJECTED / APPROVED → CANCELLED`; göndərilmiş PO ləğv edilmir, bağlanır. `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION`, `IDEMPOTENT_REPLAY`.'
+      tags: [PurchaseOrders]
+      x-permission: proc.po.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedComment'
+      responses:
+        '200':
+          description: Ləğv edildi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseOrder'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ================================================================ Approvals
+  /approvals/pending:
+    get:
+      operationId: listPendingApprovals
+      summary: Mənim gözləyən qərarlarım
+      description: |
+        Cari istifadəçinin (rol üzrə və ya delegasiya ilə) qərar verməli olduğu açıq approval addımları —
+        PO, tullantı (`WASTE`) və sayım düzəlişi (`COUNT_ADJUST`) daxil. Mobil "Təsdiqlər" ekranı bunu istifadə edir.
+      tags: [Approvals]
+      x-permission: proc.approval.view
+      parameters:
+        - name: docType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ApprovalDocType'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Gözləyən addımlar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApprovalPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /approvals/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getApproval
+      summary: Approval instansı
+      description: Bütün addımlar, qərarlar, şərhlər və delegasiya izi.
+      tags: [Approvals]
+      x-permission: proc.approval.view
+      responses:
+        '200':
+          description: Instans.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalInstance'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /approvals/{id}/decide:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: decideApproval
+      summary: Cari addım üzrə qərar ver
+      description: |
+        Ümumi qərar endpoint-i (PO / WASTE / COUNT_ADJUST). Çağıran cari addımın təsdiqləyən roluna malik olmalı
+        və ya həmin rol sahibindən qüvvədə olan delegasiyaya sahib olmalıdır; delegasiya ilə verilən qərarda
+        `delegatedFromUserId` yazılır. Sənədi yaradan qərar verə bilməz (`403`). `REJECTED` üçün `comment` məcburi.
+
+        `409` kodları: `STALE_VERSION`, `INVALID_STATE_TRANSITION` (addım artıq qərarlanıb), `IDEMPOTENT_REPLAY`.
+      tags: [Approvals]
+      x-permission: proc.approval.decide
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalDecision'
+      responses:
+        '200':
+          description: Qərar yazıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalInstance'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ================================================================ Approval rules
+  /approval-rules:
+    get:
+      operationId: listApprovalRules
+      summary: Approval qaydaları
+      description: Sənəd tipi, məhsul tipi, AZN interval, addım, rol.
+      tags: [ApprovalRules]
+      x-permission: proc.approval_rule.view
+      parameters:
+        - name: docType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ApprovalDocType'
+        - $ref: '#/components/parameters/IsActiveFilter'
+      responses:
+        '200':
+          description: Qaydalar.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApprovalRule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createApprovalRule
+      summary: Qayda yarat
+      description: 'Eyni `(docType, productType, stepNo)` üçün intervallar üst-üstə düşməməlidir (`422`). `409` kodları: `IDEMPOTENT_REPLAY`.'
+      tags: [ApprovalRules]
+      x-permission: proc.approval_rule.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalRuleCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /approval-rules/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    put:
+      operationId: updateApprovalRule
+      summary: Qaydanı yenilə
+      description: 'Mövcud açıq approval instansları köhnə qayda ilə davam edir. `409` kodları: `STALE_VERSION`.'
+      tags: [ApprovalRules]
+      x-permission: proc.approval_rule.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApprovalRuleUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ================================================================ Price history
+  /price-history:
+    get:
+      operationId: listPriceHistory
+      summary: Qiymət tarixçəsi
+      description: |
+        Məhsul × təchizatçı üzrə PO qiymətləri, AZN-ə çevrilmiş dəyər və əvvəlki qiymətlə fərq (`PriceVarianceCalculator`
+        job-u doldurur). `PriceChanged` event-i `diffPct` sıfırdan fərqli olanda göndərilir. `master.product.view_cost`
+        tələb olunur — anbardar bu endpoint-i görmür.
+      tags: [PriceHistory]
+      x-permission: master.product.view_cost
+      parameters:
+        - $ref: '#/components/parameters/ProductIdFilter'
+        - $ref: '#/components/parameters/SupplierIdFilter'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - name: minDiffPct
+          in: query
+          required: false
+          description: Yalnız |diffPct| ≥ verilən dəyər olan sətirlər.
+          schema:
+            $ref: '#/components/schemas/Percent'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Qiymət sətirləri.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceHistoryPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    bearer:
+      $ref: './common.v1.yaml#/components/securitySchemes/bearer'
+    oidc:
+      $ref: './common.v1.yaml#/components/securitySchemes/oidc'
+
+  parameters:
+    IdempotencyKey:
+      $ref: './common.v1.yaml#/components/parameters/IdempotencyKey'
+    PathId:
+      $ref: './common.v1.yaml#/components/parameters/PathId'
+    Page:
+      $ref: './common.v1.yaml#/components/parameters/Page'
+    Size:
+      $ref: './common.v1.yaml#/components/parameters/Size'
+    Sort:
+      $ref: './common.v1.yaml#/components/parameters/Sort'
+    Search:
+      $ref: './common.v1.yaml#/components/parameters/Search'
+    DateFrom:
+      $ref: './common.v1.yaml#/components/parameters/DateFrom'
+    DateTo:
+      $ref: './common.v1.yaml#/components/parameters/DateTo'
+    SupplierIdFilter:
+      $ref: './common.v1.yaml#/components/parameters/SupplierIdFilter'
+    ProductIdFilter:
+      $ref: './common.v1.yaml#/components/parameters/ProductIdFilter'
+    IsActiveFilter:
+      $ref: './common.v1.yaml#/components/parameters/IsActiveFilter'
+
+  headers:
+    Location:
+      $ref: './common.v1.yaml#/components/headers/Location'
+
+  responses:
+    BadRequest:
+      $ref: './common.v1.yaml#/components/responses/BadRequest'
+    Unauthorized:
+      $ref: './common.v1.yaml#/components/responses/Unauthorized'
+    Forbidden:
+      $ref: './common.v1.yaml#/components/responses/Forbidden'
+    NotFound:
+      $ref: './common.v1.yaml#/components/responses/NotFound'
+    Conflict:
+      $ref: './common.v1.yaml#/components/responses/Conflict'
+    UnprocessableEntity:
+      $ref: './common.v1.yaml#/components/responses/UnprocessableEntity'
+
+  schemas:
+    # --- aliases into common ---
+    Id:
+      $ref: './common.v1.yaml#/components/schemas/Id'
+    Decimal:
+      $ref: './common.v1.yaml#/components/schemas/Decimal'
+    Percent:
+      $ref: './common.v1.yaml#/components/schemas/Percent'
+    CurrencyCode:
+      $ref: './common.v1.yaml#/components/schemas/CurrencyCode'
+    Money:
+      $ref: './common.v1.yaml#/components/schemas/Money'
+    DateOnly:
+      $ref: './common.v1.yaml#/components/schemas/DateOnly'
+    DateTimeUtc:
+      $ref: './common.v1.yaml#/components/schemas/DateTimeUtc'
+    RowVersion:
+      $ref: './common.v1.yaml#/components/schemas/RowVersion'
+    AuditFields:
+      $ref: './common.v1.yaml#/components/schemas/AuditFields'
+    PageMeta:
+      $ref: './common.v1.yaml#/components/schemas/PageMeta'
+    ProblemDetails:
+      $ref: './common.v1.yaml#/components/schemas/ProblemDetails'
+    VersionedAction:
+      $ref: './common.v1.yaml#/components/schemas/VersionedAction'
+
+    VersionedComment:
+      type: object
+      required: [rowVersion]
+      properties:
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+        comment:
+          type: [string, 'null']
+          maxLength: 1000
+
+    # --- enums ---
+    ProductType:
+      type: string
+      enum: [FOOD, NON_FOOD]
+    Priority:
+      type: string
+      enum: [LOW, NORMAL, HIGH, URGENT]
+    RequisitionStatus:
+      type: string
+      enum: [DRAFT, SUBMITTED, IN_PROCUREMENT, CONVERTED_TO_PO, REJECTED, CANCELLED, CLOSED]
+    RfqStatus:
+      type: string
+      enum: [DRAFT, SENT, CLOSED, CANCELLED]
+    PurchaseOrderStatus:
+      type: string
+      enum:
+        - DRAFT
+        - PENDING_APPROVAL
+        - APPROVED
+        - REJECTED
+        - SENT_TO_SUPPLIER
+        - PARTIALLY_RECEIVED
+        - FULLY_RECEIVED
+        - CLOSED
+        - CANCELLED
+    ApprovalDocType:
+      type: string
+      enum: [PO, WASTE, COUNT_ADJUST]
+    ApprovalStatus:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED, CANCELLED]
+    StepDecision:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED]
+
+    # --- refs ---
+    ProductRef:
+      type: object
+      required: [id, sku, name, productType]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        sku:
+          type: string
+        name:
+          type: string
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        baseUomCode:
+          type: string
+
+    SupplierRef:
+      type: object
+      required: [id, code, name, currency]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        code:
+          type: string
+        name:
+          type: string
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        isApprovedFoodSupplier:
+          type: boolean
+
+    LocationRef:
+      type: object
+      required: [id, code, name]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        code:
+          type: string
+        name:
+          type: string
+
+    UserRef:
+      type: object
+      required: [id, username, fullName]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        username:
+          type: string
+        fullName:
+          type: string
+
+    # ================================================================ Requisition
+    RequisitionSummary:
+      type: object
+      required: [id, docNo, docDate, requesterLocation, productType, priority, status, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+          examples: [PR-2026-00142]
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        requesterLocation:
+          $ref: '#/components/schemas/LocationRef'
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        priority:
+          $ref: '#/components/schemas/Priority'
+        requiredDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        status:
+          $ref: '#/components/schemas/RequisitionStatus'
+        lineCount:
+          type: integer
+          format: int32
+        createdBy:
+          $ref: '#/components/schemas/UserRef'
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    Requisition:
+      allOf:
+        - $ref: '#/components/schemas/RequisitionSummary'
+        - type: object
+          required: [lines, audit]
+          properties:
+            note:
+              type: [string, 'null']
+              maxLength: 1000
+            rejectComment:
+              type: [string, 'null']
+              maxLength: 1000
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/RequisitionLine'
+            rfqIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+            purchaseOrderIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+            attachmentIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    RequisitionLine:
+      type: object
+      required: [id, lineNo, product, qty, uomId, uomCode, convertedQty]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        lineNo:
+          type: integer
+          format: int32
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        uomCode:
+          type: string
+        convertedQty:
+          $ref: '#/components/schemas/Decimal'
+          description: PO-ya çevrilmiş hissə (eyni vahiddə). `qty − convertedQty` = açıq qalıq.
+        currentStockQty:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Tələbçi lokasiyasındakı cari qalıq (base UoM) — satınalma mütəxəssisi üçün kontekst.
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    RequisitionLineCreate:
+      type: object
+      required: [productId, qty, uomId]
+      properties:
+        productId:
+          $ref: '#/components/schemas/Id'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    RequisitionCreate:
+      type: object
+      required: [docDate, requesterLocationId, productType, lines]
+      properties:
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        requesterLocationId:
+          $ref: '#/components/schemas/Id'
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        priority:
+          $ref: '#/components/schemas/Priority'
+        requiredDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RequisitionLineCreate'
+        attachmentIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+
+    RequisitionUpdate:
+      allOf:
+        - $ref: '#/components/schemas/RequisitionCreate'
+        - type: object
+          required: [rowVersion]
+          properties:
+            rowVersion:
+              $ref: '#/components/schemas/RowVersion'
+
+    RequisitionPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/RequisitionSummary'
+
+    # ================================================================ RFQ
+    RfqSummary:
+      type: object
+      required: [id, docNo, docDate, status, supplierCount, quotationCount, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+          examples: [RFQ-2026-00031]
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        dueDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        status:
+          $ref: '#/components/schemas/RfqStatus'
+        supplierCount:
+          type: integer
+          format: int32
+        quotationCount:
+          type: integer
+          format: int32
+        selectedQuotationId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    Rfq:
+      allOf:
+        - $ref: '#/components/schemas/RfqSummary'
+        - type: object
+          required: [lines, suppliers, audit]
+          properties:
+            note:
+              type: [string, 'null']
+              maxLength: 1000
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/RfqLine'
+            suppliers:
+              type: array
+              items:
+                $ref: '#/components/schemas/SupplierRef'
+            requisitionIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    RfqLine:
+      type: object
+      required: [id, lineNo, product, qty, uomId, uomCode]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        lineNo:
+          type: integer
+          format: int32
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        requisitionLineId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        uomCode:
+          type: string
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    RfqLineCreate:
+      type: object
+      required: [productId, qty, uomId]
+      properties:
+        productId:
+          $ref: '#/components/schemas/Id'
+        requisitionLineId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    RfqCreate:
+      type: object
+      required: [docDate, supplierIds, lines]
+      properties:
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        dueDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        supplierIds:
+          type: array
+          minItems: 2
+          items:
+            $ref: '#/components/schemas/Id'
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/RfqLineCreate'
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+
+    RfqPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/RfqSummary'
+
+    # ================================================================ Quotation
+    QuotationSummary:
+      type: object
+      required: [id, supplier, quoteDate, currency, isSelected, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        rfqId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        rfqDocNo:
+          type: [string, 'null']
+        supplier:
+          $ref: '#/components/schemas/SupplierRef'
+        quoteNo:
+          type: [string, 'null']
+          maxLength: 64
+        quoteDate:
+          $ref: '#/components/schemas/DateOnly'
+        validUntil:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        deliveryDays:
+          type: [integer, 'null']
+          format: int32
+          minimum: 0
+        totalAmount:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Təklif valyutasında.
+        totalAmountBase:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: AZN (`quoteDate` məzənnəsi ilə).
+        isSelected:
+          type: boolean
+        isCheapest:
+          type: boolean
+          description: RFQ daxilində ən aşağı `totalAmountBase`.
+        selectionNote:
+          type: [string, 'null']
+          maxLength: 500
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    Quotation:
+      allOf:
+        - $ref: '#/components/schemas/QuotationSummary'
+        - type: object
+          required: [lines, audit]
+          properties:
+            paymentTerms:
+              type: [string, 'null']
+              maxLength: 200
+            fxRate:
+              oneOf:
+                - $ref: '#/components/schemas/Decimal'
+                - type: 'null'
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/QuotationLine'
+            attachmentIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+              description: Təchizatçının PDF təklifi (`attachment_type=QUOTATION`).
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    QuotationLine:
+      type: object
+      required: [id, lineNo, product, qty, uomId, uomCode, unitPrice, lineTotal]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        lineNo:
+          type: integer
+          format: int32
+        rfqLineId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        uomCode:
+          type: string
+        unitPrice:
+          $ref: '#/components/schemas/Decimal'
+          description: Təklif valyutasında, `uomId` vahidi üzrə, ƏDV-siz.
+        unitPriceBase:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: AZN, base UoM üzrə (müqayisə üçün normallaşdırılmış).
+        lineTotal:
+          $ref: '#/components/schemas/Decimal'
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    QuotationLineCreate:
+      type: object
+      required: [productId, qty, uomId, unitPrice]
+      properties:
+        rfqLineId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        productId:
+          $ref: '#/components/schemas/Id'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        unitPrice:
+          $ref: '#/components/schemas/Decimal'
+        note:
+          type: [string, 'null']
+          maxLength: 500
+
+    QuotationCreate:
+      type: object
+      required: [supplierId, quoteDate, currency, lines]
+      properties:
+        rfqId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        supplierId:
+          $ref: '#/components/schemas/Id'
+        quoteNo:
+          type: [string, 'null']
+          maxLength: 64
+        quoteDate:
+          $ref: '#/components/schemas/DateOnly'
+        validUntil:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        deliveryDays:
+          type: [integer, 'null']
+          format: int32
+          minimum: 0
+        paymentTerms:
+          type: [string, 'null']
+          maxLength: 200
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/QuotationLineCreate'
+        attachmentIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+
+    QuotationUpdate:
+      allOf:
+        - $ref: '#/components/schemas/QuotationCreate'
+        - type: object
+          required: [rowVersion]
+          properties:
+            rowVersion:
+              $ref: '#/components/schemas/RowVersion'
+
+    QuotationSelect:
+      type: object
+      required: [rowVersion]
+      properties:
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+        selectionNote:
+          type: [string, 'null']
+          maxLength: 500
+          description: '**Ən ucuz təklif seçilmədikdə məcburi** (`422 SELECTION_NOTE_REQUIRED`).'
+
+    QuotationPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/QuotationSummary'
+
+    RfqComparison:
+      type: object
+      required: [rfqId, rfqDocNo, baseCurrency, quotations, rows]
+      properties:
+        rfqId:
+          $ref: '#/components/schemas/Id'
+        rfqDocNo:
+          type: string
+        baseCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        cheapestQuotationId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        selectedQuotationId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        quotations:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuotationSummary'
+          description: Sütunlar.
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/RfqComparisonRow'
+          description: Sətirlər (RFQ sətirləri).
+
+    RfqComparisonRow:
+      type: object
+      required: [rfqLineId, product, qty, uomCode, cells]
+      properties:
+        rfqLineId:
+          $ref: '#/components/schemas/Id'
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomCode:
+          type: string
+        prevPriceBase:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Son PO qiyməti (AZN, base UoM) — qiymət tarixçəsindən.
+        cells:
+          type: array
+          items:
+            $ref: '#/components/schemas/RfqComparisonCell'
+
+    RfqComparisonCell:
+      type: object
+      required: [quotationId]
+      properties:
+        quotationId:
+          $ref: '#/components/schemas/Id'
+        quotationLineId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        unitPrice:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        currency:
+          oneOf:
+            - $ref: '#/components/schemas/CurrencyCode'
+            - type: 'null'
+        unitPriceBase:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        lineTotalBase:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        diffFromPrevPct:
+          oneOf:
+            - $ref: '#/components/schemas/Percent'
+            - type: 'null'
+        isLowest:
+          type: boolean
+          description: Bu sətirdə ən aşağı `unitPriceBase`.
+
+    # ================================================================ Purchase order
+    PurchaseOrderSummary:
+      type: object
+      required: [id, docNo, docDate, supplier, currency, totalAmount, totalAmountBase, deliveryLocation, productType, status, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+          examples: [PO-2026-00087]
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        supplier:
+          $ref: '#/components/schemas/SupplierRef'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        totalAmount:
+          $ref: '#/components/schemas/Decimal'
+          description: PO valyutasında, ƏDV daxil.
+        totalAmountBase:
+          $ref: '#/components/schemas/Decimal'
+          description: AZN — approval limiti bununla yoxlanılır.
+        deliveryLocation:
+          $ref: '#/components/schemas/LocationRef'
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        expectedDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        status:
+          $ref: '#/components/schemas/PurchaseOrderStatus'
+        receivedPct:
+          $ref: '#/components/schemas/Percent'
+          description: Qəbul edilmiş miqdarın faizi (sətirlər üzrə çəkili).
+        createdBy:
+          $ref: '#/components/schemas/UserRef'
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    PurchaseOrder:
+      allOf:
+        - $ref: '#/components/schemas/PurchaseOrderSummary'
+        - type: object
+          required: [fxRate, subtotal, vatAmount, lines, audit]
+          properties:
+            fxRate:
+              $ref: '#/components/schemas/Decimal'
+              description: PO tarixindəki məzənnə (dondurulmuş). AZN üçün `1`.
+            subtotal:
+              $ref: '#/components/schemas/Decimal'
+            vatAmount:
+              $ref: '#/components/schemas/Decimal'
+            incoterms:
+              type: [string, 'null']
+              maxLength: 16
+            paymentTerms:
+              type: [string, 'null']
+              maxLength: 200
+            note:
+              type: [string, 'null']
+              maxLength: 1000
+            quotationId:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+            sentAt:
+              oneOf:
+                - $ref: '#/components/schemas/DateTimeUtc'
+                - type: 'null'
+            approval:
+              oneOf:
+                - $ref: '#/components/schemas/ApprovalInstance'
+                - type: 'null'
+              description: Cari/son approval instansı.
+            splitCheckWarning:
+              type: [string, 'null']
+              description: PR bölünməsi şübhəsi (eyni təchizatçı, pəncərədə kumulyativ məbləğ limiti aşır).
+            lines:
+              type: array
+              items:
+                $ref: '#/components/schemas/PurchaseOrderLine'
+            goodsReceiptIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+            attachmentIds:
+              type: array
+              items:
+                $ref: '#/components/schemas/Id'
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    PurchaseOrderLine:
+      type: object
+      required: [id, lineNo, product, qty, uomId, uomCode, unitPrice, vatRate, lineTotal, receivedQty]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        lineNo:
+          type: integer
+          format: int32
+        requisitionLineId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        uomCode:
+          type: string
+        unitPrice:
+          $ref: '#/components/schemas/Decimal'
+          description: PO valyutasında, ƏDV-siz.
+        vatRate:
+          $ref: '#/components/schemas/Percent'
+        lineTotal:
+          $ref: '#/components/schemas/Decimal'
+          description: '`qty × unitPrice × (1 + vatRate/100)`.'
+        receivedQty:
+          $ref: '#/components/schemas/Decimal'
+        remainingQty:
+          $ref: '#/components/schemas/Decimal'
+          description: '`qty − receivedQty` (server).'
+
+    PurchaseOrderLineCreate:
+      type: object
+      required: [productId, qty, uomId, unitPrice]
+      properties:
+        requisitionLineId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        productId:
+          $ref: '#/components/schemas/Id'
+        qty:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        unitPrice:
+          $ref: '#/components/schemas/Decimal'
+        vatRate:
+          oneOf:
+            - $ref: '#/components/schemas/Percent'
+            - type: 'null'
+          description: Boş = məhsulun `vatRate`-i.
+
+    PurchaseOrderCreate:
+      type: object
+      required: [docDate, supplierId, currency, deliveryLocationId, lines]
+      properties:
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        supplierId:
+          $ref: '#/components/schemas/Id'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        deliveryLocationId:
+          $ref: '#/components/schemas/Id'
+        expectedDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        incoterms:
+          type: [string, 'null']
+          maxLength: 16
+        paymentTerms:
+          type: [string, 'null']
+          maxLength: 200
+        quotationId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Seçilmiş təklif; verildikdə `supplierId`/`currency` ona uyğun olmalıdır.
+        note:
+          type: [string, 'null']
+          maxLength: 1000
+        lines:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/PurchaseOrderLineCreate'
+        attachmentIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+
+    PurchaseOrderUpdate:
+      allOf:
+        - $ref: '#/components/schemas/PurchaseOrderCreate'
+        - type: object
+          required: [rowVersion]
+          properties:
+            rowVersion:
+              $ref: '#/components/schemas/RowVersion'
+
+    PurchaseOrderPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/PurchaseOrderSummary'
+
+    OpenPurchaseOrder:
+      type: object
+      description: Anbardar üçün qiymətsiz PO görünüşü.
+      required: [id, docNo, docDate, supplier, deliveryLocation, status, lines]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+        docDate:
+          $ref: '#/components/schemas/DateOnly'
+        supplier:
+          $ref: '#/components/schemas/SupplierRef'
+        deliveryLocation:
+          $ref: '#/components/schemas/LocationRef'
+        expectedDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        status:
+          $ref: '#/components/schemas/PurchaseOrderStatus'
+        lines:
+          type: array
+          items:
+            type: object
+            required: [id, lineNo, product, qty, uomId, uomCode, receivedQty, remainingQty]
+            properties:
+              id:
+                $ref: '#/components/schemas/Id'
+              lineNo:
+                type: integer
+                format: int32
+              product:
+                $ref: '#/components/schemas/ProductRef'
+              qty:
+                $ref: '#/components/schemas/Decimal'
+              uomId:
+                $ref: '#/components/schemas/Id'
+              uomCode:
+                type: string
+              receivedQty:
+                $ref: '#/components/schemas/Decimal'
+              remainingQty:
+                $ref: '#/components/schemas/Decimal'
+
+    OpenPurchaseOrderPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/OpenPurchaseOrder'
+
+    # ================================================================ Approvals
+    ApprovalInstance:
+      type: object
+      required: [id, docType, docId, docNo, currentStep, status, steps]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docType:
+          $ref: '#/components/schemas/ApprovalDocType'
+        docId:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+        amountBase:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: Qaydanın seçilməsində istifadə olunan AZN məbləğ.
+        currentStep:
+          type: integer
+          format: int32
+          minimum: 1
+        status:
+          $ref: '#/components/schemas/ApprovalStatus'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovalStep'
+        createdAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+
+    ApprovalStep:
+      type: object
+      required: [id, stepNo, approverRoleCode, decision]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        stepNo:
+          type: integer
+          format: int32
+        approverRoleCode:
+          type: string
+          description: Qaydadan gələn rol.
+        approverUser:
+          oneOf:
+            - $ref: '#/components/schemas/UserRef'
+            - type: 'null'
+          description: Qərar verən (və ya təyin olunmuş) istifadəçi.
+        delegatedFromUser:
+          oneOf:
+            - $ref: '#/components/schemas/UserRef'
+            - type: 'null'
+          description: Qərar delegasiya ilə verilibsə əsl təsdiqləyən.
+        decision:
+          $ref: '#/components/schemas/StepDecision'
+        decidedAt:
+          oneOf:
+            - $ref: '#/components/schemas/DateTimeUtc'
+            - type: 'null'
+        comment:
+          type: [string, 'null']
+          maxLength: 1000
+
+    ApprovalDecision:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [APPROVED, REJECTED]
+        comment:
+          type: [string, 'null']
+          maxLength: 1000
+          description: '`REJECTED` üçün məcburi.'
+        expectedStepNo:
+          type: [integer, 'null']
+          format: int32
+          description: Verilərsə cari addımla üst-üstə düşməlidir (`409 INVALID_STATE_TRANSITION`) — köhnə ekrandan qərar verməyin qarşısını alır.
+
+    PendingApproval:
+      type: object
+      required: [approvalId, stepId, docType, docId, docNo, stepNo, waitingSince]
+      properties:
+        approvalId:
+          $ref: '#/components/schemas/Id'
+        stepId:
+          $ref: '#/components/schemas/Id'
+        docType:
+          $ref: '#/components/schemas/ApprovalDocType'
+        docId:
+          $ref: '#/components/schemas/Id'
+        docNo:
+          type: string
+        stepNo:
+          type: integer
+          format: int32
+        amountBase:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        summary:
+          type: string
+          description: Qısa təsvir (təchizatçı / lokasiya / sətir sayı).
+        requestedBy:
+          $ref: '#/components/schemas/UserRef'
+        viaDelegationFrom:
+          oneOf:
+            - $ref: '#/components/schemas/UserRef'
+            - type: 'null'
+          description: Bu qərar sizə delegasiya ilə gəlibsə — kimdən.
+        waitingSince:
+          $ref: '#/components/schemas/DateTimeUtc'
+
+    PendingApprovalPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/PendingApproval'
+
+    ApprovalRule:
+      type: object
+      required: [id, docType, productType, minAmountBase, stepNo, approverRoleId, approverRoleCode, isActive, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docType:
+          $ref: '#/components/schemas/ApprovalDocType'
+        productType:
+          type: string
+          enum: [FOOD, NON_FOOD, ANY]
+        minAmountBase:
+          $ref: '#/components/schemas/Decimal'
+        maxAmountBase:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+          description: '`null` = limitsiz.'
+        stepNo:
+          type: integer
+          format: int32
+          minimum: 1
+        approverRoleId:
+          $ref: '#/components/schemas/Id'
+        approverRoleCode:
+          type: string
+        isActive:
+          type: boolean
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    ApprovalRuleCreate:
+      type: object
+      required: [docType, productType, minAmountBase, stepNo, approverRoleId]
+      properties:
+        docType:
+          $ref: '#/components/schemas/ApprovalDocType'
+        productType:
+          type: string
+          enum: [FOOD, NON_FOOD, ANY]
+          default: ANY
+        minAmountBase:
+          $ref: '#/components/schemas/Decimal'
+        maxAmountBase:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        stepNo:
+          type: integer
+          format: int32
+          minimum: 1
+        approverRoleId:
+          $ref: '#/components/schemas/Id'
+
+    ApprovalRuleUpdate:
+      allOf:
+        - $ref: '#/components/schemas/ApprovalRuleCreate'
+        - type: object
+          required: [isActive, rowVersion]
+          properties:
+            isActive:
+              type: boolean
+            rowVersion:
+              $ref: '#/components/schemas/RowVersion'
+
+    # ================================================================ Price history
+    PriceHistoryEntry:
+      type: object
+      required: [id, product, supplier, priceDate, unitPrice, currency, unitPriceBase]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        product:
+          $ref: '#/components/schemas/ProductRef'
+        supplier:
+          $ref: '#/components/schemas/SupplierRef'
+        poId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        poDocNo:
+          type: [string, 'null']
+        priceDate:
+          $ref: '#/components/schemas/DateOnly'
+        unitPrice:
+          $ref: '#/components/schemas/Decimal'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        unitPriceBase:
+          $ref: '#/components/schemas/Decimal'
+          description: AZN, base UoM üzrə.
+        prevPriceBase:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        diffAmount:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        diffPct:
+          oneOf:
+            - $ref: '#/components/schemas/Percent'
+            - type: 'null'
+
+    PriceHistoryPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/PriceHistoryEntry'

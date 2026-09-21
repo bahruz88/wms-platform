@@ -1,0 +1,120 @@
+name: contracts
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'contracts/**'
+      - 'scripts/gen-client.sh'
+      - '.github/workflows/contracts.yml'
+  pull_request:
+    paths:
+      - 'contracts/**'
+      - 'scripts/gen-client.sh'
+      - '.github/workflows/contracts.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: contracts-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REDOCLY_IMAGE: redocly/cli:2.7.1
+  OPENAPI_GENERATOR_IMAGE: openapitools/openapi-generator-cli:v7.16.0
+
+jobs:
+  lint:
+    name: redocly lint
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # contracts/redocly.yaml extends the `recommended` ruleset and raises
+      # operationId / summary / tag / license rules to error.
+      - name: Redocly lint (all module specs)
+        run: |
+          docker run --rm -v "${{ github.workspace }}/contracts:/spec" \
+            "$REDOCLY_IMAGE" lint \
+            --config /spec/redocly.yaml \
+            /spec/openapi/common.v1.yaml \
+            /spec/openapi/identity.v1.yaml \
+            /spec/openapi/masterdata.v1.yaml \
+            /spec/openapi/inventory.v1.yaml \
+            /spec/openapi/procurement.v1.yaml \
+            /spec/openapi/documents.v1.yaml \
+            /spec/openapi/notifications.v1.yaml \
+            /spec/openapi/reporting.v1.yaml
+
+  validate:
+    name: openapi-generator validate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate every module spec
+        run: |
+          set -euo pipefail
+          status=0
+          for module in identity masterdata inventory procurement documents notifications reporting; do
+            echo "::group::validate $module"
+            if ! docker run --rm -v "${{ github.workspace }}/contracts:/spec" \
+                 "$OPENAPI_GENERATOR_IMAGE" validate -i "/spec/openapi/$module.v1.yaml"; then
+              echo "::error file=contracts/openapi/$module.v1.yaml::openapi-generator validate failed"
+              status=1
+            fi
+            echo "::endgroup::"
+          done
+          exit $status
+
+  generate:
+    name: dart client generates
+    runs-on: ubuntu-24.04
+    needs: [lint, validate]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Proof that every spec produces a usable dart-dio client. Output goes to a
+      # throwaway directory - the real target (frontend/.../generated) is gitignored
+      # and rebuilt by the frontend workflow.
+      - name: Generate Dart client into a scratch directory
+        env:
+          GEN_OUT_DIR: ${{ runner.temp }}/generated
+        run: ./scripts/gen-client.sh
+
+      - name: Summarise generated output
+        env:
+          GEN_OUT_DIR: ${{ runner.temp }}/generated
+        run: |
+          {
+            echo "### Generated Dart client"
+            echo
+            echo "| Module | Models | APIs |"
+            echo "|---|---|---|"
+            for module in identity masterdata inventory procurement documents notifications reporting; do
+              models=$(find "$GEN_OUT_DIR/$module/lib/src/model" -name '*.dart' 2>/dev/null | wc -l | tr -d ' ')
+              apis=$(find "$GEN_OUT_DIR/$module/lib/src/api" -name '*.dart' 2>/dev/null | wc -l | tr -d ' ')
+              echo "| $module | $models | $apis |"
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Quantities, amounts, rates and percentages must arrive as Dart String
+      # (contracts/openapi/common.v1.yaml -> Decimal, ADR-008). A `double`/`num` here
+      # means someone typed a numeric field as `type: number` in a spec.
+      - name: Assert decimal fields are strings, never double
+        env:
+          GEN_OUT_DIR: ${{ runner.temp }}/generated
+        run: |
+          set -euo pipefail
+          if grep -rnE '^\s+double\??\s+get\s+(qty|quantity|.*Qty|.*Amount|.*Price|.*Cost|.*Rate|.*Pct|.*Value)\b' \
+               "$GEN_OUT_DIR" --include='*.dart'; then
+            echo "::error::A quantity/amount/rate field was generated as double."
+            echo "::error::Use \$ref: './common.v1.yaml#/components/schemas/Decimal' (string) - see ADR-008."
+            exit 1
+          fi
+          echo "OK: no numeric quantity/amount fields generated as double."

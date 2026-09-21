@@ -1,0 +1,229 @@
+{
+  // Debug konfiqurasiyaları. `preLaunchTask` işlədilmir — əvvəlcə `make backend-build`
+  // (və ya C# Dev Kit-in öz build əmri) işlədin.
+  // Portlar `deploy/.env` ilə uzlaşdırılıb:
+  // Gateway 5001, Keycloak 8180 (standart 5000/8080 bu maşında tutulub — README-yə bax).
+  // Portları dəyişsəniz, aşağıdakı dart-define dəyərlərini də yeniləyin.
+  "version": "0.2.0",
+  "inputs": [
+    {
+      "id": "modules",
+      "type": "pickString",
+      "description": "Hansı modullar qalxsın? (--Modules=)",
+      "options": [
+        "*",
+        "inventory",
+        "masterdata,identity,documents",
+        "identity",
+        "procurement",
+        "reporting",
+        "notification,integration"
+      ],
+      "default": "*"
+    }
+  ],
+  "configurations": [
+    // ================================================================= Backend
+    {
+      // Bütün modullar bir prosesdə — gündəlik iş üçün ən sadə profil (ADR-001).
+      // Əvvəlcə `make up` və `make migrate` işlədilməlidir.
+      "name": ".NET: Wms.Host.Api (--Modules=*)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/Host/Wms.Host.Api/bin/Debug/net10.0/Wms.Host.Api.dll",
+      "args": ["--Modules=*"],
+      "cwd": "${workspaceFolder}/backend/src/Host/Wms.Host.Api",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s/openapi/v1.json"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5080",
+        "ConnectionStrings__Wms": "Server=localhost;Port=3308;Database=wms;User=wms_app;Password=wms_app;",
+        "Redis__ConnectionString": "localhost:6379",
+        "RabbitMq__Host": "localhost",
+        "RabbitMq__User": "wms",
+        "RabbitMq__Password": "wms",
+        "RabbitMq__Exchange": "wms.events",
+        "Minio__Endpoint": "localhost:9000",
+        "Minio__AccessKey": "minioadmin",
+        "Minio__SecretKey": "minioadmin",
+        "Minio__Bucket": "wms-attachments",
+        "Keycloak__Authority": "http://localhost:8180/realms/wms",
+        "Keycloak__Audience": "wms-api",
+        "Seq__Url": "http://localhost:5341",
+        "Jobs__Enabled": "false",
+        "ModuleTransport": "InProcess"
+      },
+      "console": "internalConsole"
+    },
+    {
+      // Modul seçimi ilə — mikroservis profilini lokal təkrarlamaq üçün.
+      "name": ".NET: Wms.Host.Api (modul seç)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/Host/Wms.Host.Api/bin/Debug/net10.0/Wms.Host.Api.dll",
+      "args": ["--Modules=${input:modules}"],
+      "cwd": "${workspaceFolder}/backend/src/Host/Wms.Host.Api",
+      "stopAtEntry": false,
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5080",
+        "ConnectionStrings__Wms": "Server=localhost;Port=3308;Database=wms;User=wms_app;Password=wms_app;",
+        "Redis__ConnectionString": "localhost:6379",
+        "RabbitMq__Host": "localhost",
+        "RabbitMq__User": "wms",
+        "RabbitMq__Password": "wms",
+        "Minio__Endpoint": "localhost:9000",
+        "Minio__AccessKey": "minioadmin",
+        "Minio__SecretKey": "minioadmin",
+        "Keycloak__Authority": "http://localhost:8180/realms/wms",
+        "Keycloak__Audience": "wms-api",
+        "Seq__Url": "http://localhost:5341",
+        "Jobs__Enabled": "false",
+        "ModuleTransport": "InProcess"
+      },
+      "console": "internalConsole"
+    },
+    {
+      // Hangfire job-ları (SPEC §15) — YALNIZ bir instans işləməlidir.
+      "name": ".NET: Worker (Jobs__Enabled=true)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/Host/Wms.Host.Api/bin/Debug/net10.0/Wms.Host.Api.dll",
+      "args": ["--Modules=*"],
+      "cwd": "${workspaceFolder}/backend/src/Host/Wms.Host.Api",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5086",
+        "ConnectionStrings__Wms": "Server=localhost;Port=3308;Database=wms;User=wms_app;Password=wms_app;",
+        "Redis__ConnectionString": "localhost:6379",
+        "RabbitMq__Host": "localhost",
+        "RabbitMq__User": "wms",
+        "RabbitMq__Password": "wms",
+        "Keycloak__Authority": "http://localhost:8180/realms/wms",
+        "Seq__Url": "http://localhost:5341",
+        "Jobs__Enabled": "true"
+      },
+      "console": "internalConsole"
+    },
+    {
+      // YARP gateway — Flutter tətbiqləri buraya (5001) müraciət edir.
+      "name": ".NET: Gateway (YARP)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/Gateway/Wms.Gateway/bin/Debug/net10.0/Wms.Gateway.dll",
+      "cwd": "${workspaceFolder}/backend/src/Gateway/Wms.Gateway",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5001"
+      },
+      "console": "internalConsole"
+    },
+    {
+      // Miqrasiya ayrıca prosesdir — startup-da avtomatik miqrasiya QADAĞANDIR (SPEC §18.3).
+      "name": ".NET: Migrator",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/src/Host/Wms.Host.Migrator/bin/Debug/net10.0/Wms.Host.Migrator.dll",
+      "args": ["--Modules=*"],
+      "cwd": "${workspaceFolder}/backend/src/Host/Wms.Host.Migrator",
+      "env": {
+        "ConnectionStrings__WmsMigrator": "Server=localhost;Port=3308;Database=wms;User=wms_migrator;Password=wms_migrator;"
+      },
+      "console": "internalConsole"
+    },
+
+    // ================================================================= Flutter
+    {
+      "name": "Flutter: wms_web (Chrome)",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/apps/wms_web/lib/main.dart",
+      "cwd": "${workspaceFolder}/frontend/apps/wms_web",
+      "deviceId": "chrome",
+      "args": ["--web-port", "3001"],
+      "toolArgs": [
+        "--dart-define=API_BASE_URL=http://localhost:5001",
+        "--dart-define=KEYCLOAK_ISSUER=http://localhost:8180/realms/wms",
+        "--dart-define=KEYCLOAK_CLIENT_ID=wms-web"
+      ]
+    },
+    {
+      // Profil rejimi — performans ölçmək üçün (DevTools timeline).
+      "name": "Flutter: wms_web (profile)",
+      "type": "dart",
+      "request": "launch",
+      "flutterMode": "profile",
+      "program": "${workspaceFolder}/frontend/apps/wms_web/lib/main.dart",
+      "cwd": "${workspaceFolder}/frontend/apps/wms_web",
+      "deviceId": "chrome",
+      "args": ["--web-port", "3001"],
+      "toolArgs": [
+        "--dart-define=API_BASE_URL=http://localhost:5001",
+        "--dart-define=KEYCLOAK_ISSUER=http://localhost:8180/realms/wms",
+        "--dart-define=KEYCLOAK_CLIENT_ID=wms-web"
+      ]
+    },
+    {
+      // Android emulyatoru: 10.0.2.2 = host maşın. Fiziki cihazda host IP-si yazılmalıdır.
+      "name": "Flutter: wms_mobile (Android emulyator)",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/apps/wms_mobile/lib/main.dart",
+      "cwd": "${workspaceFolder}/frontend/apps/wms_mobile",
+      "toolArgs": [
+        "--dart-define=API_BASE_URL=http://10.0.2.2:5001",
+        "--dart-define=KEYCLOAK_ISSUER=http://10.0.2.2:8180/realms/wms",
+        "--dart-define=KEYCLOAK_CLIENT_ID=wms-mobile"
+      ]
+    },
+    {
+      // iOS simulyatoru host-un localhost-unu birbaşa görür.
+      "name": "Flutter: wms_mobile (iOS simulyator)",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/apps/wms_mobile/lib/main.dart",
+      "cwd": "${workspaceFolder}/frontend/apps/wms_mobile",
+      "toolArgs": [
+        "--dart-define=API_BASE_URL=http://localhost:5001",
+        "--dart-define=KEYCLOAK_ISSUER=http://localhost:8180/realms/wms",
+        "--dart-define=KEYCLOAK_CLIENT_ID=wms-mobile"
+      ]
+    },
+    {
+      // Fiziki cihaz: LAN IP-nizi yazın (ifconfig | grep "inet ").
+      // Keycloak redirect URI-si az.wms.mobile://callback olaraq qalır.
+      "name": "Flutter: wms_mobile (fiziki cihaz — IP-ni dəyişin)",
+      "type": "dart",
+      "request": "launch",
+      "program": "${workspaceFolder}/frontend/apps/wms_mobile/lib/main.dart",
+      "cwd": "${workspaceFolder}/frontend/apps/wms_mobile",
+      "toolArgs": [
+        "--dart-define=API_BASE_URL=http://192.168.1.10:5001",
+        "--dart-define=KEYCLOAK_ISSUER=http://192.168.1.10:8180/realms/wms",
+        "--dart-define=KEYCLOAK_CLIENT_ID=wms-mobile"
+      ]
+    }
+  ],
+  "compounds": [
+    {
+      // Gündəlik iş: gateway + bütün modullar. Frontend ayrıca başladılır.
+      "name": "Backend: Gateway + API (hamısı)",
+      "configurations": [".NET: Gateway (YARP)", ".NET: Wms.Host.Api (--Modules=*)"],
+      "stopAll": true
+    },
+    {
+      "name": "Full stack: Backend + Web",
+      "configurations": [
+        ".NET: Gateway (YARP)",
+        ".NET: Wms.Host.Api (--Modules=*)",
+        "Flutter: wms_web (Chrome)"
+      ],
+      "stopAll": true
+    }
+  ]
+}

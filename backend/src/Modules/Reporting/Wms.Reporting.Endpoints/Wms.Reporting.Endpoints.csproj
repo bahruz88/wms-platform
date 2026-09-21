@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Reporting Minimal API endpoints and the IModule entry point.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Reporting.Application/Wms.Reporting.Application.csproj" />
+    <ProjectReference Include="../Wms.Reporting.Infrastructure/Wms.Reporting.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

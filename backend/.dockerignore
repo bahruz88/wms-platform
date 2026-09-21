@@ -1,0 +1,15 @@
+# Build context for deploy/docker/backend.Dockerfile (context = backend/)
+**/bin/
+**/obj/
+**/.vs/
+**/.idea/
+**/TestResults/
+**/artifacts/
+**/*.user
+**/*.suo
+**/*.swp
+**/appsettings.*.local.json
+**/.DS_Store
+.git
+.gitignore
+**/*.md

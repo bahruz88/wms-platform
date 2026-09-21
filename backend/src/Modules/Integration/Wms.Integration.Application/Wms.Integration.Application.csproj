@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Integration use cases (commands, queries, handlers).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Integration.Domain/Wms.Integration.Domain.csproj" />
+    <ProjectReference Include="../Wms.Integration.Contracts/Wms.Integration.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Application/Wms.Common.Application.csproj" />
+  </ItemGroup>
+</Project>

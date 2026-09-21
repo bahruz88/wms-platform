@@ -1,0 +1,62 @@
+{
+  "rabbit_version": "4.0.0",
+  "vhosts": [
+    { "name": "/" }
+  ],
+  "exchanges": [
+    {
+      "name": "wms.events",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "wms.dlx",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "wms.notification",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "wms.dlx" }
+    },
+    {
+      "name": "wms.reporting",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "wms.dlx" }
+    },
+    {
+      "name": "wms.integration",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": { "x-queue-type": "quorum", "x-dead-letter-exchange": "wms.dlx" }
+    },
+    {
+      "name": "wms.dead-letter",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": { "x-queue-type": "quorum" }
+    }
+  ],
+  "bindings": [
+    { "source": "wms.events", "vhost": "/", "destination": "wms.notification", "destination_type": "queue", "routing_key": "#", "arguments": {} },
+    { "source": "wms.events", "vhost": "/", "destination": "wms.reporting",    "destination_type": "queue", "routing_key": "#", "arguments": {} },
+    { "source": "wms.events", "vhost": "/", "destination": "wms.integration",  "destination_type": "queue", "routing_key": "#", "arguments": {} },
+    { "source": "wms.dlx",    "vhost": "/", "destination": "wms.dead-letter",  "destination_type": "queue", "routing_key": "#", "arguments": {} }
+  ]
+}

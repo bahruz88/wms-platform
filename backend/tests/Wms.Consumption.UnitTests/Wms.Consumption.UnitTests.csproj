@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Unit tests of the Consumption domain (ADR-012): BOM explosion, cycles, depth cap, recipe version selection, shortfall arithmetic and CSV parsing.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Consumption/Wms.Consumption.Domain/Wms.Consumption.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Consumption/Wms.Consumption.Infrastructure/Wms.Consumption.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

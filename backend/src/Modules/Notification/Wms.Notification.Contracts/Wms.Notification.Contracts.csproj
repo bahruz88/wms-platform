@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Notification module public contracts — the ONLY assembly other modules may reference (spec ADR-001).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Contracts/Wms.Common.Contracts.csproj" />
+  </ItemGroup>
+</Project>

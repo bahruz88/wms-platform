@@ -1,0 +1,708 @@
+openapi: 3.1.0
+info:
+  title: WMS Reporting API
+  version: 1.0.0
+  summary: Dashboard, hesabat kataloqu (TOR §29 — 24 hesabat), sinxron hesabat sorğusu və asinxron Excel export (SPEC §5, §13.4).
+  description: |
+    Reporting modulu **read-model** üzərində işləyir (`rpt_` cədvəlləri, `ReportingProjector` job-u hər dəqiqə yeniləyir;
+    ağır sorğular read replica-ya gedir). EF Core ilə hesabat yazılmır — Dapper (SPEC §3). Modul heç bir domen
+    məlumatını dəyişmir.
+
+    * Hesabat parametrləri dinamikdir — `getReportDefinition` parametr sxemini qaytarır, `runReport` onları `parameters`
+      obyektində qəbul edir. Sinxron nəticə maksimum 200 sətir/səhifə; tam export `POST /exports` ilə asinxrondur.
+    * Maya dəyəri sütunları (`*Value`, `*Cost`) `master.product.view_cost` icazəsi olmadan **cavabda olmur**;
+      kataloqda hər hesabatın `requiresCostPermission` bayrağı var.
+    * Lokasiya filtri `iam_user_location` ilə server tərəfində məhdudlaşdırılır; auditor hamısını görür.
+    * Bütün rəqəmi göstəricilər `Decimal` string-dir.
+
+    Route prefiksi: `/api/v1/reporting`. Cədvəl prefiksi: `rpt_`.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: /api/v1/reporting
+    description: Gateway (YARP) arxasında Reporting modulu
+
+security:
+  - bearer: []
+  - oidc: []
+
+tags:
+  - name: Dashboard
+    description: Rol üzrə əsas göstəricilər (KPI) və alert xülasəsi.
+  - name: Reports
+    description: Hesabat kataloqu və sinxron (səhifələnmiş) icra.
+  - name: Exports
+    description: Asinxron Excel/CSV/PDF export işləri.
+
+paths:
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      summary: Dashboard xülasəsi
+      description: |
+        Rol və lokasiya girişinə görə uyğunlaşdırılmış KPI dəsti. Hər KPI `value` (string Decimal), trend və
+        istinad linki daşıyır. `stockValue*` KPI-ları yalnız `master.product.view_cost` ilə gəlir.
+        Nəticə 60 saniyə Redis-də keşlənir (`Cache-Control: max-age=60`).
+      tags: [Dashboard]
+      x-permission: rpt.dashboard.view
+      parameters:
+        - $ref: '#/components/parameters/LocationIdFilter'
+        - name: period
+          in: query
+          required: false
+          description: Trend müqayisə dövrü.
+          schema:
+            type: string
+            enum: [TODAY, WEEK, MONTH]
+            default: WEEK
+      responses:
+        '200':
+          description: Xülasə.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /reports:
+    get:
+      operationId: listReports
+      summary: Hesabat kataloqu
+      description: İstifadəçinin icazəsi çatan hesabatlar (TOR §29). `category` üzrə qruplanır.
+      tags: [Reports]
+      x-permission: rpt.report.view
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ReportCategory'
+      responses:
+        '200':
+          description: Kataloq.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportDefinition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /reports/{code}:
+    parameters:
+      - $ref: '#/components/parameters/ReportCode'
+    get:
+      operationId: getReportDefinition
+      summary: Hesabat tərifi (parametrlər və sütunlar)
+      description: Client formanı `parameters` sxeminə görə dinamik qurur; `columns` cədvəl başlıqları və tiplər üçündür.
+      tags: [Reports]
+      x-permission: rpt.report.view
+      responses:
+        '200':
+          description: Tərif.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportDefinition'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /reports/{code}/run:
+    parameters:
+      - $ref: '#/components/parameters/ReportCode'
+    post:
+      operationId: runReport
+      summary: Hesabatı sinxron icra et (səhifələnmiş)
+      description: |
+        Nəticə sətirləri `columns` sırası ilə `rows[][]` massivi kimi (JSON həcmi üçün); hər dəyər string/number/bool/null.
+        Rəqəmi sütunlar (`DECIMAL` tipli) həmişə **string**. Maksimum `size=200`; daha böyük nəticə üçün `createExport`.
+        Sorğu 30 saniyədən uzun çəkərsə `422` (`errors.parameters: ["Dövrü daraldın və ya export istifadə edin"]`).
+
+        `POST` olsa da **idempotentdir və heç nə yaratmır** — `Idempotency-Key` yenə də məcburidir (ortaq qayda),
+        lakin təkrar açar sadəcə yenidən icra edir.
+      tags: [Reports]
+      x-permission: rpt.report.view
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportRunRequest'
+      responses:
+        '200':
+          description: Nəticə səhifəsi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResultPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /exports:
+    get:
+      operationId: listExports
+      summary: Mənim export işlərim
+      description: Son 30 günün exportları (cari istifadəçi).
+      tags: [Exports]
+      x-permission: rpt.export.create
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ExportStatus'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Export işləri.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportJobPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createExport
+      summary: Asinxron export işi yarat
+      description: |
+        Hesabat + parametrlər + format → Hangfire işi. Tamamlananda fayl MinIO-ya yazılır, `ExportReady` bildirişi göndərilir
+        və `getExport` `downloadUrl` qaytarır. Fayl 7 gün saxlanılır. `common_audit_log`-a `EXPORT` yazılır (TOR: hesabat
+        ixracı audit edilir). İstifadəçi başına eyni anda maksimum 3 aktiv iş (`422`).
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Exports]
+      x-permission: rpt.export.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportCreateRequest'
+      responses:
+        '202':
+          description: Qəbul edildi; `statusUrl` ilə izləyin.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportJob'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /exports/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getExport
+      summary: Export işinin vəziyyəti
+      description: '`COMPLETED` olduqda `downloadUrl` (presigned, 5 dəq) dolu olur — hər çağırışda yenilənir. Client 2–5 saniyə intervalla poll edir və ya `ExportReady` bildirişini gözləyir.'
+      tags: [Exports]
+      x-permission: rpt.export.create
+      responses:
+        '200':
+          description: Vəziyyət.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportJob'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: cancelExport
+      summary: Export işini ləğv et / faylı sil
+      description: '`QUEUED/RUNNING` → ləğv; `COMPLETED` → fayl silinir.'
+      tags: [Exports]
+      x-permission: rpt.export.create
+      responses:
+        '204':
+          description: Ləğv edildi / silindi.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearer:
+      $ref: './common.v1.yaml#/components/securitySchemes/bearer'
+    oidc:
+      $ref: './common.v1.yaml#/components/securitySchemes/oidc'
+
+  parameters:
+    IdempotencyKey:
+      $ref: './common.v1.yaml#/components/parameters/IdempotencyKey'
+    PathId:
+      $ref: './common.v1.yaml#/components/parameters/PathId'
+    Page:
+      $ref: './common.v1.yaml#/components/parameters/Page'
+    Size:
+      $ref: './common.v1.yaml#/components/parameters/Size'
+    LocationIdFilter:
+      $ref: './common.v1.yaml#/components/parameters/LocationIdFilter'
+    ReportCode:
+      name: code
+      in: path
+      required: true
+      description: Hesabat kodu (kataloqdan).
+      schema:
+        $ref: '#/components/schemas/ReportCode'
+
+  headers:
+    Location:
+      $ref: './common.v1.yaml#/components/headers/Location'
+
+  responses:
+    BadRequest:
+      $ref: './common.v1.yaml#/components/responses/BadRequest'
+    Unauthorized:
+      $ref: './common.v1.yaml#/components/responses/Unauthorized'
+    Forbidden:
+      $ref: './common.v1.yaml#/components/responses/Forbidden'
+    NotFound:
+      $ref: './common.v1.yaml#/components/responses/NotFound'
+    Conflict:
+      $ref: './common.v1.yaml#/components/responses/Conflict'
+    UnprocessableEntity:
+      $ref: './common.v1.yaml#/components/responses/UnprocessableEntity'
+
+  schemas:
+    Id:
+      $ref: './common.v1.yaml#/components/schemas/Id'
+    Decimal:
+      $ref: './common.v1.yaml#/components/schemas/Decimal'
+    Percent:
+      $ref: './common.v1.yaml#/components/schemas/Percent'
+    DateOnly:
+      $ref: './common.v1.yaml#/components/schemas/DateOnly'
+    DateTimeUtc:
+      $ref: './common.v1.yaml#/components/schemas/DateTimeUtc'
+    PageMeta:
+      $ref: './common.v1.yaml#/components/schemas/PageMeta'
+    ProblemDetails:
+      $ref: './common.v1.yaml#/components/schemas/ProblemDetails'
+
+    ReportCode:
+      type: string
+      pattern: '^[A-Z][A-Z0-9_]{2,47}$'
+      description: TOR §29 hesabatları; nümunələr — `STOCK_BALANCE`, `STOCK_BY_BATCH`, `EXPIRY`, `MOVEMENT_LEDGER`, `WASTE_SUMMARY`, `COUNT_VARIANCE`, `PO_STATUS`, `PRICE_TREND`, `SUPPLIER_PERFORMANCE`, `BRANCH_CONSUMPTION`, `STOCK_COVERAGE`, `RECEIPT_VARIANCE`.
+      examples: [STOCK_BALANCE, EXPIRY, WASTE_SUMMARY]
+
+    ReportCategory:
+      type: string
+      enum: [STOCK, MOVEMENT, QUALITY, PROCUREMENT, FINANCE, AUDIT]
+
+    ParamType:
+      type: string
+      enum: [DATE, DATE_RANGE, LOCATION, LOCATIONS, PRODUCT, PRODUCTS, CATEGORY, SUPPLIER, ENUM, BOOLEAN, INT, DECIMAL, TEXT]
+
+    ColumnType:
+      type: string
+      enum: [STRING, INT, DECIMAL, PERCENT, MONEY, DATE, DATETIME, BOOLEAN, ENUM, LINK]
+
+    ReportParameter:
+      type: object
+      required: [name, label, type, required]
+      properties:
+        name:
+          type: string
+          pattern: '^[a-z][A-Za-z0-9]{0,47}$'
+        label:
+          type: string
+        type:
+          $ref: '#/components/schemas/ParamType'
+        required:
+          type: boolean
+        defaultValue:
+          description: Tipə uyğun default (JSON dəyər).
+        allowedValues:
+          type: array
+          items:
+            type: object
+            required: [value, label]
+            properties:
+              value:
+                type: string
+              label:
+                type: string
+          description: '`ENUM` üçün.'
+
+    ReportColumn:
+      type: object
+      required: [key, label, type]
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        type:
+          $ref: '#/components/schemas/ColumnType'
+        isCost:
+          type: boolean
+          description: '`true` — sütun yalnız `master.product.view_cost` ilə gəlir; icazə yoxdursa `columns`-da da olmur.'
+        width:
+          type: [integer, 'null']
+          format: int32
+          description: Tövsiyə olunan eni (px), UI üçün ipucu.
+        align:
+          type: string
+          enum: [LEFT, RIGHT, CENTER]
+          default: LEFT
+
+    ReportDefinition:
+      type: object
+      required: [code, name, category, parameters, columns, requiresCostPermission, supportedFormats]
+      properties:
+        code:
+          $ref: '#/components/schemas/ReportCode'
+        name:
+          type: string
+        description:
+          type: [string, 'null']
+        category:
+          $ref: '#/components/schemas/ReportCategory'
+        torRef:
+          type: [string, 'null']
+          description: TOR §29-dakı hesabat nömrəsi.
+        parameters:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportParameter'
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReportColumn'
+        requiresCostPermission:
+          type: boolean
+          description: '`true` — hesabatın əsas mənası maya dəyəridir; icazəsiz istifadəçi kataloqda görmür.'
+        supportedFormats:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExportFormat'
+        maxSyncRows:
+          type: integer
+          format: int32
+          default: 200
+
+    ReportRunRequest:
+      type: object
+      required: [parameters]
+      properties:
+        parameters:
+          type: object
+          additionalProperties: true
+          description: '`ReportDefinition.parameters` adları → dəyərlər. Tarixlər ISO `YYYY-MM-DD`, DECIMAL string.'
+          examples:
+            - dateRange:
+                from: "2026-09-01"
+                to: "2026-09-30"
+              locationIds: [3, 7]
+              includeZero: false
+        page:
+          type: integer
+          format: int32
+          minimum: 1
+          default: 1
+        size:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 200
+          default: 50
+        sort:
+          type: [string, 'null']
+          description: '`columnKey,asc|desc`.'
+
+    ReportResultPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [code, columns, rows, generatedAt]
+          properties:
+            code:
+              $ref: '#/components/schemas/ReportCode'
+            columns:
+              type: array
+              items:
+                $ref: '#/components/schemas/ReportColumn'
+              description: Cavabda faktiki gələn sütunlar (cost sütunları icazəyə görə çıxarılmış ola bilər).
+            rows:
+              type: array
+              items:
+                type: array
+                items:
+                  oneOf:
+                    - type: string
+                    - type: number
+                    - type: boolean
+                    - type: 'null'
+              description: Hər sətir `columns` sırası ilə dəyərlər massivi. DECIMAL/MONEY/PERCENT həmişə string.
+            totals:
+              type: [object, 'null']
+              additionalProperties:
+                type: string
+              description: Cəm sətri (sütun açarı → string Decimal), hesabat dəstəkləyirsə.
+            generatedAt:
+              $ref: '#/components/schemas/DateTimeUtc'
+            dataAsOf:
+              $ref: '#/components/schemas/DateTimeUtc'
+              description: Read-model-in son proyeksiya vaxtı (≤ 1 dəq gecikmə).
+
+    # --- Dashboard ---
+    Kpi:
+      type: object
+      required: [key, label, value]
+      properties:
+        key:
+          type: string
+          examples: [stockValueTotal, expiringBatches7d, pendingApprovals, openStockRequests, wasteValueMonth]
+        label:
+          type: string
+        value:
+          $ref: '#/components/schemas/Decimal'
+        unit:
+          type: [string, 'null']
+          description: '`AZN`, `pcs`, `%`, `days` ...'
+        trendPct:
+          oneOf:
+            - $ref: '#/components/schemas/Percent'
+            - type: 'null'
+          description: Əvvəlki dövrlə müqayisə.
+        severity:
+          type: string
+          enum: [NORMAL, WARNING, CRITICAL]
+          default: NORMAL
+        link:
+          type: [string, 'null']
+          description: Tətbiq daxili yol (`/inventory/batches?expiryBefore=...`).
+        isCost:
+          type: boolean
+
+    DashboardAlert:
+      type: object
+      required: [type, severity, count, title]
+      properties:
+        type:
+          type: string
+          examples: [BATCH_EXPIRING, STOCK_BELOW_MIN, RECONCILIATION_FAILED, CERTIFICATE_EXPIRING, PENDING_APPROVAL]
+        severity:
+          type: string
+          enum: [INFO, WARNING, CRITICAL]
+        count:
+          type: integer
+          format: int32
+        title:
+          type: string
+        link:
+          type: [string, 'null']
+
+    DashboardSeriesPoint:
+      type: object
+      required: [date, value]
+      properties:
+        date:
+          $ref: '#/components/schemas/DateOnly'
+        value:
+          $ref: '#/components/schemas/Decimal'
+
+    DashboardSeries:
+      type: object
+      required: [key, label, points]
+      properties:
+        key:
+          type: string
+          examples: [receiptsPerDay, wasteValuePerDay, issuesPerDay]
+        label:
+          type: string
+        unit:
+          type: [string, 'null']
+        isCost:
+          type: boolean
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardSeriesPoint'
+
+    DashboardSummary:
+      type: object
+      required: [generatedAt, kpis, alerts, series]
+      properties:
+        generatedAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+        locationId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        kpis:
+          type: array
+          items:
+            $ref: '#/components/schemas/Kpi'
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardAlert'
+        series:
+          type: array
+          items:
+            $ref: '#/components/schemas/DashboardSeries'
+        systemHealth:
+          type: object
+          description: Yalnız ADMIN/AUDITOR üçün — özünüyoxlama job-larının son nəticəsi (SPEC §15).
+          properties:
+            lastBalanceReconciliationAt:
+              oneOf:
+                - $ref: '#/components/schemas/DateTimeUtc'
+                - type: 'null'
+            balanceReconciliationOk:
+              type: [boolean, 'null']
+            lastDoubleEntryCheckAt:
+              oneOf:
+                - $ref: '#/components/schemas/DateTimeUtc'
+                - type: 'null'
+            doubleEntryCheckOk:
+              type: [boolean, 'null']
+            outboxPending:
+              type: [integer, 'null']
+              format: int32
+
+    # --- Exports ---
+    ExportFormat:
+      type: string
+      enum: [XLSX, CSV, PDF]
+
+    ExportStatus:
+      type: string
+      enum: [QUEUED, RUNNING, COMPLETED, FAILED, CANCELLED]
+
+    ExportCreateRequest:
+      type: object
+      required: [reportCode, format, parameters]
+      properties:
+        reportCode:
+          $ref: '#/components/schemas/ReportCode'
+        format:
+          $ref: '#/components/schemas/ExportFormat'
+        parameters:
+          type: object
+          additionalProperties: true
+        fileName:
+          type: [string, 'null']
+          maxLength: 200
+          description: Boş = `<code>_<date>.<ext>`.
+        locale:
+          type: [string, 'null']
+          description: Sütun başlıqları üçün; boş = tenant locale.
+
+    ExportJob:
+      type: object
+      required: [id, reportCode, format, status, requestedAt, statusUrl]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        reportCode:
+          $ref: '#/components/schemas/ReportCode'
+        format:
+          $ref: '#/components/schemas/ExportFormat'
+        status:
+          $ref: '#/components/schemas/ExportStatus'
+        progressPct:
+          type: [integer, 'null']
+          format: int32
+          minimum: 0
+          maximum: 100
+        rowCount:
+          type: [integer, 'null']
+          format: int64
+        fileName:
+          type: [string, 'null']
+        sizeBytes:
+          type: [integer, 'null']
+          format: int64
+        downloadUrl:
+          type: [string, 'null']
+          format: uri
+          description: '`COMPLETED` olduqda presigned URL (5 dəq).'
+        downloadUrlExpiresAt:
+          oneOf:
+            - $ref: '#/components/schemas/DateTimeUtc'
+            - type: 'null'
+        errorMessage:
+          type: [string, 'null']
+        requestedAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+        completedAt:
+          oneOf:
+            - $ref: '#/components/schemas/DateTimeUtc'
+            - type: 'null'
+        expiresAt:
+          oneOf:
+            - $ref: '#/components/schemas/DateTimeUtc'
+            - type: 'null'
+          description: Faylın MinIO-dan silinəcəyi vaxt (7 gün).
+        statusUrl:
+          type: string
+          format: uri-reference
+          description: '`/api/v1/reporting/exports/{id}`.'
+
+    ExportJobPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExportJob'

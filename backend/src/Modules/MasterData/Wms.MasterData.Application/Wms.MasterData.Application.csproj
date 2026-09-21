@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>MasterData use cases (commands, queries, handlers).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.MasterData.Domain/Wms.MasterData.Domain.csproj" />
+    <ProjectReference Include="../Wms.MasterData.Contracts/Wms.MasterData.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Application/Wms.Common.Application.csproj" />
+    <!-- Allowed cross-module dependency (spec §5): MasterData → Identity.Contracts only. -->
+    <ProjectReference Include="../../Identity/Wms.Identity.Contracts/Wms.Identity.Contracts.csproj" />
+  </ItemGroup>
+</Project>

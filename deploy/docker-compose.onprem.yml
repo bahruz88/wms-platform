@@ -1,0 +1,291 @@
+# =============================================================================
+# WMS - on-prem, single-host profile (SPEC §18.2)
+#
+#   ONE api container (Modules=*, Jobs__Enabled=true, ModuleTransport=InProcess) -> :5000
+#   + MySQL 8.4 + Redis + RabbitMQ + MinIO + Keycloak (prod mode) + web (nginx)
+#   No gateway: the web container proxies /api -> wms-api, and wms-api is also
+#   published directly on ${API_PORT} for integrations (1C etc.).
+#
+# First run:
+#   cp .env.example .env            # set EVERY password + KEYCLOAK_HOSTNAME + WEB_PUBLIC_URL
+#   ./onprem/render-realm.sh        # production realm (no dev users, real redirect URIs)
+#   docker compose -f docker-compose.onprem.yml up -d --build
+#   docker compose -f docker-compose.onprem.yml --profile migrate run --rm migrator
+#   ../scripts/db-ledger-grants.sh -f docker-compose.onprem.yml
+#
+# Backup / DR (SPEC §18.4, RPO <= 15 min / RTO <= 4 h): deploy/onprem/backup.sh
+#   -> daily mysqldump + continuous binlog + MinIO mirror. Install it in cron, see README.
+# TLS: terminate at the customer's reverse proxy (nginx/Caddy/Traefik) in front of
+#   web:${WEB_PORT} and keycloak:${KEYCLOAK_PORT}; see README "On-prem".
+# =============================================================================
+name: wms-onprem
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "50m", max-file: "5" }
+
+x-backend-healthcheck: &backend-healthcheck
+  test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf \"GET /health/live HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && head -n 1 <&3 | grep -q \" 200 \"'"]
+  interval: 15s
+  timeout: 5s
+  retries: 5
+  start_period: 60s
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      WMS_APP_PASSWORD: ${MYSQL_APP_PASSWORD:?set MYSQL_APP_PASSWORD in .env}
+      WMS_MIGRATOR_PASSWORD: ${MYSQL_MIGRATOR_PASSWORD:?set MYSQL_MIGRATOR_PASSWORD in .env}
+      WMS_REPORTING_PASSWORD: ${MYSQL_REPORTING_PASSWORD:?set MYSQL_REPORTING_PASSWORD in .env}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?set KEYCLOAK_DB_PASSWORD in .env}
+      TZ: UTC
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"      # local only (backups, DBA); never expose publicly
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/conf.d:/etc/mysql/conf.d:ro
+      - ./onprem/mysql-init/01-users.sh:/docker-entrypoint-initdb.d/01-users.sh:ro   # users from env
+      - ./mysql/init/02-ledger-grants.sql:/docker-entrypoint-initdb.d/02-ledger-grants.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_ROOT_PASSWORD\" mysqladmin ping -h 127.0.0.1 -uroot --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    cap_add: [SYS_NICE]
+    deploy:
+      resources:
+        limits: { cpus: "2", memory: 2G }
+    logging: *logging
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 512M }
+    logging: *logging
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?set RABBITMQ_USER in .env}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?set RABBITMQ_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${RABBITMQ_MGMT_PORT:-15672}:15672"   # management UI: local / SSH tunnel only
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/20-wms.conf:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits: { cpus: "1", memory: 1G }
+    logging: *logging
+    restart: unless-stopped
+
+  rabbitmq-init:
+    image: rabbitmq:4-management-alpine
+    depends_on:
+      rabbitmq: { condition: service_healthy }
+    environment:
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    volumes:
+      - ./rabbitmq/definitions.json:/definitions.json:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        auth="$$(printf '%s:%s' "$$RABBITMQ_USER" "$$RABBITMQ_PASSWORD" | base64 | tr -d '\n')"
+        wget -qO- --header="Authorization: Basic $$auth" --header='Content-Type: application/json' \
+             --post-file=/definitions.json http://rabbitmq:15672/api/definitions
+        echo "RabbitMQ topology imported"
+    logging: *logging
+    restart: "no"
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER in .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
+    ports:
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"     # console: local / SSH tunnel only
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    deploy:
+      resources:
+        limits: { cpus: "1", memory: 1G }
+    logging: *logging
+    restart: unless-stopped
+
+  minio-init:
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    depends_on:
+      minio: { condition: service_healthy }
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET: ${MINIO_BUCKET:-wms-attachments}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"
+        mc mb --ignore-existing "local/$$MINIO_BUCKET"
+        mc version enable "local/$$MINIO_BUCKET"
+        echo "MinIO bucket $$MINIO_BUCKET ready (versioning enabled)"
+    logging: *logging
+    restart: "no"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION:-26.7}
+    # production mode; `start` builds the optimized server on first boot (~1 min)
+    command: ["start", "--import-realm"]
+    depends_on:
+      mysql: { condition: service_healthy }
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:?set KEYCLOAK_ADMIN in .env}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?set KEYCLOAK_ADMIN_PASSWORD in .env}
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://mysql:3306/keycloak?characterEncoding=UTF-8&connectionTimeZone=UTC
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      # Public URL (browsers / mobiles). Behind the TLS proxy: https://auth.example.com
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME:?set KEYCLOAK_HOSTNAME in .env (e.g. https://auth.example.com)}
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"     # wms-api reaches http://keycloak:8080 on the internal network
+      KC_HTTP_ENABLED: "true"                     # TLS terminates at the reverse proxy
+      KC_PROXY_HEADERS: xforwarded
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "false"
+      KC_LOG_LEVEL: ${KEYCLOAK_LOG_LEVEL:-info}
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+    volumes:
+      - ${KEYCLOAK_REALM_FILE:-./keycloak/realm-wms.json}:/opt/keycloak/data/import/realm-wms.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/9000 && printf \"GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n\" >&3 && grep -q \"\\\"status\\\": *\\\"UP\\\"\" <&3'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+    deploy:
+      resources:
+        limits: { cpus: "2", memory: 1536M }
+    logging: *logging
+    restart: unless-stopped
+
+  wms-api:
+    build:
+      context: ../backend
+      dockerfile: ../deploy/docker/backend.Dockerfile
+      args: { HOST_PROJECT: Wms.Host.Api }
+    image: ${IMAGE_PREFIX:-wms}/api:${IMAGE_TAG:-latest}
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      Modules: "*"
+      Jobs__Enabled: "true"
+      ModuleTransport: InProcess
+      ConnectionStrings__Wms: Server=mysql;Port=3306;Database=wms;User=wms_app;Password=${MYSQL_APP_PASSWORD};
+      Redis__ConnectionString: redis:6379,password=${REDIS_PASSWORD}
+      RabbitMq__Host: rabbitmq
+      RabbitMq__User: ${RABBITMQ_USER}
+      RabbitMq__Password: ${RABBITMQ_PASSWORD}
+      RabbitMq__Exchange: wms.events
+      Minio__Endpoint: minio:9000
+      Minio__AccessKey: ${MINIO_ROOT_USER}
+      Minio__SecretKey: ${MINIO_ROOT_PASSWORD}
+      Minio__Bucket: ${MINIO_BUCKET:-wms-attachments}
+      Keycloak__Authority: http://keycloak:8080/realms/wms
+      Keycloak__Audience: wms-api
+      Seq__Url: ${SEQ_URL:-}                      # optional: point at a Seq instance if you run one
+    ports:
+      - "${API_PORT:-5000}:8080"
+    depends_on:
+      mysql:         { condition: service_healthy }
+      redis:         { condition: service_healthy }
+      rabbitmq:      { condition: service_healthy }
+      rabbitmq-init: { condition: service_completed_successfully }
+      minio:         { condition: service_healthy }
+      minio-init:    { condition: service_completed_successfully }
+      keycloak:      { condition: service_healthy }
+    healthcheck: *backend-healthcheck
+    deploy:
+      resources:
+        limits: { cpus: "4", memory: 3G }
+        reservations: { memory: 512M }
+    logging: *logging
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ../frontend
+      dockerfile: ../deploy/docker/web.Dockerfile
+      additional_contexts:
+        deploy: ./docker
+      args:
+        API_BASE_URL: /api                        # relative: nginx proxies /api -> wms-api
+        KEYCLOAK_ISSUER: ${KEYCLOAK_HOSTNAME}/realms/wms
+        KEYCLOAK_CLIENT_ID: wms-web
+    image: ${IMAGE_PREFIX:-wms}/web:${IMAGE_TAG:-latest}
+    environment:
+      API_UPSTREAM: wms-api:8080
+    ports:
+      - "${WEB_PORT:-3000}:8080"
+    depends_on:
+      wms-api: { condition: service_started }
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 128M }
+    logging: *logging
+    restart: unless-stopped
+
+  migrator:
+    build:
+      context: ../backend
+      dockerfile: ../deploy/docker/backend.Dockerfile
+      args: { HOST_PROJECT: Wms.Host.Migrator }
+    image: ${IMAGE_PREFIX:-wms}/migrator:${IMAGE_TAG:-latest}
+    profiles: [migrate]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Modules: "*"
+      ConnectionStrings__WmsMigrator: Server=mysql;Port=3306;Database=wms;User=wms_migrator;Password=${MYSQL_MIGRATOR_PASSWORD};
+      ConnectionStrings__Wms: Server=mysql;Port=3306;Database=wms;User=wms_app;Password=${MYSQL_APP_PASSWORD};
+    depends_on:
+      mysql: { condition: service_healthy }
+    logging: *logging
+    restart: "no"
+
+volumes:
+  mysql_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:

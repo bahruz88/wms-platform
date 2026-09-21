@@ -1,0 +1,958 @@
+openapi: 3.1.0
+info:
+  title: WMS Identity API
+  version: 1.0.0
+  summary: Tenant, istifadəçi, rol, icazə, lokasiya girişi və approval delegasiyası (SPEC §7).
+  description: |
+    Identity modulu Keycloak-dan gələn subject-i (`external_id`) tenant daxilində istifadəçi qeydinə bağlayır,
+    rol → icazə xəritəsini və istifadəçinin görə bildiyi lokasiyaları (`iam_user_location`) saxlayır.
+
+    **Autentifikasiya Keycloak-dadır** — parol, MFA, sessiya bu API-də yoxdur. Bu API yalnız avtorizasiya
+    məlumatlarını (icazə kodları, lokasiya siyahısı, delegasiya) idarə edir.
+
+    Route prefiksi: `/api/v1/identity`. Cədvəl prefiksi: `iam_`.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: /api/v1/identity
+    description: Gateway (YARP) arxasında Identity modulu
+
+security:
+  - bearer: []
+  - oidc: []
+
+tags:
+  - name: Me
+    description: Cari istifadəçinin konteksti — icazələr, lokasiyalar, tenant.
+  - name: Users
+    description: Tenant istifadəçiləri (`iam_user`) və onların rol / lokasiya təyinatı.
+  - name: Roles
+    description: Rollar (`iam_role`) və rol → icazə xəritəsi.
+  - name: Permissions
+    description: Sistem icazə kataloqu (`iam_permission`), yalnız oxunur.
+  - name: Delegations
+    description: Approval delegasiyası (`iam_delegation`) — məzuniyyət və s. üçün.
+  - name: Tenant
+    description: Cari tenant parametrləri.
+
+paths:
+  /me:
+    get:
+      operationId: getMe
+      summary: Cari istifadəçinin konteksti
+      description: |
+        Token-dakı `sub` və `tenant_id` claim-lərinə əsasən istifadəçi qeydini, effektiv icazə kodlarını,
+        rol kodlarını və görə bildiyi lokasiya id-lərini qaytarır. Flutter tətbiqi login-dən dərhal sonra
+        bu endpoint-i çağırır və menyu/route qorumasını `permissions` siyahısına görə qurur.
+
+        Boş `locationIds` — istifadəçi bütün lokasiyaları görür (mərkəzi rollar). Filial istifadəçisi
+        üçün siyahı məhduddur və server tərəfində query filter kimi tətbiq olunur (SPEC §16).
+      tags: [Me]
+      x-permission: iam.me.view
+      responses:
+        '200':
+          description: Cari istifadəçi konteksti.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /tenant:
+    get:
+      operationId: getTenant
+      summary: Cari tenant parametrləri
+      description: Tenant kodu, adı, default valyuta, timezone və locale. Client valyuta/tarix formatını buradan alır.
+      tags: [Tenant]
+      x-permission: iam.me.view
+      responses:
+        '200':
+          description: Tenant.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tenant'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users:
+    get:
+      operationId: listUsers
+      summary: İstifadəçi siyahısı
+      description: Tenant daxilində istifadəçilər; `q` username/ad/e-mail üzrə axtarır.
+      tags: [Users]
+      x-permission: iam.user.view
+      parameters:
+        - $ref: '#/components/parameters/Search'
+        - $ref: '#/components/parameters/IsActiveFilter'
+        - name: roleCode
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/RoleCode'
+        - name: locationId
+          in: query
+          required: false
+          description: Bu lokasiyaya girişi olan istifadəçilər.
+          schema:
+            $ref: '#/components/schemas/Id'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Səhifələnmiş istifadəçi siyahısı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createUser
+      summary: İstifadəçi qeydi yarat
+      description: |
+        Keycloak-da mövcud olan istifadəçini (`externalId` = Keycloak subject) tenant-a bağlayır və rollarını,
+        lokasiyalarını təyin edir. Keycloak-da istifadəçi yaratmaq bu API-nin işi deyil (admin konsolu / SCIM).
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Users]
+      x-permission: iam.user.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /users/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getUser
+      summary: İstifadəçi
+      description: İstifadəçi qeydi, rolları və lokasiyaları ilə.
+      tags: [Users]
+      x-permission: iam.user.view
+      responses:
+        '200':
+          description: İstifadəçi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateUser
+      summary: İstifadəçini yenilə
+      description: |
+        Ad, e-mail, telefon, aktivlik. `rowVersion` məcburidir.
+
+        `409` kodları: `STALE_VERSION`.
+      tags: [Users]
+      x-permission: iam.user.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /users/{id}/roles:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    put:
+      operationId: setUserRoles
+      summary: İstifadəçinin rollarını təyin et
+      description: |
+        Rol siyahısını tam əvəz edir (`iam_user_role`). SoD qaydası: `WAREHOUSE_KEEPER` rolu
+        `master.product.view_cost` icazəsi verən rolla eyni istifadəçidə ola bilməz (SPEC §7.1) — pozulsa `422`.
+
+        `409` kodları: `STALE_VERSION`.
+      tags: [Users]
+      x-permission: iam.user.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRolesSet'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /users/{id}/locations:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    put:
+      operationId: setUserLocations
+      summary: İstifadəçinin lokasiya girişini təyin et
+      description: |
+        `iam_user_location` siyahısını tam əvəz edir. Boş siyahı = məhdudiyyət yoxdur (bütün lokasiyalar).
+        Virtual lokasiyalar (`V_*`, `IN_TRANSIT`) siyahıya daxil edilə bilməz — `422`.
+
+        `409` kodları: `STALE_VERSION`.
+      tags: [Users]
+      x-permission: iam.user.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLocationsSet'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /roles:
+    get:
+      operationId: listRoles
+      summary: Rol siyahısı
+      description: Tenant rolları; sistem rolları (`isSystem=true`) silinə bilmir.
+      tags: [Roles]
+      x-permission: iam.role.view
+      responses:
+        '200':
+          description: Rollar (səhifələnmir — tenant başına az sayda).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createRole
+      summary: Rol yarat
+      description: |
+        Xüsusi (custom) rol. Kod tenant daxilində unikaldır.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Roles]
+      x-permission: iam.role.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /roles/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getRole
+      summary: Rol
+      description: Rol və ona bağlı icazə kodları.
+      tags: [Roles]
+      x-permission: iam.role.view
+      responses:
+        '200':
+          description: Rol.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /roles/{id}/permissions:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    put:
+      operationId: setRolePermissions
+      summary: Rolun icazələrini təyin et
+      description: |
+        `iam_role_permission` siyahısını tam əvəz edir. `WAREHOUSE_KEEPER` sistem roluna
+        `master.product.view_cost` əlavə etmək qadağandır (SPEC §7.1) — `422`.
+      tags: [Roles]
+      x-permission: iam.role.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RolePermissionsSet'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /permissions:
+    get:
+      operationId: listPermissions
+      summary: İcazə kataloqu
+      description: |
+        Sistemdəki bütün icazə kodları (`iam_permission`), modul üzrə qruplanmış. Kataloq kod ilə gəlir,
+        tenant-dan asılı deyil. Bu siyahı OpenAPI fayllarındakı `x-permission` dəyərləri ilə üst-üstə düşməlidir
+        (kontrakt testi ilə yoxlanılır).
+      tags: [Permissions]
+      x-permission: iam.role.view
+      parameters:
+        - name: module
+          in: query
+          required: false
+          description: Modul filtri (`identity`, `masterdata`, `inventory`, `procurement`, `documents`, `notification`, `reporting`).
+          schema:
+            type: string
+            maxLength: 32
+      responses:
+        '200':
+          description: İcazələr.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Permission'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /delegations:
+    get:
+      operationId: listDelegations
+      summary: Delegasiya siyahısı
+      description: |
+        Adi istifadəçi yalnız özündən və ya özünə olan delegasiyaları görür; `iam.delegation.manage` icazəsi
+        olan hamısını görür. `activeOn` verildikdə həmin tarixdə qüvvədə olanlar qaytarılır.
+      tags: [Delegations]
+      x-permission: iam.delegation.view
+      parameters:
+        - name: fromUserId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: toUserId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: activeOn
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/DateOnly'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Delegasiyalar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DelegationPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createDelegation
+      summary: Delegasiya yarat
+      description: |
+        `fromUserId` verilməzsə cari istifadəçi götürülür; başqa istifadəçi adından yalnız
+        `iam.delegation.manage` icazəsi ilə. `validFrom ≤ validTo`, eyni dövrdə üst-üstə düşən aktiv delegasiya
+        olmamalıdır (`422`). Delegasiya yalnız approval qərarlarına (PO, tullantı, sayım) şamil olunur;
+        `proc_approval_step.delegated_from_user_id` bu qeydə istinad edir.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Delegations]
+      x-permission: iam.delegation.create
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DelegationCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delegation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /delegations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getDelegation
+      summary: Delegasiya
+      description: Bir delegasiya qeydi.
+      tags: [Delegations]
+      x-permission: iam.delegation.view
+      responses:
+        '200':
+          description: Delegasiya.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Delegation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: revokeDelegation
+      summary: Delegasiyanı ləğv et
+      description: Delegasiyanı dərhal qüvvədən salır (`validTo` bu günə çəkilir); tarixçə üçün sətir silinmir.
+      tags: [Delegations]
+      x-permission: iam.delegation.create
+      responses:
+        '204':
+          description: Ləğv edildi.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearer:
+      $ref: './common.v1.yaml#/components/securitySchemes/bearer'
+    oidc:
+      $ref: './common.v1.yaml#/components/securitySchemes/oidc'
+
+  parameters:
+    IdempotencyKey:
+      $ref: './common.v1.yaml#/components/parameters/IdempotencyKey'
+    PathId:
+      $ref: './common.v1.yaml#/components/parameters/PathId'
+    Page:
+      $ref: './common.v1.yaml#/components/parameters/Page'
+    Size:
+      $ref: './common.v1.yaml#/components/parameters/Size'
+    Sort:
+      $ref: './common.v1.yaml#/components/parameters/Sort'
+    Search:
+      $ref: './common.v1.yaml#/components/parameters/Search'
+    IsActiveFilter:
+      $ref: './common.v1.yaml#/components/parameters/IsActiveFilter'
+
+  headers:
+    Location:
+      $ref: './common.v1.yaml#/components/headers/Location'
+
+  responses:
+    BadRequest:
+      $ref: './common.v1.yaml#/components/responses/BadRequest'
+    Unauthorized:
+      $ref: './common.v1.yaml#/components/responses/Unauthorized'
+    Forbidden:
+      $ref: './common.v1.yaml#/components/responses/Forbidden'
+    NotFound:
+      $ref: './common.v1.yaml#/components/responses/NotFound'
+    Conflict:
+      $ref: './common.v1.yaml#/components/responses/Conflict'
+    UnprocessableEntity:
+      $ref: './common.v1.yaml#/components/responses/UnprocessableEntity'
+
+  schemas:
+    # --- aliases into common (keeps generated model names stable) ---
+    Id:
+      $ref: './common.v1.yaml#/components/schemas/Id'
+    DateOnly:
+      $ref: './common.v1.yaml#/components/schemas/DateOnly'
+    DateTimeUtc:
+      $ref: './common.v1.yaml#/components/schemas/DateTimeUtc'
+    RowVersion:
+      $ref: './common.v1.yaml#/components/schemas/RowVersion'
+    CurrencyCode:
+      $ref: './common.v1.yaml#/components/schemas/CurrencyCode'
+    AuditFields:
+      $ref: './common.v1.yaml#/components/schemas/AuditFields'
+    PageMeta:
+      $ref: './common.v1.yaml#/components/schemas/PageMeta'
+    ProblemDetails:
+      $ref: './common.v1.yaml#/components/schemas/ProblemDetails'
+
+    # --- enums ---
+    RoleCode:
+      type: string
+      description: Sistem rol kodları (Keycloak realm rolları ilə eyni). Custom rollar üçün istənilən `[A-Z_]{3,48}`.
+      enum:
+        - ADMIN
+        - PROCUREMENT_OFFICER
+        - PROCUREMENT_MANAGER
+        - WAREHOUSE_KEEPER
+        - BRANCH_USER
+        - AUDITOR
+
+    PermissionCode:
+      type: string
+      pattern: '^[a-z]+\.[a-z_]+\.[a-z_]+$'
+      description: '`<modul>.<resurs>.<əməliyyat>` formatı, məs. `inv.receipt.create`, `master.product.view_cost`.'
+      examples: [inv.receipt.create, proc.po.approve, master.product.view_cost]
+
+    # --- Me ---
+    Me:
+      type: object
+      required: [user, tenant, roles, permissions, locationIds]
+      properties:
+        user:
+          $ref: '#/components/schemas/UserSummary'
+        tenant:
+          $ref: '#/components/schemas/Tenant'
+        roles:
+          type: array
+          items:
+            type: string
+          description: Rol kodları (`realm_access.roles` ilə uzlaşdırılmış).
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionCode'
+          description: Effektiv icazə kodları (bütün rolların birləşməsi). UI menyu/route qorumasını bununla qurur.
+        locationIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          description: Görünən lokasiyalar. **Boş = məhdudiyyət yoxdur.**
+        canViewCost:
+          type: boolean
+          description: '`master.product.view_cost` icazəsinin qısa yolu — UI maya dəyəri sütunlarını buna görə gizlədir.'
+        activeDelegations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Delegation'
+          description: Bu gün cari istifadəçiyə verilmiş qüvvədə olan delegasiyalar (approval inbox üçün).
+
+    Tenant:
+      type: object
+      required: [id, code, name, defaultCurrency, timezone, locale, isActive]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        code:
+          type: string
+          maxLength: 32
+        name:
+          type: string
+          maxLength: 200
+        defaultCurrency:
+          $ref: '#/components/schemas/CurrencyCode'
+        timezone:
+          type: string
+          maxLength: 64
+          examples: [Asia/Baku]
+        locale:
+          type: string
+          maxLength: 10
+          examples: [az-AZ]
+        isActive:
+          type: boolean
+
+    # --- Users ---
+    UserSummary:
+      type: object
+      required: [id, username, fullName, isActive]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        username:
+          type: string
+          maxLength: 100
+        fullName:
+          type: string
+          maxLength: 200
+        email:
+          type: [string, 'null']
+          format: email
+          maxLength: 200
+        isActive:
+          type: boolean
+
+    User:
+      type: object
+      required: [id, externalId, username, fullName, isActive, roles, locationIds, audit]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        externalId:
+          type: string
+          maxLength: 64
+          description: Keycloak subject (`sub`).
+        username:
+          type: string
+          maxLength: 100
+        fullName:
+          type: string
+          maxLength: 200
+        email:
+          type: [string, 'null']
+          format: email
+          maxLength: 200
+        phone:
+          type: [string, 'null']
+          maxLength: 32
+        isActive:
+          type: boolean
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoleSummary'
+        locationIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+        audit:
+          $ref: '#/components/schemas/AuditFields'
+
+    UserCreate:
+      type: object
+      required: [externalId, username, fullName]
+      properties:
+        externalId:
+          type: string
+          maxLength: 64
+          description: Keycloak subject. Tenant daxilində unikal.
+        username:
+          type: string
+          maxLength: 100
+          description: Keycloak `preferred_username` ilə eyni olmalıdır.
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        email:
+          type: [string, 'null']
+          format: email
+          maxLength: 200
+        phone:
+          type: [string, 'null']
+          maxLength: 32
+        roleIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+        locationIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          default: []
+
+    UserUpdate:
+      type: object
+      required: [fullName, isActive, rowVersion]
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        email:
+          type: [string, 'null']
+          format: email
+          maxLength: 200
+        phone:
+          type: [string, 'null']
+          maxLength: 32
+        isActive:
+          type: boolean
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    UserRolesSet:
+      type: object
+      required: [roleIds, rowVersion]
+      properties:
+        roleIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    UserLocationsSet:
+      type: object
+      required: [locationIds, rowVersion]
+      properties:
+        locationIds:
+          type: array
+          items:
+            $ref: '#/components/schemas/Id'
+          description: Boş siyahı = bütün lokasiyalar.
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    UserPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/User'
+
+    # --- Roles / permissions ---
+    RoleSummary:
+      type: object
+      required: [id, code, name, isSystem]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        code:
+          type: string
+          maxLength: 48
+        name:
+          type: string
+          maxLength: 120
+        isSystem:
+          type: boolean
+
+    Role:
+      allOf:
+        - $ref: '#/components/schemas/RoleSummary'
+        - type: object
+          required: [permissions]
+          properties:
+            permissions:
+              type: array
+              items:
+                $ref: '#/components/schemas/PermissionCode'
+
+    RoleCreate:
+      type: object
+      required: [code, name]
+      properties:
+        code:
+          type: string
+          pattern: '^[A-Z][A-Z0-9_]{2,47}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionCode'
+          default: []
+
+    RolePermissionsSet:
+      type: object
+      required: [permissions]
+      properties:
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PermissionCode'
+
+    Permission:
+      type: object
+      required: [id, code, module]
+      properties:
+        id:
+          type: integer
+          format: int32
+        code:
+          $ref: '#/components/schemas/PermissionCode'
+        module:
+          type: string
+          maxLength: 32
+        description:
+          type: [string, 'null']
+          description: Qısa izah (tenant dilində).
+        isCritical:
+          type: boolean
+          description: SPEC §7.1 cədvəlindəki kritik icazələr (`view_cost`, `approve`, `reverse`) — UI-də xəbərdarlıqla göstərilir.
+
+    # --- Delegations ---
+    Delegation:
+      type: object
+      required: [id, fromUser, toUser, validFrom, validTo, createdAt, createdBy]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        fromUser:
+          $ref: '#/components/schemas/UserSummary'
+        toUser:
+          $ref: '#/components/schemas/UserSummary'
+        validFrom:
+          $ref: '#/components/schemas/DateOnly'
+        validTo:
+          $ref: '#/components/schemas/DateOnly'
+        reason:
+          type: [string, 'null']
+          maxLength: 300
+        isActiveToday:
+          type: boolean
+        createdAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+        createdBy:
+          $ref: '#/components/schemas/Id'
+
+    DelegationCreate:
+      type: object
+      required: [toUserId, validFrom, validTo]
+      properties:
+        fromUserId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Verilməzsə cari istifadəçi.
+        toUserId:
+          $ref: '#/components/schemas/Id'
+        validFrom:
+          $ref: '#/components/schemas/DateOnly'
+        validTo:
+          $ref: '#/components/schemas/DateOnly'
+        reason:
+          type: [string, 'null']
+          maxLength: 300
+
+    DelegationPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/Delegation'

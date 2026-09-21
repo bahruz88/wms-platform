@@ -1,0 +1,24 @@
+# Non-secret backend configuration (keys exactly as docs/CONVENTIONS.md, env format A__B).
+# Infrastructure (MySQL, Redis, RabbitMQ, MinIO, Keycloak, Seq) is assumed MANAGED /
+# EXTERNAL in Kubernetes (cloud DB, operator, or a separate namespace) - point the
+# hostnames below at it. Secrets (passwords, connection strings) live in secret-wms.example.yaml.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wms-config
+  labels:
+    app.kubernetes.io/part-of: wms
+data:
+  ASPNETCORE_ENVIRONMENT: Production
+  ASPNETCORE_URLS: http://+:8080
+  ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+  ModuleTransport: Http
+  Redis__ConnectionString: redis.wms-infra.svc.cluster.local:6379
+  RabbitMq__Host: rabbitmq.wms-infra.svc.cluster.local
+  RabbitMq__Exchange: wms.events
+  Minio__Endpoint: minio.wms-infra.svc.cluster.local:9000
+  Minio__Bucket: wms-attachments
+  Keycloak__Authority: https://auth.example.com/realms/wms
+  Keycloak__Audience: wms-api
+  Seq__Url: http://seq.wms-infra.svc.cluster.local:5341
+  Otel__Endpoint: http://otel-collector.wms-infra.svc.cluster.local:4317

@@ -1,0 +1,107 @@
+# SPEC §18.3: schema migrations run in a separate job, NEVER at API startup.
+#
+# ORDERING - the job must COMPLETE before the Deployments are rolled out:
+#   kubectl -n wms delete job wms-migrator --ignore-not-found
+#   kubectl kustomize deploy/k8s/overlays/prod | kubectl apply -f - -l app.kubernetes.io/component=migration
+#   kubectl -n wms wait --for=condition=complete --timeout=15m job/wms-migrator
+#   kubectl apply -k deploy/k8s/overlays/prod
+# With Argo CD the annotations below make it a PreSync hook (re-created on every sync).
+# Old-version pods keep running during the migration, so migrations must be
+# backward compatible (expand/contract).
+#
+# Step 1 (initContainer "migrate"):  Wms.Host.Migrator, user wms_migrator, all modules.
+# Step 2 (container "ledger-grants"): CALL wms_ops.apply_ledger_grants() as the DB admin -
+#   re-grants per-table UPDATE/DELETE to wms_app for new tables while inv_movement /
+#   common_audit_log stay SELECT+INSERT only (SPEC §9.4, §16). The procedure comes from
+#   deploy/mysql/init/02-ledger-grants.sql, which the DBA applies once on the managed MySQL.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: wms-migrator
+  labels:
+    app.kubernetes.io/name: wms-migrator
+    app.kubernetes.io/component: migration
+    app.kubernetes.io/part-of: wms
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 1800
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: wms-migrator
+        app.kubernetes.io/component: migration
+        app.kubernetes.io/part-of: wms
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: migrate
+          image: wms/migrator
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: Modules
+              value: "*"
+          envFrom:
+            - configMapRef:
+                name: wms-config
+            - secretRef:
+                name: wms-secrets
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: home
+              mountPath: /home/app
+      containers:
+        - name: ledger-grants
+          image: mysql:8.4
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eu
+              mysql --protocol=tcp -h "$MYSQL_HOST" -P "${MYSQL_PORT:-3306}" -u "$MYSQL_ADMIN_USER" \
+                -e "CALL wms_ops.apply_ledger_grants(); SHOW GRANTS FOR 'wms_app'@'%';"
+          envFrom:
+            - secretRef:
+                name: wms-db-admin        # MYSQL_HOST, MYSQL_PORT, MYSQL_ADMIN_USER, MYSQL_PWD
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: home
+          emptyDir: {}

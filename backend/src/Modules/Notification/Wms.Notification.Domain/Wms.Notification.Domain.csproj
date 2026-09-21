@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Notification domain model.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <Description>Single API entry point. Loads the modules named by the Modules configuration key (spec §4.1).</Description>
+    <UserSecretsId>wms-host-api</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../BuildingBlocks/Wms.Common.Infrastructure/Wms.Common.Infrastructure.csproj" />
+    <ProjectReference Include="../../Modules/Identity/Wms.Identity.Endpoints/Wms.Identity.Endpoints.csproj" />
+    <ProjectReference Include="../../Modules/MasterData/Wms.MasterData.Endpoints/Wms.MasterData.Endpoints.csproj" />
+    <ProjectReference Include="../../Modules/Inventory/Wms.Inventory.Endpoints/Wms.Inventory.Endpoints.csproj" />
+    <ProjectReference Include="../../Modules/Consumption/Wms.Consumption.Endpoints/Wms.Consumption.Endpoints.csproj" />
+    <ProjectReference Include="../../Modules/Procurement/Wms.Procurement.Endpoints/Wms.Procurement.Endpoints.csproj" />
+    <ProjectReference Include="../../Modules/Documents/Wms.Documents.Endpoints/Wms.Documents.Endpoints.csproj" />
+    <ProjectReference Include="../../Modules/Notification/Wms.Notification.Endpoints/Wms.Notification.Endpoints.csproj" />
+    <ProjectReference Include="../../Modules/Reporting/Wms.Reporting.Endpoints/Wms.Reporting.Endpoints.csproj" />
+    <ProjectReference Include="../../Modules/Integration/Wms.Integration.Endpoints/Wms.Integration.Endpoints.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Seq" />
+    <PackageReference Include="Serilog.Formatting.Compact" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Wms.Api.ContractTests" />
+    <InternalsVisibleTo Include="Wms.ArchitectureTests" />
+  </ItemGroup>
+</Project>

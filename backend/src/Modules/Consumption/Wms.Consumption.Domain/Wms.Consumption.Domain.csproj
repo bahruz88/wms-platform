@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Consumption domain: menu items, versioned recipes, sales imports and the theoretical-consumption run (ADR-012, docs/architecture/branch-operations.md).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+  </ItemGroup>
+</Project>

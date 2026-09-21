@@ -1,0 +1,554 @@
+openapi: 3.1.0
+info:
+  title: WMS Common Components
+  version: 1.0.0
+  summary: Shared components referenced by every module contract (no paths of its own).
+  description: |
+    Bu fayl yalnız ortaq komponentləri (`components/*`) saxlayır və heç bir `paths` təyin etmir.
+    Modul kontraktları (`identity.v1.yaml`, `inventory.v1.yaml` və s.) buraya `$ref` ilə istinad edir.
+
+    Əsas qaydalar (SPEC §13, CONVENTIONS):
+
+    * Bütün miqdar və məbləğ sahələri JSON-da **string**-dir (`Decimal` sxemi). Client tərəfdə
+      `decimal` paketi ilə parse edilir; `double`/`float` istifadəsi qadağandır.
+    * Bütün `POST` əməliyyatları `Idempotency-Key` (UUID) header-i tələb edir (§13.2).
+    * Xətalar RFC 7807 `application/problem+json` + `code` sahəsi ilə qaytarılır (§13.3).
+    * Səhifələmə `{ items, page, size, total }` formatındadır, `size` maksimum 200 (§13.4).
+    * Optimistic concurrency `rowVersion` ilə; uyğunsuzluq `409 STALE_VERSION` (§13.5).
+  contact:
+    name: WMS Platform Team
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+tags: []
+paths: {}
+components:
+  # ---------------------------------------------------------------------------
+  # Security
+  # ---------------------------------------------------------------------------
+  securitySchemes:
+    oidc:
+      type: openIdConnect
+      description: |
+        Keycloak realm `wms`. Public client-lər (`wms-web`, `wms-mobile`) Authorization Code + PKCE
+        axını ilə token alır. Access token-da `tenant_id` claim-i **məcburidir**; `aud` = `wms-api`.
+      openIdConnectUrl: http://localhost:8080/realms/wms/.well-known/openid-configuration
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Keycloak tərəfindən verilmiş access token. Tenant konteksti yalnız `tenant_id` claim-dən
+        oxunur — heç vaxt body/query-dən (SPEC §12.9).
+
+  # ---------------------------------------------------------------------------
+  # Primitive / value schemas
+  # ---------------------------------------------------------------------------
+  schemas:
+    Id:
+      type: integer
+      format: int64
+      minimum: 1
+      description: Surrogate primary key (`id` sütunu). Tenant daxilində unikaldır.
+      examples: [1042]
+
+    Decimal:
+      type: string
+      pattern: '^-?\d+(\.\d{1,8})?$'
+      description: |
+        Onluq ədəd — JSON-da həmişə **string** kimi ötürülür ki, `double` yuvarlaqlaşdırma
+        artefaktı (`-23.50999999999999`) yaranmasın. Miqdar/məbləğ üçün DB tipi `DECIMAL(18,4)`,
+        conversion əmsalı və məzənnə üçün `DECIMAL(18,8)`, faiz üçün `DECIMAL(9,4)` (SPEC §6.3).
+        Client: Dart `decimal` paketi, C# `decimal`.
+      examples: ["12.5000", "-3.0000", "0.08333333"]
+
+    Percent:
+      type: string
+      pattern: '^-?\d+(\.\d{1,4})?$'
+      description: Faiz dəyəri (`DECIMAL(9,4)`), string kimi. `18.0000` = 18 %.
+      examples: ["18.0000", "2.5000"]
+
+    CurrencyCode:
+      type: string
+      pattern: '^[A-Z]{3}$'
+      minLength: 3
+      maxLength: 3
+      description: ISO 4217 valyuta kodu (`CHAR(3)`).
+      examples: [AZN, USD, EUR]
+
+    Money:
+      type: object
+      description: Məbləğ + valyuta. Məbləğ `Decimal` string-dir.
+      required: [amount, currency]
+      properties:
+        amount:
+          $ref: '#/components/schemas/Decimal'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+      examples:
+        - amount: "1250.0000"
+          currency: AZN
+
+    Quantity:
+      type: object
+      description: |
+        İstifadəçinin daxil etdiyi miqdar + ölçü vahidi. Server bunu `master_product_uom.factor_to_base`
+        ilə base UoM-a çevirir və əmsalı hərəkətdə dondurur (SPEC §12.1).
+      required: [value, uomId]
+      properties:
+        value:
+          $ref: '#/components/schemas/Decimal'
+        uomId:
+          $ref: '#/components/schemas/Id'
+      examples:
+        - value: "12.0000"
+          uomId: 3
+
+    RowVersion:
+      type: integer
+      format: int32
+      minimum: 1
+      description: |
+        Optimistic concurrency token (`row_version`). Dəyişiklik sorğularında client oxuduğu
+        dəyəri geri göndərir; uyğunsuzluq → `409 STALE_VERSION` (SPEC §13.5).
+      examples: [1, 7]
+
+    DateOnly:
+      type: string
+      format: date
+      description: Tarix (`DATE`), ISO 8601 `YYYY-MM-DD`.
+      examples: ["2026-09-20"]
+
+    DateTimeUtc:
+      type: string
+      format: date-time
+      description: UTC vaxt damğası (`DATETIME(3)`), ISO 8601. Göstərmə `tenant.timezone`-a görə client-də.
+      examples: ["2026-09-20T08:15:30.123Z"]
+
+    Uuid:
+      type: string
+      format: uuid
+      examples: ["6f1c2a3e-9b7d-4e2f-8a1b-3c4d5e6f7a8b"]
+
+    AuditFields:
+      type: object
+      description: Hər cədvəldə məcburi audit sütunları (SPEC §6.2).
+      required: [createdAt, createdBy, rowVersion]
+      properties:
+        createdAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+        createdBy:
+          $ref: '#/components/schemas/Id'
+        updatedAt:
+          oneOf:
+            - $ref: '#/components/schemas/DateTimeUtc'
+            - type: 'null'
+        updatedBy:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    # ---------------------------------------------------------------------------
+    # Paging
+    # ---------------------------------------------------------------------------
+    PageMeta:
+      type: object
+      description: |
+        Səhifələmə zərfi (SPEC §13.4). Konkret cavab sxemləri `allOf: [PageMeta, {items: [...]}]`
+        ilə qurulur.
+      required: [page, size, total]
+      properties:
+        page:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Cari səhifə (1-dən başlayır).
+        size:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 200
+          description: Səhifə ölçüsü.
+        total:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Filtrə uyğun ümumi sətir sayı.
+      examples:
+        - page: 1
+          size: 50
+          total: 1284
+
+    # ---------------------------------------------------------------------------
+    # Errors — RFC 7807
+    # ---------------------------------------------------------------------------
+    ErrorCode:
+      type: string
+      description: |
+        Maşın tərəfindən oxunan xəta kodu (`ProblemDetails.code`). Client bu koda görə mesaj
+        lokalizasiyası və UI reaksiyası (məs. `STALE_VERSION` → yenidən yüklə) seçir.
+        Siyahı bağlı deyil — modul spesifik kodlar əlavə edilə bilər, lakin aşağıdakılar ortaqdır.
+      enum:
+        - VALIDATION_FAILED
+        - NOT_FOUND
+        - FORBIDDEN
+        - UNAUTHORIZED
+        - INSUFFICIENT_STOCK
+        - LOCATION_FROZEN
+        - STALE_VERSION
+        - BATCH_BLOCKED
+        - FX_RATE_MISSING
+        - APPROVAL_REQUIRED
+        - IDEMPOTENT_REPLAY
+        - IDEMPOTENCY_KEY_MISSING
+        - INVALID_STATE_TRANSITION
+        - LEDGER_UNBALANCED
+        - NEGATIVE_STOCK
+        - SELECTION_NOTE_REQUIRED
+        - VARIANCE_NOTE_REQUIRED
+        - REASON_CODE_REQUIRED
+        - RATE_LIMITED
+
+    ProblemDetails:
+      type: object
+      description: |
+        RFC 7807 problem details + WMS genişləndirmələri (`code`, `errors`, `traceId`) — SPEC §13.3.
+        `Content-Type: application/problem+json`.
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: Xəta tipinin URI-si, `https://wms/errors/<kebab-code>`.
+          examples: ["https://wms/errors/insufficient-stock"]
+        title:
+          type: string
+          description: Qısa, insan üçün başlıq (tenant dilində).
+          examples: ["Kifayət qədər stok yoxdur"]
+        status:
+          type: integer
+          format: int32
+          minimum: 400
+          maximum: 599
+          description: HTTP status kodu.
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        detail:
+          type: string
+          description: Konkret hal üçün izah.
+          examples: ["Chicken Strips: mövcud 45.0000 KG, tələb olunan 60.0000 KG"]
+        instance:
+          type: string
+          format: uri-reference
+          description: Xətanın baş verdiyi sorğu yolu.
+        traceId:
+          type: string
+          description: W3C trace-context `traceparent` id-si — Seq/OTel-də axtarış üçün.
+          examples: ["00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"]
+        errors:
+          type: object
+          description: |
+            Sahə səviyyəli validasiya xətaları. Açar — JSON path (`lines[2].qty`), dəyər — mesaj siyahısı.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          examples:
+            - lines[2].qty: ["Mövcud qalıqdan çoxdur"]
+      examples:
+        - type: https://wms/errors/insufficient-stock
+          title: Kifayət qədər stok yoxdur
+          status: 409
+          code: INSUFFICIENT_STOCK
+          detail: "Chicken Strips: mövcud 45.0000 KG, tələb olunan 60.0000 KG"
+          traceId: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
+          errors:
+            lines[2].qty: ["Mövcud qalıqdan çoxdur"]
+
+    # ---------------------------------------------------------------------------
+    # Small shared request/response fragments
+    # ---------------------------------------------------------------------------
+    ReasonedAction:
+      type: object
+      description: Səbəb kodu + qeyd tələb edən əməliyyat üçün ortaq body (storno, rədd, blok...).
+      required: [reasonCodeId]
+      properties:
+        reasonCodeId:
+          $ref: '#/components/schemas/Id'
+        note:
+          type: string
+          maxLength: 1000
+
+    Comment:
+      type: object
+      description: Yalnız şərh daşıyan əməliyyat body-si (submit / approve / reject / close).
+      properties:
+        comment:
+          type: string
+          maxLength: 1000
+
+    VersionedAction:
+      type: object
+      description: Optimistic lock yoxlaması tələb edən əməliyyat body-si.
+      required: [rowVersion]
+      properties:
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    Accepted:
+      type: object
+      description: Asinxron qəbul edilmiş əməliyyatın cavabı.
+      required: [id, status]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        status:
+          type: string
+        statusUrl:
+          type: string
+          format: uri-reference
+
+  # ---------------------------------------------------------------------------
+  # Parameters
+  # ---------------------------------------------------------------------------
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: |
+        Bütün `POST` sorğularında **məcburi** UUID (SPEC §13.2). Eyni açarla təkrar sorğu yeni
+        sənəd yaratmır — server əvvəlki nəticəni (`200`/`201`) qaytarır və ya `409 IDEMPOTENT_REPLAY`
+        ilə (body fərqli olduqda) rədd edir. Açar 24 saat saxlanılır.
+      schema:
+        type: string
+        format: uuid
+      example: 6f1c2a3e-9b7d-4e2f-8a1b-3c4d5e6f7a8b
+
+    IfMatchRowVersion:
+      name: If-Match
+      in: header
+      required: false
+      description: |
+        Opsional alternativ: `rowVersion` dəyərini body əvəzinə `If-Match: "7"` header-i ilə göndərmək.
+        Body-də `rowVersion` verilibsə header nəzərə alınmır.
+      schema:
+        type: string
+      example: '"7"'
+
+    PathId:
+      name: id
+      in: path
+      required: true
+      description: Resursun `id`-si.
+      schema:
+        $ref: '#/components/schemas/Id'
+
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Səhifə nömrəsi (1-dən başlayır).
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        default: 1
+
+    Size:
+      name: size
+      in: query
+      required: false
+      description: Səhifə ölçüsü, maksimum 200 (SPEC §13.4).
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
+        maximum: 200
+        default: 50
+
+    Sort:
+      name: sort
+      in: query
+      required: false
+      description: |
+        Sıralama, `field,asc|desc` formatında; bir neçə sahə vergüllə: `docDate,desc;docNo,asc`.
+        Azərbaycan əlifba sırası tələb edən adlar üçün server `name_sort_key`-dən istifadə edir (SPEC §6.4).
+      schema:
+        type: string
+        maxLength: 200
+      example: docDate,desc
+
+    Search:
+      name: q
+      in: query
+      required: false
+      description: Sərbəst mətn axtarışı (kod, ad, sənəd nömrəsi).
+      schema:
+        type: string
+        maxLength: 100
+
+    DateFrom:
+      name: dateFrom
+      in: query
+      required: false
+      description: Tarix filtri — başlanğıc (daxil).
+      schema:
+        $ref: '#/components/schemas/DateOnly'
+
+    DateTo:
+      name: dateTo
+      in: query
+      required: false
+      description: Tarix filtri — son (daxil).
+      schema:
+        $ref: '#/components/schemas/DateOnly'
+
+    LocationIdFilter:
+      name: locationId
+      in: query
+      required: false
+      description: Lokasiya üzrə filtr. Filial istifadəçisi üçün server `iam_user_location` ilə əlavə məhdudlaşdırır.
+      schema:
+        $ref: '#/components/schemas/Id'
+
+    ProductIdFilter:
+      name: productId
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/Id'
+
+    SupplierIdFilter:
+      name: supplierId
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/Id'
+
+    BatchIdFilter:
+      name: batchId
+      in: query
+      required: false
+      schema:
+        $ref: '#/components/schemas/Id'
+
+    IsActiveFilter:
+      name: isActive
+      in: query
+      required: false
+      description: Yalnız aktiv / yalnız qeyri-aktiv sətirlər; verilməyibsə hamısı.
+      schema:
+        type: boolean
+
+  # ---------------------------------------------------------------------------
+  # Headers
+  # ---------------------------------------------------------------------------
+  headers:
+    Location:
+      description: Yeni yaradılmış resursun URL-i.
+      schema:
+        type: string
+        format: uri-reference
+    IdempotentReplayed:
+      description: '`true` olduqda cavab əvvəlki eyni `Idempotency-Key` sorğusunun nəticəsidir.'
+      schema:
+        type: boolean
+    RateLimitRemaining:
+      description: Cari pəncərədə qalan sorğu sayı (istifadəçi başına 100 req/dəq, SPEC §16).
+      schema:
+        type: integer
+
+  # ---------------------------------------------------------------------------
+  # Standard responses (all problem+json)
+  # ---------------------------------------------------------------------------
+  responses:
+    BadRequest:
+      description: Sorğu sintaktik səhvdir və ya məcburi header (`Idempotency-Key`) çatışmır.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            missingIdempotencyKey:
+              value:
+                type: https://wms/errors/idempotency-key-missing
+                title: Idempotency-Key header-i tələb olunur
+                status: 400
+                code: IDEMPOTENCY_KEY_MISSING
+    Unauthorized:
+      description: Token yoxdur, etibarsızdır və ya vaxtı keçib.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Forbidden:
+      description: İcazə (`x-permission`) yoxdur və ya lokasiya istifadəçinin `iam_user_location` siyahısında deyil.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            forbidden:
+              value:
+                type: https://wms/errors/forbidden
+                title: Bu əməliyyat üçün icazəniz yoxdur
+                status: 403
+                code: FORBIDDEN
+    NotFound:
+      description: Resurs tapılmadı (və ya başqa tenant-a aiddir — tenant filter nəticəsində fərqlənmir).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Conflict:
+      description: |
+        Domen konflikti. `code` sahəsi konkret səbəbi bildirir; hər əməliyyat öz təsvirində mümkün kodları sadalayır:
+        `INSUFFICIENT_STOCK`, `LOCATION_FROZEN`, `STALE_VERSION`, `BATCH_BLOCKED`, `FX_RATE_MISSING`,
+        `APPROVAL_REQUIRED`, `IDEMPOTENT_REPLAY`, `INVALID_STATE_TRANSITION`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            staleVersion:
+              value:
+                type: https://wms/errors/stale-version
+                title: Sənəd başqa istifadəçi tərəfindən dəyişdirilib
+                status: 409
+                code: STALE_VERSION
+                detail: "Gözlənilən rowVersion 7, cari 8"
+            locationFrozen:
+              value:
+                type: https://wms/errors/location-frozen
+                title: Lokasiya sayım üçün dondurulub
+                status: 409
+                code: LOCATION_FROZEN
+                detail: "IC-2026-00012 sayımı tamamlanana qədər Food WH üzrə əməliyyat mümkün deyil"
+    UnprocessableEntity:
+      description: Validasiya xətası — `errors` sahəsi sahə üzrə mesajları daşıyır.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            validation:
+              value:
+                type: https://wms/errors/validation-failed
+                title: Validasiya xətası
+                status: 422
+                code: VALIDATION_FAILED
+                errors:
+                  lines[0].varianceNote: ["Fərq olduqda izah məcburidir"]
+    TooManyRequests:
+      description: Rate limit (istifadəçi başına 100 req/dəq).
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'

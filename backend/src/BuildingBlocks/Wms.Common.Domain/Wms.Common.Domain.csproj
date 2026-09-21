@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Shared domain primitives: Entity, AggregateRoot, Result, Quantity, Money.</Description>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,446 @@
+openapi: 3.1.0
+info:
+  title: WMS Documents API
+  version: 1.0.0
+  summary: Attachment metadata və MinIO presigned upload/download axını (SPEC §11 `common_attachment`).
+  description: |
+    Fayllar **heç vaxt** API-dən keçmir və MySQL BLOB-da saxlanmır (SPEC §3). Axın üç addımdır:
+
+    1. `POST /attachments/presign` — metadata yaradılır (`status=PENDING`), MinIO üçün presigned `PUT` URL qaytarılır.
+    2. Client faylı birbaşa `uploadUrl`-ə `PUT` edir (`Content-Type` və `Content-Length` presign-dakı ilə eyni olmalıdır).
+    3. `POST /attachments/{id}/complete` — server obyektin mövcudluğunu, ölçüsünü və SHA-256 checksum-unu yoxlayır,
+       ClamAV skanı növbəyə qoyur, `status=READY` (skan `INFECTED` verərsə obyekt silinir, `status=REJECTED`).
+
+    Yalnız `READY` attachment başqa sənədə (`attachmentIds`) bağlana bilər. Yükləmə **25 MB**-dan böyük ola bilməz;
+    icazəli tiplər: `application/pdf`, `image/jpeg`, `image/png`,
+    `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` (XLSX),
+    `application/vnd.openxmlformats-officedocument.wordprocessingml.document` (DOCX).
+
+    Route prefiksi: `/api/v1/documents`. Cədvəl: `common_attachment`.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: /api/v1/documents
+    description: Gateway (YARP) arxasında Documents modulu (`wms-masterdata` konteyneri ilə birgə)
+
+security:
+  - bearer: []
+  - oidc: []
+
+tags:
+  - name: Attachments
+    description: Fayl əlavələri — presign / complete / download-url.
+
+paths:
+  /attachments:
+    get:
+      operationId: listAttachments
+      summary: Sənədin əlavələri
+      description: '`entityType` + `entityId` üzrə `READY` əlavələr. Sənədə giriş icazəsi olan hər kəs görə bilər (sənəd modulu yoxlayır).'
+      tags: [Attachments]
+      x-permission: doc.attachment.view
+      parameters:
+        - name: entityType
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/EntityType'
+        - name: entityId
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: attachmentType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AttachmentType'
+      responses:
+        '200':
+          description: Əlavələr.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attachment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /attachments/presign:
+    post:
+      operationId: presignAttachmentUpload
+      summary: Yükləmə üçün presigned URL al
+      description: |
+        Metadata `PENDING` statusunda yaradılır, `uploadUrl` **15 dəqiqə** etibarlıdır. `sizeBytes > 26214400`
+        (25 MB) və ya icazəsiz `contentType` → `422`. `entityId` hələ mövcud olmayan (DRAFT-dan əvvəl) sənəd üçün
+        `null` ola bilər — sonra sənəd yaradılarkən `attachmentIds` ilə bağlanır.
+
+        Client `PUT uploadUrl` çağırarkən `uploadHeaders`-dəki bütün header-ləri **dəyişmədən** göndərməlidir.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Attachments]
+      x-permission: doc.attachment.upload
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresignRequest'
+      responses:
+        '201':
+          description: Presign hazırdır.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PresignResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /attachments/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getAttachment
+      summary: Əlavə metadata-sı
+      description: Status, ölçü, checksum, skan nəticəsi.
+      tags: [Attachments]
+      x-permission: doc.attachment.view
+      responses:
+        '200':
+          description: Əlavə.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteAttachment
+      summary: Əlavəni sil
+      description: |
+        Yalnız yükləyən və ya `doc.attachment.manage`. POSTED/APPROVED sənədə bağlı əlavə silinə bilməz
+        (`409 INVALID_STATE_TRANSITION`) — audit izi qorunur. MinIO obyekti `AttachmentOrphanCleaner` job-u ilə təmizlənir.
+      tags: [Attachments]
+      x-permission: doc.attachment.upload
+      responses:
+        '204':
+          description: Silindi.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /attachments/{id}/complete:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    post:
+      operationId: completeAttachmentUpload
+      summary: Yükləməni tamamla (yoxlama + skan)
+      description: |
+        `PENDING → READY` (və ya `SCANNING`, skan asinxron olduqda). Server MinIO-da obyektin ölçüsünü presign-dakı
+        `sizeBytes` ilə, checksum-u `checksumSha256` ilə tutuşdurur; uyğunsuzluq → `422` və obyekt silinir.
+        Presign vaxtı keçibsə və obyekt yoxdursa `404`.
+
+        `409` kodları: `INVALID_STATE_TRANSITION` (artıq `READY`/`REJECTED`), `IDEMPOTENT_REPLAY`.
+      tags: [Attachments]
+      x-permission: doc.attachment.upload
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteUploadRequest'
+      responses:
+        '200':
+          description: Tamamlandı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /attachments/{id}/download-url:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getAttachmentDownloadUrl
+      summary: Yükləmə (download) üçün presigned URL
+      description: |
+        `READY` əlavə üçün **5 dəqiqə** etibarlı presigned `GET` URL. `inline=true` — brauzerdə açmaq üçün
+        `Content-Disposition: inline`. URL tenant-a bağlıdır; paylaşılmamalıdır. Hər çağırış `common_audit_log`-a
+        `EXPORT` kimi düşmür (yalnız hesabat exportları) — lakin `accessed` metrikası artır.
+      tags: [Attachments]
+      x-permission: doc.attachment.view
+      parameters:
+        - name: inline
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadUrlResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Əlavə hələ `READY` deyil (`PENDING`/`SCANNING`) və ya `REJECTED`.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+
+components:
+  securitySchemes:
+    bearer:
+      $ref: './common.v1.yaml#/components/securitySchemes/bearer'
+    oidc:
+      $ref: './common.v1.yaml#/components/securitySchemes/oidc'
+
+  parameters:
+    IdempotencyKey:
+      $ref: './common.v1.yaml#/components/parameters/IdempotencyKey'
+    PathId:
+      $ref: './common.v1.yaml#/components/parameters/PathId'
+
+  responses:
+    BadRequest:
+      $ref: './common.v1.yaml#/components/responses/BadRequest'
+    Unauthorized:
+      $ref: './common.v1.yaml#/components/responses/Unauthorized'
+    Forbidden:
+      $ref: './common.v1.yaml#/components/responses/Forbidden'
+    NotFound:
+      $ref: './common.v1.yaml#/components/responses/NotFound'
+    Conflict:
+      $ref: './common.v1.yaml#/components/responses/Conflict'
+    UnprocessableEntity:
+      $ref: './common.v1.yaml#/components/responses/UnprocessableEntity'
+
+  schemas:
+    Id:
+      $ref: './common.v1.yaml#/components/schemas/Id'
+    DateTimeUtc:
+      $ref: './common.v1.yaml#/components/schemas/DateTimeUtc'
+    ProblemDetails:
+      $ref: './common.v1.yaml#/components/schemas/ProblemDetails'
+
+    EntityType:
+      type: string
+      description: Əlavənin bağlandığı sənəd tipi (`common_attachment.entity_type`).
+      enum:
+        - PRODUCT
+        - SUPPLIER
+        - SUPPLIER_CERTIFICATE
+        - GOODS_RECEIPT
+        - ISSUE
+        - COUNT
+        - WASTE
+        - SAMPLE
+        - RETURN_TO_VENDOR
+        - REQUISITION
+        - RFQ
+        - QUOTATION
+        - PURCHASE_ORDER
+        - USER
+
+    AttachmentType:
+      type: string
+      description: Məzmun kateqoriyası (`attachment_type`).
+      enum:
+        - QUOTATION
+        - INVOICE
+        - DELIVERY_NOTE
+        - CERTIFICATE
+        - TEMP_PHOTO
+        - WASTE_PHOTO
+        - DISCREPANCY_PHOTO
+        - PRODUCT_IMAGE
+        - CONTRACT
+        - OTHER
+
+    AllowedContentType:
+      type: string
+      description: İcazəli MIME tipləri (SPEC §11). Siyahı tətbiq konfiqurasiyasındadır; bu enum kontraktın cari vəziyyətidir.
+      enum:
+        - application/pdf
+        - image/jpeg
+        - image/png
+        - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+
+    AttachmentStatus:
+      type: string
+      enum: [PENDING, SCANNING, READY, REJECTED]
+      description: '`PENDING` — presign verilib, obyekt gözlənilir; `SCANNING` — ClamAV; `READY` — istifadəyə hazır; `REJECTED` — checksum/skan uğursuz.'
+
+    Attachment:
+      type: object
+      required: [id, entityType, attachmentType, fileName, contentType, sizeBytes, status, uploadedBy, uploadedAt]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        entityType:
+          $ref: '#/components/schemas/EntityType'
+        entityId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: Sənəd hələ yaradılmayıbsa `null`; sənəd yaradılarkən bağlanır.
+        attachmentType:
+          $ref: '#/components/schemas/AttachmentType'
+        fileName:
+          type: string
+          maxLength: 300
+        contentType:
+          $ref: '#/components/schemas/AllowedContentType'
+        sizeBytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 26214400
+        checksumSha256:
+          type: [string, 'null']
+          pattern: '^[a-f0-9]{64}$'
+        status:
+          $ref: '#/components/schemas/AttachmentStatus'
+        scanResult:
+          type: [string, 'null']
+          description: ClamAV nəticəsi (`CLEAN`, `INFECTED:<signature>`, `SKIPPED`).
+        uploadedBy:
+          $ref: '#/components/schemas/Id'
+        uploadedAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+        thumbnailAvailable:
+          type: boolean
+          description: Şəkillər üçün server kiçik önizləmə yaradıbsa (`download-url?variant=thumb` gələcək genişlənmə).
+
+    PresignRequest:
+      type: object
+      required: [entityType, attachmentType, fileName, contentType, sizeBytes]
+      properties:
+        entityType:
+          $ref: '#/components/schemas/EntityType'
+        entityId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        attachmentType:
+          $ref: '#/components/schemas/AttachmentType'
+        fileName:
+          type: string
+          minLength: 1
+          maxLength: 300
+          description: Orijinal ad; server sanitizasiya edir, MinIO açarı ayrıca (`tenant/<entityType>/<uuid>.<ext>`).
+        contentType:
+          $ref: '#/components/schemas/AllowedContentType'
+        sizeBytes:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 26214400
+          description: Maksimum 25 MB (26 214 400 bayt).
+        checksumSha256:
+          type: [string, 'null']
+          pattern: '^[a-f0-9]{64}$'
+          description: Client əvvəlcədən hesablaya bilirsə; `complete`-də də göndərilə bilər.
+
+    PresignResponse:
+      type: object
+      required: [attachmentId, uploadUrl, method, uploadHeaders, expiresAt, maxSizeBytes]
+      properties:
+        attachmentId:
+          $ref: '#/components/schemas/Id'
+        uploadUrl:
+          type: string
+          format: uri
+          description: MinIO presigned URL. Dev-də `http://localhost:9000/wms-attachments/...`; brauzer üçün MinIO CORS konfiqurasiyası lazımdır.
+        method:
+          type: string
+          enum: [PUT]
+        uploadHeaders:
+          type: object
+          additionalProperties:
+            type: string
+          description: '`PUT` sorğusuna əlavə ediləcək header-lər (`Content-Type`, `x-amz-*`...).'
+        expiresAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+        maxSizeBytes:
+          type: integer
+          format: int64
+          examples: [26214400]
+
+    CompleteUploadRequest:
+      type: object
+      required: [checksumSha256]
+      properties:
+        checksumSha256:
+          type: string
+          pattern: '^[a-f0-9]{64}$'
+          description: Client tərəfində hesablanmış SHA-256 (hex, kiçik hərf). Server MinIO obyekti ilə tutuşdurur.
+        etag:
+          type: [string, 'null']
+          description: MinIO `PUT` cavabındakı `ETag` (opsional, əlavə yoxlama).
+
+    DownloadUrlResponse:
+      type: object
+      required: [downloadUrl, expiresAt, fileName, contentType, sizeBytes]
+      properties:
+        downloadUrl:
+          type: string
+          format: uri
+        expiresAt:
+          $ref: '#/components/schemas/DateTimeUtc'
+        fileName:
+          type: string
+        contentType:
+          $ref: '#/components/schemas/AllowedContentType'
+        sizeBytes:
+          type: integer
+          format: int64

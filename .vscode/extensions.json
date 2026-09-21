@@ -1,0 +1,36 @@
+{
+  // Layihə üçün tövsiyə olunan genişlənmələr.
+  // VS Code bunları repo ilk dəfə açılanda təklif edir (Extensions: Show Recommended Extensions).
+  "recommendations": [
+    // --- Backend: .NET 10 ---
+    "ms-dotnettools.csdevkit",          // C# Dev Kit — solution explorer, test runner
+    "ms-dotnettools.csharp",            // C# dili (OmniSharp/Roslyn), debugger
+    "ms-dotnettools.vscode-dotnet-runtime",
+
+    // --- Frontend: Flutter / Dart ---
+    "dart-code.dart-code",              // Dart dili, analyzer, debug
+    "dart-code.flutter",                // Flutter: run/hot reload, cihaz seçimi, launch.json dəstəyi
+
+    // --- Konteynerlər və deployment ---
+    "ms-azuretools.vscode-docker",      // Dockerfile, compose, image/konteyner idarəsi
+    "ms-kubernetes-tools.vscode-kubernetes-tools", // k8s manifestləri, kustomize
+
+    // --- Kontraktlar: OpenAPI 3.1 ---
+    "42crunch.vscode-openapi",          // OpenAPI redaktoru, sxem validasiyası, preview
+    "redhat.vscode-yaml",               // YAML sxem dəstəyi (workflow-lar, compose, k8s)
+
+    // --- Sənədlər: Mermaid diaqramları ---
+    "bierner.markdown-mermaid",         // Markdown preview-də Mermaid render
+    "bpruitt-goddard.mermaid-markdown-syntax-highlighting",
+
+    // --- Verilənlər bazası və ümumi ---
+    "cweijan.vscode-mysql-client2",     // MySQL 8.4 sorğuları
+    "editorconfig.editorconfig",        // .editorconfig-ə riayət
+    "github.vscode-github-actions",     // workflow redaktəsi və icra nəticələri
+    "timonwong.shellcheck"              // scripts/*.sh yoxlanışı
+  ],
+  "unwantedRecommendations": [
+    // C# Dev Kit ilə eyni vaxtda işləməsi tövsiyə olunmur
+    "ms-dotnettools.vscodeintellicode-csharp"
+  ]
+}

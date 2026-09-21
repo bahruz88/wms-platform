@@ -1,0 +1,1822 @@
+openapi: 3.1.0
+info:
+  title: WMS MasterData API
+  version: 1.0.0
+  summary: Məhsul, kateqoriya, ölçü vahidi, supplier, lokasiya, məzənnə, səbəb kodu, nömrə seriyası (SPEC §8).
+  description: |
+    MasterData modulu istinad məlumatlarının "system of record"-udur (1C sahibliyi — SPEC §20.2 açıq qərar).
+
+    Vacib qaydalar:
+    * `sku` məcburi və tenant daxilində unikaldır; `name` server tərəfində `TRIM` edilir və
+      `nameSortKey` (Azərbaycan əlifba sırası) hesablanır (SPEC §6.4, §8).
+    * Məhsul üzrə vahid əmsalı (`ProductUom.factorToBase`) **yenilənmir** — dəyişiklik köhnə sətri
+      `validTo` ilə bağlayıb yenisini açır (SPEC §12.1).
+    * Maya dəyəri ilə bağlı sahələr bu modulda yoxdur; `master.product.view_cost` icazəsi Inventory/Reporting
+      cavablarında tətbiq olunur.
+
+    Route prefiksi: `/api/v1/masterdata`. Cədvəl prefiksi: `master_`.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: /api/v1/masterdata
+    description: Gateway (YARP) arxasında MasterData modulu
+
+security:
+  - bearer: []
+  - oidc: []
+
+tags:
+  - name: Products
+    description: Məhsul kartı (`master_product`) və məhsul üzrə vahidlər (`master_product_uom`).
+  - name: Categories
+    description: Məhsul kateqoriyaları (`master_product_category`), FOOD / NON_FOOD ağacı.
+  - name: Uoms
+    description: Ölçü vahidləri (`master_uom`).
+  - name: Suppliers
+    description: Təchizatçılar (`master_supplier`) və sertifikatları.
+  - name: Locations
+    description: Fiziki və virtual lokasiyalar (`master_location`) — double-entry ledger-in əsası.
+  - name: CurrencyRates
+    description: Məzənnələr (`master_currency_rate`), mənbə CBAR.
+  - name: ReasonCodes
+    description: Səbəb kodları (`master_reason_code`) — tullantı, düzəliş, qaytarma, nümunə, transfer.
+  - name: NumberSequences
+    description: Sənəd nömrələmə seriyaları (`master_number_sequence`), yalnız oxunur.
+
+paths:
+  # ---------------------------------------------------------------- Products
+  /products:
+    get:
+      operationId: listProducts
+      summary: Məhsul siyahısı
+      description: '`q` — SKU, ad və barkod üzrə; sıralama default `nameSortKey` (AZ əlifba sırası).'
+      tags: [Products]
+      x-permission: master.product.view
+      parameters:
+        - $ref: '#/components/parameters/Search'
+        - name: categoryId
+          in: query
+          required: false
+          description: Kateqoriya (alt kateqoriyalar daxil).
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: productType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+        - name: supplierId
+          in: query
+          required: false
+          description: Default təchizatçı.
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: barcode
+          in: query
+          required: false
+          description: Tam uyğunluq — mobil skan üçün.
+          schema:
+            type: string
+            maxLength: 64
+        - $ref: '#/components/parameters/IsActiveFilter'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Məhsullar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createProduct
+      summary: Məhsul yarat
+      description: |
+        Base UoM üçün `factorToBase = 1` sətri avtomatik yaradılır. `requiresExpiry=true` olduqda `shelfLifeDays`
+        tövsiyə olunur. `sku` dublikatı → `422` (`errors.sku`).
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Products]
+      x-permission: master.product.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /products/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getProduct
+      summary: Məhsul kartı
+      description: Məhsul və qüvvədə olan vahidləri.
+      tags: [Products]
+      x-permission: master.product.view
+      responses:
+        '200':
+          description: Məhsul.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateProduct
+      summary: Məhsulu yenilə
+      description: |
+        `sku` və `baseUomId` **dəyişdirilə bilməz** (hərəkət tarixçəsi var) — `422`.
+
+        `409` kodları: `STALE_VERSION`.
+      tags: [Products]
+      x-permission: master.product.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /products/{id}/uoms:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: listProductUoms
+      summary: Məhsulun vahidləri
+      description: '`asOf` verildikdə həmin tarixdə qüvvədə olanlar; verilməzsə bütün tarixçə.'
+      tags: [Products]
+      x-permission: master.product.view
+      parameters:
+        - name: asOf
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/DateOnly'
+      responses:
+        '200':
+          description: Vahid sətirləri.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductUom'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: addProductUom
+      summary: Məhsula vahid / yeni əmsal əlavə et
+      description: |
+        Eyni `uomId` üçün açıq sətir varsa server onu `validTo = validFrom − 1 gün` ilə bağlayır və yeni sətir açır
+        (SPEC §12.1 — əmsal heç vaxt UPDATE olunmur). `validFrom` keçmişdə ola bilməz (`422`).
+        Base UoM üçün `factorToBase` yalnız `1` ola bilər.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`, `STALE_VERSION`.
+      tags: [Products]
+      x-permission: master.product.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUomCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductUom'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ---------------------------------------------------------------- Categories
+  /categories:
+    get:
+      operationId: listCategories
+      summary: Kateqoriya ağacı
+      description: Bütün kateqoriyalar düz siyahı kimi (`parentId`, `path` ilə); client ağacı özü qurur.
+      tags: [Categories]
+      x-permission: master.product.view
+      parameters:
+        - name: productType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ProductType'
+      responses:
+        '200':
+          description: Kateqoriyalar.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createCategory
+      summary: Kateqoriya yarat
+      description: '`path` server tərəfindən hesablanır (`/NON_FOOD/CHEMICAL`). `409` kodları: `IDEMPOTENT_REPLAY`.'
+      tags: [Categories]
+      x-permission: master.category.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /categories/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getCategory
+      summary: Kateqoriya
+      description: Bir kateqoriya.
+      tags: [Categories]
+      x-permission: master.product.view
+      responses:
+        '200':
+          description: Kateqoriya.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateCategory
+      summary: Kateqoriyanı yenilə
+      description: '`productType` dəyişdirilə bilməz (alt məhsullar var). `409` kodları: `STALE_VERSION`.'
+      tags: [Categories]
+      x-permission: master.category.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ---------------------------------------------------------------- UoMs
+  /uoms:
+    get:
+      operationId: listUoms
+      summary: Ölçü vahidləri
+      description: Tenant vahidləri (KG, G, L, ML, PCS, CASE, BOX...).
+      tags: [Uoms]
+      x-permission: master.product.view
+      parameters:
+        - name: uomClass
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/UomClass'
+      responses:
+        '200':
+          description: Vahidlər.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Uom'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createUom
+      summary: Vahid yarat
+      description: '`409` kodları: `IDEMPOTENT_REPLAY`.'
+      tags: [Uoms]
+      x-permission: master.uom.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UomCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Uom'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /uoms/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getUom
+      summary: Vahid
+      description: Bir vahid.
+      tags: [Uoms]
+      x-permission: master.product.view
+      responses:
+        '200':
+          description: Vahid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Uom'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ---------------------------------------------------------------- Suppliers
+  /suppliers:
+    get:
+      operationId: listSuppliers
+      summary: Təchizatçı siyahısı
+      description: '`approvedFoodOnly=true` — yalnız təsdiqlənmiş qida təchizatçıları (TOR §7).'
+      tags: [Suppliers]
+      x-permission: master.supplier.view
+      parameters:
+        - $ref: '#/components/parameters/Search'
+        - name: approvedFoodOnly
+          in: query
+          required: false
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/IsActiveFilter'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Sort'
+      responses:
+        '200':
+          description: Təchizatçılar.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createSupplier
+      summary: Təchizatçı yarat
+      description: '`409` kodları: `IDEMPOTENT_REPLAY`.'
+      tags: [Suppliers]
+      x-permission: master.supplier.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /suppliers/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getSupplier
+      summary: Təchizatçı kartı
+      description: Təchizatçı və sertifikatları.
+      tags: [Suppliers]
+      x-permission: master.supplier.view
+      responses:
+        '200':
+          description: Təchizatçı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateSupplier
+      summary: Təchizatçını yenilə
+      description: '`409` kodları: `STALE_VERSION`.'
+      tags: [Suppliers]
+      x-permission: master.supplier.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Supplier'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /suppliers/{id}/certificates:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: listSupplierCertificates
+      summary: Təchizatçı sertifikatları
+      description: Sertifikatlar bitmə tarixi üzrə; `CertificateExpiryScanner` job-u bunlara görə alert verir (SPEC §15).
+      tags: [Suppliers]
+      x-permission: master.supplier.view
+      responses:
+        '200':
+          description: Sertifikatlar.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SupplierCertificate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      operationId: addSupplierCertificate
+      summary: Sertifikat əlavə et
+      description: '`attachmentId` Documents modulundan (`completeAttachmentUpload`) gəlir. `409` kodları: `IDEMPOTENT_REPLAY`.'
+      tags: [Suppliers]
+      x-permission: master.supplier.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SupplierCertificateCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupplierCertificate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ---------------------------------------------------------------- Locations
+  /locations:
+    get:
+      operationId: listLocations
+      summary: Lokasiya siyahısı
+      description: |
+        Fiziki və virtual lokasiyalar. Filial istifadəçisi yalnız `iam_user_location`-dakıları (və onların alt
+        lokasiyalarını) görür; virtual lokasiyalar (`V_*`, `IN_TRANSIT`) yalnız `includeVirtual=true` ilə qaytarılır.
+      tags: [Locations]
+      x-permission: master.location.view
+      parameters:
+        - name: locationType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/LocationType'
+        - name: parentId
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: includeVirtual
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - $ref: '#/components/parameters/IsActiveFilter'
+      responses:
+        '200':
+          description: Lokasiyalar (səhifələnmir).
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createLocation
+      summary: Lokasiya yarat
+      description: |
+        Virtual lokasiyalar (`V_SUPPLIER`, `V_WASTE`, `V_SAMPLE`, `V_ADJUSTMENT`, `IN_TRANSIT`) tenant üçün
+        seed ilə bir dəfə yaradılır; bu endpoint-lə ikinci virtual lokasiya yaratmaq `422` verir.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [Locations]
+      x-permission: master.location.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /locations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    get:
+      operationId: getLocation
+      summary: Lokasiya
+      description: Bir lokasiya.
+      tags: [Locations]
+      x-permission: master.location.view
+      responses:
+        '200':
+          description: Lokasiya.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      operationId: updateLocation
+      summary: Lokasiyanı yenilə
+      description: '`locationType` və `isVirtual` dəyişdirilə bilməz. `409` kodları: `STALE_VERSION`.'
+      tags: [Locations]
+      x-permission: master.location.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LocationUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ---------------------------------------------------------------- Currency rates
+  /currency-rates:
+    get:
+      operationId: listCurrencyRates
+      summary: Məzənnələr
+      description: |
+        `1 <currency> = rateToBase AZN`. `date` verildikdə yalnız o günün məzənnəsi; **köhnə məzənnə avtomatik
+        götürülmür** (SPEC §12.5) — yoxdursa boş siyahı, PO/qəbul isə `409 FX_RATE_MISSING` verir.
+      tags: [CurrencyRates]
+      x-permission: master.currency.view
+      parameters:
+        - name: currency
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CurrencyCode'
+        - name: date
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/DateOnly'
+        - $ref: '#/components/parameters/DateFrom'
+        - $ref: '#/components/parameters/DateTo'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Məzənnələr.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyRatePage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: upsertCurrencyRate
+      summary: Məzənnə daxil et
+      description: |
+        Manual məzənnə (`source=MANUAL`). CBAR job-u eyni endpoint-i daxildən istifadə etmir — birbaşa yazır.
+        Eyni `(currency, rateDate)` üçün mövcud sətir varsa yenilənir (`source` `MANUAL`-a keçir) — audit-ə düşür.
+
+        `409` kodları: `IDEMPOTENT_REPLAY`.
+      tags: [CurrencyRates]
+      x-permission: master.currency.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CurrencyRateUpsert'
+      responses:
+        '200':
+          description: Yaradıldı və ya yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyRate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ---------------------------------------------------------------- Reason codes
+  /reason-codes:
+    get:
+      operationId: listReasonCodes
+      summary: Səbəb kodları
+      description: |
+        `reasonGroup` üzrə filtr — UI tullantı formasında yalnız `WASTE`, sayım fərqində `ADJUSTMENT` və s. göstərir.
+        `requiresPhoto=true` olan kod seçildikdə client ən azı bir foto attachment tələb etməlidir.
+      tags: [ReasonCodes]
+      x-permission: master.reason.view
+      parameters:
+        - name: reasonGroup
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/ReasonGroup'
+        - $ref: '#/components/parameters/IsActiveFilter'
+      responses:
+        '200':
+          description: Səbəb kodları.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReasonCode'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      operationId: createReasonCode
+      summary: Səbəb kodu yarat
+      description: '`409` kodları: `IDEMPOTENT_REPLAY`.'
+      tags: [ReasonCodes]
+      x-permission: master.reason.manage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonCodeCreate'
+      responses:
+        '201':
+          description: Yaradıldı.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReasonCode'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  /reason-codes/{id}:
+    parameters:
+      - $ref: '#/components/parameters/PathId'
+    put:
+      operationId: updateReasonCode
+      summary: Səbəb kodunu yenilə
+      description: '`reasonGroup` dəyişdirilə bilməz. `409` kodları: `STALE_VERSION`.'
+      tags: [ReasonCodes]
+      x-permission: master.reason.manage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonCodeUpdate'
+      responses:
+        '200':
+          description: Yeniləndi.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReasonCode'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ---------------------------------------------------------------- Number sequences
+  /number-sequences:
+    get:
+      operationId: listNumberSequences
+      summary: Nömrə seriyaları (oxunur)
+      description: |
+        Sənəd nömrələmə vəziyyəti (`PR-2026-00142` və s., SPEC Əlavə B). Nömrə `SELECT ... FOR UPDATE` ilə
+        sənəd yaradılarkən alınır; bu endpoint yalnız monitorinq üçündür. Boşluqlar (gap) normaldır.
+      tags: [NumberSequences]
+      x-permission: master.sequence.view
+      parameters:
+        - name: docType
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/DocType'
+      responses:
+        '200':
+          description: Seriyalar.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NumberSequence'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+components:
+  securitySchemes:
+    bearer:
+      $ref: './common.v1.yaml#/components/securitySchemes/bearer'
+    oidc:
+      $ref: './common.v1.yaml#/components/securitySchemes/oidc'
+
+  parameters:
+    IdempotencyKey:
+      $ref: './common.v1.yaml#/components/parameters/IdempotencyKey'
+    PathId:
+      $ref: './common.v1.yaml#/components/parameters/PathId'
+    Page:
+      $ref: './common.v1.yaml#/components/parameters/Page'
+    Size:
+      $ref: './common.v1.yaml#/components/parameters/Size'
+    Sort:
+      $ref: './common.v1.yaml#/components/parameters/Sort'
+    Search:
+      $ref: './common.v1.yaml#/components/parameters/Search'
+    IsActiveFilter:
+      $ref: './common.v1.yaml#/components/parameters/IsActiveFilter'
+    DateFrom:
+      $ref: './common.v1.yaml#/components/parameters/DateFrom'
+    DateTo:
+      $ref: './common.v1.yaml#/components/parameters/DateTo'
+
+  headers:
+    Location:
+      $ref: './common.v1.yaml#/components/headers/Location'
+
+  responses:
+    BadRequest:
+      $ref: './common.v1.yaml#/components/responses/BadRequest'
+    Unauthorized:
+      $ref: './common.v1.yaml#/components/responses/Unauthorized'
+    Forbidden:
+      $ref: './common.v1.yaml#/components/responses/Forbidden'
+    NotFound:
+      $ref: './common.v1.yaml#/components/responses/NotFound'
+    Conflict:
+      $ref: './common.v1.yaml#/components/responses/Conflict'
+    UnprocessableEntity:
+      $ref: './common.v1.yaml#/components/responses/UnprocessableEntity'
+
+  schemas:
+    # --- aliases into common ---
+    Id:
+      $ref: './common.v1.yaml#/components/schemas/Id'
+    Decimal:
+      $ref: './common.v1.yaml#/components/schemas/Decimal'
+    Percent:
+      $ref: './common.v1.yaml#/components/schemas/Percent'
+    CurrencyCode:
+      $ref: './common.v1.yaml#/components/schemas/CurrencyCode'
+    DateOnly:
+      $ref: './common.v1.yaml#/components/schemas/DateOnly'
+    RowVersion:
+      $ref: './common.v1.yaml#/components/schemas/RowVersion'
+    AuditFields:
+      $ref: './common.v1.yaml#/components/schemas/AuditFields'
+    PageMeta:
+      $ref: './common.v1.yaml#/components/schemas/PageMeta'
+    ProblemDetails:
+      $ref: './common.v1.yaml#/components/schemas/ProblemDetails'
+
+    # --- enums ---
+    ProductType:
+      type: string
+      enum: [FOOD, NON_FOOD]
+    UomClass:
+      type: string
+      enum: [MASS, VOLUME, COUNT]
+    IssueStrategy:
+      type: string
+      enum: [FEFO, FIFO]
+      description: Məxaricdə partiya ayırma strategiyası (SPEC §12.4).
+    LocationType:
+      type: string
+      enum:
+        - CENTRAL_WAREHOUSE
+        - SUB_LOCATION
+        - SHELF
+        - RESTAURANT
+        - IN_TRANSIT
+        - V_SUPPLIER
+        - V_WASTE
+        - V_SAMPLE
+        - V_ADJUSTMENT
+      description: '`IN_TRANSIT` və `V_*` virtualdır — double-entry ledger-in qarşı tərəfi (SPEC §12.3).'
+    ReasonGroup:
+      type: string
+      enum: [WASTE, ADJUSTMENT, RETURN, SAMPLE, TRANSFER]
+    DocType:
+      type: string
+      enum: [PR, PO, GR, SR, IS, IC, WS, SM, RV]
+      description: Sənəd nömrə seriyası tipi (SPEC Əlavə B).
+
+    # --- Product ---
+    ProductSummary:
+      type: object
+      description: Siyahılarda və başqa modul cavablarında istifadə olunan qısa məhsul.
+      required: [id, sku, name, baseUomId, productType, requiresBatch, requiresExpiry, isActive]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        sku:
+          type: string
+          maxLength: 48
+        name:
+          type: string
+          maxLength: 250
+        barcode:
+          type: [string, 'null']
+          maxLength: 64
+        baseUomId:
+          $ref: '#/components/schemas/Id'
+        baseUomCode:
+          type: string
+          maxLength: 12
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        requiresBatch:
+          type: boolean
+        requiresExpiry:
+          type: boolean
+        isActive:
+          type: boolean
+
+    Product:
+      allOf:
+        - $ref: '#/components/schemas/ProductSummary'
+        - type: object
+          required: [categoryId, vatRate, issueStrategy, uoms, audit]
+          properties:
+            categoryId:
+              $ref: '#/components/schemas/Id'
+            categoryPath:
+              type: string
+              maxLength: 500
+            brand:
+              type: [string, 'null']
+              maxLength: 120
+            defaultSupplierId:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+            minStock:
+              oneOf:
+                - $ref: '#/components/schemas/Decimal'
+                - type: 'null'
+              description: Base UoM-da.
+            maxStock:
+              oneOf:
+                - $ref: '#/components/schemas/Decimal'
+                - type: 'null'
+            reorderPoint:
+              oneOf:
+                - $ref: '#/components/schemas/Decimal'
+                - type: 'null'
+            vatRate:
+              $ref: '#/components/schemas/Percent'
+            issueStrategy:
+              $ref: '#/components/schemas/IssueStrategy'
+            shelfLifeDays:
+              type: [integer, 'null']
+              format: int32
+              minimum: 0
+            imageAttachmentId:
+              oneOf:
+                - $ref: '#/components/schemas/Id'
+                - type: 'null'
+              description: Məhsul şəkli (Documents modulu, `image_key` MinIO açarına uyğun).
+            uoms:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProductUom'
+              description: Bu gün qüvvədə olan vahid sətirləri (base daxil).
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    ProductCreate:
+      type: object
+      required: [sku, name, categoryId, baseUomId]
+      properties:
+        sku:
+          type: string
+          pattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,47}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 250
+        barcode:
+          type: [string, 'null']
+          maxLength: 64
+        categoryId:
+          $ref: '#/components/schemas/Id'
+        brand:
+          type: [string, 'null']
+          maxLength: 120
+        baseUomId:
+          $ref: '#/components/schemas/Id'
+        defaultSupplierId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        minStock:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        maxStock:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        reorderPoint:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        vatRate:
+          $ref: '#/components/schemas/Percent'
+        requiresBatch:
+          type: boolean
+          default: false
+        requiresExpiry:
+          type: boolean
+          default: false
+        issueStrategy:
+          $ref: '#/components/schemas/IssueStrategy'
+        shelfLifeDays:
+          type: [integer, 'null']
+          format: int32
+          minimum: 0
+        additionalUoms:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductUomCreate'
+          default: []
+          description: Base UoM-dan başqa vahidlər (məs. CASE = 12 PCS).
+
+    ProductUpdate:
+      type: object
+      required: [name, categoryId, vatRate, requiresBatch, requiresExpiry, issueStrategy, isActive, rowVersion]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 250
+        barcode:
+          type: [string, 'null']
+          maxLength: 64
+        categoryId:
+          $ref: '#/components/schemas/Id'
+        brand:
+          type: [string, 'null']
+          maxLength: 120
+        defaultSupplierId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        minStock:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        maxStock:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        reorderPoint:
+          oneOf:
+            - $ref: '#/components/schemas/Decimal'
+            - type: 'null'
+        vatRate:
+          $ref: '#/components/schemas/Percent'
+        requiresBatch:
+          type: boolean
+        requiresExpiry:
+          type: boolean
+        issueStrategy:
+          $ref: '#/components/schemas/IssueStrategy'
+        shelfLifeDays:
+          type: [integer, 'null']
+          format: int32
+          minimum: 0
+        imageAttachmentId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        isActive:
+          type: boolean
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    ProductPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProductSummary'
+
+    ProductUom:
+      type: object
+      required: [id, productId, uomId, uomCode, factorToBase, isPurchaseDefault, isIssueDefault, validFrom]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        productId:
+          $ref: '#/components/schemas/Id'
+        uomId:
+          $ref: '#/components/schemas/Id'
+        uomCode:
+          type: string
+          maxLength: 12
+        factorToBase:
+          $ref: '#/components/schemas/Decimal'
+        isPurchaseDefault:
+          type: boolean
+        isIssueDefault:
+          type: boolean
+        validFrom:
+          $ref: '#/components/schemas/DateOnly'
+        validTo:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+          description: '`null` = hazırda qüvvədə.'
+
+    ProductUomCreate:
+      type: object
+      required: [uomId, factorToBase, validFrom]
+      properties:
+        uomId:
+          $ref: '#/components/schemas/Id'
+        factorToBase:
+          $ref: '#/components/schemas/Decimal'
+          description: '`1 <uom> = factorToBase <base>`; 8 onluq dəqiqlik. Müsbət olmalıdır.'
+        isPurchaseDefault:
+          type: boolean
+          default: false
+        isIssueDefault:
+          type: boolean
+          default: false
+        validFrom:
+          $ref: '#/components/schemas/DateOnly'
+
+    # --- Category ---
+    Category:
+      type: object
+      required: [id, code, name, productType, path, isActive, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        parentId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        code:
+          type: string
+          maxLength: 32
+        name:
+          type: string
+          maxLength: 150
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        path:
+          type: string
+          maxLength: 500
+          examples: [/NON_FOOD/CHEMICAL]
+        defaultIssueStrategy:
+          oneOf:
+            - $ref: '#/components/schemas/IssueStrategy'
+            - type: 'null'
+          description: Kateqoriya səviyyəsində default; məhsul override edir (SPEC §12.4).
+        isActive:
+          type: boolean
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    CategoryCreate:
+      type: object
+      required: [code, name, productType]
+      properties:
+        parentId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        code:
+          type: string
+          pattern: '^[A-Z0-9_]{1,32}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        productType:
+          $ref: '#/components/schemas/ProductType'
+        defaultIssueStrategy:
+          oneOf:
+            - $ref: '#/components/schemas/IssueStrategy'
+            - type: 'null'
+
+    CategoryUpdate:
+      type: object
+      required: [name, isActive, rowVersion]
+      properties:
+        parentId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        defaultIssueStrategy:
+          oneOf:
+            - $ref: '#/components/schemas/IssueStrategy'
+            - type: 'null'
+        isActive:
+          type: boolean
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    # --- UoM ---
+    Uom:
+      type: object
+      required: [id, code, name, uomClass, decimals]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        code:
+          type: string
+          maxLength: 12
+        name:
+          type: string
+          maxLength: 60
+        uomClass:
+          $ref: '#/components/schemas/UomClass'
+        decimals:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 4
+          description: Bu vahiddə göstərilən/yuvarlaqlaşdırılan onluq sayı (`base_uom.decimals`, SPEC §12.1).
+
+    UomCreate:
+      type: object
+      required: [code, name, uomClass]
+      properties:
+        code:
+          type: string
+          pattern: '^[A-Z0-9_]{1,12}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 60
+        uomClass:
+          $ref: '#/components/schemas/UomClass'
+        decimals:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 4
+          default: 3
+
+    # --- Supplier ---
+    SupplierSummary:
+      type: object
+      required: [id, code, name, currency, isApprovedFoodSupplier, isActive]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        code:
+          type: string
+          maxLength: 32
+        name:
+          type: string
+          maxLength: 250
+        taxId:
+          type: [string, 'null']
+          maxLength: 32
+          description: VÖEN.
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        isApprovedFoodSupplier:
+          type: boolean
+        isActive:
+          type: boolean
+
+    Supplier:
+      allOf:
+        - $ref: '#/components/schemas/SupplierSummary'
+        - type: object
+          required: [certificates, audit]
+          properties:
+            contactPerson:
+              type: [string, 'null']
+              maxLength: 150
+            phone:
+              type: [string, 'null']
+              maxLength: 64
+            email:
+              type: [string, 'null']
+              format: email
+              maxLength: 200
+            address:
+              type: [string, 'null']
+              maxLength: 500
+            bankDetails:
+              type: [string, 'null']
+              maxLength: 500
+            paymentTerms:
+              type: [string, 'null']
+              maxLength: 200
+            deliveryTerms:
+              type: [string, 'null']
+              maxLength: 200
+            incoterms:
+              type: [string, 'null']
+              maxLength: 16
+            certificates:
+              type: array
+              items:
+                $ref: '#/components/schemas/SupplierCertificate'
+            audit:
+              $ref: '#/components/schemas/AuditFields'
+
+    SupplierCreate:
+      type: object
+      required: [code, name, currency]
+      properties:
+        code:
+          type: string
+          pattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 250
+        taxId:
+          type: [string, 'null']
+          maxLength: 32
+        contactPerson:
+          type: [string, 'null']
+          maxLength: 150
+        phone:
+          type: [string, 'null']
+          maxLength: 64
+        email:
+          type: [string, 'null']
+          format: email
+          maxLength: 200
+        address:
+          type: [string, 'null']
+          maxLength: 500
+        bankDetails:
+          type: [string, 'null']
+          maxLength: 500
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        paymentTerms:
+          type: [string, 'null']
+          maxLength: 200
+        deliveryTerms:
+          type: [string, 'null']
+          maxLength: 200
+        incoterms:
+          type: [string, 'null']
+          maxLength: 16
+        isApprovedFoodSupplier:
+          type: boolean
+          default: false
+
+    SupplierUpdate:
+      allOf:
+        - $ref: '#/components/schemas/SupplierCreate'
+        - type: object
+          required: [isActive, rowVersion]
+          properties:
+            isActive:
+              type: boolean
+            rowVersion:
+              $ref: '#/components/schemas/RowVersion'
+
+    SupplierPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/SupplierSummary'
+
+    SupplierCertificate:
+      type: object
+      required: [id, supplierId, certType]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        supplierId:
+          $ref: '#/components/schemas/Id'
+        certType:
+          type: string
+          maxLength: 80
+        certNumber:
+          type: [string, 'null']
+          maxLength: 80
+        issuedDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        expiryDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        attachmentId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        isExpired:
+          type: boolean
+
+    SupplierCertificateCreate:
+      type: object
+      required: [certType]
+      properties:
+        certType:
+          type: string
+          minLength: 1
+          maxLength: 80
+        certNumber:
+          type: [string, 'null']
+          maxLength: 80
+        issuedDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        expiryDate:
+          oneOf:
+            - $ref: '#/components/schemas/DateOnly'
+            - type: 'null'
+        attachmentId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+
+    # --- Location ---
+    Location:
+      type: object
+      required: [id, code, name, locationType, isVirtual, allowsFood, allowsNonFood, isActive, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        parentId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        code:
+          type: string
+          maxLength: 32
+        name:
+          type: string
+          maxLength: 200
+        locationType:
+          $ref: '#/components/schemas/LocationType'
+        isVirtual:
+          type: boolean
+        allowsFood:
+          type: boolean
+        allowsNonFood:
+          type: boolean
+        isActive:
+          type: boolean
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    LocationCreate:
+      type: object
+      required: [code, name, locationType]
+      properties:
+        parentId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        code:
+          type: string
+          pattern: '^[A-Za-z0-9][A-Za-z0-9._-]{0,31}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        locationType:
+          $ref: '#/components/schemas/LocationType'
+        allowsFood:
+          type: boolean
+          default: true
+        allowsNonFood:
+          type: boolean
+          default: true
+
+    LocationUpdate:
+      type: object
+      required: [name, allowsFood, allowsNonFood, isActive, rowVersion]
+      properties:
+        parentId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        allowsFood:
+          type: boolean
+        allowsNonFood:
+          type: boolean
+        isActive:
+          type: boolean
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    # --- Currency rate ---
+    CurrencyRate:
+      type: object
+      required: [id, currency, rateDate, rateToBase, source]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        rateDate:
+          $ref: '#/components/schemas/DateOnly'
+        rateToBase:
+          $ref: '#/components/schemas/Decimal'
+          description: '`1 <currency> = rateToBase AZN`, 8 onluq.'
+        source:
+          type: string
+          maxLength: 32
+          examples: [CBAR, MANUAL]
+
+    CurrencyRateUpsert:
+      type: object
+      required: [currency, rateDate, rateToBase]
+      properties:
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        rateDate:
+          $ref: '#/components/schemas/DateOnly'
+        rateToBase:
+          $ref: '#/components/schemas/Decimal'
+
+    CurrencyRatePage:
+      allOf:
+        - $ref: '#/components/schemas/PageMeta'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/CurrencyRate'
+
+    # --- Reason code ---
+    ReasonCode:
+      type: object
+      required: [id, code, name, reasonGroup, requiresApproval, requiresPhoto, isActive, rowVersion]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        code:
+          type: string
+          maxLength: 32
+        name:
+          type: string
+          maxLength: 200
+        reasonGroup:
+          $ref: '#/components/schemas/ReasonGroup'
+        requiresApproval:
+          type: boolean
+        requiresPhoto:
+          type: boolean
+        isActive:
+          type: boolean
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    ReasonCodeCreate:
+      type: object
+      required: [code, name, reasonGroup]
+      properties:
+        code:
+          type: string
+          pattern: '^[A-Z0-9_]{1,32}$'
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        reasonGroup:
+          $ref: '#/components/schemas/ReasonGroup'
+        requiresApproval:
+          type: boolean
+          default: true
+        requiresPhoto:
+          type: boolean
+          default: false
+
+    ReasonCodeUpdate:
+      type: object
+      required: [name, requiresApproval, requiresPhoto, isActive, rowVersion]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        requiresApproval:
+          type: boolean
+        requiresPhoto:
+          type: boolean
+        isActive:
+          type: boolean
+        rowVersion:
+          $ref: '#/components/schemas/RowVersion'
+
+    # --- Number sequence ---
+    NumberSequence:
+      type: object
+      required: [id, docType, prefix, period, lastNumber, padding, nextNumberPreview]
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        docType:
+          $ref: '#/components/schemas/DocType'
+        prefix:
+          type: string
+          maxLength: 12
+        period:
+          type: string
+          maxLength: 8
+          examples: ["2026", "2026-09"]
+        lastNumber:
+          type: integer
+          format: int32
+          minimum: 0
+        padding:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 9
+        nextNumberPreview:
+          type: string
+          description: Növbəti nömrənin görünüşü (rezerv edilmir).
+          examples: [PR-2026-00143]

@@ -1,0 +1,39 @@
+# /api -> gateway (YARP), everything else -> web (Flutter SPA).
+# Assumes ingress-nginx + cert-manager; adapt annotations for other controllers.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wms
+  labels:
+    app.kubernetes.io/part-of: wms
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 30m          # attachments <= 25 MB (SPEC §11)
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"          # HTTPS only + HSTS (SPEC §16)
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains";
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - wms.example.com
+      secretName: wms-tls
+  rules:
+    - host: wms.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: wms-gateway
+                port:
+                  name: http
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: wms-web
+                port:
+                  name: http

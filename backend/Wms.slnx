@@ -1,0 +1,95 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="BannedSymbols.txt" />
+    <File Path="global.json" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Host/">
+    <Project Path="src/Host/Wms.Host.Api/Wms.Host.Api.csproj" />
+    <Project Path="src/Host/Wms.Host.Migrator/Wms.Host.Migrator.csproj" />
+  </Folder>
+  <Folder Name="/src/Gateway/">
+    <Project Path="src/Gateway/Wms.Gateway/Wms.Gateway.csproj" />
+  </Folder>
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+    <Project Path="src/BuildingBlocks/Wms.Common.Application/Wms.Common.Application.csproj" />
+    <Project Path="src/BuildingBlocks/Wms.Common.Infrastructure/Wms.Common.Infrastructure.csproj" />
+    <Project Path="src/BuildingBlocks/Wms.Common.Contracts/Wms.Common.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/Wms.Identity.Domain/Wms.Identity.Domain.csproj" />
+    <Project Path="src/Modules/Identity/Wms.Identity.Application/Wms.Identity.Application.csproj" />
+    <Project Path="src/Modules/Identity/Wms.Identity.Infrastructure/Wms.Identity.Infrastructure.csproj" />
+    <Project Path="src/Modules/Identity/Wms.Identity.Endpoints/Wms.Identity.Endpoints.csproj" />
+    <Project Path="src/Modules/Identity/Wms.Identity.Contracts/Wms.Identity.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/MasterData/">
+    <Project Path="src/Modules/MasterData/Wms.MasterData.Domain/Wms.MasterData.Domain.csproj" />
+    <Project Path="src/Modules/MasterData/Wms.MasterData.Application/Wms.MasterData.Application.csproj" />
+    <Project Path="src/Modules/MasterData/Wms.MasterData.Infrastructure/Wms.MasterData.Infrastructure.csproj" />
+    <Project Path="src/Modules/MasterData/Wms.MasterData.Endpoints/Wms.MasterData.Endpoints.csproj" />
+    <Project Path="src/Modules/MasterData/Wms.MasterData.Contracts/Wms.MasterData.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Inventory/">
+    <Project Path="src/Modules/Inventory/Wms.Inventory.Domain/Wms.Inventory.Domain.csproj" />
+    <Project Path="src/Modules/Inventory/Wms.Inventory.Application/Wms.Inventory.Application.csproj" />
+    <Project Path="src/Modules/Inventory/Wms.Inventory.Infrastructure/Wms.Inventory.Infrastructure.csproj" />
+    <Project Path="src/Modules/Inventory/Wms.Inventory.Endpoints/Wms.Inventory.Endpoints.csproj" />
+    <Project Path="src/Modules/Inventory/Wms.Inventory.Contracts/Wms.Inventory.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Consumption/">
+    <Project Path="src/Modules/Consumption/Wms.Consumption.Domain/Wms.Consumption.Domain.csproj" />
+    <Project Path="src/Modules/Consumption/Wms.Consumption.Application/Wms.Consumption.Application.csproj" />
+    <Project Path="src/Modules/Consumption/Wms.Consumption.Infrastructure/Wms.Consumption.Infrastructure.csproj" />
+    <Project Path="src/Modules/Consumption/Wms.Consumption.Endpoints/Wms.Consumption.Endpoints.csproj" />
+    <Project Path="src/Modules/Consumption/Wms.Consumption.Contracts/Wms.Consumption.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Procurement/">
+    <Project Path="src/Modules/Procurement/Wms.Procurement.Domain/Wms.Procurement.Domain.csproj" />
+    <Project Path="src/Modules/Procurement/Wms.Procurement.Application/Wms.Procurement.Application.csproj" />
+    <Project Path="src/Modules/Procurement/Wms.Procurement.Infrastructure/Wms.Procurement.Infrastructure.csproj" />
+    <Project Path="src/Modules/Procurement/Wms.Procurement.Endpoints/Wms.Procurement.Endpoints.csproj" />
+    <Project Path="src/Modules/Procurement/Wms.Procurement.Contracts/Wms.Procurement.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Documents/">
+    <Project Path="src/Modules/Documents/Wms.Documents.Domain/Wms.Documents.Domain.csproj" />
+    <Project Path="src/Modules/Documents/Wms.Documents.Application/Wms.Documents.Application.csproj" />
+    <Project Path="src/Modules/Documents/Wms.Documents.Infrastructure/Wms.Documents.Infrastructure.csproj" />
+    <Project Path="src/Modules/Documents/Wms.Documents.Endpoints/Wms.Documents.Endpoints.csproj" />
+    <Project Path="src/Modules/Documents/Wms.Documents.Contracts/Wms.Documents.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notification/">
+    <Project Path="src/Modules/Notification/Wms.Notification.Domain/Wms.Notification.Domain.csproj" />
+    <Project Path="src/Modules/Notification/Wms.Notification.Application/Wms.Notification.Application.csproj" />
+    <Project Path="src/Modules/Notification/Wms.Notification.Infrastructure/Wms.Notification.Infrastructure.csproj" />
+    <Project Path="src/Modules/Notification/Wms.Notification.Endpoints/Wms.Notification.Endpoints.csproj" />
+    <Project Path="src/Modules/Notification/Wms.Notification.Contracts/Wms.Notification.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Reporting/">
+    <Project Path="src/Modules/Reporting/Wms.Reporting.Domain/Wms.Reporting.Domain.csproj" />
+    <Project Path="src/Modules/Reporting/Wms.Reporting.Application/Wms.Reporting.Application.csproj" />
+    <Project Path="src/Modules/Reporting/Wms.Reporting.Infrastructure/Wms.Reporting.Infrastructure.csproj" />
+    <Project Path="src/Modules/Reporting/Wms.Reporting.Endpoints/Wms.Reporting.Endpoints.csproj" />
+    <Project Path="src/Modules/Reporting/Wms.Reporting.Contracts/Wms.Reporting.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Integration/">
+    <Project Path="src/Modules/Integration/Wms.Integration.Domain/Wms.Integration.Domain.csproj" />
+    <Project Path="src/Modules/Integration/Wms.Integration.Application/Wms.Integration.Application.csproj" />
+    <Project Path="src/Modules/Integration/Wms.Integration.Infrastructure/Wms.Integration.Infrastructure.csproj" />
+    <Project Path="src/Modules/Integration/Wms.Integration.Endpoints/Wms.Integration.Endpoints.csproj" />
+    <Project Path="src/Modules/Integration/Wms.Integration.Contracts/Wms.Integration.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Wms.ArchitectureTests/Wms.ArchitectureTests.csproj" />
+    <Project Path="tests/Wms.Inventory.UnitTests/Wms.Inventory.UnitTests.csproj" />
+    <Project Path="tests/Wms.Inventory.IntegrationTests/Wms.Inventory.IntegrationTests.csproj" />
+    <Project Path="tests/Wms.Consumption.UnitTests/Wms.Consumption.UnitTests.csproj" />
+    <Project Path="tests/Wms.Consumption.IntegrationTests/Wms.Consumption.IntegrationTests.csproj" />
+    <Project Path="tests/Wms.Api.ContractTests/Wms.Api.ContractTests.csproj" />
+  </Folder>
+</Solution>

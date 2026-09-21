@@ -1,0 +1,106 @@
+# SPEC §18.1: wms-masterdata (masterdata + documents), 2 replicas
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wms-masterdata
+  labels:
+    app.kubernetes.io/name: wms-masterdata
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: wms
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: wms-masterdata
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: wms-masterdata
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: wms
+    spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654          # `app` user of mcr.microsoft.com/dotnet/aspnet
+        runAsGroup: 1654
+        fsGroup: 1654
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: wms-masterdata
+      containers:
+        - name: api
+          image: wms/api
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: Modules
+              value: "masterdata,identity,documents"
+            - name: Jobs__Enabled
+              value: "false"
+            - name: ModuleTransport
+              value: Http
+          envFrom:
+            - configMapRef:
+                name: wms-config
+            - secretRef:
+                name: wms-secrets
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 250m
+              memory: 384Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: home
+              mountPath: /home/app        # DataProtection keys, .NET caches
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: home
+          emptyDir: {}

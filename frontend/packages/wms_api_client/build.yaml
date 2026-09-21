@@ -1,0 +1,9 @@
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          # Nested value objects (Quantity/Money/Decimal) and DTO lists are
+          # serialised eagerly so that `toJson()` returns plain JSON.
+          explicit_to_json: true
+          field_rename: none

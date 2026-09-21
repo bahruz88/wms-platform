@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Documents use cases (commands, queries, handlers).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Documents.Domain/Wms.Documents.Domain.csproj" />
+    <ProjectReference Include="../Wms.Documents.Contracts/Wms.Documents.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Application/Wms.Common.Application.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Inventory Minimal API endpoints under /api/v1/inventory and the IModule entry point.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Inventory.Application/Wms.Inventory.Application.csproj" />
+    <ProjectReference Include="../Wms.Inventory.Infrastructure/Wms.Inventory.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

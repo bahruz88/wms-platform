@@ -1,0 +1,193 @@
+name: deploy
+
+# Manual only. Builds and pushes the four release images to GHCR and verifies that the
+# kustomize overlays still build with the new tag. It does NOT apply anything to a cluster -
+# rollout stays a deliberate, separate step (SPEC §18.3: no automatic migration on startup).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semver release tag (e.g. 1.0.0 or 1.2.0-rc.1) - images get this tag plus the commit sha'
+        required: true
+        type: string
+      push_images:
+        description: 'Push to GHCR (uncheck for a dry run that only builds)'
+        required: false
+        default: true
+        type: boolean
+      overlay:
+        description: 'Kustomize overlay to verify'
+        required: false
+        default: prod
+        type: choice
+        options: [dev, prod]
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  validate-inputs:
+    name: validate version
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Check semver
+        id: check
+        run: |
+          set -euo pipefail
+          v='${{ inputs.version }}'
+          if ! printf '%s' "$v" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::'$v' is not a semver version (expected e.g. 1.0.0 or 1.2.0-rc.1)"
+            exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+  images:
+    name: build ${{ matrix.image }}
+    runs-on: ubuntu-24.04
+    needs: [validate-inputs]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Backend host projects share one Dockerfile; HOST_PROJECT picks the entrypoint
+          # (docs/CONVENTIONS.md -> backend project paths).
+          - image: wms-api
+            context: backend
+            file: deploy/docker/backend.Dockerfile
+            build_args: HOST_PROJECT=Wms.Host.Api
+          - image: wms-gateway
+            context: backend
+            file: deploy/docker/backend.Dockerfile
+            build_args: HOST_PROJECT=Wms.Gateway
+          - image: wms-migrator
+            context: backend
+            file: deploy/docker/backend.Dockerfile
+            build_args: HOST_PROJECT=Wms.Host.Migrator
+          - image: wms-web
+            context: frontend
+            file: deploy/docker/web.Dockerfile
+            build_args: |
+              API_BASE_URL=/api
+              KEYCLOAK_CLIENT_ID=wms-web
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: ${{ inputs.push_images }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ matrix.image }}
+          tags: |
+            type=raw,value=${{ needs.validate-inputs.outputs.version }}
+            type=sha,format=long,prefix=sha-
+          labels: |
+            org.opencontainers.image.title=${{ matrix.image }}
+            org.opencontainers.image.version=${{ needs.validate-inputs.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.file }}
+          build-args: ${{ matrix.build_args }}
+          push: ${{ inputs.push_images }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+  kustomize-check:
+    name: kustomize build (${{ inputs.overlay }})
+    runs-on: ubuntu-24.04
+    needs: [validate-inputs, images]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kustomize
+        run: |
+          set -euo pipefail
+          version=5.7.1
+          curl -fsSL -o kustomize.tar.gz \
+            "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${version}/kustomize_v${version}_linux_amd64.tar.gz"
+          tar -xzf kustomize.tar.gz
+          sudo install -m 0755 kustomize /usr/local/bin/kustomize
+          kustomize version
+
+      # Point the manifests at the images this run produced, then render.
+      # A render failure here means the overlay and the new tag disagree - catch it
+      # before anyone runs `kubectl apply`.
+      - name: Render overlay with the release tag
+        working-directory: deploy/k8s/overlays/${{ inputs.overlay }}
+        env:
+          OWNER: ${{ github.repository_owner }}
+          VERSION: ${{ needs.validate-inputs.outputs.version }}
+        run: |
+          set -euo pipefail
+          for image in api gateway migrator web; do
+            kustomize edit set image \
+              "ghcr.io/example/wms-${image}=ghcr.io/${OWNER}/wms-${image}:${VERSION}"
+          done
+          kustomize build . > "${RUNNER_TEMP}/rendered.yaml"
+          echo "rendered $(grep -c '^kind:' "${RUNNER_TEMP}/rendered.yaml") objects"
+
+      - name: Sanity-check the rendered manifests
+        run: |
+          set -euo pipefail
+          rendered="${RUNNER_TEMP}/rendered.yaml"
+          # every workload must reference a tagged image from this release
+          if grep -E '^\s+image:' "$rendered" | grep -vE ":${{ needs.validate-inputs.outputs.version }}$"; then
+            echo "::error::A workload still points at an image outside this release."
+            exit 1
+          fi
+          # the migrator must stay a Job - automatic migration on startup is forbidden (SPEC §18.3)
+          grep -q 'kind: Job' "$rendered" || {
+            echo "::error::wms-migrator Job is missing from the rendered overlay."; exit 1; }
+          echo "OK"
+
+      - name: Upload rendered manifests
+        uses: actions/upload-artifact@v4
+        with:
+          name: k8s-${{ inputs.overlay }}-${{ needs.validate-inputs.outputs.version }}
+          path: ${{ runner.temp }}/rendered.yaml
+          retention-days: 30
+
+      - name: Summary
+        run: |
+          {
+            echo "### Release ${{ needs.validate-inputs.outputs.version }}"
+            echo
+            echo "| Image | Tags |"
+            echo "|---|---|"
+            for i in wms-api wms-gateway wms-migrator wms-web; do
+              echo "| \`$i\` | \`${{ needs.validate-inputs.outputs.version }}\`, \`sha-${{ github.sha }}\` |"
+            done
+            echo
+            echo "Pushed to GHCR: **${{ inputs.push_images }}** · Overlay verified: **${{ inputs.overlay }}**"
+            echo
+            echo "Rollout is manual: run the \`wms-migrator\` Job first, then apply the overlay."
+          } >> "$GITHUB_STEP_SUMMARY"

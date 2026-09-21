@@ -1,0 +1,28 @@
+name: feature_consumption
+description: Branch consumption feature - daily sales entry, theoretical consumption result, recipe catalogue/editor, CSV sales import, consumption journal and variance report (ADR-012).
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.13.0
+  flutter: ">=3.47.0"
+resolution: workspace
+
+dependencies:
+  decimal: ^3.2.6
+  feature_identity: ^0.1.0
+  feature_master_data: ^0.1.0
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^3.4.3
+  go_router: ^18.0.1
+  meta: ^1.16.0
+  wms_api_client: ^0.1.0
+  wms_auth: ^0.1.0
+  wms_core: ^0.1.0
+  wms_design_system: ^0.1.0
+  wms_l10n: ^0.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

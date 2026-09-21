@@ -1,0 +1,69 @@
+# Redocly CLI konfiqurasiyası — `contracts/openapi/*.v1.yaml` üçün.
+#
+# İşə salma (repo kökündən):
+#   docker run --rm -v "$PWD/contracts:/spec" redocly/cli lint --config /spec/redocly.yaml /spec/openapi/*.v1.yaml
+#   make lint-contracts
+#
+# Ruleset: `recommended` (Redocly default). Aşağıdakı istisnalar şüurlu qərarlardır:
+#
+# * `common.v1.yaml` yalnız ortaq komponent kitabxanasıdır — `paths`/`servers` yoxdur və
+#   komponentləri başqa fayllardan `$ref` ilə istifadə olunur. Ona görə həmin fayl üçün
+#   `no-unused-components` və `no-empty-servers` söndürülür (yalnız o fayl üçün).
+# * `x-permission` genişləndirməsi hər əməliyyatda backend `.RequirePermission(...)` kodu və
+#   Flutter tərəfində menyu/route qoruması üçün istifadə olunur — Redocly `x-` prefiksli
+#   sahələri qəbul edir, əlavə qayda lazım deyil.
+
+extends:
+  - recommended
+
+rules:
+  # Hər əməliyyat `operationId` daşımalıdır — Dart/C# metod adı buradan gəlir.
+  operation-operationId: error
+  operation-operationId-unique: error
+  operation-operationId-url-safe: error
+  # Hər əməliyyatda ən azı bir uğurlu (2xx/3xx) cavab olmalıdır.
+  operation-2xx-response: error
+  # Bütün path-lar unikal, parametrlər təyin olunmuş olmalıdır.
+  no-identical-paths: error
+  path-params-defined: error
+  # Server URL-lərinin sonunda `/` olmasın (`/api/v1/inventory`).
+  no-server-trailing-slash: error
+  # `info.license` və əməliyyat `summary`-si məcburidir.
+  info-license: error
+  operation-summary: error
+  operation-description: warn
+  # Tag-lər təyin olunmalı və hər əməliyyatda tag olmalıdır.
+  operation-tag-defined: error
+  tags-alphabetical: off
+  # Xarici `$ref` (./common.v1.yaml#/...) icazəlidir.
+  no-unresolved-refs: error
+  # `security` kök səviyyədə təyin olunur; hər əməliyyat üçün təkrar tələb olunmur.
+  security-defined: error
+  # Nümunələr sxemə uyğun olmalıdır.
+  no-invalid-media-type-examples: warn
+  no-invalid-schema-examples: warn
+  # Sxem adları PascalCase, parametr/property adları camelCase.
+  spec-components-invalid-map-name: error
+
+apis:
+  common@v1:
+    root: ./openapi/common.v1.yaml
+    rules:
+      no-unused-components: off
+      no-empty-servers: off
+  identity@v1:
+    root: ./openapi/identity.v1.yaml
+  masterdata@v1:
+    root: ./openapi/masterdata.v1.yaml
+  inventory@v1:
+    root: ./openapi/inventory.v1.yaml
+  procurement@v1:
+    root: ./openapi/procurement.v1.yaml
+  consumption@v1:
+    root: ./openapi/consumption.v1.yaml
+  documents@v1:
+    root: ./openapi/documents.v1.yaml
+  notifications@v1:
+    root: ./openapi/notifications.v1.yaml
+  reporting@v1:
+    root: ./openapi/reporting.v1.yaml

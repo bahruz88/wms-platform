@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Consumption persistence (ConsumptionDbContext, cons_* mappings), CSV parsing, queries and the daily jobs.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Consumption.Application/Wms.Consumption.Application.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Infrastructure/Wms.Common.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

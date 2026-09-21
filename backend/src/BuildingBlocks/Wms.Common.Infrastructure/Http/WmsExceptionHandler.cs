@@ -1,0 +1,35 @@
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
+using Wms.Common.Domain;
+
+namespace Wms.Common.Infrastructure.Http;
+
+/// <summary>Last-resort mapping of exceptions to RFC 7807 (spec §13.3, §13.5).</summary>
+public sealed class WmsExceptionHandler(IProblemDetailsService problemDetailsService, ILogger<WmsExceptionHandler> logger) : IExceptionHandler
+{
+    public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(httpContext);
+        ArgumentNullException.ThrowIfNull(exception);
+
+        var error = exception switch
+        {
+            DbUpdateConcurrencyException => CommonErrors.StaleVersion(),
+            OperationCanceledException => new Error("REQUEST_CANCELLED", "The request was cancelled by the client.", 499),
+            _ => new Error("INTERNAL_ERROR", "An unexpected error occurred.", 500),
+        };
+
+        if (error.Status >= 500)
+        {
+            logger.LogError(exception, "Unhandled exception for {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
+        }
+
+        httpContext.Response.StatusCode = error.Status;
+        return await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+        {
+            HttpContext = httpContext,
+            ProblemDetails = error.ToProblemDetails(),
+            Exception = exception,
+        }).ConfigureAwait(false);
+    }
+}

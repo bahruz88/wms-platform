@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Reporting use cases (commands, queries, handlers).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.Reporting.Domain/Wms.Reporting.Domain.csproj" />
+    <ProjectReference Include="../Wms.Reporting.Contracts/Wms.Reporting.Contracts.csproj" />
+    <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Application/Wms.Common.Application.csproj" />
+  </ItemGroup>
+</Project>

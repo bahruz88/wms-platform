@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>MasterData Minimal API endpoints and the IModule entry point.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Wms.MasterData.Application/Wms.MasterData.Application.csproj" />
+    <ProjectReference Include="../Wms.MasterData.Infrastructure/Wms.MasterData.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>
