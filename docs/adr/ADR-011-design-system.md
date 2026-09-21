@@ -25,7 +25,8 @@ Müştəri tərəfindən **WMS Enterprise** adlı dizayn sistemi Claude Artifact
 2. **Repoda güzgü — `docs/design-system/`**: `tokens.json`, `README.md` (brend kitabı),
    `components/` (14 komponent təlimatı + `bundle.css` + `index.d.ts`), `FLUTTER-MAPPING.md`.
    Bu qovluq **oxunur, əl ilə redaktə edilmir** — artifact-dan yenilənir.
-3. **Tətbiq — `frontend/packages/wms_design_system`**: tokenlər `tokens.json`-dan **hərfi**
+3. **Tətbiq — `mobile/packages/wms_design_system`** (mobil) və `web/` (React, komponentləri
+   birbaşa işlədir — [ADR-013](ADR-013-web-react-mobile-flutter.md)): tokenlər `tokens.json`-dan **hərfi**
    köçürülür (`ThemeExtension<WmsColors>`, `WmsTypography`, `WmsSpacing`, `WmsRadius`,
    `WmsShadows`), komponentlər `bundle.css`-dəki ölçülərlə birə-bir qurulur
    (`min-height: 34px` → `minimumSize: Size(0, 34)`).
@@ -36,7 +37,7 @@ Müştəri tərəfindən **WMS Enterprise** adlı dizayn sistemi Claude Artifact
         ↓  (export / sync)
    docs/design-system/        ← repoda həqiqət nüsxəsi
         ↓  (hərfi köçürmə + test)
-   frontend/packages/wms_design_system/lib/src/tokens/*.dart
+   mobile/packages/wms_design_system/lib/src/tokens/*.dart
         ↓
    feature paketləri və qabıqlar
    ```

@@ -1,6 +1,6 @@
 # Layihə konvensiyaları (bütün komponentlər üçün ortaq)
 
-Bu sənəd backend, frontend, deploy və docs arasında **ortaq adlar** və parametrləri təyin edir.
+Bu sənəd backend, web, mobil, deploy və docs arasında **ortaq adlar** və parametrləri təyin edir.
 Əsas mənbə: `docs/SPEC-Satinalma-Anbar-Platformasi.md`. Ziddiyyət olarsa SPEC üstündür.
 
 ## Repo düzülüşü
@@ -8,7 +8,8 @@ Bu sənəd backend, frontend, deploy və docs arasında **ortaq adlar** və para
 ```
 SASS/
 ├── backend/            .NET 10 modulyar solution (Wms.slnx)
-├── frontend/           Flutter pub-workspace monorepo (apps/ + packages/)
+├── web/                Vite + React 18 + TypeScript (satınalma, menecer, admin, auditor)
+├── mobile/             Flutter pub-workspace monorepo (apps/wms_mobile + packages/)
 ├── contracts/openapi/  OpenAPI 3.1 — modul başına bir fayl (API contract-first)
 ├── deploy/             docker-compose (dev, on-prem), Dockerfile-lar, k8s, keycloak realm, mysql init
 ├── docs/               SPEC, ADR-lər, arxitektura diaqramları, bu sənəd
@@ -76,14 +77,14 @@ Health: `GET /health/live`, `GET /health/ready`. OpenAPI: `GET /openapi/v1.json`
 
 | Servis | Host port | Qeyd |
 |---|---|---|
-| Gateway (YARP) | 5000 | Flutter tətbiqlərinin `API_BASE_URL`-i |
+| Gateway (YARP) | 5000 | web `VITE_API_BASE_URL`, mobil `API_BASE_URL` |
 | wms-identity | 5081 | |
 | wms-masterdata | 5082 | (+ documents) |
 | wms-inventory | 5083 | |
 | wms-procurement | 5084 | |
 | wms-reporting | 5085 | |
 | wms-worker | — | Hangfire dashboard: 5086 |
-| Flutter web (nginx) | 3000 | `flutter run -d chrome --web-port 3001` dev üçün |
+| Web (React → nginx) | 3000 | dev: Vite `npm run dev -- --port 3001` |
 | MySQL 8.4 | 3306 | db `wms`, root/`wms_root`, `wms_app`/`wms_app`, `wms_migrator`/`wms_migrator` |
 | Redis 7 | 6379 | |
 | RabbitMQ 4 | 5672 / 15672 | `wms`/`wms` |
@@ -94,8 +95,9 @@ Health: `GET /health/live`, `GET /health/ready`. OpenAPI: `GET /openapi/v1.json`
 > **Bu maşındakı faktiki portlar.** 5000, 8080 və 3306 portları başqa proseslər tərəfindən
 > tutulduğu üçün `deploy/.env` onları əvəz edir: **Gateway 5001**, **Keycloak 8180**,
 > **MySQL 3308**. `deploy/.env.example` standart dəyərləri saxlayır; `.env` yalnız bu maşına aiddir.
-> Flutter üçün: `--dart-define=API_BASE_URL=http://localhost:5001`
-> `--dart-define=KEYCLOAK_ISSUER=http://localhost:8180/realms/wms`.
+> Web üçün: `VITE_API_BASE_URL=http://localhost:5001`,
+> `VITE_KEYCLOAK_ISSUER=http://localhost:8180/realms/wms`; mobil üçün eyni dəyərlər
+> `--dart-define=API_BASE_URL=...` / `--dart-define=KEYCLOAK_ISSUER=...` kimi.
 > Yoxlanılıb (21.09.2026): `keeper` istifadəçisinin access token-i `tenant_id=1`,
 > `aud=wms-api`, `realm_access.roles=[WAREHOUSE_KEEPER]` daşıyır.
 
@@ -115,26 +117,54 @@ On-prem profili (`docker-compose.onprem.yml`): tək `wms-api` (`Modules=*`, `Job
 - `Idempotency-Key: <GUID>` header — bütün POST-larda məcburi
 - Xəta: RFC 7807 `application/problem+json` + `code` sahəsi (`INSUFFICIENT_STOCK`, `LOCATION_FROZEN`, `STALE_VERSION`...)
 - Səhifələmə: `{ items, page, size, total }`, max `size=200`
-- Bütün miqdar/məbləğ sahələri JSON-da **string** kimi ötürülür (`"qty": "12.5000"`) — Dart-da `decimal` paketi ilə parse edilir, float işlənmir
+- Bütün miqdar/məbləğ sahələri JSON-da **string** kimi ötürülür (`"qty": "12.5000"`) — web-də `decimal.js`, mobildə `decimal` paketi ilə parse edilir, float işlənmir
 
-## Flutter monorepo
+## Frontend: iki stack, bir kontrakt
+
+Qərar: [ADR-013](adr/ADR-013-web-react-mobile-flutter.md) (ADR-006-nı əvəz edir).
 
 ```
-frontend/pubspec.yaml            pub workspace kökü
-frontend/melos.yaml              skriptlər (analyze/test/gen)
-frontend/apps/wms_mobile         android+ios, org az.wms  (anbardar, filial)
-frontend/apps/wms_web            web, org az.wms          (satınalma, menecer, admin, auditor)
-frontend/packages/wms_core            saf Dart: Result/Failure, Quantity/Money (decimal), ProblemDetails
-frontend/packages/wms_api_client      dio + interceptor-lar (auth, tenant, idempotency, problem+json), modul API-ləri
-frontend/packages/wms_auth            OIDC abstraksiyası, token store, session state
-frontend/packages/wms_design_system   tema, tokenlər, ortaq widget-lər, breakpoint-lər
-frontend/packages/wms_l10n            az (default), en, ru ARB
-frontend/packages/features/feature_{identity,master_data,inventory,procurement,reporting,notifications}
+web/                     Vite + React 18 + TypeScript  (satınalma, menecer, admin, auditor)
+mobile/                  Flutter pub workspace         (anbardar, filial)
+  apps/wms_mobile
+  packages/{wms_core,wms_api_client,wms_auth,wms_design_system,wms_l10n}
+  packages/features/*
+```
+
+Ortaq nöqtə **yalnız** `contracts/openapi/`-dir. Hər iki client oradan generasiya olunur.
+Kod paylaşılmır.
+
+### web/ (React)
+
+- Vite + React 18 + TypeScript, React Router 6, TanStack Query, React Hook Form + Zod.
+- Auth: `oidc-client-ts`, Authorization Code + PKCE, client `wms-web`.
+- API: `openapi-typescript` + `openapi-fetch`, `contracts/openapi/*.v1.yaml` faylarından generasiya.
+- Miqdar/məbləğ: `decimal.js` (JSON-da string). `number` tipi miqdar üçün **qadağandır**.
+- Dizayn sistemi: `docs/design-system/tokens.json` → CSS dəyişənləri,
+  `components/bundle.css` olduğu kimi, `components/bundle.js` → tipli ESM React modulları.
+- i18n: `i18next`, az (default), en, ru.
+- Build: statik fayllar, nginx ilə verilir (`deploy/docker/web.Dockerfile`).
+- Dev env: `VITE_API_BASE_URL`, `VITE_KEYCLOAK_ISSUER`, `VITE_KEYCLOAK_CLIENT_ID`.
+
+### mobile/ (Flutter)
+
+
+
+```
+mobile/pubspec.yaml            pub workspace kökü
+mobile/melos.yaml              skriptlər (analyze/test/gen)
+mobile/apps/wms_mobile         android+ios, org az.wms  (anbardar, filial)
+mobile/packages/wms_core            saf Dart: Result/Failure, Quantity/Money (decimal), ProblemDetails
+mobile/packages/wms_api_client      dio + interceptor-lar (auth, tenant, idempotency, problem+json), modul API-ləri
+mobile/packages/wms_auth            OIDC abstraksiyası, token store, session state
+mobile/packages/wms_design_system   tema, tokenlər, ortaq widget-lər, breakpoint-lər
+mobile/packages/wms_l10n            az (default), en, ru ARB
+mobile/packages/features/feature_{consumption,identity,master_data,inventory,procurement,reporting,notifications}
 ```
 
 - State: Riverpod 3. Routing: go_router. HTTP: dio. Decimal: `decimal`. Codegen: freezed + json_serializable (build_runner).
 - Hər feature: `lib/src/{data,domain,presentation}/`, `lib/src/routes.dart`, barrel `lib/<feature>.dart`.
-- Env: `--dart-define=API_BASE_URL=http://localhost:5000 --dart-define=KEYCLOAK_ISSUER=http://localhost:8080/realms/wms --dart-define=KEYCLOAK_CLIENT_ID=wms-web|wms-mobile`
+- Env: `--dart-define=API_BASE_URL=http://localhost:5000 --dart-define=KEYCLOAK_ISSUER=http://localhost:8080/realms/wms --dart-define=KEYCLOAK_CLIENT_ID=wms-mobile`
 - Mobile deep link scheme: `az.wms.mobile`.
 
 ## Consumption modulu (filial istehlakı)
@@ -161,7 +191,7 @@ mənbələrinin birindən gəlir.
   `SalesItemUnmapped`.
 - Job-lar: `ConsumptionRunner` (gündəlik 03:00, özünüyoxlama job-larından sonra),
   `SalesImportReminder` (gündəlik 11:00).
-- Flutter feature paketi: `frontend/packages/features/feature_consumption`.
+- Flutter feature paketi: `mobile/packages/features/feature_consumption`.
 
 ## Dizayn sistemi
 

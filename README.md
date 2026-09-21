@@ -8,12 +8,12 @@ Sistemin texniki mövqeyi üç qərarla müəyyən olunur:
 
 - **Balans heç vaxt birbaşa yazılmır.** Hər qalıq ikili yazılışlı ledger-dən törəyir —
   Excel-dəki izahsız `+510` sabiti bu modeldə mümkün deyil ([ADR-003](docs/adr/ADR-003-double-entry-ledger.md), [ADR-004](docs/adr/ADR-004-balance-as-projection.md)).
-- **Float qadağandır.** Miqdar və məbləğ DB-də `DECIMAL`, JSON-da **string**, Dart-da
-  `decimal` paketi ([ADR-008](docs/adr/ADR-008-decimal-on-client.md)).
+- **Float qadağandır.** Miqdar və məbləğ DB-də `DECIMAL`, JSON-da **string**, web-də
+  `decimal.js`, mobildə `decimal` paketi ([ADR-008](docs/adr/ADR-008-decimal-on-client.md)).
 - **Modulyar monolit, modul üzrə deployment.** Eyni image cloud-da 7 konteyner, on-prem-də
   tək konteyner kimi işləyir ([ADR-001](docs/adr/ADR-001-modular-monolith-per-module-deployment.md)).
 
-**Stack:** .NET 10 · MySQL 8.4 · Redis · RabbitMQ · MinIO · Keycloak · YARP · Flutter 3.47 (web + mobil)
+**Stack:** .NET 10 · MySQL 8.4 · Redis · RabbitMQ · MinIO · Keycloak · YARP · React 18 + Vite (web) · Flutter 3.47 (mobil)
 
 ---
 
@@ -22,16 +22,17 @@ Sistemin texniki mövqeyi üç qərarla müəyyən olunur:
 | Qovluq | Nədir | Sənəd |
 |---|---|---|
 | [`backend/`](backend) | .NET 10 modulyar solution (`Wms.slnx`), 8 modul, Minimal API | — |
-| [`frontend/`](frontend) | Flutter pub-workspace monorepo — `apps/` (web, mobil) + `packages/` | — |
+| [`web/`](web) | Vite + React 18 + TypeScript — satınalma, menecer, admin, auditor | — |
+| [`mobile/`](mobile) | Flutter pub-workspace monorepo — `apps/wms_mobile` + `packages/` (anbardar, filial) | — |
 | [`contracts/`](contracts) | **OpenAPI 3.1 kontraktları** — API-nin həqiqət mənbəyi | [contracts/README.md](contracts/README.md) |
 | [`deploy/`](deploy) | docker-compose (dev, on-prem), Dockerfile-lar, k8s, Keycloak realm, MySQL init | [deploy/README.md](deploy/README.md) |
 | [`docs/`](docs) | SPEC, konvensiyalar, ADR-lər, arxitektura, UX, dizayn sistemi | aşağıda |
 | [`docs/design-system/`](docs/design-system) | **WMS Enterprise** dizayn sistemi — tokenlər, 14 komponent, brend kitabı | [design-system/README.md](docs/design-system/README.md) |
-| [`docs/adr/`](docs/adr) | 11 arxitektura qərarı | [adr/README.md](docs/adr/README.md) |
+| [`docs/adr/`](docs/adr) | 13 arxitektura qərarı | [adr/README.md](docs/adr/README.md) |
 | [`docs/architecture/`](docs/architecture) | C4, ardıcıllıq, vəziyyət və ER diaqramları (Mermaid) | [overview.md](docs/architecture/overview.md) · [data-model.md](docs/architecture/data-model.md) |
 | [`docs/ux/`](docs/ux) | Rol × platforma ekran xəritəsi | [screen-map.md](docs/ux/screen-map.md) |
 | [`scripts/`](scripts) | `dev-up` · `dev-down` · `dev-logs` · `db-migrate` · `keycloak-token` · `gen-client` | — |
-| [`.github/workflows/`](.github/workflows) | CI: backend · frontend · contracts · deploy | — |
+| [`.github/workflows/`](.github/workflows) | CI: backend · web · mobile · contracts · deploy | — |
 
 ---
 
@@ -40,7 +41,8 @@ Sistemin texniki mövqeyi üç qərarla müəyyən olunur:
 | Alət | Versiya | Məcburi? |
 |---|---|---|
 | **Docker** (Compose v2.24+) | 24+ | **Bəli** — bütün infrastruktur, həmçinin lint və backend build burada işləyə bilər |
-| **Flutter** | 3.47.x (Dart 3.13.x) | Frontend üzərində işləyirsinizsə |
+| **Node.js** | 22 LTS (npm 10+) | **Bəli** — `web/` (Vite + React) üzərində işləyirsinizsə |
+| **Flutter** | 3.47.x (Dart 3.13.x) | `mobile/` (Flutter) üzərində işləyirsinizsə |
 | .NET SDK | 10.0.100+ | **Opsional** — yoxdursa `make` avtomatik `mcr.microsoft.com/dotnet/sdk:10.0` konteynerinə keçir |
 | `bash`, `curl` | — | Bəli (skriptlər üçün) |
 | `jq` | — | Tövsiyə (`keycloak-token.sh --decode` üçün) |
@@ -65,12 +67,19 @@ make migrate                  # = scripts/db-migrate.sh
 make backend-run MODULES=*    # lokal dotnet varsa host-da, yoxsa konteynerdə
 #   və ya bir modul:  make backend-run MODULES=inventory
 
-# 5. Frontend
-make frontend-get             # pub workspace (bir dəfə)
+# 5a. Web (React) — satınalma, menecer, admin, auditor
+make web-install              # npm ci (bir dəfə)
+make gen-client-web           # OpenAPI → TypeScript client (kod gitignore-dadır)
+make web-dev                  # Vite dev server, port 3001
+
+# 5b. Mobil (Flutter) — anbardar, filial
+make mobile-get               # pub workspace (bir dəfə)
 make gen-client               # OpenAPI → Dart client (məcburi, kod gitignore-dadır)
-make web-run                  # Chrome, port 3001
-#   və ya:  make mobile-run   # qoşulmuş cihaz / emulyator
+make mobile-run               # qoşulmuş cihaz / emulyator
 ```
+
+Web və mobil müstəqildir — yalnız biri üzərində işləyirsinizsə digərinin alətlərinə
+ehtiyac yoxdur ([ADR-013](docs/adr/ADR-013-web-react-mobile-flutter.md)).
 
 **Login:** dev istifadəçiləri — `admin`, `procurement`, `manager`, `keeper`, `branch1`, `auditor`.
 **Parol = istifadəçi adı**, hamısı `tenant_id=1`.
@@ -94,14 +103,14 @@ başlamazdan əvvəl tutulmuş portları xəbərdarlıq edir.
 
 | Servis | Standart (`.env.example`) | Bu maşında (`.env`) | Qeyd |
 |---|---|---|---|
-| **Gateway (YARP)** | 5000 | **5001** | Flutter üçün `API_BASE_URL` |
+| **Gateway (YARP)** | 5000 | **5001** | web `VITE_API_BASE_URL`, mobil `API_BASE_URL` |
 | wms-identity | 5081 | 5081 | |
 | wms-masterdata (+ documents) | 5082 | 5082 | |
 | wms-inventory | 5083 | 5083 | |
 | wms-procurement | 5084 | 5084 | |
 | wms-reporting | 5085 | 5085 | |
 | wms-worker (Hangfire dashboard) | 5086 | 5086 | `/hangfire` |
-| Flutter web (nginx) | 3000 | 3000 | dev: `flutter run --web-port 3001` |
+| Web (React → nginx) | 3000 | 3000 | dev: Vite `make web-dev` → 3001 |
 | MySQL 8.4 | 3306 | **3308** | db `wms`; `wms_app`/`wms_app`, `wms_migrator`/`wms_migrator` |
 | Redis 7 | 6379 | 6379 | |
 | RabbitMQ 4 | 5672 / 15672 | 5672 / 15672 | `wms`/`wms` |
@@ -113,15 +122,22 @@ başlamazdan əvvəl tutulmuş portları xəbərdarlıq edir.
 > 3306 (host `mysqld`) tutulub. Başqa maşında `.env`-i silmək kifayətdir — standart portlar işləyəcək.
 > Dəyişdirdikdə `API_BASE_URL` və `KEYCLOAK_ISSUER` sətirlərini də yeniləyin.
 
-**Flutter dart-define-ları** (hazırkı konfiqurasiya):
+**Web (Vite env)** və **mobil (dart-define)** dəyərləri (hazırkı konfiqurasiya):
 
 ```
+# web/  — Vite build/dev zamanı mühit dəyişəni
+VITE_API_BASE_URL=http://localhost:5001
+VITE_KEYCLOAK_ISSUER=http://localhost:8180/realms/wms
+VITE_KEYCLOAK_CLIENT_ID=wms-web
+
+# mobile/  — flutter run/build arqumenti
 --dart-define=API_BASE_URL=http://localhost:5001
 --dart-define=KEYCLOAK_ISSUER=http://localhost:8180/realms/wms
---dart-define=KEYCLOAK_CLIENT_ID=wms-web        # mobil üçün: wms-mobile
+--dart-define=KEYCLOAK_CLIENT_ID=wms-mobile
 ```
 
-`make web-run` / `make mobile-run` və `.vscode/launch.json` bunları özü ötürür.
+`make web-dev` / `make web-build` / `make mobile-run` və `.vscode/launch.json`
+bunları özü ötürür.
 
 ---
 
@@ -129,7 +145,7 @@ başlamazdan əvvəl tutulmuş portları xəbərdarlıq edir.
 
 ```
 make help              bütün target-lər + hazırkı toolchain
-make doctor            docker / dotnet / flutter / .env yoxlaması
+make doctor            docker / dotnet / flutter / node / .env yoxlaması
 
 make up | down | logs  dev stack (logs: make logs SERVICES="keycloak mysql")
 make migrate           EF miqrasiyaları (ayrıca migrator — startup-da YOX)
@@ -138,13 +154,19 @@ make backend-build     dotnet build, xəbərdarlıqlar xətadır
 make backend-test      unit + arxitektura + integration (Testcontainers)
 make backend-run       MODULES=inventory | masterdata | procurement | reporting | *
 
-make frontend-get      pub workspace asılılıqları
-make frontend-analyze  flutter analyze
-make frontend-test     melos run test
-make web-run           Chrome :3001
+make mobile-get        pub workspace asılılıqları
+make mobile-analyze    flutter analyze
+make mobile-test       melos run test
 make mobile-run        cihaz / emulyator
 
-make gen-client        OpenAPI → Dart client + build_runner
+make web-install       npm ci
+make web-dev           Vite dev server :3001
+make web-build         produksiya bundle-ı (web/dist)
+make web-test          web testləri
+make web-lint          eslint + typecheck
+
+make gen-client        OpenAPI → Dart client + build_runner (mobil)
+make gen-client-web    OpenAPI → TypeScript client (web)
 make lint-contracts    redocly lint + openapi-generator validate
 make k8s-build         kustomize render (OVERLAY=dev|prod)
 ```
@@ -182,12 +204,20 @@ Tam siyahı: [`docs/CONVENTIONS.md`](docs/CONVENTIONS.md) · [`SPEC Əlavə A`](
 - Hər unikal indeksin birinci sütunu `tenant_id`.
 - Miqrasiya adı: `YYYYMMDD_ModuleName_Description`; startup-da avtomatik miqrasiya **qadağandır**.
 
-**Frontend**
+**Web (`web/`, React)**
+
+- Vite · React 18 · TypeScript · React Router 6 · TanStack Query · React Hook Form + Zod.
+- Miqdar/məbləğ `decimal.js` (JSON-da string); miqdar üçün `number` tipi **qadağandır**.
+- Dizayn sistemi `docs/design-system/` fayllarından gəlir — tokenlər CSS dəyişəni,
+  `bundle.js` tipli ESM React modulları ([ADR-011](docs/adr/ADR-011-design-system.md)).
+- Generasiya olunan TypeScript client commit edilmir (`make gen-client-web`).
+
+**Mobil (`mobile/`, Flutter)**
 
 - Riverpod 3 · go_router · dio · `decimal` · freezed + json_serializable.
 - Hər feature paketi: `lib/src/{data,domain,presentation}/` + `routes.dart` + barrel.
 - UI komponentləri `wms_design_system`-dən götürülür — öz badge/cədvəl yazılmır ([ADR-011](docs/adr/ADR-011-design-system.md)).
-- Generasiya olunan API client commit edilmir (`make gen-client`).
+- Generasiya olunan Dart client commit edilmir (`make gen-client`).
 
 ---
 
@@ -233,7 +263,7 @@ müvafiq modul tam layihələndirilə bilməz.
 | **20.3** | **Həcm göstəriciləri** — rol üzrə istifadəçi sayı, SKU sayı, aylıq hərəkət sətri, attachment həcmi | Sizing və qiymətləndirmə |
 | **20.4** | **Costing metodunun 1C ilə uzlaşması** — default `MOVING_AVERAGE`; 1C fərqli metod işlədirsə anbar dəyəri iki sistemdə fərqlənəcək | Maliyyə ilə təsdiqlənməlidir |
 
-Əlavə olaraq frontend tərəfdə həll gözləyən məsələlər (offline rejimi, barkod skan axını,
+Əlavə olaraq interfeys tərəfində həll gözləyən məsələlər (offline rejimi, barkod skan axını,
 mobil toxunma hədəfləri, çap şablonları) [`docs/ux/screen-map.md` §8](docs/ux/screen-map.md)-də sadalanıb.
 
 ## Filial istehlakı — SPEC §20.1 həll olundu

@@ -73,12 +73,17 @@ jobs:
             context: backend
             file: deploy/docker/backend.Dockerfile
             build_args: HOST_PROJECT=Wms.Host.Migrator
+          # React web app (ADR-013); nginx.conf comes from the extra `deploy` context.
           - image: wms-web
-            context: frontend
+            context: web
             file: deploy/docker/web.Dockerfile
             build_args: |
-              API_BASE_URL=/api
-              KEYCLOAK_CLIENT_ID=wms-web
+              VITE_API_BASE_URL=/api
+              VITE_KEYCLOAK_CLIENT_ID=wms-web
+            build_contexts: |
+              deploy=deploy/docker
+              contracts=contracts/openapi
+              designsystem=docs/design-system
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -113,6 +118,7 @@ jobs:
           context: ${{ matrix.context }}
           file: ${{ matrix.file }}
           build-args: ${{ matrix.build_args }}
+          build-contexts: ${{ matrix.build_contexts }}
           push: ${{ inputs.push_images }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

@@ -71,7 +71,7 @@ Bütün modul konteynerləri **eyni image-dən** qalxır, yalnız `Modules` dəy
 
 ```mermaid
 flowchart TB
-    web["Flutter Web<br/>wms_web<br/>nginx, port 3000"]
+    web["React (Vite)<br/>web/<br/>nginx, port 3000"]
     mob["Flutter Mobile<br/>wms_mobile<br/>Android / iOS"]
 
     gw["wms-gateway<br/>YARP<br/>route → modul"]

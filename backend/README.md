@@ -52,7 +52,7 @@ dotnet run --project src/Host/Wms.Host.Api
 ```bash
 scripts/dev-up.sh                 # infra: mysql, redis, rabbitmq, minio, keycloak, seq
 scripts/db-migrate.sh             # migrator image-ini build edir, miqrasiyaları tətbiq edir, ledger grant-larını verir
-# backend servisləri (web olmadan; web frontend/ tərəfindən build olunur):
+# backend servisləri (web olmadan; web web/ (React) tərəfindən build olunur):
 docker compose --project-directory deploy -f deploy/docker-compose.yml \
   --profile infra --profile app up -d --build \
   gateway wms-identity wms-masterdata wms-inventory wms-procurement wms-reporting wms-worker

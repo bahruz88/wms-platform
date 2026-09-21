@@ -13,7 +13,8 @@ SHELL := /bin/bash
 
 ROOT_DIR      := $(CURDIR)
 BACKEND_DIR   := $(ROOT_DIR)/backend
-FRONTEND_DIR  := $(ROOT_DIR)/frontend
+MOBILE_DIR    := $(ROOT_DIR)/mobile
+WEB_DIR       := $(ROOT_DIR)/web
 CONTRACTS_DIR := $(ROOT_DIR)/contracts
 COMPOSE_FILE  := deploy/docker-compose.yml
 
@@ -38,11 +39,13 @@ endif
 
 FLUTTER ?= flutter
 DART    ?= dart
+NPM     ?= npm
 
 REDOCLY_IMAGE ?= redocly/cli:latest
 KUSTOMIZE_IMAGE ?= registry.k8s.io/kustomize/kustomize:v5.4.3
 
-# Dev dart-define dəyərləri — deploy/.env-dəki portlarla uzlaşdırılıb.
+# Dev dəyərləri — deploy/.env-dəki portlarla uzlaşdırılıb. Mobil tərəfdə
+# `--dart-define`, web tərəfdə `VITE_*` mühit dəyişəni kimi ötürülür.
 API_BASE_URL     ?= http://localhost:5001
 KEYCLOAK_ISSUER  ?= http://localhost:8180/realms/wms
 
@@ -52,14 +55,15 @@ MODULES ?= *
 OVERLAY ?= dev
 
 .PHONY: help up down logs migrate backend-build backend-test backend-run \
-        frontend-get frontend-analyze frontend-test web-run mobile-run \
-        gen-client lint-contracts k8s-build doctor
+        mobile-get mobile-analyze mobile-test mobile-run \
+        web-install web-dev web-build web-test web-lint \
+        gen-client gen-client-web lint-contracts k8s-build doctor
 
 ## help: bu siyahını göstər
 help:
 	@echo "WMS — make target-ləri"
 	@echo ""
-	@grep -E '^## ' $(MAKEFILE_LIST) | sed -E 's/^## ([a-z-]+): /\1\t/' \
+	@grep -E '^## ' $(MAKEFILE_LIST) | sed -E 's/^## ([a-z0-9-]+): /\1\t/' \
 	  | awk -F'\t' '{printf "  \033[1m%-18s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "  .NET:    $(DOTNET_HOW)"
@@ -130,43 +134,72 @@ else
 endif
 
 # =====================================================================================
-# Frontend (Flutter 3.47 / Dart 3.13, pub workspace)
+# Mobil (Flutter 3.47 / Dart 3.13, pub workspace — ADR-013)
 # =====================================================================================
 
-## frontend-get: pub workspace asılılıqlarını bağla (kökdə bir dəfə)
-frontend-get:
-	cd "$(FRONTEND_DIR)" && $(FLUTTER) pub get
+## mobile-get: pub workspace asılılıqlarını bağla (kökdə bir dəfə)
+mobile-get:
+	cd "$(MOBILE_DIR)" && $(FLUTTER) pub get
 
-## frontend-analyze: bütün paketlər üzrə statik analiz
-frontend-analyze:
-	cd "$(FRONTEND_DIR)" && $(FLUTTER) analyze --no-pub
+## mobile-analyze: bütün paketlər üzrə statik analiz
+mobile-analyze:
+	cd "$(MOBILE_DIR)" && $(FLUTTER) analyze --no-pub
 
-## frontend-test: test qovluğu olan hər paket/tətbiq üçün testlər (melos)
-frontend-test:
-	cd "$(FRONTEND_DIR)" && $(DART) run melos run test
-
-## web-run: wms_web-i Chrome-da işlət (port 3001)
-web-run:
-	cd "$(FRONTEND_DIR)/apps/wms_web" && $(FLUTTER) run -d chrome --web-port 3001 \
-	  --dart-define=API_BASE_URL=$(API_BASE_URL) \
-	  --dart-define=KEYCLOAK_ISSUER=$(KEYCLOAK_ISSUER) \
-	  --dart-define=KEYCLOAK_CLIENT_ID=wms-web
+## mobile-test: test qovluğu olan hər paket/tətbiq üçün testlər (melos)
+mobile-test:
+	cd "$(MOBILE_DIR)" && $(DART) run melos run test
 
 ## mobile-run: wms_mobile-i qoşulmuş cihazda/emulyatorda işlət
 mobile-run:
-	cd "$(FRONTEND_DIR)/apps/wms_mobile" && $(FLUTTER) run \
+	cd "$(MOBILE_DIR)/apps/wms_mobile" && $(FLUTTER) run \
 	  --dart-define=API_BASE_URL=$(API_BASE_URL) \
 	  --dart-define=KEYCLOAK_ISSUER=$(KEYCLOAK_ISSUER) \
 	  --dart-define=KEYCLOAK_CLIENT_ID=wms-mobile
 
 # =====================================================================================
+# Web (Vite + React 18 + TypeScript — ADR-013)
+# =====================================================================================
+
+## web-install: npm asılılıqlarını qur (kilid faylına uyğun)
+web-install:
+	cd "$(WEB_DIR)" && $(NPM) ci
+
+## web-dev: Vite dev serverini qaldır (port 3001)
+web-dev:
+	cd "$(WEB_DIR)" && \
+	  VITE_API_BASE_URL=$(API_BASE_URL) \
+	  VITE_KEYCLOAK_ISSUER=$(KEYCLOAK_ISSUER) \
+	  VITE_KEYCLOAK_CLIENT_ID=wms-web \
+	  $(NPM) run dev -- --port 3001
+
+## web-build: produksiya bundle-ı (çıxış: web/dist)
+web-build:
+	cd "$(WEB_DIR)" && \
+	  VITE_API_BASE_URL=$(API_BASE_URL) \
+	  VITE_KEYCLOAK_ISSUER=$(KEYCLOAK_ISSUER) \
+	  VITE_KEYCLOAK_CLIENT_ID=wms-web \
+	  $(NPM) run build
+
+## web-test: web testləri
+web-test:
+	cd "$(WEB_DIR)" && $(NPM) test
+
+## web-lint: eslint + tip yoxlaması
+web-lint:
+	cd "$(WEB_DIR)" && $(NPM) run lint && $(NPM) run typecheck
+
+# =====================================================================================
 # Kontraktlar və deployment
 # =====================================================================================
 
-## gen-client: OpenAPI → Dart (dart-dio) client generasiyası + build_runner
+## gen-client: OpenAPI → Dart (dart-dio) client generasiyası + build_runner (mobil)
 gen-client:
 	scripts/gen-client.sh
-	cd "$(FRONTEND_DIR)" && $(DART) run melos run gen
+	cd "$(MOBILE_DIR)" && $(DART) run melos run gen
+
+## gen-client-web: OpenAPI → TypeScript client (skript web/package.json-dadır)
+gen-client-web:
+	cd "$(WEB_DIR)" && $(NPM) run gen:api
 
 ## lint-contracts: redocly lint + openapi-generator validate (hamısı Docker-də)
 lint-contracts:
@@ -197,4 +230,6 @@ doctor:
 	@echo "dotnet:   $(if $(DOTNET_LOCAL),$(shell dotnet --version 2>/dev/null) ($(DOTNET_LOCAL)),yoxdur → Docker SDK image: $(DOTNET_SDK_IMAGE))"
 	@echo "flutter:  $$($(FLUTTER) --version 2>/dev/null | head -1 || echo 'YOXDUR')"
 	@echo "dart:     $$($(DART) --version 2>&1 | head -1 || echo 'YOXDUR')"
+	@echo "node:     $$(node --version 2>/dev/null || echo 'YOXDUR — web üçün məcburidir')"
+	@echo "npm:      $$($(NPM) --version 2>/dev/null || echo 'YOXDUR — web üçün məcburidir')"
 	@echo "env:      $$([ -f deploy/.env ] && echo 'deploy/.env var' || echo 'deploy/.env YOXDUR — cp deploy/.env.example deploy/.env')"

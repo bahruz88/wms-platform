@@ -44,5 +44,17 @@ coverage/
 **/appsettings.*.local.json
 deploy/secrets/
 
-# --- Generated OpenAPI clients (regenerate with `make gen-client`) ---
-frontend/packages/wms_api_client/lib/src/generated/
+# --- Node / Vite (web/, ADR-013) ---
+node_modules/
+web/dist/
+web/.vite/
+web/coverage/
+web/test-results/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+.eslintcache
+
+# --- Generated OpenAPI clients (regenerate with `make gen-client` / `make gen-client-web`) ---
+mobile/packages/wms_api_client/lib/src/generated/
+web/src/api/generated/

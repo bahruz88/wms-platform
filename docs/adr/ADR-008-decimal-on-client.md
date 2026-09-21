@@ -1,7 +1,12 @@
 # ADR-008: Client tərəfdə decimal — JSON-da string, Dart-da `decimal` paketi
 
 **Status:** Qəbul edilib
-**Əlaqəli:** [SPEC §1.4](../SPEC-Satinalma-Anbar-Platformasi.md#14-mövcud-vəziyyətdən-çıxarılan-dərslər), [SPEC §6.3](../SPEC-Satinalma-Anbar-Platformasi.md#63-tip-qaydaları--məcburi), [CONVENTIONS → API](../CONVENTIONS.md), [ADR-007](ADR-007-contract-first-openapi.md)
+**Əlaqəli:** [SPEC §1.4](../SPEC-Satinalma-Anbar-Platformasi.md#14-mövcud-vəziyyətdən-çıxarılan-dərslər), [SPEC §6.3](../SPEC-Satinalma-Anbar-Platformasi.md#63-tip-qaydaları--məcburi), [CONVENTIONS → API](../CONVENTIONS.md), [ADR-007](ADR-007-contract-first-openapi.md), [ADR-013](ADR-013-web-react-mobile-flutter.md)
+
+> **Qeyd (ADR-013, 21.09.2026).** Aşağıdakı mətn Dart/Flutter client-i üçün yazılıb və mobil
+> tərəfdə olduğu kimi qalır. Web tərəfi artıq React + TypeScript-dir: eyni qayda orada
+> `decimal.js` ilə tətbiq olunur — JSON-da string, `number` tipi miqdar/məbləğ üçün
+> **qadağandır**. Arqument dəyişmir; yalnız kitabxana adı platformaya görə fərqlidir.
 
 ## Kontekst
 

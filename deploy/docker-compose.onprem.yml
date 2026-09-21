@@ -246,14 +246,16 @@ services:
 
   web:
     build:
-      context: ../frontend
+      context: ../web
       dockerfile: ../deploy/docker/web.Dockerfile
       additional_contexts:
         deploy: ./docker
+        contracts: ../contracts/openapi
+        designsystem: ../docs/design-system
       args:
-        API_BASE_URL: /api                        # relative: nginx proxies /api -> wms-api
-        KEYCLOAK_ISSUER: ${KEYCLOAK_HOSTNAME}/realms/wms
-        KEYCLOAK_CLIENT_ID: wms-web
+        VITE_API_BASE_URL: /api                   # relative: nginx proxies /api -> wms-api
+        VITE_KEYCLOAK_ISSUER: ${KEYCLOAK_HOSTNAME}/realms/wms
+        VITE_KEYCLOAK_CLIENT_ID: wms-web
     image: ${IMAGE_PREFIX:-wms}/web:${IMAGE_TAG:-latest}
     environment:
       API_UPSTREAM: wms-api:8080

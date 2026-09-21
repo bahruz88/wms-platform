@@ -1,7 +1,8 @@
 # WMS Enterprise dizayn sistemi → Flutter tətbiqi
 
 Mənbə: `docs/design-system/` (Claude Artifact "WMS Enterprise" design system, namespace `Wms`).
-Hədəf: `frontend/packages/wms_design_system`.
+Hədəf: `mobile/packages/wms_design_system` (yalnız mobil — web tətbiqi dizayn sistemini
+öz doğma React formatında işlədir, [ADR-013](../adr/ADR-013-web-react-mobile-flutter.md)).
 
 Bu sənəd dizayn sistemini Flutter-ə **necə köçürəcəyini** deyir. Dəyərlərin özü
 `tokens.json` və `components/bundle.css` fayllarındadır — onlar mənbədir, təxmin etmə.

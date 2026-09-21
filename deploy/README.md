@@ -11,7 +11,7 @@ deploy/
 ├── .env.example                 bütün port/parol dəyişənləri (→ .env, git-ignored)
 ├── docker/
 │   ├── backend.Dockerfile       bütün .NET host-lar üçün tək Dockerfile (HOST_PROJECT arg)
-│   ├── web.Dockerfile           Flutter web → nginx
+│   ├── web.Dockerfile           React (Vite) web → nginx
 │   └── nginx.conf               SPA fallback, gzip, cache, /api → gateway proxy
 ├── mysql/
 │   ├── conf.d/wms.cnf           utf8mb4_0900_ai_ci, UTC, strict sql_mode, ROW binlog
@@ -53,7 +53,7 @@ heç vaxt dəyişmir — yalnız host tərəfi sürüşür, yəni `docs/CONVENTI
 ```bash
 # deploy/.env
 GATEWAY_PORT=5001
-API_BASE_URL=http://localhost:5001              # Flutter build-inə keçir, gateway portu ilə eyni olmalıdır
+API_BASE_URL=http://localhost:5001              # VITE_API_BASE_URL kimi web build-inə keçir, gateway portu ilə eyni olmalıdır
 KEYCLOAK_PORT=8180
 KEYCLOAK_ISSUER=http://localhost:8180/realms/wms  # KC_HOSTNAME buradan qurulur, token `iss` ilə eyni olmalıdır
 MYSQL_PORT=3308
@@ -176,7 +176,7 @@ bunu avtomatik doğru sıra ilə edir.
 | `wms/api` | `docker/backend.Dockerfile` | `HOST_PROJECT=Wms.Host.Api` (default) |
 | `wms/gateway` | `docker/backend.Dockerfile` | `HOST_PROJECT=Wms.Gateway` |
 | `wms/migrator` | `docker/backend.Dockerfile` | `HOST_PROJECT=Wms.Host.Migrator` |
-| `wms/web` | `docker/web.Dockerfile` | `API_BASE_URL`, `KEYCLOAK_ISSUER`, `KEYCLOAK_CLIENT_ID` (`--dart-define`) |
+| `wms/web` | `docker/web.Dockerfile` | `VITE_API_BASE_URL`, `VITE_KEYCLOAK_ISSUER`, `VITE_KEYCLOAK_CLIENT_ID` (Vite build-time env) |
 
 ```bash
 # əl ilə build (multi-arch, CI üçün)
@@ -184,18 +184,31 @@ docker buildx build --platform linux/amd64,linux/arm64 \
   -f deploy/docker/backend.Dockerfile --build-arg HOST_PROJECT=Wms.Host.Api -t ghcr.io/org/wms-api:1.0.0 --push backend
 docker buildx build --platform linux/amd64,linux/arm64 \
   -f deploy/docker/web.Dockerfile --build-context deploy=deploy/docker \
-  --build-arg API_BASE_URL=/api --build-arg KEYCLOAK_ISSUER=https://auth.example.com/realms/wms \
-  -t ghcr.io/org/wms-web:1.0.0 --push frontend
+  --build-context deploy=deploy/docker \
+  --build-context contracts=contracts/openapi \
+  --build-context designsystem=docs/design-system \
+  --build-arg VITE_API_BASE_URL=/api --build-arg VITE_KEYCLOAK_ISSUER=https://auth.example.com/realms/wms \
+  -t ghcr.io/org/wms-web:1.0.0 --push web
 ```
 
 * Backend: SDK mərhələsi həmişə host arxitekturasında işləyir və `-a $TARGETARCH` ilə cross-compile edir;
   restore layer-i yalnız `*.csproj/*.props` dəyişəndə yenilənir; runtime non-root (`app`, uid 1654), port 8080,
   entrypoint `dotnet /app/$HOST_PROJECT.dll "$@"` (`--Modules=...` arqumentləri ötürülür).
-* Web: `ghcr.io/cirruslabs/flutter:stable` → `flutter pub get` (workspace kökü) → `apps/wms_web`-də
-  `flutter build web --release`; nginx `nginxinc/nginx-unprivileged:stable-alpine` (`nginx:alpine`-ın
-  non-root variantı, port 8080). `nginx.conf` `deploy` adlı əlavə build context-dən gəlir.
-* `.dockerignore`: `backend/.dockerignore` (bin/obj/.vs/TestResults), `frontend/.dockerignore`
-  (build/.dart_tool/android/ios/.idea).
+* Web: `node:22-alpine` → `npm ci` (kilid layer-i) → `npm run gen:api` → `npm run build`
+  (Vite, çıxış `dist/`); nginx `nginxinc/nginx-unprivileged:stable-alpine`
+  (`nginx:alpine`-ın non-root variantı, port 8080). Build context `web/`-dir
+  ([ADR-013](../docs/adr/ADR-013-web-react-mobile-flutter.md)), `VITE_*` dəyərləri build
+  zamanı bundle-a hopdurulur — hamısı publik dəyərlərdir (ADR-009: public client, PKCE).
+  Üç əlavə named build context web/-dən kənardakı mənbələri gətirir:
+  `deploy` → `deploy/docker` (nginx.conf), `contracts` → `contracts/openapi` (`gen:api`),
+  `designsystem` → `docs/design-system` (`gen:tokens`). Konteynerdə repo düzülüşü təkrarlanır
+  (`web/` → `/app`, kontraktlar → `/contracts/openapi`), ona görə generator skriptlərinin
+  nisbi yolları olduğu kimi işləyir.
+* `.dockerignore`: `backend/.dockerignore` (bin/obj/.vs/TestResults). `web/` hələ öz
+  `.dockerignore`-unu saxlamır — Dockerfile əvvəlcə mənbəni, sonra `deps` mərhələsinin
+  `node_modules`-ını kopyalayır, ona görə host-un `node_modules`-ı build-ə düşsə belə
+  üzərinə yazılır. Web tətbiqi `.dockerignore` əlavə edəndə bu addım sadəcə sürətlənir.
+* Mobil (Flutter, `mobile/`) image kimi build olunmur — mağaza artefaktı kimi paylanır.
 
 ---
 

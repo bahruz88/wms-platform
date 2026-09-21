@@ -131,7 +131,7 @@ Skript hər modul üçün Docker-də `openapitools/openapi-generator-cli` işlə
 ```
 -g dart-dio
 -i /spec/<modul>.v1.yaml
--o frontend/packages/wms_api_client/lib/src/generated/<modul>/
+-o mobile/packages/wms_api_client/lib/src/generated/<modul>/
 --additional-properties=pubName=wms_api_generated,nullableFields=true,...
 ```
 

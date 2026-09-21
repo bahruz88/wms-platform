@@ -1,7 +1,11 @@
 # ADR-006: Flutter monorepo — iki tətbiq qabığı, ortaq feature paketləri
 
-**Status:** Qəbul edilib
-**Əlaqəli:** [CONVENTIONS → Flutter monorepo](../CONVENTIONS.md), [ADR-007](ADR-007-contract-first-openapi.md), [ADR-011](ADR-011-design-system.md)
+> **⚠️ ƏVƏZ EDİLİB — 21.09.2026.** Bu qərar [ADR-013](ADR-013-web-react-mobile-flutter.md)
+> ilə əvəz olunub: web React + TypeScript-ə keçdi, mobil Flutter olaraq qaldı.
+> Aşağıdakı mətn tarixi qeyd kimi saxlanılır.
+
+**Status:** Əvəz edilib (ADR-013)
+**Əlaqəli:** [CONVENTIONS → Frontend: iki stack, bir kontrakt](../CONVENTIONS.md), [ADR-007](ADR-007-contract-first-openapi.md), [ADR-011](ADR-011-design-system.md)
 
 ## Kontekst
 

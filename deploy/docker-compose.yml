@@ -241,7 +241,7 @@ services:
     restart: unless-stopped
 
   # ===========================================================================
-  # profile: app  (images are built from ../backend and ../frontend)
+  # profile: app  (images are built from ../backend and ../web)
   # ===========================================================================
   gateway:
     build:
@@ -380,14 +380,16 @@ services:
 
   web:
     build:
-      context: ../frontend
+      context: ../web
       dockerfile: ../deploy/docker/web.Dockerfile
       additional_contexts:
         deploy: ./docker
+        contracts: ../contracts/openapi
+        designsystem: ../docs/design-system
       args:
-        API_BASE_URL: ${API_BASE_URL:-http://localhost:5000}
-        KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:-http://localhost:8080/realms/wms}
-        KEYCLOAK_CLIENT_ID: wms-web
+        VITE_API_BASE_URL: ${API_BASE_URL:-http://localhost:5000}
+        VITE_KEYCLOAK_ISSUER: ${KEYCLOAK_ISSUER:-http://localhost:8080/realms/wms}
+        VITE_KEYCLOAK_CLIENT_ID: wms-web
     image: ${IMAGE_PREFIX:-wms}/web:${IMAGE_TAG:-dev}
     profiles: [app]
     environment:

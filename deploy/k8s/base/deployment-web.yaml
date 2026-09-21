@@ -1,6 +1,6 @@
-# Flutter web bundle served by nginx (deploy/docker/web.Dockerfile). The image is built with
-# API_BASE_URL=/api, so nginx proxies /api -> wms-gateway (API_UPSTREAM); the Ingress routes
-# /api to the gateway directly as well - both paths work.
+# React (Vite) static bundle served by nginx (deploy/docker/web.Dockerfile). The image is built
+# with VITE_API_BASE_URL=/api, so nginx proxies /api -> wms-gateway (API_UPSTREAM); the Ingress
+# routes /api to the gateway directly as well - both paths work.
 apiVersion: apps/v1
 kind: Deployment
 metadata:

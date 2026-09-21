@@ -65,7 +65,7 @@
   "clients": [
     {
       "clientId": "wms-web",
-      "name": "WMS Web (Flutter)",
+      "name": "WMS Web (React)",
       "description": "Public SPA client. PKCE S256. directAccessGrantsEnabled=true is DEV ONLY (scripts/keycloak-token.sh) - set to false in production (deploy/onprem/render-realm.sh does this).",
       "enabled": true,
       "protocol": "openid-connect",

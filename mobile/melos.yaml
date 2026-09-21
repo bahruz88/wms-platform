@@ -1,0 +1,10 @@
+# Melos >= 7 (pub workspace mode) reads configuration from the root
+# `pubspec.yaml` under the `melos:` key; this file is documentation only.
+#
+# Available scripts (see pubspec.yaml -> melos.scripts):
+#   dart run melos run analyze   # flutter analyze for the whole workspace
+#   dart run melos run test      # flutter test in every package/app with tests
+#   dart run melos run gen       # build_runner (freezed / json_serializable / riverpod_generator)
+#   dart run melos run l10n      # flutter gen-l10n in packages/wms_l10n
+#   dart run melos run format    # dart format --set-exit-if-changed .
+name: wms_mobile_workspace

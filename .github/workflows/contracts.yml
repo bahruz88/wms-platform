@@ -80,8 +80,8 @@ jobs:
         uses: actions/checkout@v4
 
       # Proof that every spec produces a usable dart-dio client. Output goes to a
-      # throwaway directory - the real target (frontend/.../generated) is gitignored
-      # and rebuilt by the frontend workflow.
+      # throwaway directory - the real target (mobile/.../generated) is gitignored
+      # and rebuilt by the mobile workflow.
       - name: Generate Dart client into a scratch directory
         env:
           GEN_OUT_DIR: ${{ runner.temp }}/generated

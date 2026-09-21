@@ -20,7 +20,13 @@
 Bölgü **optimallaşdırmadır, məhdudiyyət deyil**: rol icazəsi çatırsa, ekran hər iki qabıqda
 açıla bilər. Yeganə həqiqi yoxlama serverdədir (`x-permission`).
 
-| Rol | Mobil (`wms_mobile`) | Veb (`wms_web`) | Əsas iş |
+> **«Platforma» sətri iki ayrı stack deməkdir** ([ADR-013](../adr/ADR-013-web-react-mobile-flutter.md)):
+> **veb** = React 18 + TypeScript (`web/`), **mobil** = Flutter (`mobile/apps/wms_mobile`).
+> Kod paylaşılmır; ortaq nöqtə yalnız `contracts/openapi/`-dir. Ona görə «mobil + veb»
+> işarəsi ekranın **iki dəfə** — hər stack-də bir dəfə — qurulduğunu bildirir, eyni
+> widget-in təkrar istifadəsini yox.
+
+| Rol | Mobil (Flutter, `mobile/`) | Veb (React, `web/`) | Əsas iş |
 |---|---|---|---|
 | **WAREHOUSE_KEEPER** (anbardar) | ●●● əsas | ○ nadir | Qəbul (skan), məxaric/picking, sayım, tullantı, nümunə, partiya bloku. **Qiymət görmür** (`master.product.view_cost` YOX) |
 | **BRANCH_USER** (filial) | ●●● əsas | ○ nadir | Tələb göndərmək, gələn malı təsdiqləmək (fərqlə), filial tullantısı, filial qalığı |
@@ -33,13 +39,15 @@ açıla bilər. Yeganə həqiqi yoxlama serverdədir (`x-permission`).
 
 **Platforma seçiminin səbəbi:** anbardar və filial işçisi ayaq üstə, bir əllə, skan edərək
 işləyir — mobil. Satınalma və menecer çoxsütunlu müqayisə cədvəlləri və Excel export ilə
-işləyir — veb ([ADR-006](../adr/ADR-006-flutter-monorepo-two-shells.md)).
+işləyir — veb ([ADR-013](../adr/ADR-013-web-react-mobile-flutter.md), ADR-006-nı əvəz edir).
+Masaüstü admin paneli üçün DOM əsaslı React seçilib: mətn seçimi, `Ctrl+F`, çap və
+brauzerin öz açıqlıq alətləri olduğu kimi işləyir.
 
 ---
 
 ## 2. Naviqasiya
 
-### Mobil (`wms_mobile`)
+### Mobil (Flutter — `mobile/apps/wms_mobile`)
 
 Bottom navigation, 4 bölmə + kontekstual axınlar:
 
@@ -52,7 +60,7 @@ Bottom navigation, 4 bölmə + kontekstual axınlar:
 
 Menecer mobildə əlavə: **Təsdiqlər** bölməsi (`listPendingApprovals`).
 
-### Veb (`wms_web`)
+### Veb (React — `web/`)
 
 Sol sidebar, rol üzrə filtrlənmiş:
 
@@ -511,7 +519,8 @@ panel-də olması, əlcəkli barmaq üçün sahələr arası məsafə.
 - ikonoqrafiya qaydası (konturlu, 1.5px, 16px şəbəkə, `currentColor`, `aria-label`);
 - boş və xəta vəziyyətləri (səbəb + növbəti addım; `code` mütləq görünür);
 - əlçatanlıq (kontrast 4.5:1 / 3:1, fokus halqası, `prefers-reduced-motion`, real `table` markup);
-- Flutter-ə köçürmə təlimatı ([FLUTTER-MAPPING.md](../design-system/FLUTTER-MAPPING.md)).
+- React tətbiqi komponentləri **doğma formatında** işlədir (`bundle.css` + tipli ESM modulları);
+- Flutter-ə (mobil) köçürmə təlimatı ([FLUTTER-MAPPING.md](../design-system/FLUTTER-MAPPING.md)).
 
 **Vermir** (bu sənədin §8-i və gələcək UI/UX sənədi həll etməlidir):
 

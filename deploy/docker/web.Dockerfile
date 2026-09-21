@@ -1,53 +1,65 @@
 # syntax=docker/dockerfile:1.7
 # -----------------------------------------------------------------------------
-# WMS web (Flutter, apps/wms_web) -> static bundle served by nginx.
+# WMS web (Vite + React + TypeScript, web/) -> static bundle served by nginx.
 #
-# Build context is the frontend/ directory (pub workspace root). The nginx config
-# lives in deploy/docker, outside that context, so it is passed as an additional
-# named build context called "deploy":
-#   docker build -f deploy/docker/web.Dockerfile --build-context deploy=deploy/docker \
-#     --build-arg API_BASE_URL=/api \
-#     --build-arg KEYCLOAK_ISSUER=https://auth.example.com/realms/wms \
-#     -t wms/web frontend
+# Build context is the web/ directory (npm project root). Three things the build needs
+# live outside it, so they are passed as additional named build contexts:
+#   deploy        -> deploy/docker          (nginx.conf for the runtime stage)
+#   contracts     -> contracts/openapi      (npm run gen:api, ADR-007)
+#   designsystem  -> docs/design-system     (npm run gen:tokens, ADR-011)
+#
+#   docker build -f deploy/docker/web.Dockerfile \
+#     --build-context deploy=deploy/docker \
+#     --build-context contracts=contracts/openapi \
+#     --build-context designsystem=docs/design-system \
+#     --build-arg VITE_API_BASE_URL=/api \
+#     --build-arg VITE_KEYCLOAK_ISSUER=https://auth.example.com/realms/wms \
+#     -t wms/web web
 # (docker compose does this via build.additional_contexts.)
+#
+# The container mirrors the repo layout the generator scripts expect: web/ is /app, so
+# `resolve(here, '../../contracts/openapi')` lands on /contracts/openapi.
+#
+# Vite inlines `import.meta.env.VITE_*` at build time, so the three VITE_ args
+# below are baked into the bundle - they are public values (ADR-009: the OIDC
+# client is public, Authorization Code + PKCE, no secret).
 #
 # Runtime args (env): API_UPSTREAM=gateway:8080  -> nginx proxies /api/ there
 #                     DNS_RESOLVER              -> auto-detected from /etc/resolv.conf
 # -----------------------------------------------------------------------------
-ARG FLUTTER_IMAGE=ghcr.io/cirruslabs/flutter:stable
+ARG NODE_IMAGE=node:22-alpine
 ARG NGINX_IMAGE=nginxinc/nginx-unprivileged:stable-alpine
 
-# ---- 1. prep: only pubspec manifests, so `flutter pub get` is cacheable ----
-FROM ${FLUTTER_IMAGE} AS prep
-WORKDIR /workspace
-COPY . .
-RUN mkdir -p /manifests && find . -type f \( \
-        -name 'pubspec.yaml' -o -name 'pubspec.lock' -o -name 'melos.yaml' -o -name 'pubspec_overrides.yaml' \
-      \) -not -path '*/.dart_tool/*' -not -path '*/build/*' \
-      -exec cp --parents '{}' /manifests \;
+# ---- 1. deps: only the lockfile manifests, so `npm ci` is cacheable ----
+FROM ${NODE_IMAGE} AS deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,id=npm,target=/root/.npm,sharing=locked \
+    npm ci
 
 # ---- 2. build ----
-FROM ${FLUTTER_IMAGE} AS build
-ARG API_BASE_URL=/api
-ARG KEYCLOAK_ISSUER=http://localhost:8080/realms/wms
-ARG KEYCLOAK_CLIENT_ID=wms-web
-ENV PUB_CACHE=/root/.pub-cache
-WORKDIR /workspace
+FROM ${NODE_IMAGE} AS build
+ARG VITE_API_BASE_URL=/api
+ARG VITE_KEYCLOAK_ISSUER=http://localhost:8080/realms/wms
+ARG VITE_KEYCLOAK_CLIENT_ID=wms-web
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL} \
+    VITE_KEYCLOAK_ISSUER=${VITE_KEYCLOAK_ISSUER} \
+    VITE_KEYCLOAK_CLIENT_ID=${VITE_KEYCLOAK_CLIENT_ID}
+WORKDIR /app
 
-# dependency layer
-COPY --from=prep /manifests .
-RUN --mount=type=cache,id=pub,target=/root/.pub-cache,sharing=locked \
-    flutter --version && flutter pub get
-
-# full source + release build of the web app
+# Source first, then the Linux node_modules on top: web/ has no .dockerignore of its
+# own yet, so a developer's macOS node_modules can ride along in the context - this
+# order guarantees the deps stage wins.
 COPY . .
-RUN --mount=type=cache,id=pub,target=/root/.pub-cache,sharing=locked \
-    flutter pub get && \
-    cd apps/wms_web && \
-    flutter build web --release \
-      --dart-define=API_BASE_URL="${API_BASE_URL}" \
-      --dart-define=KEYCLOAK_ISSUER="${KEYCLOAK_ISSUER}" \
-      --dart-define=KEYCLOAK_CLIENT_ID="${KEYCLOAK_CLIENT_ID}"
+COPY --from=deps /app/node_modules ./node_modules
+
+# Sources that live outside web/, placed where the generator scripts resolve them.
+COPY --from=contracts . /contracts/openapi
+COPY --from=designsystem . /docs/design-system
+
+# The OpenAPI types are git-ignored (ADR-007), so a clean checkout has none - generate
+# them first. `npm run build` then runs gen:tokens + tsc -b --noEmit + vite build.
+RUN npm run gen:api && npm run build
 
 # ---- 3. runtime: nginx (unprivileged flavour of nginx:alpine - same upstream, runs as uid 101 on :8080) ----
 FROM ${NGINX_IMAGE} AS runtime
@@ -68,7 +80,7 @@ if [ -z "${DNS_RESOLVER:-}" ]; then
 fi
 RESOLVER_SH
 
-COPY --from=build /workspace/apps/wms_web/build/web /usr/share/nginx/html
+COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

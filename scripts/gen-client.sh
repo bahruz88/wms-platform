@@ -8,14 +8,14 @@
 #   OPENAPI_GENERATOR_IMAGE=openapitools/openapi-generator-cli:v7.14.0 scripts/gen-client.sh
 #
 # Output (gitignored, see .gitignore):
-#   frontend/packages/wms_api_client/lib/src/generated/<module>/
+#   mobile/packages/wms_api_client/lib/src/generated/<module>/
 #
 # Requires Docker only — no local Java / openapi-generator install.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SPEC_DIR="$ROOT_DIR/contracts/openapi"
-OUT_DIR="${GEN_OUT_DIR:-$ROOT_DIR/frontend/packages/wms_api_client/lib/src/generated}"
+OUT_DIR="${GEN_OUT_DIR:-$ROOT_DIR/mobile/packages/wms_api_client/lib/src/generated}"
 IMAGE="${OPENAPI_GENERATOR_IMAGE:-openapitools/openapi-generator-cli:latest}"
 ALL_MODULES=(identity masterdata inventory procurement documents notifications reporting)
 
@@ -81,7 +81,7 @@ Post-generation notes (read before wiring the client):
      layer in wms_api_client MUST convert them with `Decimal.parse(...)` (package:decimal) into
      wms_core `Quantity` / `Money` — never `double.parse`, never `num` (ADR-008).
   2. built_value needs codegen after generation:
-       cd frontend/packages/wms_api_client && dart run build_runner build --delete-conflicting-outputs
+       cd mobile/packages/wms_api_client && dart run build_runner build --delete-conflicting-outputs
   3. Generated sources are gitignored; CI and developers regenerate with `make gen-client`.
   4. Each module is generated under the same pubName (wms_api_generated) but a distinct
      pubLibrary (wms_api_generated.<module>) so the `serializers.dart` of one module does not

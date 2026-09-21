@@ -7,9 +7,13 @@
     "ms-dotnettools.csharp",            // C# dili (OmniSharp/Roslyn), debugger
     "ms-dotnettools.vscode-dotnet-runtime",
 
-    // --- Frontend: Flutter / Dart ---
+    // --- Mobil: Flutter / Dart (mobile/) ---
     "dart-code.dart-code",              // Dart dili, analyzer, debug
     "dart-code.flutter",                // Flutter: run/hot reload, cihaz seçimi, launch.json dəstəyi
+
+    // --- Web: Vite + React + TypeScript (web/) ---
+    "dbaeumer.vscode-eslint",           // ESLint
+    "esbenp.prettier-vscode",           // Prettier formatlaması
 
     // --- Konteynerlər və deployment ---
     "ms-azuretools.vscode-docker",      // Dockerfile, compose, image/konteyner idarəsi

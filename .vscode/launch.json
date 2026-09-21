@@ -3,7 +3,7 @@
   // (və ya C# Dev Kit-in öz build əmri) işlədin.
   // Portlar `deploy/.env` ilə uzlaşdırılıb:
   // Gateway 5001, Keycloak 8180 (standart 5000/8080 bu maşında tutulub — README-yə bax).
-  // Portları dəyişsəniz, aşağıdakı dart-define dəyərlərini də yeniləyin.
+  // Portları dəyişsəniz, aşağıdakı dart-define / VITE_* dəyərlərini də yeniləyin.
   "version": "0.2.0",
   "inputs": [
     {
@@ -111,7 +111,7 @@
       "console": "internalConsole"
     },
     {
-      // YARP gateway — Flutter tətbiqləri buraya (5001) müraciət edir.
+      // YARP gateway — web və mobil tətbiqlər buraya (5001) müraciət edir.
       "name": ".NET: Gateway (YARP)",
       "type": "coreclr",
       "request": "launch",
@@ -137,44 +137,25 @@
       "console": "internalConsole"
     },
 
-    // ================================================================= Flutter
+    // ============================================== Web (Vite + React, web/)
     {
-      "name": "Flutter: wms_web (Chrome)",
-      "type": "dart",
+      // `npm run dev` üzərindən Vite serveri; brauzer debug-ı üçün Chrome qoşulur.
+      // Serveri ayrıca qaldırın: `make web-dev` (port 3001).
+      "name": "Web: Chrome (Vite dev server)",
+      "type": "chrome",
       "request": "launch",
-      "program": "${workspaceFolder}/frontend/apps/wms_web/lib/main.dart",
-      "cwd": "${workspaceFolder}/frontend/apps/wms_web",
-      "deviceId": "chrome",
-      "args": ["--web-port", "3001"],
-      "toolArgs": [
-        "--dart-define=API_BASE_URL=http://localhost:5001",
-        "--dart-define=KEYCLOAK_ISSUER=http://localhost:8180/realms/wms",
-        "--dart-define=KEYCLOAK_CLIENT_ID=wms-web"
-      ]
+      "url": "http://localhost:3001",
+      "webRoot": "${workspaceFolder}/web"
     },
-    {
-      // Profil rejimi — performans ölçmək üçün (DevTools timeline).
-      "name": "Flutter: wms_web (profile)",
-      "type": "dart",
-      "request": "launch",
-      "flutterMode": "profile",
-      "program": "${workspaceFolder}/frontend/apps/wms_web/lib/main.dart",
-      "cwd": "${workspaceFolder}/frontend/apps/wms_web",
-      "deviceId": "chrome",
-      "args": ["--web-port", "3001"],
-      "toolArgs": [
-        "--dart-define=API_BASE_URL=http://localhost:5001",
-        "--dart-define=KEYCLOAK_ISSUER=http://localhost:8180/realms/wms",
-        "--dart-define=KEYCLOAK_CLIENT_ID=wms-web"
-      ]
-    },
+
+    // ================================================== Flutter (mobil, mobile/)
     {
       // Android emulyatoru: 10.0.2.2 = host maşın. Fiziki cihazda host IP-si yazılmalıdır.
       "name": "Flutter: wms_mobile (Android emulyator)",
       "type": "dart",
       "request": "launch",
-      "program": "${workspaceFolder}/frontend/apps/wms_mobile/lib/main.dart",
-      "cwd": "${workspaceFolder}/frontend/apps/wms_mobile",
+      "program": "${workspaceFolder}/mobile/apps/wms_mobile/lib/main.dart",
+      "cwd": "${workspaceFolder}/mobile/apps/wms_mobile",
       "toolArgs": [
         "--dart-define=API_BASE_URL=http://10.0.2.2:5001",
         "--dart-define=KEYCLOAK_ISSUER=http://10.0.2.2:8180/realms/wms",
@@ -186,8 +167,8 @@
       "name": "Flutter: wms_mobile (iOS simulyator)",
       "type": "dart",
       "request": "launch",
-      "program": "${workspaceFolder}/frontend/apps/wms_mobile/lib/main.dart",
-      "cwd": "${workspaceFolder}/frontend/apps/wms_mobile",
+      "program": "${workspaceFolder}/mobile/apps/wms_mobile/lib/main.dart",
+      "cwd": "${workspaceFolder}/mobile/apps/wms_mobile",
       "toolArgs": [
         "--dart-define=API_BASE_URL=http://localhost:5001",
         "--dart-define=KEYCLOAK_ISSUER=http://localhost:8180/realms/wms",
@@ -200,8 +181,8 @@
       "name": "Flutter: wms_mobile (fiziki cihaz — IP-ni dəyişin)",
       "type": "dart",
       "request": "launch",
-      "program": "${workspaceFolder}/frontend/apps/wms_mobile/lib/main.dart",
-      "cwd": "${workspaceFolder}/frontend/apps/wms_mobile",
+      "program": "${workspaceFolder}/mobile/apps/wms_mobile/lib/main.dart",
+      "cwd": "${workspaceFolder}/mobile/apps/wms_mobile",
       "toolArgs": [
         "--dart-define=API_BASE_URL=http://192.168.1.10:5001",
         "--dart-define=KEYCLOAK_ISSUER=http://192.168.1.10:8180/realms/wms",
@@ -211,7 +192,7 @@
   ],
   "compounds": [
     {
-      // Gündəlik iş: gateway + bütün modullar. Frontend ayrıca başladılır.
+      // Gündəlik iş: gateway + bütün modullar. Web/mobil ayrıca başladılır.
       "name": "Backend: Gateway + API (hamısı)",
       "configurations": [".NET: Gateway (YARP)", ".NET: Wms.Host.Api (--Modules=*)"],
       "stopAll": true
@@ -221,7 +202,7 @@
       "configurations": [
         ".NET: Gateway (YARP)",
         ".NET: Wms.Host.Api (--Modules=*)",
-        "Flutter: wms_web (Chrome)"
+        "Web: Chrome (Vite dev server)"
       ],
       "stopAll": true
     }

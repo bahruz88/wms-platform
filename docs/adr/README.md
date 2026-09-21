@@ -5,7 +5,7 @@ Hər ADR bir qərarı, onun kontekstini və nəticələrini qeyd edir. Şablon:
 
 ADR-001…005 spesifikasiyanın §2 bölməsində artıq qəbul edilmiş qərarların ayrıca
 sənədləşdirilmiş formasıdır — mənbə mətn `docs/SPEC-Satinalma-Anbar-Platformasi.md` §2-dədir
-və ziddiyyət olarsa SPEC üstündür. ADR-006…011 spesifikasiyadan sonra, frontend və
+və ziddiyyət olarsa SPEC üstündür. ADR-006…013 spesifikasiyadan sonra, interfeys və
 kontrakt qatı layihələndirilərkən qəbul edilib.
 
 | № | Qərar | Status |
@@ -22,6 +22,7 @@ kontrakt qatı layihələndirilərkən qəbul edilib.
 | [ADR-010](ADR-010-mysql-single-db-table-prefix.md) | Tək MySQL database + cədvəl prefiksi | Qəbul edilib |
 | [ADR-011](ADR-011-design-system.md) | Dizayn sistemi artifact-dan gəlir | Qəbul edilib |
 | [ADR-012](ADR-012-branch-consumption-model.md) | Filial istehlakı: resept əsaslı nəzəri məxaric | Qəbul edilib |
+| [ADR-013](ADR-013-web-react-mobile-flutter.md) | Web React + TypeScript, mobil Flutter | Qəbul edilib (ADR-006-nı əvəz edir) |
 
 Yeni ADR əlavə edərkən nömrəni artır, bu cədvələ sətir əlavə et və köhnə ADR-i
 `Status: Əvəz edilib (ADR-0NN)` kimi işarələ — silmə.

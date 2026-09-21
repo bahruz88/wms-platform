@@ -1,4 +1,4 @@
-# /api -> gateway (YARP), everything else -> web (Flutter SPA).
+# /api -> gateway (YARP), everything else -> web (React SPA).
 # Assumes ingress-nginx + cert-manager; adapt annotations for other controllers.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
