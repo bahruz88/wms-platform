@@ -276,3 +276,9 @@ Satış məlumatı `POS`, `CSV` və ya `MANUAL` mənbəyindən gəlir — POS in
 - Dizayn: [docs/architecture/branch-operations.md](docs/architecture/branch-operations.md)
 - Kontrakt: [contracts/openapi/consumption.v1.yaml](contracts/openapi/consumption.v1.yaml)
 - Modul: `Consumption` (`cons_`, `--Modules=consumption`)
+
+## Vəziyyət və yol xəritəsi
+
+Repo boyunca aparılmış auditin nəticəsi, fazalar üzrə: [docs/ROADMAP.md](docs/ROADMAP.md).
+Orada kontrakt əhatəsi (184 əməliyyatın 81-i işləyir), bağlanmalı təhlükəsizlik boşluqları,
+beş faza və miqyas tavanları göstərilib.
