@@ -1,0 +1,84 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Main.dc.html": {
+      "h": 960,
+      "title": "Anbar paneli",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Mexaric.dc.html": {
+      "h": 960,
+      "title": "Filiala məxaric",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "PO-Tesdiq.dc.html": {
+      "h": 960,
+      "title": "Sifarişin təsdiqi",
+      "w": 1440,
+      "x": 0,
+      "y": 1400
+    },
+    "Qebul.dc.html": {
+      "h": 960,
+      "title": "Anbara qəbul",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Sayim.dc.html": {
+      "h": 960,
+      "title": "Sayım və fərqlər",
+      "w": 1440,
+      "x": 1520,
+      "y": 1400
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-09-20T13:35:11Z",
+    "v": 1
+  },
+  "designSystems": [
+    {
+      "artifact": "https://claude.ai/artifact/NTfj6emAeJ6ebrBupGpqhY",
+      "copiedAt": "2026-09-20T13:35:11Z",
+      "namespace": "wms",
+      "title": "WMS Enterprise",
+      "version": null
+    }
+  ],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "n1": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Gündəlik iş",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "n2": {
+      "kind": "title1",
+      "maxW": 2960,
+      "text": "Təsdiq və nəzarət",
+      "w": 240,
+      "x": 0,
+      "y": 1100
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Qebul.dc.html",
+    "Mexaric.dc.html",
+    "PO-Tesdiq.dc.html",
+    "Sayim.dc.html"
+  ],
+  "pages": [],
+  "title": "WMS — ekran maketləri"
+}

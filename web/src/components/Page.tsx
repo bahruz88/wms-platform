@@ -1,53 +1,212 @@
 import type { ReactNode } from 'react';
+import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button, DocStatusBadge } from '@ds/index';
 import { isApiError, type ProblemDetails } from '@api/problem';
 
-/** Page frame: one `display` title per screen, actions on the right. */
+/**
+ * Screen frames — docs/design-system/screens/README.md «Layout qaydaları».
+ *
+ * A screen owns its header because the artboards give it two different heights: 72px on a list
+ * (title + one muted line) and 84px on a document (breadcrumb, then the document number in
+ * `wms-num` at 20px/600 beside its `DocStatusBadge` and any context badges). Both put the action
+ * buttons on the right in ghost → secondary → primary order, and both are followed by the same
+ * content well: `padding: 20px 32px`, `gap: 16px`.
+ */
+
+/** List screen: 72px header. */
 export function Page({
   title,
   subtitle,
   actions,
+  contentClassName,
   children,
 }: {
   title: ReactNode;
   subtitle?: ReactNode;
   actions?: ReactNode;
+  contentClassName?: string;
   children: ReactNode;
 }) {
   return (
     <>
-      <div className="wms-page__head">
-        <div>
-          <h1 className="wms-page__title">{title}</h1>
-          {subtitle ? <div className="wms-page__subtitle">{subtitle}</div> : null}
+      <header className="wms-header">
+        <div className="wms-header__main">
+          <h1 className="wms-header__title">{title}</h1>
+          {subtitle ? <div className="wms-header__sub">{subtitle}</div> : null}
         </div>
-        {actions ? <div className="wms-page__actions">{actions}</div> : null}
+        {actions ? <div className="wms-header__actions">{actions}</div> : null}
+      </header>
+      <div className={contentClassName ? `wms-content ${contentClassName}` : 'wms-content'}>
+        {children}
       </div>
-      {children}
     </>
   );
 }
 
-export function Section({
-  title,
+/**
+ * Document screen: 84px header with the breadcrumb line above the document number.
+ *
+ * `status` goes through `DocStatusBadge` — no screen writes its own status badge
+ * (docs/design-system/README.md «Sənəd statusu hər yerdə eyni görünür»).
+ */
+export function DocumentPage({
+  breadcrumb,
+  docNo,
+  mono = true,
+  status,
+  statusLabel,
+  badges,
+  context,
   actions,
+  contentClassName,
   children,
 }: {
-  title?: ReactNode;
+  breadcrumb?: ReactNode;
+  docNo: ReactNode;
+  /** A document that has no number yet (a draft being written) sets this to false. */
+  mono?: boolean;
+  status?: string | null;
+  statusLabel?: string;
+  badges?: ReactNode;
+  context?: ReactNode;
   actions?: ReactNode;
+  contentClassName?: string;
   children: ReactNode;
 }) {
   return (
-    <section className="wms-section">
-      {title || actions ? (
-        <div className="wms-page__head">
-          {title ? <h2 className="wms-section__title">{title}</h2> : <span />}
-          {actions ? <div className="wms-page__actions">{actions}</div> : null}
+    <>
+      <header className="wms-header wms-header--doc">
+        <div className="wms-header__main">
+          {breadcrumb ? <div className="wms-header__crumb">{breadcrumb}</div> : null}
+          <div className="wms-header__docline">
+            <span className={mono ? 'wms-num wms-header__docno' : 'wms-header__docno'}>
+              {docNo}
+            </span>
+            {status ? <DocStatusBadge status={status} label={statusLabel} /> : null}
+            {badges}
+            {context ? <span className="wms-header__context">{context}</span> : null}
+          </div>
+        </div>
+        {actions ? <div className="wms-header__actions">{actions}</div> : null}
+      </header>
+      <div className={contentClassName ? `wms-content ${contentClassName}` : 'wms-content'}>
+        {children}
+      </div>
+    </>
+  );
+}
+
+/**
+ * Card — `surface`, `border`, `radius-lg`; head `14px 16px` with a bottom border, body `16px`.
+ * `flush` drops the body padding so a table keeps the card's own frame instead of drawing a
+ * second one.
+ */
+export function Card({
+  title,
+  subtitle,
+  actions,
+  flush,
+  rows,
+  footer,
+  className,
+  children,
+}: {
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  actions?: ReactNode;
+  /** The body holds a table or another framed block: no padding. */
+  flush?: boolean;
+  /** The body is a list of rows with their own 12/16 padding. */
+  rows?: boolean;
+  footer?: ReactNode;
+  className?: string;
+  children?: ReactNode;
+}) {
+  const bodyClasses = ['wms-card__body'];
+  if (flush) bodyClasses.push('wms-card__body--flush');
+  if (rows) bodyClasses.push('wms-card__body--rows');
+
+  return (
+    <section className={className ? `wms-card ${className}` : 'wms-card'}>
+      {title || subtitle || actions ? (
+        <div className="wms-card__head">
+          <div>
+            {title ? <h2 className="wms-card__title">{title}</h2> : null}
+            {subtitle ? <div className="wms-card__sub">{subtitle}</div> : null}
+          </div>
+          {actions ? <div className="wms-card__actions">{actions}</div> : null}
         </div>
       ) : null}
-      {children}
+      {children !== undefined ? <div className={bodyClasses.join(' ')}>{children}</div> : null}
+      {footer ? <div className="wms-card__foot">{footer}</div> : null}
     </section>
+  );
+}
+
+/**
+ * Backwards-compatible section wrapper: a titled card. Screens that have not been reworked yet
+ * still read as part of the same product because this is the same card the artboards draw.
+ */
+export function Section({
+  title,
+  subtitle,
+  actions,
+  flush,
+  children,
+}: {
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  actions?: ReactNode;
+  flush?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Card title={title} subtitle={subtitle} actions={actions} flush={flush}>
+      {children}
+    </Card>
+  );
+}
+
+/** A row of sibling screens reached from one navigation entry. */
+export function Tabs({ items }: { items: Array<{ to: string; label: ReactNode }> }) {
+  const { t } = useTranslation();
+  return (
+    <nav className="wms-tabs" aria-label={t('app.sectionNav')}>
+      {items.map((item) => (
+        <NavLink
+          key={item.to}
+          to={item.to}
+          className={({ isActive }) => (isActive ? 'wms-tab wms-tab--active' : 'wms-tab')}
+        >
+          {item.label}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
+/** Metadata grid — six columns on a document header, as the goods-receipt artboard draws it. */
+export function MetaGrid({ columns = 6, children }: { columns?: 2 | 4 | 6; children: ReactNode }) {
+  const cls = columns === 6 ? 'wms-meta' : `wms-meta wms-meta--${columns}`;
+  return <div className={cls}>{children}</div>;
+}
+
+export function Meta({
+  label,
+  value,
+  sub,
+}: {
+  label: ReactNode;
+  value: ReactNode;
+  sub?: ReactNode;
+}) {
+  return (
+    <div>
+      <div className="wms-meta__k">{label}</div>
+      <div className="wms-meta__v">{value}</div>
+      {sub ? <div className="wms-meta__sub">{sub}</div> : null}
+    </div>
   );
 }
 
@@ -69,6 +228,16 @@ export function KeyValue({ items }: { items: Array<[ReactNode, ReactNode]> }) {
 
 export function DocNo({ value }: { value: string | null | undefined }) {
   return <span className="wms-doc-no">{value ?? '—'}</span>;
+}
+
+/** Product cell: name on top, SKU in `mono` underneath — the artboards' line-table idiom. */
+export function ProductCell({ name, sku }: { name: ReactNode; sku?: ReactNode }) {
+  return (
+    <div>
+      <div className="wms-cell__name">{name}</div>
+      {sku ? <div className="wms-cell__sku wms-num">{sku}</div> : null}
+    </div>
+  );
 }
 
 export function StatusCell({ status }: { status: string | null | undefined }) {
@@ -121,6 +290,33 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
             </Button>
           </div>
         ) : null}
+      </div>
+    </Alert>
+  );
+}
+
+/**
+ * Says out loud that an operation the screen offers is not routed yet. Used instead of a button
+ * that would appear to work: the user never sees a success that did not happen.
+ */
+export function NotOpenYet({
+  operation,
+  status,
+  children,
+}: {
+  operation: string;
+  status?: number;
+  children?: ReactNode;
+}) {
+  const { t } = useTranslation();
+  return (
+    <Alert tone="info" title={t('state.notImplementedTitle')}>
+      <div className="wms-stack">
+        <span>
+          <span className="wms-num">{operation}</span> —{' '}
+          {t('state.notImplementedBody', { status: status ?? 404 })}
+        </span>
+        {children}
       </div>
     </Alert>
   );

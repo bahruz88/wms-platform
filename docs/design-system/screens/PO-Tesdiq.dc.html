@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<title>Sifarişin təsdiqi</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wms/tokens.css">
+<link rel="stylesheet" href="ds/wms/components/bundle.css">
+<script src="ds/wms/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; font-family: var(--font-sans); background: var(--surface-canvas); color: var(--ink); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; font-size: 14px; color: var(--ink-muted); text-decoration: none; }
+.nav-item:hover { background: var(--row-hover); color: var(--ink); text-decoration: none; }
+.nav-item[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav-group { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-subtle); padding: 14px 10px 4px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.card-title { font-size: 16px; font-weight: 600; }
+.sum-row { display: flex; justify-content: space-between; gap: 16px; font-size: 14px; }
+.sum-row span:last-child { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+</style>
+</helmet>
+<div class="wms-root" style="width: 1440px; height: 960px; box-sizing: border-box; display: flex; background: var(--surface-canvas);">
+
+  <aside style="width: 248px; flex: none; box-sizing: border-box; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 12px; display: flex; flex-direction: column; gap: 2px;">
+    <div style="padding: 0 10px 16px;">
+      <div style="font-size: 20px; line-height: 28px; font-weight: 600;">WMS</div>
+      <div style="font-size: 12px; line-height: 16px; color: var(--ink-muted);">Subway AZ · 15 filial</div>
+    </div>
+    <a class="nav-item" href="Main.dc.html">Panel</a>
+    <div class="nav-group">Satınalma</div>
+    <a class="nav-item" href="Main.dc.html">Tələbnamə</a>
+    <a class="nav-item" href="PO-Tesdiq.dc.html" aria-current="page">Sifarişlər</a>
+    <a class="nav-item" href="Main.dc.html">Təchizatçılar</a>
+    <div class="nav-group">Anbar</div>
+    <a class="nav-item" href="Qebul.dc.html">Qəbul</a>
+    <a class="nav-item" href="Mexaric.dc.html">Məxaric və transfer</a>
+    <a class="nav-item" href="Sayim.dc.html">Sayım</a>
+    <a class="nav-item" href="Main.dc.html">Tullantı və nümunə</a>
+    <a class="nav-item" href="Main.dc.html">Qalıqlar</a>
+    <div class="nav-group">Sistem</div>
+    <a class="nav-item" href="Main.dc.html">Master data</a>
+    <a class="nav-item" href="Main.dc.html">Hesabatlar</a>
+    <div style="flex-grow: 1;"></div>
+    <div style="padding: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+      <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">NQ</div>
+      <div style="min-width: 0;">
+        <div style="font-size: 13px; font-weight: 600;">Nigar Quliyeva</div>
+        <div style="font-size: 12px; color: var(--ink-muted);">FINANCE_DIRECTOR</div>
+      </div>
+    </div>
+  </aside>
+
+  <main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+    <header style="box-sizing: border-box; height: 84px; flex: none; padding: 0 32px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <div>
+        <div style="font-size: 12px; line-height: 16px; color: var(--ink-muted);"><a href="Main.dc.html">Satınalma</a> · Sifarişlər</div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
+          <span class="wms-num" style="font-size: 20px; line-height: 28px; font-weight: 600;">PO-2026-00087</span>
+          <x-import component-from-global-scope="Wms.DocStatusBadge" status="PENDING_APPROVAL"></x-import>
+          <span class="wms-num" style="font-size: 14px; color: var(--ink-muted);">48 240,00 AZN</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <x-import component-from-global-scope="Wms.Button" variant="ghost">PDF</x-import>
+        <x-import component-from-global-scope="Wms.Button" variant="danger">Rədd et</x-import>
+        <x-import component-from-global-scope="Wms.Button" variant="primary">Təsdiqlə</x-import>
+      </div>
+    </header>
+
+    <div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 20px 32px; display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px;">
+
+      <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+
+        <x-import component-from-global-scope="Wms.Alert" tone="warning" title="Təchizatçı üzrə kumulyativ məbləğ həddə yaxınlaşır">Azərsun MMC ilə son 30 gündə 142 800,00 AZN sifariş verilib. Bu sifariş təsdiqlənsə, 150 000 AZN-lik bölünmə nəzarəti həddini aşacaq.</x-import>
+
+        <section class="card" style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column;">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Sifariş sətirləri</div>
+              <div style="font-size: 12px; color: var(--ink-muted);">Valyuta: AZN · məzənnə 1,00000000 · çatdırılma: Food WH, 28.09.2026</div>
+            </div>
+          </div>
+          <div style="flex-grow: 1; min-height: 0; overflow: auto;">
+            <table class="wms-table wms-table--dense" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th scope="col" style="width: 44px;">#</th>
+                  <th scope="col">Məhsul</th>
+                  <th scope="col" style="width: 120px; text-align: right;">Miqdar</th>
+                  <th scope="col" style="width: 120px; text-align: right;">Vahid qiymət</th>
+                  <th scope="col" style="width: 170px;">Əvvəlki qiymət</th>
+                  <th scope="col" style="width: 80px; text-align: right;">ƏDV</th>
+                  <th scope="col" style="width: 130px; text-align: right;">Sətir cəmi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="wms-td--num">1</td>
+                  <td>
+                    <div style="font-weight: 600;">Chicken Strips</div>
+                    <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">CHS-0042</div>
+                  </td>
+                  <td class="wms-td--num">1 200,000 KG</td>
+                  <td class="wms-td--num">8,4000</td>
+                  <td>
+                    <div class="wms-num" style="font-size: 13px; color: var(--ink-muted);">7,9000</div>
+                    <div class="wms-num" style="font-size: 12px; color: var(--warning); font-weight: 600;">+6,33% · yem qiyməti</div>
+                  </td>
+                  <td class="wms-td--num">18%</td>
+                  <td class="wms-td--num">10 080,00</td>
+                </tr>
+                <tr>
+                  <td class="wms-td--num">2</td>
+                  <td>
+                    <div style="font-weight: 600;">Bread Stick Black</div>
+                    <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">BSB-0114</div>
+                  </td>
+                  <td class="wms-td--num">24 000,000 PCS</td>
+                  <td class="wms-td--num">0,6200</td>
+                  <td><span style="color: var(--ink-muted); font-size: 13px;">Dəyişməyib</span></td>
+                  <td class="wms-td--num">18%</td>
+                  <td class="wms-td--num">14 880,00</td>
+                </tr>
+                <tr>
+                  <td class="wms-td--num">3</td>
+                  <td>
+                    <div style="font-weight: 600;">Cheddar Slice</div>
+                    <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">CHD-0018</div>
+                  </td>
+                  <td class="wms-td--num">900,000 KG</td>
+                  <td class="wms-td--num">11,2000</td>
+                  <td>
+                    <div class="wms-num" style="font-size: 13px; color: var(--ink-muted);">12,4000</div>
+                    <div class="wms-num" style="font-size: 12px; color: var(--success); font-weight: 600;">−9,68% · yeni müqavilə</div>
+                  </td>
+                  <td class="wms-td--num">18%</td>
+                  <td class="wms-td--num">10 080,00</td>
+                </tr>
+                <tr>
+                  <td class="wms-td--num">4</td>
+                  <td>
+                    <div style="font-weight: 600;">Mayonez 5 kq</div>
+                    <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">MYZ-0031</div>
+                  </td>
+                  <td class="wms-td--num">240,000 PCS</td>
+                  <td class="wms-td--num">24,0000</td>
+                  <td><span style="color: var(--ink-muted); font-size: 13px;">Dəyişməyib</span></td>
+                  <td class="wms-td--num">18%</td>
+                  <td class="wms-td--num">5 760,00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="border-top: 1px solid var(--border-control); background: var(--surface-sunken); padding: 12px 16px; display: flex; justify-content: flex-end;">
+            <div style="width: 280px; display: flex; flex-direction: column; gap: 6px;">
+              <div class="sum-row"><span style="color: var(--ink-muted);">Ara cəm</span><span>40 881,36</span></div>
+              <div class="sum-row"><span style="color: var(--ink-muted);">ƏDV 18%</span><span>7 358,64</span></div>
+              <div class="sum-row" style="font-weight: 600; font-size: 16px; padding-top: 6px; border-top: 1px solid var(--border);"><span>Cəmi, AZN</span><span>48 240,00</span></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+
+        <section class="card" style="flex: none;">
+          <div class="card-head">
+            <div class="card-title">Təsdiq zənciri</div>
+            <x-import component-from-global-scope="Wms.Badge" tone="warning" dot="{{ yes }}">Addım 3 / 4</x-import>
+          </div>
+          <div style="padding: 16px;">
+            <x-import component-from-global-scope="Wms.ApprovalChain" steps="{{ steps }}"></x-import>
+          </div>
+        </section>
+
+        <section class="card" style="flex: none;">
+          <div class="card-head">
+            <div class="card-title">Qərarınız</div>
+          </div>
+          <div style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+            <x-import component-from-global-scope="Wms.TextField" label="Şərh" value="{{ comment }}" hint="Rədd edilərkən şərh məcburidir"></x-import>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+              <x-import component-from-global-scope="Wms.Button" variant="danger">Rədd et</x-import>
+              <x-import component-from-global-scope="Wms.Button" variant="primary">Təsdiqlə</x-import>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" style="flex-grow: 1; min-height: 0;">
+          <div class="card-head">
+            <div class="card-title">Təklif müqayisəsi</div>
+            <a href="Main.dc.html" style="font-size: 13px; font-weight: 600;">RFQ-2026-00021</a>
+          </div>
+          <div style="padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 6px;">
+              <div style="flex-grow: 1; min-width: 0;">
+                <div style="font-weight: 600; font-size: 14px;">Azərsun MMC</div>
+                <div style="font-size: 12px; color: var(--ink-muted);">7 gün · 30 gün ödəniş · seçilib</div>
+              </div>
+              <span class="wms-num" style="font-size: 14px; font-weight: 600;">48 240,00</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px;">
+              <div style="flex-grow: 1; min-width: 0;">
+                <div style="font-weight: 600; font-size: 14px;">Bolmart LTD</div>
+                <div style="font-size: 12px; color: var(--ink-muted);">14 gün · qabaqcadan ödəniş</div>
+              </div>
+              <span class="wms-num" style="font-size: 14px;">47 110,00</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px;">
+              <div style="flex-grow: 1; min-width: 0;">
+                <div style="font-weight: 600; font-size: 14px;">Gilan Food</div>
+                <div style="font-size: 12px; color: var(--ink-muted);">5 gün · 15 gün ödəniş</div>
+              </div>
+              <span class="wms-num" style="font-size: 14px;">51 900,00</span>
+            </div>
+            <div style="font-size: 12px; line-height: 16px; color: var(--ink-muted); padding-top: 4px;">Ən ucuz təklif seçilmədiyi üçün seçim qeydi məcburi doldurulub: «Bolmart qida təchizatçısı kimi təsdiqlənməyib — sertifikatı 12.09.2026-da bitib.»</div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true,
+      comment: '',
+      steps: [
+        { stepNo: 1, role: 'PROCUREMENT_OFFICER', user: 'Orxan Məmmədov', decision: 'APPROVED', decidedAt: '2026-09-18T09:41', comment: 'Üç təklif müqayisə edildi, sertifikat yoxlanışı aparıldı.' },
+        { stepNo: 2, role: 'PROCUREMENT_MANAGER', user: 'Günel Əliyeva', decision: 'APPROVED', decidedAt: '2026-09-19T14:05', delegatedFrom: 'Rəşad Hüseynov' },
+        { stepNo: 3, role: 'FINANCE_DIRECTOR', user: 'Nigar Quliyeva', decision: 'PENDING' },
+        { stepNo: 4, role: 'CEO', decision: 'PENDING' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

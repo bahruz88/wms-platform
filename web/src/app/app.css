@@ -1,5 +1,16 @@
-/* Application chrome. Every value comes from the design tokens; the component styles themselves
- * live in bundle.css and are never overridden here. */
+/* Application chrome.
+ *
+ * Every measurement here is read off the approved artboards in
+ * docs/design-system/screens/*.dc.html and the rules distilled in their README:
+ * sidebar 248px, list header 72px, document header 84px, content `20px 32px` with a 16px gap,
+ * KPI row `repeat(4, minmax(0,1fr))` at 12px, cards on `surface` with a `border` + `radius-lg`,
+ * card head `14px 16px`, card body `16px`.
+ *
+ * Colours come from the tokens only; the component styles themselves live in bundle.css and are
+ * never overridden here — the two exceptions are marked and are additive layout rules, not
+ * restyling (a table that sits flush inside a card, and the 44px minimum touch target the
+ * accessibility rule asks for on top of the design system's 34px control height).
+ */
 
 html,
 body,
@@ -23,55 +34,94 @@ a {
 }
 
 a:hover {
+  color: var(--accent-hover);
   text-decoration: underline;
 }
 
-.wms-app {
-  display: grid;
-  grid-template-columns: 248px 1fr;
-  min-height: 100vh;
+/* Minimum touch target. The design system sizes controls at 34px; the platform rule for this
+ * product is 44px, so the app layer raises the medium controls and leaves the dense `sm`
+ * affordances that live inside table rows at 36px — the brand book's density principle
+ * ("anbardar bir ekranda 40 sətir görməlidir") does not survive 44px rows. */
+.wms-root .wms-btn {
+  min-height: 44px;
 }
 
-/* ---------- side navigation ---------- */
+.wms-root .wms-btn--sm {
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
+}
 
-.wms-side {
-  background: var(--surface);
-  border-right: 1px solid var(--border);
+.wms-root .wms-input,
+.wms-root .wms-select,
+.wms-root .wms-qty {
+  min-height: 44px;
+}
+
+.wms-root .wms-iconbtn {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* ---------- frame ---------- */
+
+.wms-app {
+  display: flex;
+  min-height: 100vh;
+  background: var(--surface-canvas);
+}
+
+.wms-main {
+  flex-grow: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
 }
 
-.wms-side__brand {
+/* ---------- side navigation (248px, `surface`, right border) ---------- */
+
+.wms-side {
+  width: 248px;
+  flex: none;
+  box-sizing: border-box;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 20px 12px;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--space-4);
-  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.wms-side__brand {
+  padding: 0 10px 16px;
 }
 
 .wms-side__brand-name {
-  font-size: 16px;
-  line-height: 22px;
+  display: block;
+  font-size: 20px;
+  line-height: 28px;
   font-weight: 600;
 }
 
 .wms-side__brand-sub {
+  display: block;
   font-size: 12px;
   line-height: 16px;
   color: var(--ink-muted);
 }
 
 .wms-side__nav {
-  flex: 1;
-  padding: var(--space-3) var(--space-2) var(--space-5);
-}
-
-.wms-side__group {
-  margin-bottom: var(--space-4);
+  flex-grow: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* The artboard draws eleven entries; a real tenant has twice that, so the list scrolls.
+   * The padding keeps the last entry off the user block rather than clipping it mid-glyph. */
+  padding-bottom: 8px;
 }
 
 .wms-side__group-label {
@@ -79,25 +129,28 @@ a:hover {
   line-height: 16px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--ink-muted);
-  padding: var(--space-1) var(--space-3);
+  color: var(--ink-subtle);
+  padding: 14px 10px 4px;
 }
 
 .wms-side__link {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
-  color: var(--ink);
-  text-decoration: none;
+  gap: 10px;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 8px 10px;
+  border-radius: 6px;
   font-size: 14px;
   line-height: 20px;
+  color: var(--ink-muted);
+  text-decoration: none;
 }
 
 .wms-side__link:hover {
   background: var(--row-hover);
+  color: var(--ink);
+  text-decoration: none;
 }
 
 .wms-side__link--active {
@@ -106,65 +159,89 @@ a:hover {
   font-weight: 600;
 }
 
-/* ---------- top bar ---------- */
-
-.wms-main {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.wms-topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-5);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-}
-
-.wms-topbar__right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.wms-user {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-}
-
-.wms-user__name {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 600;
-}
-
-.wms-user__meta {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
+.wms-side__note {
+  padding: 8px 10px;
   font-size: 12px;
   line-height: 16px;
   color: var(--ink-muted);
 }
 
-.wms-menu {
+/* user block, pinned to the bottom */
+
+.wms-side__user {
   position: relative;
+  flex: none;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
 }
 
-.wms-menu__panel {
+.wms-side__user-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  margin: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-height: 52px;
+}
+
+.wms-side__user-btn:hover {
+  background: var(--row-hover);
+}
+
+.wms-side__avatar {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.wms-side__user-text {
+  display: block;
+  min-width: 0;
+  flex-grow: 1;
+}
+
+.wms-side__user-name {
+  display: block;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wms-side__user-role {
+  display: block;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wms-side__usermenu {
   position: absolute;
+  left: 0;
   right: 0;
-  top: calc(100% + var(--space-1));
-  min-width: 240px;
+  bottom: calc(100% + 6px);
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -173,7 +250,7 @@ a:hover {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  z-index: 40;
+  z-index: 60;
 }
 
 .wms-menu__row {
@@ -187,7 +264,7 @@ a:hover {
   line-height: 16px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--ink-muted);
+  color: var(--ink-subtle);
 }
 
 .wms-segmented {
@@ -203,7 +280,8 @@ a:hover {
   color: var(--ink);
   font-family: inherit;
   font-size: 13px;
-  padding: var(--space-1) var(--space-2);
+  padding: var(--space-2) var(--space-2);
+  min-height: 36px;
   cursor: pointer;
 }
 
@@ -217,79 +295,372 @@ a:hover {
   font-weight: 600;
 }
 
-/* ---------- page ---------- */
+/* ---------- header: 72px on a list, 84px on a document ---------- */
 
-.wms-content {
-  padding: var(--space-5);
+.wms-header {
+  box-sizing: border-box;
+  height: 72px;
+  flex: none;
+  padding: 0 32px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.wms-header--doc {
+  height: 84px;
+}
+
+.wms-header__main {
   min-width: 0;
 }
 
-.wms-page__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-
-.wms-page__title {
-  font-size: 28px;
-  line-height: 34px;
+.wms-header__title {
+  font-size: 20px;
+  line-height: 28px;
   font-weight: 600;
-  letter-spacing: -0.01em;
   margin: 0;
 }
 
-.wms-page__subtitle {
+.wms-header__sub,
+.wms-header__crumb {
   font-size: 12px;
   line-height: 16px;
   color: var(--ink-muted);
-  margin-top: var(--space-1);
 }
 
-.wms-page__actions {
+.wms-header__docline {
   display: flex;
-  gap: var(--space-2);
   align-items: center;
+  gap: 10px;
+  margin-top: 2px;
   flex-wrap: wrap;
 }
 
-.wms-page-state {
-  padding: var(--space-7) var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-items: center;
-  justify-content: center;
+.wms-header__docno {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.wms-header__context {
+  font-size: 13px;
   color: var(--ink-muted);
 }
 
-.wms-section {
+/* ghost → secondary → primary, right-aligned; exactly one primary per screen. */
+.wms-header__actions {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
+  gap: 8px;
+  align-items: center;
+  flex: none;
 }
 
-.wms-section__title {
+/* ---------- content: padding 20px 32px, gap 16px ---------- */
+
+.wms-content {
+  flex-grow: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.wms-content--split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: stretch;
+}
+
+.wms-content--split-po {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.wms-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* dashboard body: expiry table 1.45fr, approvals 1fr. Both cards fill the remaining height,
+ * exactly as Main.dc.html sets `flex-grow: 1` on them. */
+.wms-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.wms-split > .wms-card {
+  min-height: 0;
+}
+
+.wms-split > .wms-card > .wms-card__body {
+  min-height: 0;
+  overflow: auto;
+}
+
+/* A card that takes the rest of its column and scrolls its own body. */
+.wms-card--fill {
+  flex-grow: 1;
+  min-height: 0;
+}
+
+.wms-card--fill > .wms-card__body {
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ---------- cards ---------- */
+
+.wms-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.wms-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.wms-card__title {
   font-size: 16px;
   line-height: 22px;
   font-weight: 600;
   margin: 0;
 }
 
-.wms-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
+.wms-card__sub {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-muted);
+}
+
+.wms-card__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: none;
+}
+
+.wms-card__body {
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: 16px;
   min-width: 0;
 }
+
+.wms-card__body--flush {
+  padding: 0;
+  gap: 0;
+}
+
+.wms-card__body--rows {
+  padding: 8px 0;
+  gap: 0;
+}
+
+.wms-card__foot {
+  border-top: 1px solid var(--border-control);
+  background: var(--surface-sunken);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: flex-end;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* An inline control inside a dense table row keeps a usable width: a `Select` in an auto-width
+ * cell would otherwise collapse to its chevron. */
+.wms-table td .wms-field,
+.wms-table td .wms-qty {
+  min-width: 120px;
+}
+
+/* The pager fills the card foot so its own space-between layout works. */
+.wms-card__foot > .wms-pager {
+  flex: 1;
+  min-width: 0;
+}
+
+/* A table that sits flush inside a card keeps the card's own frame, not a second one. */
+.wms-card__body--flush .wms-table-wrap {
+  border: 0;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  background: transparent;
+}
+
+/* ---------- meta grid (goods receipt header: six columns) ---------- */
+
+.wms-meta {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+.wms-meta--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.wms-meta--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wms-meta__k {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-muted);
+}
+
+.wms-meta__v {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.wms-meta__sub {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-muted);
+}
+
+/* ---------- document row list (dashboard: "Mənim təsdiqim gözlənilir") ---------- */
+
+.wms-doclist {
+  display: flex;
+  flex-direction: column;
+}
+
+.wms-doclist__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.wms-doclist__row:last-child {
+  border-bottom: 0;
+}
+
+.wms-doclist__main {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.wms-doclist__title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.wms-doclist__no {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.wms-doclist__meta {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+/* ---------- totals block (purchase order) ---------- */
+
+.wms-sum {
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wms-sum__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 14px;
+}
+
+.wms-sum__row span:last-child {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.wms-sum__row--total {
+  font-weight: 600;
+  font-size: 16px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.wms-sum__key {
+  color: var(--ink-muted);
+}
+
+/* ---------- option rows (quotation comparison) ---------- */
+
+.wms-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.wms-option--picked {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.wms-option__main {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.wms-option__name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.wms-option__meta {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-muted);
+}
+
+.wms-option__price {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* ---------- KPI row: four up, 12px ---------- */
 
 .wms-grid {
   display: grid;
@@ -297,7 +668,8 @@ a:hover {
 }
 
 .wms-grid--kpi {
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .wms-grid--2 {
@@ -307,7 +679,47 @@ a:hover {
 .wms-grid--form {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   align-items: start;
+  gap: 16px;
 }
+
+/* ---------- tab strip (one nav entry that fans out into sibling screens) ---------- */
+
+.wms-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+}
+
+.wms-tab {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-height: 36px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--ink-muted);
+  text-decoration: none;
+}
+
+.wms-tab:hover {
+  background: var(--row-hover);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.wms-tab--active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ---------- toolbars, pager, small helpers ---------- */
 
 .wms-toolbar {
   display: flex;
@@ -389,8 +801,22 @@ a:hover {
   color: var(--ink-muted);
 }
 
+.wms-cell__name {
+  font-weight: 600;
+}
+
+.wms-cell__sku {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-muted);
+}
+
 .wms-muted {
   color: var(--ink-muted);
+}
+
+.wms-small {
+  font-size: 13px;
 }
 
 .wms-stack {
@@ -404,6 +830,19 @@ a:hover {
   gap: var(--space-2);
   align-items: center;
   flex-wrap: wrap;
+}
+
+.wms-page-state {
+  padding: var(--space-7) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
 .wms-login {
@@ -425,24 +864,60 @@ a:hover {
   gap: var(--space-4);
 }
 
+/* ---------- narrower viewports ---------- */
+
+@media (max-width: 1280px) {
+  .wms-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1180px) {
+  .wms-split {
+    flex: none;
+  }
+
+  .wms-split,
+  .wms-content--split,
+  .wms-content--split-po {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wms-grid--kpi {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 960px) {
-  a {
-    color: var(--accent);
-    text-decoration: none;
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
-
   .wms-app {
-    grid-template-columns: 1fr;
+    display: block;
   }
 
   .wms-side {
     position: static;
+    width: auto;
     height: auto;
     border-right: 0;
     border-bottom: 1px solid var(--border);
+  }
+
+  .wms-header,
+  .wms-header--doc {
+    height: auto;
+    padding: 12px 16px;
+    flex-wrap: wrap;
+  }
+
+  .wms-content {
+    padding: 16px;
+  }
+
+  .wms-meta,
+  .wms-meta--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wms-grid--kpi {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

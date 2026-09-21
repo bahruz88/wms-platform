@@ -1,5 +1,5 @@
-import { useParams } from 'react-router-dom';
-import { Badge, LedgerTable, type LedgerLine } from '@ds/index';
+import { Link, useParams } from 'react-router-dom';
+import { Badge, Button, LedgerTable, type LedgerLine } from '@ds/index';
 import { useMemo } from 'react';
 import { useApiPage, useApiQuery } from '@api/hooks';
 import {
@@ -13,7 +13,7 @@ import {
 import { indexById, normalizeMovement } from '@api/adapters';
 import { useAuth } from '@auth/index';
 import { formatDate, formatDateTime } from '@core/format';
-import { DocNo, ErrorState, KeyValue, LoadingState, Page, Section } from '@/components/Page';
+import { Card, DocumentPage, ErrorState, LoadingState, Meta, MetaGrid } from '@/components/Page';
 
 /**
  * One movement group, rendered with `LedgerTable` — docs/ux/screen-map.md §3.12.
@@ -47,7 +47,12 @@ export function MovementGroupScreen() {
   }, [group.data, products.data, locations.data]);
 
   if (group.isLoading) return <LoadingState />;
-  if (group.isError) return <ErrorState error={group.error} onRetry={() => void group.refetch()} />;
+  if (group.isError)
+    return (
+      <DocumentPage breadcrumb="Anbar · Ledger" docNo={`#${groupId}`}>
+        <ErrorState error={group.error} onRetry={() => void group.refetch()} />
+      </DocumentPage>
+    );
   const doc = group.data;
   if (!doc) return null;
 
@@ -64,41 +69,59 @@ export function MovementGroupScreen() {
   }));
 
   return (
-    <Page
-      title={<DocNo value={doc.docNo} />}
-      subtitle="Hərəkət qrupu — ikili yazılış"
-      actions={<Badge tone="neutral">{doc.docType}</Badge>}
+    <DocumentPage
+      breadcrumb={
+        <>
+          <Link to="/inventory/balances">Anbar</Link> ·{' '}
+          <Link to="/inventory/movements">Ledger</Link>
+        </>
+      }
+      docNo={doc.docNo}
+      badges={
+        <Badge tone="neutral" variant="outline" title="movement group doc_type">
+          {doc.docType}
+        </Badge>
+      }
+      context={`${lines.length} sətir · ikili yazılış`}
+      actions={
+        <Button variant="ghost" onClick={() => window.print()}>
+          Çap et
+        </Button>
+      }
     >
-      <Section title="Qrup başlığı">
-        <div className="wms-card">
-          <KeyValue
-            items={[
-              ['Sənəd nömrəsi', <DocNo key="d" value={doc.docNo} />],
-              ['Tip', doc.docType],
-              ['Sənəd tarixi', formatDate(doc.docDate)],
-              ['Post vaxtı', formatDateTime(doc.postedAt)],
-              [
-                'Post edən',
-                <span key="p" className="wms-num">
-                  {doc.postedBy}
-                </span>,
-              ],
-              ['Mənbə sənəd', doc.sourceDocType ? `${doc.sourceDocType} #${doc.sourceDocId}` : '—'],
-              [
-                'Storno',
-                doc.reversesGroupId
-                  ? `Bu qrup #${doc.reversesGroupId} qrupunu storno edir`
-                  : doc.reversedByGroupId
-                    ? `#${doc.reversedByGroupId} qrupu ilə storno edilib`
-                    : '—',
-              ],
-              ['Qeyd', doc.note ?? '—'],
-            ]}
+      <Card title="Qrup başlığı">
+        <MetaGrid columns={4}>
+          <Meta
+            label="Sənəd tarixi"
+            value={<span className="wms-num">{formatDate(doc.docDate)}</span>}
           />
-        </div>
-      </Section>
+          <Meta
+            label="Post vaxtı"
+            value={<span className="wms-num">{formatDateTime(doc.postedAt)}</span>}
+            sub={`post edən #${doc.postedBy}`}
+          />
+          <Meta
+            label="Mənbə sənəd"
+            value={doc.sourceDocType ? `${doc.sourceDocType} #${doc.sourceDocId}` : '—'}
+          />
+          <Meta
+            label="Storno"
+            value={
+              doc.reversesGroupId
+                ? `#${doc.reversesGroupId} qrupunu storno edir`
+                : doc.reversedByGroupId
+                  ? `#${doc.reversedByGroupId} ilə storno edilib`
+                  : '—'
+            }
+            sub={doc.note ?? undefined}
+          />
+        </MetaGrid>
+      </Card>
 
-      <Section title="Sətirlər">
+      <Card
+        title="Sətirlər"
+        subtitle="Qrupun cəmi sıfır olmalıdır — bu, gecə işləyən DoubleEntryCheck-in interfeys tərəfidir"
+      >
         {/* showCost only with the permission — the component never decides that itself. */}
         <LedgerTable
           lines={lines}
@@ -107,7 +130,7 @@ export function MovementGroupScreen() {
           showBalanceCheck
           label={`${doc.docNo} hərəkət sətirləri`}
         />
-      </Section>
-    </Page>
+      </Card>
+    </DocumentPage>
   );
 }

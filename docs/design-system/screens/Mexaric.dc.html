@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<title>Filiala məxaric</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wms/tokens.css">
+<link rel="stylesheet" href="ds/wms/components/bundle.css">
+<script src="ds/wms/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; font-family: var(--font-sans); background: var(--surface-canvas); color: var(--ink); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; font-size: 14px; color: var(--ink-muted); text-decoration: none; }
+.nav-item:hover { background: var(--row-hover); color: var(--ink); text-decoration: none; }
+.nav-item[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav-group { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-subtle); padding: 14px 10px 4px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.card-title { font-size: 16px; font-weight: 600; }
+.meta-k { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-muted); }
+</style>
+</helmet>
+<div class="wms-root" style="width: 1440px; height: 960px; box-sizing: border-box; display: flex; background: var(--surface-canvas);">
+
+  <aside style="width: 248px; flex: none; box-sizing: border-box; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 12px; display: flex; flex-direction: column; gap: 2px;">
+    <div style="padding: 0 10px 16px;">
+      <div style="font-size: 20px; line-height: 28px; font-weight: 600;">WMS</div>
+      <div style="font-size: 12px; line-height: 16px; color: var(--ink-muted);">Subway AZ · 15 filial</div>
+    </div>
+    <a class="nav-item" href="Main.dc.html">Panel</a>
+    <div class="nav-group">Satınalma</div>
+    <a class="nav-item" href="Main.dc.html">Tələbnamə</a>
+    <a class="nav-item" href="PO-Tesdiq.dc.html">Sifarişlər</a>
+    <a class="nav-item" href="Main.dc.html">Təchizatçılar</a>
+    <div class="nav-group">Anbar</div>
+    <a class="nav-item" href="Qebul.dc.html">Qəbul</a>
+    <a class="nav-item" href="Mexaric.dc.html" aria-current="page">Məxaric və transfer</a>
+    <a class="nav-item" href="Sayim.dc.html">Sayım</a>
+    <a class="nav-item" href="Main.dc.html">Tullantı və nümunə</a>
+    <a class="nav-item" href="Main.dc.html">Qalıqlar</a>
+    <div class="nav-group">Sistem</div>
+    <a class="nav-item" href="Main.dc.html">Master data</a>
+    <a class="nav-item" href="Main.dc.html">Hesabatlar</a>
+    <div style="flex-grow: 1;"></div>
+    <div style="padding: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+      <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">OM</div>
+      <div style="min-width: 0;">
+        <div style="font-size: 13px; font-weight: 600;">Orxan Məmmədov</div>
+        <div style="font-size: 12px; color: var(--ink-muted);">WAREHOUSE_KEEPER</div>
+      </div>
+    </div>
+  </aside>
+
+  <main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+    <header style="box-sizing: border-box; height: 84px; flex: none; padding: 0 32px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <div>
+        <div style="font-size: 12px; line-height: 16px; color: var(--ink-muted);"><a href="Main.dc.html">Anbar</a> · Məxaric · <a href="Main.dc.html">SR-2026-01204</a> tələbi üzrə</div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
+          <span class="wms-num" style="font-size: 20px; line-height: 28px; font-weight: 600;">IS-2026-00998</span>
+          <x-import component-from-global-scope="Wms.DocStatusBadge" status="DRAFT"></x-import>
+          <span style="font-size: 13px; color: var(--ink-muted);">Food WH → Elmlər filialı</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <x-import component-from-global-scope="Wms.Button" variant="secondary">Qaralama saxla</x-import>
+        <x-import component-from-global-scope="Wms.Button" variant="primary">Yola sal</x-import>
+      </div>
+    </header>
+
+    <div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 20px 32px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 16px;">
+
+      <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+
+        <section class="card" style="flex: none;">
+          <div class="card-head">
+            <div class="card-title">Sətir 1 — Bread Stick Black</div>
+            <x-import component-from-global-scope="Wms.Badge" tone="neutral" variant="outline">FEFO</x-import>
+          </div>
+          <div style="padding: 16px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;">
+            <div>
+              <div class="meta-k">Məhsul</div>
+              <div style="font-size: 14px; font-weight: 600;">Bread Stick Black</div>
+              <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">BSB-0114 · base UoM: PCS</div>
+            </div>
+            <div>
+              <div class="meta-k">Tələb olunan</div>
+              <div class="wms-num" style="font-size: 14px;">120 PCS</div>
+              <div style="font-size: 12px; color: var(--ink-muted);">SR-2026-01204, sətir 3</div>
+            </div>
+            <x-import component-from-global-scope="Wms.QtyUomInput" label="Veriləcək miqdar" required="{{ yes }}" qty="{{ qty }}" uom-id="{{ uom }}" uoms="{{ uoms }}" base-uom-code="PCS" decimals="{{ zero }}"></x-import>
+            <x-import component-from-global-scope="Wms.Select" label="Səbəb kodu" required="{{ yes }}" value="{{ reason }}" options="{{ reasonOpts }}" hint="FEFO təklifindən kənar seçim üçün məcburidir"></x-import>
+            <div style="grid-column: span 2;">
+              <x-import component-from-global-scope="Wms.TextField" label="Qeyd" required="{{ yes }}" value="{{ note }}" hint="Audit jurnalına yazılır"></x-import>
+            </div>
+          </div>
+        </section>
+
+        <section class="card" style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column;">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Post ediləcək hərəkətlər</div>
+              <div style="font-size: 12px; color: var(--ink-muted);">Ön baxış — sənəd post edilənə qədər ledger-ə yazılmır</div>
+            </div>
+          </div>
+          <div style="padding: 12px 16px 16px; overflow: auto;">
+            <x-import component-from-global-scope="Wms.LedgerTable" lines="{{ lines }}" decimals="{{ zero }}" show-balance-check="{{ yes }}"></x-import>
+          </div>
+        </section>
+
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 16px; min-height: 0;">
+        <x-import component-from-global-scope="Wms.Alert" tone="warning" title="FEFO təklifindən kənar partiya seçildi">Sistem BSB-2509-A partiyasını təklif edir — onun son istifadə tarixi 5 gün sonradır. Başqa partiya seçildiyi üçün səbəb kodu və qeyd məcburidir.</x-import>
+
+        <section class="card" style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column;">
+          <div class="card-head">
+            <div class="card-title">Partiya seçimi</div>
+            <span class="wms-num" style="font-size: 12px; color: var(--ink-muted);">Food WH · 5 partiya</span>
+          </div>
+          <div style="padding: 16px; overflow: auto;">
+            <x-import component-from-global-scope="Wms.BatchPicker" batches="{{ batches }}" strategy="FEFO" value="{{ picked }}" required-qty="{{ req }}" uom="PCS" decimals="{{ zero }}" today="2026-09-20"></x-import>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true, zero: 0,
+      qty: '120', uom: '1', req: 120, picked: 3,
+      reason: 'CUSTOMER_PRIORITY',
+      note: 'Filial aksiya üçün uzun müddətli partiya tələb edib',
+      uoms: [
+        { id: '1', code: 'PCS', factorToBase: 1 },
+        { id: '2', code: 'CASE', factorToBase: 12 }
+      ],
+      reasonOpts: [
+        { value: 'CUSTOMER_PRIORITY', label: 'Filialın xüsusi tələbi' },
+        { value: 'QUALITY_HOLD', label: 'Təklif olunan partiya keyfiyyət yoxlamasındadır' },
+        { value: 'PHYSICAL_ACCESS', label: 'Təklif olunan partiyaya fiziki giriş yoxdur' }
+      ],
+      batches: [
+        { id: 1, batchNo: 'BSB-2509-A', expiryDate: '2026-09-25', receivedAt: '2026-09-01', available: 96, status: 'ACTIVE' },
+        { id: 2, batchNo: 'BSB-2610-C', expiryDate: '2026-10-12', receivedAt: '2026-09-12', available: 480, status: 'ACTIVE' },
+        { id: 3, batchNo: 'BSB-2602-B', expiryDate: '2027-02-18', receivedAt: '2026-09-18', available: 1284, status: 'ACTIVE' },
+        { id: 4, batchNo: 'BSB-2508-X', expiryDate: '2026-09-10', receivedAt: '2026-08-20', available: 42, status: 'EXPIRED' },
+        { id: 5, batchNo: 'BSB-2609-Q', expiryDate: '2026-11-30', receivedAt: '2026-09-15', available: 120, status: 'QUARANTINE' }
+      ],
+      lines: [
+        { lineNo: 1, product: 'Bread Stick Black', sku: 'BSB-0114', batchNo: 'BSB-2602-B', location: 'Food WH', locationType: 'CENTRAL_WAREHOUSE', qtyBase: -120, uom: 'PCS' },
+        { lineNo: 2, product: 'Bread Stick Black', sku: 'BSB-0114', batchNo: 'BSB-2602-B', location: 'Yolda', locationType: 'IN_TRANSIT', qtyBase: 120, uom: 'PCS' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

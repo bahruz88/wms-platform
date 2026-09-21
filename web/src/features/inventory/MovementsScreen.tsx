@@ -13,7 +13,7 @@ import {
 import { indexById, normalizeMovement } from '@api/adapters';
 import { useAuth } from '@auth/index';
 import { formatDateTime, formatSigned } from '@core/format';
-import { ErrorState, LoadingState, Page, Section } from '@/components/Page';
+import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 import { Pager } from '@/components/Pager';
 
 /**
@@ -123,64 +123,70 @@ export function MovementsScreen() {
       title="Ledger"
       subtitle="Hərəkət jurnalı — append-only. Düzəliş yalnız storno ilə (SPEC §9.4)."
     >
-      <div className="wms-toolbar">
-        <Select
-          label="Sənəd tipi"
-          value={docType}
-          placeholder="Bütün tiplər"
-          options={[
-            'RECEIPT',
-            'ISSUE',
-            'TRANSFER',
-            'COUNT_ADJUST',
-            'WASTE',
-            'SAMPLE',
-            'RETURN',
-            'OPENING',
-            'REVERSAL',
-          ].map((v) => ({ value: v, label: v }))}
-          onChange={(e) => {
-            setDocType(e.target.value);
-            setPage(1);
-          }}
-        />
-        <div className="wms-toolbar__spacer" />
-        <TextField
-          label="Qrup id ilə aç"
-          mono
-          value={groupId}
-          hint="Bir sənədin bütün sətirləri `LedgerTable` ilə açılır."
-          onChange={(e) => setGroupId(e.target.value)}
-        />
-        {groupId.trim() ? (
-          <Link
-            className="wms-btn wms-btn--secondary"
-            to={`/inventory/movement-groups/${groupId.trim()}`}
-          >
-            Aç
-          </Link>
-        ) : null}
-      </div>
+      <Card>
+        <div className="wms-toolbar">
+          <Select
+            label="Sənəd tipi"
+            value={docType}
+            placeholder="Bütün tiplər"
+            options={[
+              'RECEIPT',
+              'ISSUE',
+              'TRANSFER',
+              'COUNT_ADJUST',
+              'WASTE',
+              'SAMPLE',
+              'RETURN',
+              'OPENING',
+              'REVERSAL',
+            ].map((v) => ({ value: v, label: v }))}
+            onChange={(e) => {
+              setDocType(e.target.value);
+              setPage(1);
+            }}
+          />
+          <div className="wms-toolbar__spacer" />
+          <TextField
+            label="Qrup id ilə aç"
+            mono
+            value={groupId}
+            hint="Bir sənədin bütün sətirləri `LedgerTable` ilə açılır."
+            onChange={(e) => setGroupId(e.target.value)}
+          />
+          {groupId.trim() ? (
+            <Link
+              className="wms-btn wms-btn--secondary"
+              to={`/inventory/movement-groups/${groupId.trim()}`}
+            >
+              Aç
+            </Link>
+          ) : null}
+        </div>
+      </Card>
 
-      <Section>
-        {movements.isLoading ? (
-          <LoadingState />
-        ) : movements.isError ? (
-          <ErrorState error={movements.error} onRetry={() => void movements.refetch()} />
-        ) : (
-          <>
-            <DataTable<Movement>
-              columns={columns}
-              rows={rows}
-              permissions={session?.permissions ?? []}
-              rowKey={(row) => row.id}
-              label="Hərəkət jurnalı"
-              empty="Bu filtrə uyğun hərəkət yoxdur. Sənəd post edildikdə sətirlər burada görünür."
-            />
-            {movements.data ? <Pager page={movements.data} onPageChange={setPage} /> : null}
-          </>
-        )}
-      </Section>
+      {movements.isLoading ? (
+        <LoadingState />
+      ) : movements.isError ? (
+        <ErrorState error={movements.error} onRetry={() => void movements.refetch()} />
+      ) : (
+        <Card
+          title="Hərəkət jurnalı"
+          subtitle="İşarə həmişə yazılır: + mədaxil, − məxaric"
+          flush
+          footer={
+            movements.data ? <Pager page={movements.data} onPageChange={setPage} /> : undefined
+          }
+        >
+          <DataTable<Movement>
+            columns={columns}
+            rows={rows}
+            permissions={session?.permissions ?? []}
+            rowKey={(row) => row.id}
+            label="Hərəkət jurnalı"
+            empty="Bu filtrə uyğun hərəkət yoxdur. Sənəd post edildikdə sətirlər burada görünür."
+          />
+        </Card>
+      )}
     </Page>
   );
 }

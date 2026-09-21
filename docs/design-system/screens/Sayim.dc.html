@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<title>Sayım və fərqlər</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wms/tokens.css">
+<link rel="stylesheet" href="ds/wms/components/bundle.css">
+<script src="ds/wms/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; font-family: var(--font-sans); background: var(--surface-canvas); color: var(--ink); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; font-size: 14px; color: var(--ink-muted); text-decoration: none; }
+.nav-item:hover { background: var(--row-hover); color: var(--ink); text-decoration: none; }
+.nav-item[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav-group { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-subtle); padding: 14px 10px 4px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.card-title { font-size: 16px; font-weight: 600; }
+</style>
+</helmet>
+<div class="wms-root" style="width: 1440px; height: 960px; box-sizing: border-box; display: flex; background: var(--surface-canvas);">
+
+  <aside style="width: 248px; flex: none; box-sizing: border-box; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 12px; display: flex; flex-direction: column; gap: 2px;">
+    <div style="padding: 0 10px 16px;">
+      <div style="font-size: 20px; line-height: 28px; font-weight: 600;">WMS</div>
+      <div style="font-size: 12px; line-height: 16px; color: var(--ink-muted);">Subway AZ · 15 filial</div>
+    </div>
+    <a class="nav-item" href="Main.dc.html">Panel</a>
+    <div class="nav-group">Satınalma</div>
+    <a class="nav-item" href="Main.dc.html">Tələbnamə</a>
+    <a class="nav-item" href="PO-Tesdiq.dc.html">Sifarişlər</a>
+    <a class="nav-item" href="Main.dc.html">Təchizatçılar</a>
+    <div class="nav-group">Anbar</div>
+    <a class="nav-item" href="Qebul.dc.html">Qəbul</a>
+    <a class="nav-item" href="Mexaric.dc.html">Məxaric və transfer</a>
+    <a class="nav-item" href="Sayim.dc.html" aria-current="page">Sayım</a>
+    <a class="nav-item" href="Main.dc.html">Tullantı və nümunə</a>
+    <a class="nav-item" href="Main.dc.html">Qalıqlar</a>
+    <div class="nav-group">Sistem</div>
+    <a class="nav-item" href="Main.dc.html">Master data</a>
+    <a class="nav-item" href="Main.dc.html">Hesabatlar</a>
+    <div style="flex-grow: 1;"></div>
+    <div style="padding: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+      <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">GƏ</div>
+      <div style="min-width: 0;">
+        <div style="font-size: 13px; font-weight: 600;">Günel Əliyeva</div>
+        <div style="font-size: 12px; color: var(--ink-muted);">PROCUREMENT_MANAGER</div>
+      </div>
+    </div>
+  </aside>
+
+  <main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+    <header style="box-sizing: border-box; height: 84px; flex: none; padding: 0 32px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <div>
+        <div style="font-size: 12px; line-height: 16px; color: var(--ink-muted);"><a href="Main.dc.html">Anbar</a> · Sayım</div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
+          <span class="wms-num" style="font-size: 20px; line-height: 28px; font-weight: 600;">IC-2026-00012</span>
+          <x-import component-from-global-scope="Wms.DocStatusBadge" status="REVIEW"></x-import>
+          <x-import component-from-global-scope="Wms.Badge" tone="neutral" variant="outline">FULL</x-import>
+          <span style="font-size: 13px; color: var(--ink-muted);">Food WH · dondurulub 20.09.2026, 06:00</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <x-import component-from-global-scope="Wms.Button" variant="ghost">Excel-ə çıxar</x-import>
+        <x-import component-from-global-scope="Wms.Button" variant="secondary">Yenidən say</x-import>
+        <x-import component-from-global-scope="Wms.Button" variant="primary">Fərqləri təsdiqə göndər</x-import>
+      </div>
+    </header>
+
+    <div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 20px 32px; display: flex; flex-direction: column; gap: 16px;">
+
+      <x-import component-from-global-scope="Wms.Alert" tone="warning" title="Food WH lokasiyası dondurulub" code="LOCATION_FROZEN">Sayım tamamlanana qədər bu lokasiyada qəbul, məxaric, transfer, tullantı və nümunə əməliyyatları rədd edilir. Kitab qalığı dondurulma anında yazılıb.</x-import>
+
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+        <x-import component-from-global-scope="Wms.KpiCard" label="Sayılan sətir" value="{{ k1 }}" hint="248 sətirdən"></x-import>
+        <x-import component-from-global-scope="Wms.KpiCard" label="Fərqi olan sətir" value="{{ k2 }}"></x-import>
+        <x-import component-from-global-scope="Wms.KpiCard" label="Həddi aşan fərq" value="{{ k3 }}" hint="count_variance_approval_threshold_pct = 2"></x-import>
+        <x-import component-from-global-scope="Wms.KpiCard" label="Fərqin dəyəri" value="{{ k4 }}" decimals="{{ two }}" unit="AZN" delta="{{ d4 }}" hint="anbar dəyərinə nisbətən"></x-import>
+      </div>
+
+      <section class="card" style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column;">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Fərqi olan sətirlər</div>
+            <div style="font-size: 12px; color: var(--ink-muted);">Fərq sıfırdan fərqlidirsə səbəb kodu məcburidir — onsuz sənəd təsdiqə göndərilmir</div>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <x-import component-from-global-scope="Wms.Badge" tone="danger" dot="{{ yes }}">2 sətirdə səbəb yoxdur</x-import>
+          </div>
+        </div>
+        <div style="flex-grow: 1; min-height: 0; overflow: auto;">
+          <table class="wms-table wms-table--dense" style="width: 100%;">
+            <thead>
+              <tr>
+                <th scope="col">Məhsul</th>
+                <th scope="col" style="width: 130px;">Partiya</th>
+                <th scope="col" style="width: 140px; text-align: right;">Kitab qalığı</th>
+                <th scope="col" style="width: 140px; text-align: right;">Sayılan</th>
+                <th scope="col" style="width: 330px;">Fərq</th>
+                <th scope="col" style="width: 120px; text-align: right;">Dəyər, AZN</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <div style="font-weight: 600;">Bread Stick Black</div>
+                  <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">BSB-0114</div>
+                </td>
+                <td class="wms-num" style="font-size: 13px;">BSB-2602-B</td>
+                <td class="wms-td--num">1 284,000</td>
+                <td class="wms-td--num">1 290,000</td>
+                <td><x-import component-from-global-scope="Wms.VarianceIndicator" book="{{ r1b }}" counted="{{ r1c }}" uom="PCS" decimals="{{ zero }}" threshold-pct="{{ thr }}" reason-code="COUNT_OVER"></x-import></td>
+                <td class="wms-td--num">+3,72</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight: 600;">Salfet 24x24</div>
+                  <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">NAP-0007</div>
+                </td>
+                <td><span style="color: var(--ink-muted); font-size: 13px;">partiyasız</span></td>
+                <td class="wms-td--num">121 000,000</td>
+                <td class="wms-td--num">118 400,000</td>
+                <td><x-import component-from-global-scope="Wms.VarianceIndicator" book="{{ r2b }}" counted="{{ r2c }}" uom="PCS" decimals="{{ zero }}" threshold-pct="{{ thr }}"></x-import></td>
+                <td class="wms-td--num">−31,20</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight: 600;">Cheddar Slice</div>
+                  <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">CHD-0018</div>
+                </td>
+                <td class="wms-num" style="font-size: 13px;">CHD-2609-B</td>
+                <td class="wms-td--num">60,000</td>
+                <td class="wms-td--num">59,400</td>
+                <td><x-import component-from-global-scope="Wms.VarianceIndicator" book="{{ r3b }}" counted="{{ r3c }}" uom="KG" decimals="{{ three }}" threshold-pct="{{ thr }}" reason-code="SHRINKAGE"></x-import></td>
+                <td class="wms-td--num">−6,72</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight: 600;">Chicken Strips</div>
+                  <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">CHS-0042</div>
+                </td>
+                <td class="wms-num" style="font-size: 13px;">CS-2609-A</td>
+                <td class="wms-td--num">45,000</td>
+                <td class="wms-td--num">41,500</td>
+                <td><x-import component-from-global-scope="Wms.VarianceIndicator" book="{{ r4b }}" counted="{{ r4c }}" uom="KG" decimals="{{ three }}" threshold-pct="{{ thr }}"></x-import></td>
+                <td class="wms-td--num">−29,40</td>
+              </tr>
+              <tr>
+                <td>
+                  <div style="font-weight: 600;">Mayonez 5 kq</div>
+                  <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">MYZ-0031</div>
+                </td>
+                <td class="wms-num" style="font-size: 13px;">MYZ-2608-C</td>
+                <td class="wms-td--num">60,000</td>
+                <td class="wms-td--num">60,000</td>
+                <td><x-import component-from-global-scope="Wms.VarianceIndicator" book="{{ r5b }}" counted="{{ r5c }}" uom="PCS" decimals="{{ zero }}" threshold-pct="{{ thr }}"></x-import></td>
+                <td class="wms-td--num">0,00</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>5 sətir göstərilir</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="wms-td--num">−63,60</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true, zero: 0, two: 2, three: 3, thr: 2,
+      k1: 248, k2: 11, k3: 3, k4: -63.6, d4: -0.02,
+      r1b: 1284, r1c: 1290,
+      r2b: 121000, r2c: 118400,
+      r3b: 60, r3c: 59.4,
+      r4b: 45, r4c: 41.5,
+      r5b: 60, r5c: 60
+    };
+  }
+}
+</script>
+</body>
+</html>

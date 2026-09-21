@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Badge, Button, Icons } from '@ds/index';
+import { Button, Icons } from '@ds/index';
+import { useApiQuery } from '@api/hooks';
+import { getTenant } from '@api/endpoints';
 import { useAuth } from '@auth/index';
 import {
   LANGUAGE_NAMES,
@@ -11,31 +13,76 @@ import {
   type Language,
 } from '@/i18n';
 import { useTheme, type ThemePreference } from './theme';
-import { visibleNavGroups } from './navigation';
+import { navItemMatches, visibleNavGroups } from './navigation';
 
 /**
- * Application shell: side navigation filtered by permission, theme toggle, language switch, and
- * the user menu showing tenant, username and roles. Nothing here uppercases interface text —
- * `label` weight and letter-spacing carry the emphasis instead (design-system README).
+ * Application shell — docs/design-system/screens/README.md «Layout qaydaları».
+ *
+ * 248px sidebar on `surface` with a right border; the groups are labelled at 12px / 600 in
+ * `ink-subtle`; the active entry is `accent-soft` with `accent` text; the user block is pinned to
+ * the bottom with a 32px round monogram on `accent-soft`, the name and the role code. Tenant,
+ * theme, language and sign-out hang off that block, so the header belongs entirely to the screen
+ * — which is what lets it be 72px on a list and 84px on a document.
+ *
+ * Nothing here uppercases interface text (`label` weight and letter-spacing carry the emphasis);
+ * the one uppercase call is the monogram, and it goes through the Azerbaijani locale so `i`
+ * becomes `İ` rather than `I`.
  */
+
+/** Two-letter monogram, Azerbaijani casing. Never `toUpperCase()`: `i` → `İ`, not `I`. */
+export function monogram(name: string): string {
+  const parts = name
+    .split(/[\s._-]+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const [first, second] = parts;
+  if (!first) return '—';
+  const letters = second ? `${first.slice(0, 1)}${second.slice(0, 1)}` : first.slice(0, 2);
+  return letters.toLocaleUpperCase('az');
+}
+
 export function AppShell() {
   const { t } = useTranslation();
   const { session, signOut } = useAuth();
   const { preference, setPreference } = useTheme();
+  const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [language, setLanguageState] = useState<Language>(storedLanguage);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!menuOpen) return;
     const onClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+      if (userRef.current && !userRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
     };
     document.addEventListener('mousedown', onClick);
-    return () => document.removeEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+      document.removeEventListener('keydown', onKey);
+    };
   }, [menuOpen]);
 
+  // Closes the menu when the route changes, so it never hangs over the next screen.
+  useEffect(() => setMenuOpen(false), [pathname]);
+
+  // `GET /identity/tenant` carries the tenant's own name for the brand line. Until the gateway
+  // routes it the line falls back to the `tenant_id` claim — an id, not an invented name.
+  const tenant = useApiQuery(['identity', 'tenant'], getTenant, {
+    retry: false,
+    staleTime: Infinity,
+    gcTime: Infinity,
+  });
+
   const groups = visibleNavGroups(session?.permissions ?? []);
+  const username = session?.username ?? '—';
+  const roleCode = session?.roles[0] ?? '—';
+  const tenantName =
+    (tenant.data as { name?: string } | undefined)?.name ??
+    `${t('app.tenant')} ${session?.tenantId ?? '—'}`;
 
   const themes: Array<[ThemePreference, string]> = [
     ['system', t('app.themeSystem')],
@@ -48,112 +95,104 @@ export function AppShell() {
       <aside className="wms-side">
         <div className="wms-side__brand">
           <span className="wms-side__brand-name">{t('app.shortName')}</span>
-          <span className="wms-side__brand-sub">{t('app.name')}</span>
+          <span className="wms-side__brand-sub">{tenantName}</span>
         </div>
-        <nav className="wms-side__nav" aria-label={t('nav.dashboard')}>
-          {groups.map((group) => (
-            <div key={group.labelKey} className="wms-side__group">
-              <div className="wms-side__group-label">{t(group.labelKey)}</div>
-              {group.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === '/'}
-                  className={({ isActive }) =>
-                    isActive ? 'wms-side__link wms-side__link--active' : 'wms-side__link'
-                  }
-                >
-                  {t(item.labelKey)}
-                </NavLink>
-              ))}
+
+        <nav className="wms-side__nav" aria-label={t('app.mainNav')}>
+          {groups.map((group, groupIndex) => (
+            <div key={group.labelKey ?? `group-${groupIndex}`}>
+              {group.labelKey ? (
+                <div className="wms-side__group-label">{t(group.labelKey)}</div>
+              ) : null}
+              {group.items.map((item) => {
+                const active = navItemMatches(item, pathname);
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    aria-current={active ? 'page' : undefined}
+                    className={active ? 'wms-side__link wms-side__link--active' : 'wms-side__link'}
+                  >
+                    {t(item.labelKey)}
+                  </Link>
+                );
+              })}
             </div>
           ))}
-          {groups.length === 0 ? (
-            <div className="wms-side__group-label">
-              Rolunuza uyğun veb ekranı yoxdur. Sistem administratoruna müraciət edin.
+          {groups.length === 0 ? <div className="wms-side__note">{t('app.noScreens')}</div> : null}
+        </nav>
+
+        <div className="wms-side__user" ref={userRef}>
+          {menuOpen ? (
+            <div className="wms-side__usermenu" role="menu" aria-label={t('app.userMenu')}>
+              <div className="wms-menu__row">
+                <span className="wms-menu__label">{t('app.tenant')}</span>
+                <span className="wms-num">{session?.tenantId ?? '—'}</span>
+              </div>
+              <div className="wms-menu__row">
+                <span className="wms-menu__label">{t('app.role')}</span>
+                <span>{session?.roles.join(', ') || '—'}</span>
+              </div>
+              <div className="wms-menu__row">
+                <span className="wms-menu__label">{t('app.theme')}</span>
+                <div className="wms-segmented" role="group" aria-label={t('app.theme')}>
+                  {themes.map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={preference === value}
+                      onClick={() => setPreference(value)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="wms-menu__row">
+                <span className="wms-menu__label">{t('app.language')}</span>
+                <div className="wms-segmented" role="group" aria-label={t('app.language')}>
+                  {SUPPORTED_LANGUAGES.map((code) => (
+                    <button
+                      key={code}
+                      type="button"
+                      aria-pressed={language === code}
+                      onClick={() => {
+                        setLanguage(code);
+                        setLanguageState(code);
+                      }}
+                    >
+                      {LANGUAGE_NAMES[code]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Button variant="secondary" onClick={() => void signOut()}>
+                {t('app.signOut')}
+              </Button>
             </div>
           ) : null}
-        </nav>
+
+          <button
+            type="button"
+            className="wms-side__user-btn"
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <span className="wms-side__avatar" aria-hidden="true">
+              {monogram(username)}
+            </span>
+            <span className="wms-side__user-text">
+              <span className="wms-side__user-name">{username}</span>
+              <span className="wms-side__user-role">{roleCode}</span>
+            </span>
+            {Icons.chevron(16)}
+          </button>
+        </div>
       </aside>
 
       <div className="wms-main">
-        <header className="wms-topbar">
-          <div className="wms-row">
-            <Badge tone="accent" variant="outline" title="tenant_id claim">
-              {t('app.tenant')} {session?.tenantId ?? '—'}
-            </Badge>
-            {session?.roles.map((role) => (
-              <Badge key={role} tone="neutral" title={`realm_access.roles: ${role}`}>
-                {role}
-              </Badge>
-            ))}
-          </div>
-
-          <div className="wms-topbar__right">
-            <div className="wms-segmented" role="group" aria-label={t('app.theme')}>
-              {themes.map(([value, label]) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={preference === value}
-                  onClick={() => setPreference(value)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            <div className="wms-menu" ref={menuRef}>
-              <button
-                type="button"
-                className="wms-btn wms-btn--secondary wms-btn--sm"
-                aria-expanded={menuOpen}
-                aria-haspopup="menu"
-                onClick={() => setMenuOpen((v) => !v)}
-              >
-                <span className="wms-user__name">{session?.username ?? '—'}</span>
-                {Icons.chevron(16)}
-              </button>
-              {menuOpen ? (
-                <div className="wms-menu__panel" role="menu" aria-label={t('app.userMenu')}>
-                  <div className="wms-menu__row">
-                    <span className="wms-menu__label">{t('app.tenant')}</span>
-                    <span className="wms-num">{session?.tenantId ?? '—'}</span>
-                  </div>
-                  <div className="wms-menu__row">
-                    <span className="wms-menu__label">{t('app.role')}</span>
-                    <span>{session?.roles.join(', ') || '—'}</span>
-                  </div>
-                  <div className="wms-menu__row">
-                    <span className="wms-menu__label">{t('app.language')}</span>
-                    <div className="wms-segmented">
-                      {SUPPORTED_LANGUAGES.map((code) => (
-                        <button
-                          key={code}
-                          type="button"
-                          aria-pressed={language === code}
-                          onClick={() => {
-                            setLanguage(code);
-                            setLanguageState(code);
-                          }}
-                        >
-                          {LANGUAGE_NAMES[code]}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <Button variant="secondary" size="sm" onClick={() => void signOut()}>
-                    {t('app.signOut')}
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </header>
-
-        <main className="wms-content">
-          <Outlet />
-        </main>
+        <Outlet />
       </div>
     </div>
   );

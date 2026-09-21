@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<title>Anbar paneli</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wms/tokens.css">
+<link rel="stylesheet" href="ds/wms/components/bundle.css">
+<script src="ds/wms/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; font-family: var(--font-sans); background: var(--surface-canvas); color: var(--ink); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; font-size: 14px; color: var(--ink-muted); text-decoration: none; }
+.nav-item:hover { background: var(--row-hover); color: var(--ink); text-decoration: none; }
+.nav-item[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav-group { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-subtle); padding: 14px 10px 4px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.card-title { font-size: 16px; font-weight: 600; }
+</style>
+</helmet>
+<div class="wms-root" style="width: 1440px; height: 960px; box-sizing: border-box; display: flex; background: var(--surface-canvas);">
+
+  <aside style="width: 248px; flex: none; box-sizing: border-box; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 12px; display: flex; flex-direction: column; gap: 2px;">
+    <div style="padding: 0 10px 16px;">
+      <div style="font-size: 20px; line-height: 28px; font-weight: 600;">WMS</div>
+      <div style="font-size: 12px; line-height: 16px; color: var(--ink-muted);">Subway AZ · 15 filial</div>
+    </div>
+    <a class="nav-item" href="Main.dc.html" aria-current="page">Panel</a>
+    <div class="nav-group">Satınalma</div>
+    <a class="nav-item" href="Main.dc.html">Tələbnamə</a>
+    <a class="nav-item" href="PO-Tesdiq.dc.html">Sifarişlər</a>
+    <a class="nav-item" href="Main.dc.html">Təchizatçılar</a>
+    <div class="nav-group">Anbar</div>
+    <a class="nav-item" href="Qebul.dc.html">Qəbul</a>
+    <a class="nav-item" href="Mexaric.dc.html">Məxaric və transfer</a>
+    <a class="nav-item" href="Sayim.dc.html">Sayım</a>
+    <a class="nav-item" href="Main.dc.html">Tullantı və nümunə</a>
+    <a class="nav-item" href="Main.dc.html">Qalıqlar</a>
+    <div class="nav-group">Sistem</div>
+    <a class="nav-item" href="Main.dc.html">Master data</a>
+    <a class="nav-item" href="Main.dc.html">Hesabatlar</a>
+    <div style="flex-grow: 1;"></div>
+    <div style="padding: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+      <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">OM</div>
+      <div style="min-width: 0;">
+        <div style="font-size: 13px; font-weight: 600;">Orxan Məmmədov</div>
+        <div style="font-size: 12px; color: var(--ink-muted);">WAREHOUSE_KEEPER</div>
+      </div>
+    </div>
+  </aside>
+
+  <main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+    <header style="box-sizing: border-box; height: 72px; flex: none; padding: 0 32px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <div>
+        <div style="font-size: 20px; line-height: 28px; font-weight: 600;">Anbar paneli</div>
+        <div style="font-size: 12px; line-height: 16px; color: var(--ink-muted);">Food WH · 20.09.2026, 13:35</div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <x-import component-from-global-scope="Wms.Button" variant="secondary">Excel-ə çıxar</x-import>
+        <x-import component-from-global-scope="Wms.Button" variant="primary">Yeni qəbul</x-import>
+      </div>
+    </header>
+
+    <div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 20px 32px; display: flex; flex-direction: column; gap: 16px;">
+
+      <x-import component-from-global-scope="Wms.Alert" tone="danger" title="Balans uyğunsuzluğu aşkarlandı" code="RECONCILIATION_MISMATCH">Gecə yoxlanışı Food WH üzrə 2 məhsulda ledger cəmi ilə qalıq arasında fərq tapdı. Bu, tranzaksiya səviyyəsində problemdir — sənəd yaratmadan əvvəl baxılmalıdır.</x-import>
+
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+        <x-import component-from-global-scope="Wms.KpiCard" label="Anbar dəyəri" value="{{ v1 }}" decimals="{{ two }}" unit="AZN" delta="{{ d1 }}" hint="ötən həftəyə nisbətən"></x-import>
+        <x-import component-from-global-scope="Wms.KpiCard" label="Təsdiq gözləyən sənəd" value="{{ v2 }}"></x-import>
+        <x-import component-from-global-scope="Wms.KpiCard" label="30 gündə bitən partiya" value="{{ v3 }}" unit="partiya"></x-import>
+        <x-import component-from-global-scope="Wms.KpiCard" label="Həftəlik tullantı" value="{{ v4 }}" decimals="{{ one }}" unit="AZN" delta="{{ d4 }}" hint="ötən həftəyə nisbətən"></x-import>
+      </div>
+
+      <div style="flex-grow: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 16px;">
+
+        <section class="card" style="display: flex; flex-direction: column; min-height: 0;">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Vaxtı yaxınlaşan partiyalar</div>
+              <div style="font-size: 12px; color: var(--ink-muted);">expiry_warning_days = 30 · expiry_critical_days = 7</div>
+            </div>
+            <a href="Mexaric.dc.html" style="font-size: 13px; font-weight: 600;">Hamısına bax</a>
+          </div>
+          <div style="padding: 12px 16px 16px;">
+            <x-import component-from-global-scope="Wms.DataTable" columns="{{ expiryCols }}" rows="{{ expiryRows }}" dense="{{ yes }}" label="Vaxtı yaxınlaşan partiyalar"></x-import>
+          </div>
+        </section>
+
+        <section class="card" style="display: flex; flex-direction: column; min-height: 0;">
+          <div class="card-head">
+            <div class="card-title">Mənim təsdiqim gözlənilir</div>
+            <x-import component-from-global-scope="Wms.Badge" tone="warning" dot="{{ yes }}">7</x-import>
+          </div>
+          <div style="padding: 8px 0; display: flex; flex-direction: column;">
+
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border);">
+              <div style="flex-grow: 1; min-width: 0;">
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <span class="wms-num" style="font-size: 13px; font-weight: 500;">PO-2026-00087</span>
+                  <x-import component-from-global-scope="Wms.DocStatusBadge" status="PENDING_APPROVAL"></x-import>
+                </div>
+                <div style="font-size: 12px; color: var(--ink-muted); margin-top: 2px;">Azərsun MMC · 48 240,00 AZN · 2 gün gecikib</div>
+              </div>
+              <x-import component-from-global-scope="Wms.Button" variant="secondary" size="sm">Bax</x-import>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border);">
+              <div style="flex-grow: 1; min-width: 0;">
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <span class="wms-num" style="font-size: 13px; font-weight: 500;">WS-2026-00067</span>
+                  <x-import component-from-global-scope="Wms.DocStatusBadge" status="PENDING_APPROVAL"></x-import>
+                </div>
+                <div style="font-size: 12px; color: var(--ink-muted); margin-top: 2px;">Tullantı · Elmlər filialı · səbəb: temperatur rejimi pozulub</div>
+              </div>
+              <x-import component-from-global-scope="Wms.Button" variant="secondary" size="sm">Bax</x-import>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border);">
+              <div style="flex-grow: 1; min-width: 0;">
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <span class="wms-num" style="font-size: 13px; font-weight: 500;">IC-2026-00012</span>
+                  <x-import component-from-global-scope="Wms.DocStatusBadge" status="REVIEW"></x-import>
+                </div>
+                <div style="font-size: 12px; color: var(--ink-muted); margin-top: 2px;">Sayım · Food WH · 3 sətirdə fərq həddi aşır</div>
+              </div>
+              <x-import component-from-global-scope="Wms.Button" variant="secondary" size="sm">Bax</x-import>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px;">
+              <div style="flex-grow: 1; min-width: 0;">
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                  <span class="wms-num" style="font-size: 13px; font-weight: 500;">RV-2026-00004</span>
+                  <x-import component-from-global-scope="Wms.DocStatusBadge" status="DRAFT"></x-import>
+                </div>
+                <div style="font-size: 12px; color: var(--ink-muted); margin-top: 2px;">Təchizatçıya qaytarma · Bolmart · 1 284,00 AZN iddia</div>
+              </div>
+              <x-import component-from-global-scope="Wms.Button" variant="secondary" size="sm">Bax</x-import>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true,
+      one: 1,
+      two: 2,
+      v1: 284150.42, d1: 3.8,
+      v2: 7,
+      v3: 14,
+      v4: 1284.5, d4: -12.4,
+      expiryCols: [
+        { key: 'product', header: 'Məhsul' },
+        { key: 'batch', header: 'Partiya' },
+        { key: 'expiry', header: 'Son istifadə' },
+        { key: 'left', header: 'Qalan gün', numeric: true, decimals: 0 },
+        { key: 'qty', header: 'Qalıq', numeric: true, decimals: 3 },
+        { key: 'loc', header: 'Lokasiya' }
+      ],
+      expiryRows: [
+        { id: 1, product: 'Bread Stick Black', batch: 'BSB-2509-A', expiry: '25.09.2026', left: 5, qty: 96, loc: 'Food WH' },
+        { id: 2, product: 'Chicken Strips', batch: 'CS-2609-A', expiry: '04.10.2026', left: 14, qty: 45, loc: 'Freezer' },
+        { id: 3, product: 'Cheddar Slice', batch: 'CHD-2609-B', expiry: '08.10.2026', left: 18, qty: 22.4, loc: 'Cooler' },
+        { id: 4, product: 'Mayonez 5 kq', batch: 'MYZ-2608-C', expiry: '12.10.2026', left: 22, qty: 60, loc: 'Dry Store' },
+        { id: 5, product: 'Bread Stick Black', batch: 'BSB-2610-C', expiry: '12.10.2026', left: 22, qty: 480, loc: 'Food WH' },
+        { id: 6, product: 'Turşu 3 kq', batch: 'TRS-2607-A', expiry: '17.10.2026', left: 27, qty: 18, loc: 'Cooler' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

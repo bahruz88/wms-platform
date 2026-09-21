@@ -50,13 +50,13 @@ describe('i18n', () => {
 
   it('translates through the active language and back', async () => {
     await i18n.changeLanguage('az');
-    expect(i18n.t('nav.balances')).toBe('Qalıq');
+    expect(i18n.t('nav.balances')).toBe('Qalıqlar');
     setLanguage('en');
     await i18n.changeLanguage('en');
     expect(i18n.t('nav.balances')).toBe('Balances');
     setLanguage('az');
     await i18n.changeLanguage('az');
-    expect(i18n.t('nav.balances')).toBe('Qalıq');
+    expect(i18n.t('nav.balances')).toBe('Qalıqlar');
   });
 
   it('interpolates the gateway status into the not-implemented message', async () => {

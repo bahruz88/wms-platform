@@ -1,198 +1,401 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Alert, DataTable, DocStatusBadge, KpiCard, type Column } from '@ds/index';
+import { Alert, Badge, Button, DataTable, DocStatusBadge, KpiCard, type Column } from '@ds/index';
 import { useApiPage, useApiQuery } from '@api/hooks';
 import {
   getDashboardSummary,
   listBalances,
-  listConsumptionRuns,
-  listLocations,
+  listCounts,
+  listGoodsReceipts,
+  listInventorySettings,
   listPendingApprovals,
-  listProducts,
-  listPurchaseOrders,
   type Balance,
-  type ConsumptionRun,
+  type CountSummary,
+  type DashboardSummary,
+  type GoodsReceiptSummary,
+  type InventorySetting,
   type PendingApproval,
 } from '@api/endpoints';
+import { normalizeBalance } from '@api/adapters';
 import { useAuth } from '@auth/index';
-import { Decimal } from '@core/decimal';
-import { formatDate, formatMoney } from '@core/format';
-import { Money } from '@core/decimal';
-import { DocNo, ErrorState, Page, Section } from '@/components/Page';
+import { Decimal, Money } from '@core/decimal';
+import { daysUntil, formatDate, formatDateTime, formatMoney, formatNumber } from '@core/format';
+import { Card, DocNo, ErrorState, Page, ProductCell } from '@/components/Page';
 
 /**
- * Dashboard — docs/ux/screen-map.md §5.1.
+ * Warehouse dashboard — docs/design-system/screens/Main.dc.html.
  *
- * `GET /reporting/dashboard/summary` is the contract's source for the KPIs. While that operation
- * is not live on the gateway the screen falls back to counting the collections that are, and says
- * so rather than showing invented numbers.
+ * The artboard's spine: a document-level `Alert` when the nightly reconciliation finds a
+ * mismatch, a four-up KPI row, then a `1.45fr / 1fr` split with the expiring batches on the left
+ * and "Mənim təsdiqim gözlənilir" on the right.
  *
- * The stock-value card is bound to `master.product.view_cost`: without the permission the card is
- * **not rendered** — not blanked, not starred out (components/KpiCard/README.md, SPEC §16).
+ * `GET /reporting/dashboard/summary` is the contract's source for the KPIs and for the
+ * reconciliation state. While it is not routed the screen counts what the live endpoints give it
+ * and says so — it never invents a figure, and it never shows a reconciliation alert it has not
+ * been told about.
+ *
+ * The stock-value card is bound to `master.product.view_cost`: without the permission it is not
+ * rendered at all, and a non-cost card takes its place so the row stays four wide
+ * (components/KpiCard/README.md, SPEC §16).
  */
+
+/** The artboard's thresholds; overridden by `inv_setting` as soon as `/settings` is routed. */
+const DEFAULT_EXPIRY_WARNING_DAYS = 30;
+const DEFAULT_EXPIRY_CRITICAL_DAYS = 7;
+
+interface ExpiringRow {
+  key: string;
+  productName: string;
+  sku: string;
+  batchNo: string;
+  expiryDate: string | null;
+  daysLeft: number | null;
+  qty: string;
+  uom: string;
+  location: string;
+}
+
 export function DashboardScreen() {
   const { t } = useTranslation();
   const { can } = useAuth();
   const canViewCost = can('master.product.view_cost');
 
-  const summary = useApiQuery(['dashboard', 'summary'], getDashboardSummary, { retry: false });
+  const summary = useApiQuery<DashboardSummary>(['dashboard', 'summary'], getDashboardSummary, {
+    retry: false,
+  });
 
-  const products = useApiPage(
-    ['dashboard', 'products'],
-    () => listProducts({ page: 1, size: 1 }),
-    1,
+  const settings = useApiPage<InventorySetting>(
+    ['dashboard', 'settings'],
+    listInventorySettings,
+    50,
+    { retry: false },
   );
-  const locations = useApiPage(['dashboard', 'locations'], () => listLocations({}), 1);
+
   const balances = useApiPage<Balance>(
     ['dashboard', 'balances'],
     () => listBalances({ page: 1, size: 200 }),
     200,
   );
-  const purchaseOrders = useApiPage(
-    ['dashboard', 'purchase-orders'],
-    () => listPurchaseOrders({ page: 1, size: 1 }),
-    1,
-  );
-  const runs = useApiPage<ConsumptionRun>(
-    ['dashboard', 'runs'],
-    () => listConsumptionRuns({ page: 1, size: 5 }),
-    5,
-  );
+
   const approvals = useApiPage<PendingApproval>(
     ['dashboard', 'approvals'],
     () => listPendingApprovals({ page: 1, size: 20 }),
     20,
+    { retry: false },
+  );
+
+  const receipts = useApiPage<GoodsReceiptSummary>(
+    ['dashboard', 'receipts'],
+    () => listGoodsReceipts({ page: 1, size: 1 }),
+    1,
+    { retry: false },
+  );
+
+  const counts = useApiPage<CountSummary>(
+    ['dashboard', 'counts'],
+    () => listCounts({ page: 1, size: 1 }),
+    1,
+    { retry: false },
+  );
+
+  const setting = (key: string, fallback: number): number => {
+    const raw = (settings.data?.items ?? []).find((s) => s.key === key)?.value;
+    const parsed = raw === undefined ? Number.NaN : Number(raw);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+  const warningDays = setting('expiry_warning_days', DEFAULT_EXPIRY_WARNING_DAYS);
+  const criticalDays = setting('expiry_critical_days', DEFAULT_EXPIRY_CRITICAL_DAYS);
+
+  const rows = useMemo(
+    () => (balances.data?.items ?? []).map((row) => normalizeBalance(row)),
+    [balances.data],
   );
 
   // Stock value is summed through Decimal, never through Number — the strings come as
   // DECIMAL(18,4) and a float sum drifts on the fourth decimal.
-  const stockValue = (balances.data?.items ?? []).reduce(
+  const stockValue = rows.reduce(
     (acc, row) => (row.totalValue ? acc.plus(new Decimal(row.totalValue)) : acc),
     new Decimal(0),
   );
 
-  const approvalColumns: Column<PendingApproval>[] = [
-    {
-      key: 'docNo',
-      header: 'Sənəd',
-      render: (row) => <DocNo value={row.docNo} />,
-    },
-    { key: 'docType', header: 'Tip' },
-    {
-      key: 'amountBase',
-      header: 'Məbləğ (AZN)',
-      numeric: true,
-      decimals: 2,
-      permission: 'master.product.view_cost',
-    },
-    { key: 'requestedBy', header: 'Tələbçi', render: (row) => row.requestedBy?.username ?? '—' },
-    {
-      key: 'viaDelegationFrom',
-      header: 'Delegasiya',
-      render: (row) => row.viaDelegationFrom?.username ?? '—',
-    },
-    {
-      key: 'waitingSince',
-      header: 'Gözləyir',
-      render: (row) => formatDate(row.waitingSince),
-    },
-  ];
+  const expiring: ExpiringRow[] = useMemo(() => {
+    const withExpiry = rows
+      .filter((row) => row.batch?.expiryDate)
+      .map((row) => {
+        const daysLeft = row.daysToExpiry ?? daysUntil(row.batch?.expiryDate);
+        return {
+          key: `${row.product.id}-${row.batch?.id ?? 0}-${row.location.id}`,
+          productName: row.product.name,
+          sku: row.product.sku,
+          batchNo: row.batch?.batchNo ?? '—',
+          expiryDate: row.batch?.expiryDate ?? null,
+          daysLeft,
+          qty: row.qtyOnHand,
+          uom: row.baseUomCode,
+          location: row.location.name,
+        };
+      })
+      .filter((row) => row.daysLeft !== null && row.daysLeft <= warningDays);
+    withExpiry.sort((a, b) => (a.daysLeft ?? 0) - (b.daysLeft ?? 0));
+    return withExpiry.slice(0, 12);
+  }, [rows, warningDays]);
 
-  const runColumns: Column<ConsumptionRun>[] = [
+  // The reconciliation alert is only shown when the server says the check failed. No summary
+  // means no claim — an absent answer is not evidence of a mismatch.
+  const health = summary.data?.systemHealth;
+  const reconciliationFailed = health?.balanceReconciliationOk === false;
+
+  const kpiByKey = (key: string) => summary.data?.kpis?.find((k) => k.key === key);
+  const pendingCount = approvals.data?.total ?? 0;
+
+  const expiringColumns: Column<ExpiringRow>[] = [
     {
-      key: 'docNo',
-      header: 'Sənəd',
-      render: (row) => (
-        <Link to={`/consumption/runs/${row.id}`}>
-          <DocNo value={row.docNo} />
-        </Link>
-      ),
+      key: 'product',
+      header: t('dashboard.colProduct'),
+      render: (row) => <ProductCell name={row.productName} sku={row.sku} />,
     },
-    { key: 'locationName', header: 'Lokasiya' },
-    { key: 'businessDate', header: 'Tarix', render: (row) => formatDate(row.businessDate) },
-    { key: 'status', header: 'Status', render: (row) => <DocStatusBadge status={row.status} /> },
-    { key: 'shortfallCount', header: 'Çatışmazlıq', numeric: true, decimals: 0 },
-    { key: 'unmappedCount', header: 'Uyğunsuz POS', numeric: true, decimals: 0 },
+    {
+      key: 'batch',
+      header: t('dashboard.colBatch'),
+      width: '130px',
+      render: (row) => <span className="wms-num wms-small">{row.batchNo}</span>,
+    },
+    {
+      key: 'expiry',
+      header: t('dashboard.colExpiry'),
+      width: '110px',
+      render: (row) => <span className="wms-num wms-small">{formatDate(row.expiryDate)}</span>,
+    },
+    {
+      key: 'daysLeft',
+      header: t('dashboard.colDaysLeft'),
+      width: '110px',
+      numeric: true,
+      decimals: 0,
+      render: (row) =>
+        row.daysLeft === null ? (
+          <span className="wms-muted">—</span>
+        ) : row.daysLeft <= criticalDays ? (
+          <Badge tone="danger" dot title={`expiry_critical_days = ${criticalDays}`}>
+            {formatNumber(row.daysLeft, 0)}
+          </Badge>
+        ) : (
+          formatNumber(row.daysLeft, 0)
+        ),
+    },
+    {
+      key: 'qty',
+      header: t('dashboard.colQty'),
+      numeric: true,
+      width: '140px',
+      render: (row) => `${formatNumber(row.qty, 3)} ${row.uom}`,
+    },
+    { key: 'location', header: t('dashboard.colLocation'), width: '140px' },
   ];
 
   return (
-    <Page title={t('dashboard.title')} subtitle={t('dashboard.subtitle')}>
+    <Page
+      title={t('dashboard.title')}
+      subtitle={t('dashboard.subtitle', {
+        location: summary.data?.locationId ? `#${summary.data.locationId}` : t('nav.inventory'),
+        when: formatDateTime(summary.data?.generatedAt ?? new Date()),
+      })}
+      actions={
+        <>
+          <Button variant="secondary" onClick={() => void balances.refetch()}>
+            {t('common.refresh')}
+          </Button>
+          {can('inv.receipt.create') ? (
+            <Link to="/inventory/goods-receipts/new" className="wms-btn wms-btn--primary">
+              {t('dashboard.newReceipt')}
+            </Link>
+          ) : (
+            <Button disabled title="`inv.receipt.create` icazəniz yoxdur">
+              {t('dashboard.newReceipt')}
+            </Button>
+          )}
+        </>
+      }
+    >
+      {reconciliationFailed ? (
+        <Alert
+          tone="danger"
+          title={t('dashboard.reconciliationTitle')}
+          code="RECONCILIATION_MISMATCH"
+        >
+          {t('dashboard.reconciliationBody', {
+            location: summary.data?.locationId ? `#${summary.data.locationId}` : t('nav.inventory'),
+            count:
+              summary.data?.alerts?.find((a) => a.type === 'RECONCILIATION_MISMATCH')?.count ?? 0,
+          })}
+          {health?.lastBalanceReconciliationAt ? (
+            <div className="wms-num wms-small">
+              {formatDateTime(health.lastBalanceReconciliationAt)}
+            </div>
+          ) : null}
+        </Alert>
+      ) : null}
+
       {summary.isError ? (
         <Alert
           tone="info"
-          title="Dashboard xülasəsi hələ backend-də açılmayıb"
-          code={summary.error?.code}
+          title={t('state.notImplementedTitle')}
+          code={summary.error?.code ?? undefined}
         >
-          `GET /reporting/dashboard/summary` kontraktda var, lakin gateway {summary.error?.status}{' '}
-          qaytarır. Aşağıdakı göstəricilər işləyən endpoint-lərdən birbaşa sayılıb.
+          <span className="wms-num">GET /reporting/dashboard/summary</span> —{' '}
+          {t('state.notImplementedBody', { status: summary.error?.status ?? 404 })}{' '}
+          {t('dashboard.summaryFallback')}
         </Alert>
       ) : null}
 
       <div className="wms-grid wms-grid--kpi">
-        <KpiCard
-          label={t('dashboard.kpiProducts')}
-          value={products.data?.total ?? 0}
-          hint="master_product, aktiv tenant"
-        />
-        <KpiCard
-          label={t('dashboard.kpiLocations')}
-          value={locations.data?.total ?? 0}
-          hint="master_location, virtual daxil"
-        />
-        <KpiCard
-          label={t('dashboard.kpiBalanceRows')}
-          value={balances.data?.total ?? 0}
-          hint="inv_balance proyeksiyası"
-        />
-        <KpiCard
-          label={t('dashboard.kpiOpenPos')}
-          value={purchaseOrders.data?.total ?? 0}
-          hint="proc_purchase_order"
-        />
-        <KpiCard
-          label={t('dashboard.kpiRuns')}
-          value={runs.data?.total ?? 0}
-          hint="cons_consumption_run"
-        />
-        {/* Money KPI only with master.product.view_cost — otherwise not rendered at all. */}
         {canViewCost ? (
           <KpiCard
             label={t('dashboard.kpiStockValue')}
-            value={formatMoney(Money.parse(stockValue.toFixed(4), 'AZN'), 2)}
-            hint="İlk 200 qalıq sətrinin cəmi"
-            badge={<DocStatusBadge status="POSTED" label="Cari" />}
+            value={
+              kpiByKey('stock_value')
+                ? formatNumber(kpiByKey('stock_value')?.value ?? '0', 2)
+                : formatMoney(Money.parse(stockValue.toFixed(4), 'AZN'), 2)
+            }
+            unit={kpiByKey('stock_value') ? 'AZN' : undefined}
+            hint={t('dashboard.kpiStockValueHint')}
           />
-        ) : null}
+        ) : (
+          <KpiCard
+            label={t('dashboard.kpiBalanceRows')}
+            value={balances.data?.total ?? 0}
+            hint="inv_balance"
+          />
+        )}
+        <KpiCard
+          label={t('dashboard.kpiPendingDocs')}
+          value={pendingCount}
+          hint="proc_approval_step"
+        />
+        <KpiCard
+          label={t('dashboard.kpiExpiring')}
+          value={expiring.length}
+          unit={t('dashboard.kpiExpiringUnit')}
+          hint={`expiry_warning_days = ${warningDays}`}
+        />
+        <KpiCard
+          label={canViewCost ? t('dashboard.kpiBalanceRows') : t('dashboard.kpiOpenPos')}
+          value={
+            canViewCost
+              ? (balances.data?.total ?? 0)
+              : (receipts.data?.total ?? counts.data?.total ?? 0)
+          }
+          hint={canViewCost ? 'inv_balance' : 'inv_goods_receipt'}
+        />
       </div>
 
-      <Section title={t('dashboard.pendingApprovals')}>
-        {approvals.isError ? (
-          <ErrorState error={approvals.error} onRetry={() => void approvals.refetch()} />
-        ) : (
-          <DataTable<PendingApproval>
-            columns={approvalColumns}
-            rows={approvals.data?.items ?? []}
-            permissions={canViewCost ? ['master.product.view_cost'] : []}
-            rowKey={(row) => row.approvalId}
-            label={t('dashboard.pendingApprovals')}
-            empty={t('dashboard.pendingEmpty')}
-          />
-        )}
-      </Section>
+      <div className="wms-split">
+        <Card
+          title={t('dashboard.expiringTitle')}
+          subtitle={t('dashboard.expiringSub', { warning: warningDays, critical: criticalDays })}
+          actions={<Link to="/inventory/batches">{t('common.seeAll')}</Link>}
+          flush
+        >
+          {balances.isError ? (
+            <div className="wms-card__body">
+              <ErrorState error={balances.error} onRetry={() => void balances.refetch()} />
+            </div>
+          ) : (
+            <DataTable<ExpiringRow>
+              columns={expiringColumns}
+              rows={expiring}
+              rowKey={(row) => row.key}
+              label={t('dashboard.expiringTitle')}
+              empty={t('dashboard.expiringEmpty')}
+            />
+          )}
+        </Card>
 
-      <Section title={t('dashboard.recentRuns')}>
-        {runs.isError ? (
-          <ErrorState error={runs.error} onRetry={() => void runs.refetch()} />
-        ) : (
-          <DataTable<ConsumptionRun>
-            columns={runColumns}
-            rows={runs.data?.items ?? []}
-            rowKey={(row) => row.id}
-            label={t('dashboard.recentRuns')}
-            empty="Hələ istehlak sənədi yoxdur. Satış importu göndərin və hesablama başladın."
-          />
-        )}
-      </Section>
+        <Card
+          title={t('dashboard.pendingApprovals')}
+          actions={
+            pendingCount > 0 ? (
+              <Badge tone="warning" dot>
+                {formatNumber(pendingCount, 0)}
+              </Badge>
+            ) : undefined
+          }
+          rows
+        >
+          {approvals.isError ? (
+            approvals.error.status === 404 || approvals.error.status === 405 ? (
+              // The screen already carries one "not routed yet" notice; a second identical Alert
+              // inside the card would be noise, so the card says it in one muted line instead.
+              <div className="wms-muted" style={{ padding: '8px 16px' }}>
+                <span className="wms-num">GET /procurement/approvals/pending</span> —{' '}
+                {t('state.notImplementedBody', { status: approvals.error.status })}
+              </div>
+            ) : (
+              <div style={{ padding: '8px 16px' }}>
+                <ErrorState error={approvals.error} onRetry={() => void approvals.refetch()} />
+              </div>
+            )
+          ) : (approvals.data?.items ?? []).length === 0 ? (
+            <div className="wms-muted" style={{ padding: '8px 16px' }}>
+              {t('dashboard.pendingEmpty')}
+            </div>
+          ) : (
+            <div className="wms-doclist">
+              {(approvals.data?.items ?? []).map((row) => (
+                <div className="wms-doclist__row" key={row.approvalId}>
+                  <div className="wms-doclist__main">
+                    <div className="wms-doclist__title">
+                      <span className="wms-num wms-doclist__no">{row.docNo}</span>
+                      <DocStatusBadge status="PENDING_APPROVAL" />
+                    </div>
+                    <div className="wms-doclist__meta">
+                      {[
+                        row.summary,
+                        canViewCost && row.amountBase
+                          ? `${formatNumber(row.amountBase, 2)} AZN`
+                          : null,
+                        row.viaDelegationFrom
+                          ? `delegasiya: ${row.viaDelegationFrom.username}`
+                          : null,
+                        t('dashboard.waitingSince', {
+                          days: Math.max(0, -(daysUntil(row.waitingSince) ?? 0)),
+                        }),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </div>
+                  </div>
+                  <Link
+                    to={approvalLink(row)}
+                    className="wms-btn wms-btn--secondary wms-btn--sm"
+                    aria-label={`${row.docNo} — ${t('common.view')}`}
+                  >
+                    {t('common.view')}
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
     </Page>
   );
 }
+
+/** Where a pending decision actually lives. An unknown document type stays on the approvals list. */
+export function approvalLink(row: Pick<PendingApproval, 'docType' | 'docId'>): string {
+  switch (row.docType) {
+    case 'PO':
+      return `/procurement/purchase-orders/${row.docId}`;
+    case 'WASTE':
+      return `/inventory/waste/${row.docId}`;
+    case 'COUNT_ADJUST':
+      return `/inventory/counts/${row.docId}`;
+    default:
+      return '/procurement/approvals';
+  }
+}
+
+/** Re-exported for the dashboard test: the document number cell never loses its `mono` face. */
+export { DocNo };

@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<title>Anbara qəbul</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/wms/tokens.css">
+<link rel="stylesheet" href="ds/wms/components/bundle.css">
+<script src="ds/wms/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin: 0; font-family: var(--font-sans); background: var(--surface-canvas); color: var(--ink); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-hover); text-decoration: underline; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; font-size: 14px; color: var(--ink-muted); text-decoration: none; }
+.nav-item:hover { background: var(--row-hover); color: var(--ink); text-decoration: none; }
+.nav-item[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.nav-group { font-size: 12px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-subtle); padding: 14px 10px 4px; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.card-title { font-size: 16px; font-weight: 600; }
+.meta-k { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.02em; color: var(--ink-muted); }
+.meta-v { font-size: 14px; line-height: 20px; }
+</style>
+</helmet>
+<div class="wms-root" style="width: 1440px; height: 960px; box-sizing: border-box; display: flex; background: var(--surface-canvas);">
+
+  <aside style="width: 248px; flex: none; box-sizing: border-box; background: var(--surface); border-right: 1px solid var(--border); padding: 20px 12px; display: flex; flex-direction: column; gap: 2px;">
+    <div style="padding: 0 10px 16px;">
+      <div style="font-size: 20px; line-height: 28px; font-weight: 600;">WMS</div>
+      <div style="font-size: 12px; line-height: 16px; color: var(--ink-muted);">Subway AZ · 15 filial</div>
+    </div>
+    <a class="nav-item" href="Main.dc.html">Panel</a>
+    <div class="nav-group">Satınalma</div>
+    <a class="nav-item" href="Main.dc.html">Tələbnamə</a>
+    <a class="nav-item" href="PO-Tesdiq.dc.html">Sifarişlər</a>
+    <a class="nav-item" href="Main.dc.html">Təchizatçılar</a>
+    <div class="nav-group">Anbar</div>
+    <a class="nav-item" href="Qebul.dc.html" aria-current="page">Qəbul</a>
+    <a class="nav-item" href="Mexaric.dc.html">Məxaric və transfer</a>
+    <a class="nav-item" href="Sayim.dc.html">Sayım</a>
+    <a class="nav-item" href="Main.dc.html">Tullantı və nümunə</a>
+    <a class="nav-item" href="Main.dc.html">Qalıqlar</a>
+    <div class="nav-group">Sistem</div>
+    <a class="nav-item" href="Main.dc.html">Master data</a>
+    <a class="nav-item" href="Main.dc.html">Hesabatlar</a>
+    <div style="flex-grow: 1;"></div>
+    <div style="padding: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px;">
+      <div style="width: 32px; height: 32px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">OM</div>
+      <div style="min-width: 0;">
+        <div style="font-size: 13px; font-weight: 600;">Orxan Məmmədov</div>
+        <div style="font-size: 12px; color: var(--ink-muted);">WAREHOUSE_KEEPER</div>
+      </div>
+    </div>
+  </aside>
+
+  <main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+    <header style="box-sizing: border-box; height: 84px; flex: none; padding: 0 32px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+      <div>
+        <div style="font-size: 12px; line-height: 16px; color: var(--ink-muted);"><a href="Main.dc.html">Anbar</a> · Qəbul</div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 2px;">
+          <span class="wms-num" style="font-size: 20px; line-height: 28px; font-weight: 600;">GR-2026-00311</span>
+          <x-import component-from-global-scope="Wms.DocStatusBadge" status="DRAFT"></x-import>
+          <x-import component-from-global-scope="Wms.Badge" tone="neutral" variant="outline">PO-2026-00087</x-import>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <x-import component-from-global-scope="Wms.Button" variant="ghost">Çap et</x-import>
+        <x-import component-from-global-scope="Wms.Button" variant="secondary">Qaralama saxla</x-import>
+        <x-import component-from-global-scope="Wms.Button" variant="primary">Post et</x-import>
+      </div>
+    </header>
+
+    <div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 20px 32px; display: flex; flex-direction: column; gap: 16px;">
+
+      <x-import component-from-global-scope="Wms.Alert" tone="warning" title="2 sətirdə PO ilə fərq var">receipt_over_tolerance_pct = 0 olduğu üçün artıq qəbul təsdiq tələb edir; çatışmazlıqda fərq qeydi məcburidir.</x-import>
+
+      <section class="card" style="flex: none;">
+        <div style="padding: 16px; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px;">
+          <div>
+            <div class="meta-k">Təchizatçı</div>
+            <div class="meta-v">Azərsun MMC</div>
+            <div style="font-size: 12px; color: var(--ink-muted);">VÖEN 1400312345</div>
+          </div>
+          <div>
+            <div class="meta-k">Sənəd tarixi</div>
+            <div class="meta-v wms-num">20.09.2026</div>
+          </div>
+          <x-import component-from-global-scope="Wms.Select" label="Qəbul lokasiyası" required="{{ yes }}" value="{{ locVal }}" options="{{ locOpts }}" hint="Yalnız icazəniz olan lokasiyalar"></x-import>
+          <x-import component-from-global-scope="Wms.TextField" label="Temperatur, °C" required="{{ yes }}" value="{{ tempVal }}" mono="{{ yes }}" align="right" hint="Soyuducu maşında ölçülüb"></x-import>
+          <x-import component-from-global-scope="Wms.Select" label="Keyfiyyət statusu" required="{{ yes }}" value="{{ qVal }}" options="{{ qOpts }}"></x-import>
+          <x-import component-from-global-scope="Wms.TextField" label="Qablaşdırma qeydi" value="{{ packVal }}" placeholder="Qeyd yoxdursa boş buraxın"></x-import>
+        </div>
+      </section>
+
+      <section class="card" style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column;">
+        <div class="card-head">
+          <div class="card-title">Qəbul sətirləri</div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <x-import component-from-global-scope="Wms.Button" variant="ghost" size="sm">Barkodla əlavə et</x-import>
+            <x-import component-from-global-scope="Wms.Button" variant="secondary" size="sm">Sətir əlavə et</x-import>
+          </div>
+        </div>
+
+        <div style="flex-grow: 1; min-height: 0; overflow: auto;">
+          <table class="wms-table wms-table--dense" style="width: 100%;">
+            <thead>
+              <tr>
+                <th scope="col" style="width: 44px;">#</th>
+                <th scope="col">Məhsul</th>
+                <th scope="col" style="width: 130px;">Partiya</th>
+                <th scope="col" style="width: 110px;">Son istifadə</th>
+                <th scope="col" style="width: 110px; text-align: right;">Sifariş</th>
+                <th scope="col" style="width: 150px; text-align: right;">Qəbul edilən</th>
+                <th scope="col" style="width: 110px; text-align: right;">Rədd</th>
+                <th scope="col" style="width: 210px;">Fərq</th>
+                <th scope="col" style="width: 120px; text-align: right;">Vahid qiymət</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="wms-td--num">1</td>
+                <td>
+                  <div style="font-weight: 600;">Chicken Strips</div>
+                  <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">CHS-0042</div>
+                </td>
+                <td class="wms-num" style="font-size: 13px;">CS-2609-A</td>
+                <td class="wms-num" style="font-size: 13px;">04.10.2026</td>
+                <td class="wms-td--num">60,000 KG</td>
+                <td class="wms-td--num">60,000 KG</td>
+                <td class="wms-td--num">0,000</td>
+                <td><span style="color: var(--ink-muted); font-size: 13px;">Fərq yoxdur</span></td>
+                <td class="wms-td--num">8,4000</td>
+              </tr>
+              <tr>
+                <td class="wms-td--num">2</td>
+                <td>
+                  <div style="font-weight: 600;">Bread Stick Black</div>
+                  <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">BSB-0114</div>
+                </td>
+                <td class="wms-num" style="font-size: 13px;">BSB-2602-B</td>
+                <td class="wms-num" style="font-size: 13px;">18.02.2027</td>
+                <td class="wms-td--num">480,000 PCS</td>
+                <td class="wms-td--num">492,000 PCS</td>
+                <td class="wms-td--num">0,000</td>
+                <td>
+                  <x-import component-from-global-scope="Wms.VarianceIndicator" book="{{ b2 }}" counted="{{ c2 }}" decimals="{{ zero }}" threshold-pct="{{ thr }}" reason-code="OVER_DELIVERY"></x-import>
+                </td>
+                <td class="wms-td--num">0,6200</td>
+              </tr>
+              <tr>
+                <td class="wms-td--num">3</td>
+                <td>
+                  <div style="font-weight: 600;">Cheddar Slice</div>
+                  <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">CHD-0018</div>
+                </td>
+                <td class="wms-num" style="font-size: 13px;">CHD-2609-B</td>
+                <td class="wms-num" style="font-size: 13px;">08.10.2026</td>
+                <td class="wms-td--num">30,000 KG</td>
+                <td class="wms-td--num">22,400 KG</td>
+                <td class="wms-td--num">1,600</td>
+                <td>
+                  <x-import component-from-global-scope="Wms.VarianceIndicator" book="{{ b3 }}" counted="{{ c3 }}" decimals="{{ three }}" threshold-pct="{{ thr }}"></x-import>
+                </td>
+                <td class="wms-td--num">11,2000</td>
+              </tr>
+              <tr style="background: var(--accent-soft);">
+                <td class="wms-td--num">4</td>
+                <td>
+                  <div style="font-weight: 600;">Mayonez 5 kq</div>
+                  <div class="wms-num" style="font-size: 12px; color: var(--ink-muted);">MYZ-0031</div>
+                </td>
+                <td style="padding-top: 8px; padding-bottom: 8px;">
+                  <x-import component-from-global-scope="Wms.TextField" value="{{ batch4 }}" mono="{{ yes }}" placeholder="Partiya nömrəsi"></x-import>
+                </td>
+                <td style="padding-top: 8px; padding-bottom: 8px;">
+                  <x-import component-from-global-scope="Wms.TextField" value="{{ exp4 }}" mono="{{ yes }}" placeholder="gg.aa.iiii"></x-import>
+                </td>
+                <td class="wms-td--num">12,000 CASE</td>
+                <td style="padding-top: 8px; padding-bottom: 8px;">
+                  <x-import component-from-global-scope="Wms.QtyUomInput" qty="{{ qty4 }}" uom-id="{{ uom4 }}" uoms="{{ uoms4 }}" base-uom-code="PCS" decimals="{{ zero }}"></x-import>
+                </td>
+                <td class="wms-td--num">0,000</td>
+                <td><span style="color: var(--ink-muted); font-size: 13px;">Daxil edilir…</span></td>
+                <td class="wms-td--num">24,0000</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td></td>
+                <td>4 sətir</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="wms-td--num">1 083,08 AZN</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      yes: true, zero: 0, three: 3, thr: 0,
+      b2: 480, c2: 492,
+      b3: 30, c3: 22.4,
+      locVal: '2', qVal: 'PARTIALLY_ACCEPTED',
+      tempVal: '3,4',
+      packVal: 'Bir qutu əzik, foto əlavə edildi',
+      batch4: 'MYZ-2609-D', exp4: '30.03.2027',
+      qty4: '12', uom4: '2',
+      uoms4: [
+        { id: '1', code: 'PCS', factorToBase: 1 },
+        { id: '2', code: 'CASE', factorToBase: 6 }
+      ],
+      locOpts: [
+        { value: '1', label: 'Food WH — mərkəzi anbar' },
+        { value: '2', label: 'Freezer — Food WH' },
+        { value: '3', label: 'Dry Store — Food WH' },
+        { value: '4', label: 'Non-Food WH (qida qəbul etmir)', disabled: true }
+      ],
+      qOpts: [
+        { value: 'ACCEPTED', label: 'Tam qəbul edildi' },
+        { value: 'PARTIALLY_ACCEPTED', label: 'Qismən qəbul edildi' },
+        { value: 'REJECTED', label: 'Rədd edildi' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

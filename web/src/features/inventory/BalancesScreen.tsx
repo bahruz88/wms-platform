@@ -11,7 +11,7 @@ import {
 } from '@api/endpoints';
 import { indexById, normalizeBalance } from '@api/adapters';
 import { useAuth } from '@auth/index';
-import { ErrorState, LoadingState, Page, Section } from '@/components/Page';
+import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 import { Pager } from '@/components/Pager';
 
 /**
@@ -136,57 +136,62 @@ export function BalancesScreen() {
 
   return (
     <Page
-      title="Qalıq"
+      title="Qalıqlar"
       subtitle="Balans proyeksiyası — yalnız oxunur. Dəyişiklik yalnız sənədlə olur (ADR-004)."
     >
-      <div className="wms-toolbar">
-        <Select
-          label="Lokasiya"
-          value={locationId}
-          placeholder="Bütün lokasiyalar"
-          hint="Siyahı `iam_user_location` ilə filtrlənir."
-          options={(locations.data?.items ?? []).map((l) => ({
-            value: String(l.id),
-            label: `${l.name} (${l.code})`,
-          }))}
-          onChange={(e) => {
-            setLocationId(e.target.value);
-            setPage(1);
-          }}
-        />
-        <Select
-          label="Sıfır qalıqlar"
-          value={includeZero ? '1' : '0'}
-          options={[
-            { value: '0', label: 'Gizlədilir' },
-            { value: '1', label: 'Göstərilir' },
-          ]}
-          onChange={(e) => {
-            setIncludeZero(e.target.value === '1');
-            setPage(1);
-          }}
-        />
-      </div>
+      <Card>
+        <div className="wms-toolbar">
+          <Select
+            label="Lokasiya"
+            value={locationId}
+            placeholder="Bütün lokasiyalar"
+            hint="Siyahı `iam_user_location` ilə filtrlənir."
+            options={(locations.data?.items ?? []).map((l) => ({
+              value: String(l.id),
+              label: `${l.name} (${l.code})`,
+            }))}
+            onChange={(e) => {
+              setLocationId(e.target.value);
+              setPage(1);
+            }}
+          />
+          <Select
+            label="Sıfır qalıqlar"
+            value={includeZero ? '1' : '0'}
+            options={[
+              { value: '0', label: 'Gizlədilir' },
+              { value: '1', label: 'Göstərilir' },
+            ]}
+            onChange={(e) => {
+              setIncludeZero(e.target.value === '1');
+              setPage(1);
+            }}
+          />
+          <div className="wms-toolbar__spacer" />
+        </div>
+      </Card>
 
-      <Section>
-        {raw.isLoading ? (
-          <LoadingState />
-        ) : raw.isError ? (
-          <ErrorState error={raw.error} onRetry={() => void raw.refetch()} />
-        ) : (
-          <>
-            <DataTable<Balance>
-              columns={columns}
-              rows={balances?.items ?? []}
-              permissions={session?.permissions ?? []}
-              rowKey={(row) => `${row.product.id}-${row.location.id}-${row.batch?.id ?? 0}`}
-              label="Qalıq siyahısı"
-              empty="Bu lokasiyada qalıq yoxdur. Qəbul sənədi yaradın."
-            />
-            {balances ? <Pager page={balances} onPageChange={setPage} /> : null}
-          </>
-        )}
-      </Section>
+      {raw.isLoading ? (
+        <LoadingState />
+      ) : raw.isError ? (
+        <ErrorState error={raw.error} onRetry={() => void raw.refetch()} />
+      ) : (
+        <Card
+          title="Qalıq"
+          subtitle="qtyAvailable = qtyOnHand − qtyReserved"
+          flush
+          footer={balances ? <Pager page={balances} onPageChange={setPage} /> : undefined}
+        >
+          <DataTable<Balance>
+            columns={columns}
+            rows={balances?.items ?? []}
+            permissions={session?.permissions ?? []}
+            rowKey={(row) => `${row.product.id}-${row.location.id}-${row.batch?.id ?? 0}`}
+            label="Qalıq siyahısı"
+            empty="Bu lokasiyada qalıq yoxdur. Qəbul sənədi yaradın."
+          />
+        </Card>
+      )}
     </Page>
   );
 }

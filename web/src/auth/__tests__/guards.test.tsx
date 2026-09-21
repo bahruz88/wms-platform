@@ -124,16 +124,15 @@ describe('navigation filtering', () => {
     expect(groups.map((g) => g.labelKey)).not.toContain('nav.admin');
   });
 
-  it('shows the full tree to an admin', () => {
+  it("shows the full tree to an admin, in the artboards' order", () => {
     const groups = visibleNavGroups(permissionsForRoles(['ADMIN']));
+    // The first block is the artboard's ungrouped «Panel»; it carries no label.
     expect(groups.map((g) => g.labelKey)).toEqual([
-      'nav.dashboard',
+      null,
       'nav.procurement',
       'nav.inventory',
       'nav.consumption',
-      'nav.masterData',
-      'nav.reporting',
-      'nav.admin',
+      'nav.system',
     ]);
   });
 

@@ -69,8 +69,24 @@ export type GoodsReceiptCreate = InventoryComponents['schemas']['GoodsReceiptCre
 export type Movement = InventoryComponents['schemas']['Movement'];
 export type MovementGroup = InventoryComponents['schemas']['MovementGroup'];
 export type CountSummary = InventoryComponents['schemas']['CountSummary'];
+export type Count = InventoryComponents['schemas']['Count'];
+export type CountLine = InventoryComponents['schemas']['CountLine'];
+export type CountCreate = InventoryComponents['schemas']['CountCreate'];
+export type CountLineInput = InventoryComponents['schemas']['CountLineInput'];
+export type Issue = InventoryComponents['schemas']['Issue'];
+export type IssueSummary = InventoryComponents['schemas']['IssueSummary'];
+export type IssueLine = InventoryComponents['schemas']['IssueLine'];
+export type IssueCreate = InventoryComponents['schemas']['IssueCreate'];
+export type IssueConfirmLine = InventoryComponents['schemas']['IssueConfirmLine'];
 export type WasteSummary = InventoryComponents['schemas']['WasteSummary'];
+export type Waste = InventoryComponents['schemas']['Waste'];
+export type WasteCreate = InventoryComponents['schemas']['WasteCreate'];
 export type SampleSummary = InventoryComponents['schemas']['SampleSummary'];
+export type Sample = InventoryComponents['schemas']['Sample'];
+export type SampleCreate = InventoryComponents['schemas']['SampleCreate'];
+export type StockRequestSummary = InventoryComponents['schemas']['StockRequestSummary'];
+export type StockRequest = InventoryComponents['schemas']['StockRequest'];
+export type StockRequestCreate = InventoryComponents['schemas']['StockRequestCreate'];
 export type InventorySetting = InventoryComponents['schemas']['InventorySetting'];
 
 export type RequisitionSummary = ProcurementComponents['schemas']['RequisitionSummary'];
@@ -184,14 +200,257 @@ export const listMovements = async (query: Query<InventoryPaths, '/movements'> =
 export const getMovementGroup = async (id: number) =>
   unwrap(await inventoryApi.GET('/movement-groups/{id}', { params: { path: { id } } }));
 
+export const cancelGoodsReceipt = async (id: number, rowVersion: number, reasonCodeId: number) =>
+  unwrap(
+    await inventoryApi.POST('/goods-receipts/{id}/cancel', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion, reasonCodeId },
+    }),
+  );
+
+// --- issues (branch issue / warehouse transfer) -------------------------------------------------
+export const listIssues = async (query: Query<InventoryPaths, '/issues'> = {}) =>
+  unwrap(await inventoryApi.GET('/issues', { params: { query } }));
+
+export const getIssue = async (id: number) =>
+  unwrap(await inventoryApi.GET('/issues/{id}', { params: { path: { id } } }));
+
+export const createIssue = async (body: IssueCreate) =>
+  unwrap(
+    await inventoryApi.POST('/issues', {
+      params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body,
+    }),
+  );
+
+/** `DRAFT → DISPATCHED`: the source location is credited and `IN_TRANSIT` is debited. */
+export const dispatchIssue = async (id: number, rowVersion: number) =>
+  unwrap(
+    await inventoryApi.POST('/issues/{id}/dispatch', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion },
+    }),
+  );
+
+/** The branch confirms what actually arrived; a line that differs needs a reason and a note. */
+export const confirmIssueReceipt = async (
+  id: number,
+  rowVersion: number,
+  lines: IssueConfirmLine[],
+) =>
+  unwrap(
+    await inventoryApi.POST('/issues/{id}/confirm-receipt', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion, lines },
+    }),
+  );
+
+export const cancelIssue = async (id: number, rowVersion: number) =>
+  unwrap(
+    await inventoryApi.POST('/issues/{id}/cancel', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion },
+    }),
+  );
+
+// --- counts -------------------------------------------------------------------------------------
 export const listCounts = async (query: Query<InventoryPaths, '/counts'> = {}) =>
   unwrap(await inventoryApi.GET('/counts', { params: { query } }));
 
+export const getCount = async (id: number) =>
+  unwrap(await inventoryApi.GET('/counts/{id}', { params: { path: { id } } }));
+
+export const createCount = async (body: CountCreate) =>
+  unwrap(
+    await inventoryApi.POST('/counts', {
+      params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body,
+    }),
+  );
+
+/** `DRAFT → FROZEN`: the location stops accepting movements and `bookQty` is snapshotted. */
+export const freezeCount = async (id: number, rowVersion: number) =>
+  unwrap(
+    await inventoryApi.POST('/counts/{id}/freeze', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion },
+    }),
+  );
+
+export const submitCountLines = async (id: number, rowVersion: number, lines: CountLineInput[]) =>
+  unwrap(
+    await inventoryApi.POST('/counts/{id}/lines', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion, lines },
+    }),
+  );
+
+export const submitCount = async (id: number, rowVersion: number) =>
+  unwrap(
+    await inventoryApi.POST('/counts/{id}/submit', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion },
+    }),
+  );
+
+export const decideCount = async (
+  id: number,
+  rowVersion: number,
+  decision: 'APPROVED' | 'REJECTED',
+  comment?: string,
+) =>
+  unwrap(
+    await inventoryApi.POST('/counts/{id}/approve', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion, decision, comment },
+    }),
+  );
+
+/** `APPROVED → POSTED`: writes the `COUNT_ADJUST` group and unfreezes the location. */
+export const postCount = async (id: number, rowVersion: number) =>
+  unwrap(
+    await inventoryApi.POST('/counts/{id}/post', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion },
+    }),
+  );
+
+export const cancelCount = async (
+  id: number,
+  rowVersion: number,
+  reasonCodeId: number,
+  note?: string,
+) =>
+  unwrap(
+    await inventoryApi.POST('/counts/{id}/cancel', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion, reasonCodeId, note },
+    }),
+  );
+
+// --- waste / samples ------------------------------------------------------------------------------
 export const listWaste = async (query: Query<InventoryPaths, '/waste'> = {}) =>
   unwrap(await inventoryApi.GET('/waste', { params: { query } }));
 
+export const getWaste = async (id: number) =>
+  unwrap(await inventoryApi.GET('/waste/{id}', { params: { path: { id } } }));
+
+export const createWaste = async (body: WasteCreate) =>
+  unwrap(
+    await inventoryApi.POST('/waste', {
+      params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body,
+    }),
+  );
+
+export const submitWaste = async (id: number, rowVersion: number) =>
+  unwrap(
+    await inventoryApi.POST('/waste/{id}/submit', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion },
+    }),
+  );
+
+export const decideWaste = async (
+  id: number,
+  rowVersion: number,
+  decision: 'APPROVED' | 'REJECTED',
+  comment?: string,
+) =>
+  unwrap(
+    await inventoryApi.POST('/waste/{id}/approve', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion, decision, comment },
+    }),
+  );
+
+export const postWaste = async (id: number, rowVersion: number) =>
+  unwrap(
+    await inventoryApi.POST('/waste/{id}/post', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion },
+    }),
+  );
+
 export const listSamples = async (query: Query<InventoryPaths, '/samples'> = {}) =>
   unwrap(await inventoryApi.GET('/samples', { params: { query } }));
+
+export const getSample = async (id: number) =>
+  unwrap(await inventoryApi.GET('/samples/{id}', { params: { path: { id } } }));
+
+export const createSample = async (body: SampleCreate) =>
+  unwrap(
+    await inventoryApi.POST('/samples', {
+      params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body,
+    }),
+  );
+
+export const postSample = async (id: number, rowVersion: number) =>
+  unwrap(
+    await inventoryApi.POST('/samples/{id}/post', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion },
+    }),
+  );
+
+// --- stock requests -------------------------------------------------------------------------------
+export const listStockRequests = async (query: Query<InventoryPaths, '/stock-requests'> = {}) =>
+  unwrap(await inventoryApi.GET('/stock-requests', { params: { query } }));
+
+export const getStockRequest = async (id: number) =>
+  unwrap(await inventoryApi.GET('/stock-requests/{id}', { params: { path: { id } } }));
+
+export const createStockRequest = async (body: StockRequestCreate) =>
+  unwrap(
+    await inventoryApi.POST('/stock-requests', {
+      params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body,
+    }),
+  );
+
+export const submitStockRequest = async (id: number, rowVersion: number) =>
+  unwrap(
+    await inventoryApi.POST('/stock-requests/{id}/submit', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion },
+    }),
+  );
+
+export const cancelStockRequest = async (id: number, rowVersion: number) =>
+  unwrap(
+    await inventoryApi.POST('/stock-requests/{id}/cancel', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion },
+    }),
+  );
+
+// --- batches / reversal ----------------------------------------------------------------------------
+export const getBatch = async (id: number) =>
+  unwrap(await inventoryApi.GET('/batches/{id}', { params: { path: { id } } }));
+
+export const changeBatchStatus = async (
+  id: number,
+  rowVersion: number,
+  status: 'ACTIVE' | 'BLOCKED' | 'QUARANTINE',
+  reasonCodeId: number,
+  note?: string,
+) =>
+  unwrap(
+    await inventoryApi.POST('/batches/{id}/status', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion, status, reasonCodeId, note },
+    }),
+  );
+
+/** A posted document is never edited — a reversal writes a new, opposite movement group. */
+export const reverseMovementGroup = async (id: number, reasonCodeId: number, note?: string) =>
+  unwrap(
+    await inventoryApi.POST('/movement-groups/{id}/reverse', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { reasonCodeId, note },
+    }),
+  );
 
 export const listInventorySettings = async () => unwrap(await inventoryApi.GET('/settings'));
 

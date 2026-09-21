@@ -14,15 +14,16 @@ import { useApiPage } from '@api/hooks';
 import { listGoodsReceipts, type GoodsReceiptSummary } from '@api/endpoints';
 import { useAuth } from '@auth/index';
 import { formatDate } from '@core/format';
-import { ErrorState, LoadingState, Page, Section } from '@/components/Page';
+import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 import { Pager } from '@/components/Pager';
 
 /**
- * Goods receipts — docs/ux/screen-map.md §3.1.
+ * Goods receipts — the list behind the artboard's «Qəbul» entry.
  *
- * `listGoodsReceipts` is defined in the contract but the gateway currently routes only POST on
- * `/goods-receipts` (it answers 405 on GET). The screen therefore also offers a direct lookup by
- * document id, which `getGoodsReceipt` does serve — a real receipt opens from here today.
+ * `listGoodsReceipts` is in the contract; while the gateway routes only POST on
+ * `/goods-receipts` (it answers 405 on GET) the screen also offers a direct lookup by document
+ * id, which `getGoodsReceipt` does serve — so a real receipt opens from here today instead of
+ * the screen being a dead end.
  */
 export function GoodsReceiptsScreen() {
   const navigate = useNavigate();
@@ -42,103 +43,130 @@ export function GoodsReceiptsScreen() {
     {
       key: 'docNo',
       header: 'Sənəd',
+      width: '160px',
       render: (row) => (
         <Link to={`/inventory/goods-receipts/${row.id}`}>
           <span className="wms-doc-no">{row.docNo}</span>
         </Link>
       ),
     },
-    { key: 'docDate', header: 'Tarix', render: (row) => formatDate(row.docDate) },
+    {
+      key: 'docDate',
+      header: 'Tarix',
+      width: '110px',
+      render: (row) => <span className="wms-num wms-small">{formatDate(row.docDate)}</span>,
+    },
     { key: 'supplierName', header: 'Təchizatçı', render: (row) => row.supplierName ?? '—' },
     { key: 'locationName', header: 'Lokasiya', render: (row) => row.locationName ?? '—' },
     {
       key: 'poDocNo',
       header: 'PO',
-      render: (row) => row.poDocNo ?? <span className="wms-muted">PO-suz</span>,
+      width: '150px',
+      render: (row) =>
+        row.poDocNo ? (
+          <span className="wms-doc-no">{row.poDocNo}</span>
+        ) : (
+          <span className="wms-muted">PO-suz</span>
+        ),
     },
-    { key: 'lineCount', header: 'Sətir', numeric: true, decimals: 0 },
+    { key: 'lineCount', header: 'Sətir', numeric: true, decimals: 0, width: '90px' },
     {
       key: 'hasVariance',
       header: 'Fərq',
+      width: '120px',
       render: (row) =>
         row.hasVariance ? (
-          <Badge tone="warning">Fərq var</Badge>
+          <Badge tone="warning" dot>
+            Fərq var
+          </Badge>
         ) : (
           <span className="wms-muted">—</span>
         ),
     },
-    { key: 'status', header: 'Status', render: (row) => <DocStatusBadge status={row.status} /> },
+    {
+      key: 'status',
+      header: 'Status',
+      width: '150px',
+      render: (row) => <DocStatusBadge status={row.status} />,
+    },
   ];
 
   return (
     <Page
-      title="Qəbullar"
-      subtitle="Açıq və post edilmiş qəbullar"
+      title="Qəbul"
+      subtitle="Açıq və post edilmiş qəbul sənədləri"
       actions={
         can('inv.receipt.create') ? (
           <Button variant="primary" onClick={() => navigate('/inventory/goods-receipts/new')}>
             Yeni qəbul
           </Button>
-        ) : null
+        ) : (
+          <Button disabled title="`inv.receipt.create` icazəniz yoxdur">
+            Yeni qəbul
+          </Button>
+        )
       }
     >
-      <div className="wms-toolbar">
-        <Select
-          label="Status"
-          value={status}
-          placeholder="Bütün statuslar"
-          options={[
-            { value: 'DRAFT', label: 'Qaralama' },
-            { value: 'POSTED', label: 'Post edilib' },
-            { value: 'CANCELLED', label: 'Ləğv edilib' },
-          ]}
-          onChange={(e) => {
-            setStatus(e.target.value as typeof status);
-            setPage(1);
-          }}
-        />
-        <div className="wms-toolbar__spacer" />
-        <TextField
-          label="Sənəd id ilə aç"
-          mono
-          value={directId}
-          hint="`getGoodsReceipt` işləyir; siyahı endpoint-i gateway-də hələ açılmayıb."
-          onChange={(e) => setDirectId(e.target.value)}
-        />
-        <Button
-          disabled={!directId.trim()}
-          title={!directId.trim() ? 'Sənəd id-si yazın' : undefined}
-          onClick={() => navigate(`/inventory/goods-receipts/${directId.trim()}`)}
-        >
-          Aç
-        </Button>
-      </div>
+      <Card>
+        <div className="wms-toolbar">
+          <Select
+            label="Status"
+            value={status}
+            placeholder="Bütün statuslar"
+            options={[
+              { value: 'DRAFT', label: 'Qaralama' },
+              { value: 'POSTED', label: 'Post edilib' },
+              { value: 'CANCELLED', label: 'Ləğv edilib' },
+            ]}
+            onChange={(e) => {
+              setStatus(e.target.value as typeof status);
+              setPage(1);
+            }}
+          />
+          <div className="wms-toolbar__spacer" />
+          <TextField
+            label="Sənəd id ilə aç"
+            mono
+            value={directId}
+            hint="`getGoodsReceipt` işləyir; siyahı endpoint-i gateway-də hələ açılmayıb."
+            onChange={(e) => setDirectId(e.target.value)}
+          />
+          <Button
+            disabled={!directId.trim()}
+            title={!directId.trim() ? 'Sənəd id-si yazın' : undefined}
+            onClick={() => navigate(`/inventory/goods-receipts/${directId.trim()}`)}
+          >
+            Aç
+          </Button>
+        </div>
+      </Card>
 
-      <Section>
-        {receipts.isLoading ? (
-          <LoadingState />
-        ) : receipts.isError ? (
-          <>
-            <ErrorState error={receipts.error} onRetry={() => void receipts.refetch()} />
-            <Alert tone="info" title="Sənədi birbaşa açın">
-              Siyahı gələnə qədər sənəd nömrəsini bilirsinizsə yuxarıdakı id sahəsindən açın —
-              məsələn <span className="wms-doc-no">GR-2026-00001</span> üçün id{' '}
-              <span className="wms-num">1</span>.
-            </Alert>
-          </>
-        ) : (
-          <>
-            <DataTable<GoodsReceiptSummary>
-              columns={columns}
-              rows={receipts.data?.items ?? []}
-              rowKey={(row) => row.id}
-              label="Qəbul siyahısı"
-              empty="Qəbul sənədi yoxdur. «Yeni qəbul» ilə başlayın."
-            />
-            {receipts.data ? <Pager page={receipts.data} onPageChange={setPage} /> : null}
-          </>
-        )}
-      </Section>
+      {receipts.isLoading ? (
+        <LoadingState />
+      ) : receipts.isError ? (
+        <>
+          <ErrorState error={receipts.error} onRetry={() => void receipts.refetch()} />
+          <Alert tone="info" title="Sənədi birbaşa açın">
+            Siyahı gələnə qədər sənəd id-sini bilirsinizsə yuxarıdakı sahədən açın — məsələn{' '}
+            <span className="wms-doc-no">GR-2026-00001</span> üçün id{' '}
+            <span className="wms-num">1</span>.
+          </Alert>
+        </>
+      ) : (
+        <Card
+          title="Qəbul sənədləri"
+          flush
+          footer={receipts.data ? <Pager page={receipts.data} onPageChange={setPage} /> : undefined}
+        >
+          <DataTable<GoodsReceiptSummary>
+            columns={columns}
+            rows={receipts.data?.items ?? []}
+            rowKey={(row) => row.id}
+            label="Qəbul siyahısı"
+            empty="Qəbul sənədi yoxdur. «Yeni qəbul» ilə başlayın."
+          />
+        </Card>
+      )}
     </Page>
   );
 }

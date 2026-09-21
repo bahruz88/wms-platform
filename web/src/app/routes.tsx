@@ -22,6 +22,11 @@ import { GoodsReceiptCreateScreen } from '@features/inventory/GoodsReceiptCreate
 import { MovementsScreen } from '@features/inventory/MovementsScreen';
 import { MovementGroupScreen } from '@features/inventory/MovementGroupScreen';
 import { CountsScreen } from '@features/inventory/CountsScreen';
+import { CountDetailScreen } from '@features/inventory/CountDetailScreen';
+import { IssuesScreen } from '@features/inventory/IssuesScreen';
+import { IssueCreateScreen } from '@features/inventory/IssueCreateScreen';
+import { IssueDetailScreen } from '@features/inventory/IssueDetailScreen';
+import { StockRequestsScreen } from '@features/inventory/StockRequestsScreen';
 import { WasteScreen } from '@features/inventory/WasteScreen';
 import { SamplesScreen } from '@features/inventory/SamplesScreen';
 import { ProductsScreen } from '@features/masterdata/ProductsScreen';
@@ -199,10 +204,50 @@ export function AppRoutes() {
             }
           />
           <Route
+            path="issues"
+            element={
+              <Guarded permission={['inv.issue.view', 'inv.issue.create']}>
+                <IssuesScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="issues/new"
+            element={
+              <Guarded permission="inv.issue.create">
+                <IssueCreateScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="issues/:id"
+            element={
+              <Guarded permission="inv.issue.view">
+                <IssueDetailScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="stock-requests"
+            element={
+              <Guarded permission="inv.request.view">
+                <StockRequestsScreen />
+              </Guarded>
+            }
+          />
+          <Route
             path="counts"
             element={
-              <Guarded permission="inv.count.view">
+              <Guarded permission={['inv.count.view', 'inv.count.create']}>
                 <CountsScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="counts/:id"
+            element={
+              <Guarded permission="inv.count.view">
+                <CountDetailScreen />
               </Guarded>
             }
           />
