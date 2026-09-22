@@ -5,6 +5,7 @@ import { listCurrencyRates, type CurrencyRate } from '@api/endpoints';
 import { formatDate } from '@core/format';
 import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 import { Pager } from '@/components/Pager';
+import { MasterDataTabs } from './MasterDataTabs';
 
 /**
  * Currency rates — docs/ux/screen-map.md §5.3. An old rate is never carried forward: if the day's
@@ -27,6 +28,8 @@ export function CurrencyRatesScreen() {
 
   return (
     <Page title="Məzənnələr" subtitle="`1 <valyuta> = rateToBase AZN`, 8 onluq">
+      <MasterDataTabs />
+
       <Alert tone="warning" title="Köhnə məzənnə avtomatik götürülmür">
         Sənəd tarixinə məzənnə yoxdursa PO və xarici valyutada qəbul bloklanır —{' '}
         <span className="wms-num">409 FX_RATE_MISSING</span>.
@@ -39,7 +42,9 @@ export function CurrencyRatesScreen() {
         {rates.isLoading ? (
           <LoadingState />
         ) : rates.isError ? (
-          <ErrorState error={rates.error} onRetry={() => void rates.refetch()} />
+          <div className="wms-card__body">
+            <ErrorState error={rates.error} onRetry={() => void rates.refetch()} />
+          </div>
         ) : (
           <DataTable<CurrencyRate>
             columns={columns}

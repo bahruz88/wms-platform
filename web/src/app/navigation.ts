@@ -126,6 +126,7 @@ export const NAV_GROUPS: NavGroup[] = [
           'master.currency.view',
         ],
         match: [
+          '/master-data/categories',
           '/master-data/suppliers',
           '/master-data/locations',
           '/master-data/uoms',

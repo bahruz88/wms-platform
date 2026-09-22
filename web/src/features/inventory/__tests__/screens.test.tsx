@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -191,8 +191,10 @@ const mocks = {
   listLocations: vi.fn(async () => page([])),
   listSuppliers: vi.fn(notRouted),
   listUoms: vi.fn(notRouted),
-  // The reason-code list is the one the audit calls out: unrouted on the gateway today.
+  // The reason-code list: live on the gateway now, but the error path still has to hold, so
+  // the default here is the failure and the happy path is set per test.
   listReasonCodes: vi.fn(notRouted),
+  listProductUoms: vi.fn(async (): Promise<unknown> => []),
   listInventorySettings: vi.fn(notRouted),
   listPendingApprovals: vi.fn(notRouted),
   getDashboardSummary: vi.fn(notRouted),
@@ -236,6 +238,7 @@ async function mountAt(path: string, roles: string[]): Promise<void> {
     subject: 'sub',
     roles,
     permissions: permissionsForRoles(roles),
+    permissionSource: 'roles' as const,
     accessToken: 'token',
   };
 
@@ -326,20 +329,35 @@ describe('return to vendor', () => {
     await waitFor(() => expect(mocks.sendReturnToVendor).toHaveBeenCalledWith(2, 1));
   });
 
-  it('survives the bare decimal string the service sends for claimAmount', async () => {
-    // Regression: the contract declares `Money { amount, currency }` but the live service
-    // answers `"claimAmount": "40.0000"`. Reading `.amount` off that reached Decimal as
-    // `undefined` and threw `[DecimalError] Invalid argument`, blanking the whole document.
-    mocks.getReturnToVendor.mockResolvedValueOnce({ ...RTV_DOC, claimAmount: '40.0000' });
+  /*
+   * `claimAmount` regression guard.
+   *
+   * The service used to answer `"claimAmount": "40.0000"` where the contract declares
+   * `Money { amount, currency }`, and two adapters absorbed the divergence: `moneyRef()` on the
+   * way in and `withWireClaimAmount()` on the way out. Both are deleted now that the service
+   * speaks the contract. These two tests are what would catch it going back: the document has
+   * to render the object, and the close request has to carry `currency` with the amount.
+   */
+  it('renders the contract Money object the service answers with', async () => {
+    mocks.getReturnToVendor.mockResolvedValueOnce({
+      ...RTV_DOC,
+      claimAmount: { amount: '40.0000', currency: 'AZN' },
+    });
     await mountAt('/inventory/returns/2', ['ADMIN']);
     await waitFor(() => expect(screen.getByText('RV-2026-00002')).toBeInTheDocument());
     expect(screen.getByText(/40,00/)).toBeInTheDocument();
+    expect(screen.queryByText('[object Object]')).toBeNull();
   });
 
-  it('renders the claim column for either shape in the list', async () => {
+  it('renders the claim column from the contract Money object in the list', async () => {
     mocks.listReturnsToVendor.mockResolvedValueOnce(
       page([
-        { ...RTV_DOC, id: 1, docNo: 'RV-2026-00001', claimAmount: '20.0000' },
+        {
+          ...RTV_DOC,
+          id: 1,
+          docNo: 'RV-2026-00001',
+          claimAmount: { amount: '20.0000', currency: 'AZN' },
+        },
         { ...RTV_DOC, id: 2, claimAmount: { amount: '40.0000', currency: 'AZN' } },
       ]),
     );
@@ -348,6 +366,33 @@ describe('return to vendor', () => {
     expect(screen.getByText(/20,00/)).toBeInTheDocument();
     expect(screen.getByText(/40,00/)).toBeInTheDocument();
     expect(screen.queryByText('[object Object]')).toBeNull();
+  });
+
+  it('sends the close request with Money, not a flattened decimal string', async () => {
+    const user = userEvent.setup();
+    mocks.getReturnToVendor.mockResolvedValue({
+      ...RTV_DOC,
+      status: 'SENT',
+      claimAmount: { amount: '40.0000', currency: 'AZN' },
+    });
+    await mountAt('/inventory/returns/2', ['ADMIN']);
+    await waitFor(() => expect(screen.getByText('RV-2026-00002')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Cavabı qeyd et' }));
+    const dialog = await screen.findByRole('dialog');
+    const amount = within(dialog).getByLabelText(/Yekun iddia məbləği/);
+    fireEvent.change(amount, { target: { value: '35.5000' } });
+    // The dialog's own dismiss icon is also labelled «Bağla»; the footer button is the last.
+    const confirms = within(dialog).getAllByRole('button', { name: 'Bağla' });
+    await user.click(confirms[confirms.length - 1] as HTMLElement);
+    await waitFor(() => expect(mocks.closeReturnToVendor).toHaveBeenCalled());
+    expect(mocks.closeReturnToVendor).toHaveBeenCalledWith(
+      2,
+      1,
+      'ACCEPTED',
+      { amount: '35.5000', currency: 'AZN' },
+      null,
+    );
+    mocks.getReturnToVendor.mockResolvedValue(RTV_DOC);
   });
 
   it('is hidden from the branch user, whom the gateway refuses with 403', async () => {
@@ -425,6 +470,71 @@ describe('ledger reversal', () => {
 });
 
 describe('mandatory reason code', () => {
+  it('renders a real select of the group`s codes once the list answers', async () => {
+    // `GET /masterdata/reason-codes` serves now. The picker's normal path is a Select of the
+    // document's own `reasonGroup`, filtered server-side — not the id field that stood in for
+    // it while the route was missing.
+    const user = userEvent.setup();
+    mocks.listReasonCodes.mockResolvedValueOnce([
+      {
+        id: 1,
+        code: 'ADJ-ERR',
+        name: 'Səhv sənəd — düzəliş',
+        reasonGroup: 'ADJUSTMENT',
+        requiresApproval: false,
+        requiresPhoto: false,
+        isActive: true,
+        rowVersion: 1,
+      },
+      {
+        id: 2,
+        code: 'ADJ-COUNT',
+        name: 'Sayım fərqi',
+        reasonGroup: 'ADJUSTMENT',
+        requiresApproval: true,
+        requiresPhoto: false,
+        isActive: true,
+        rowVersion: 1,
+      },
+    ] as never);
+    await mountAt('/inventory/movement-groups/28', ['ADMIN']);
+    await waitFor(() => expect(screen.getByText('WS-2026-00067')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Storno et' }));
+    const dialog = await screen.findByRole('dialog');
+
+    const select = await within(dialog).findByLabelText(/Səbəb kodu/);
+    expect(select.tagName).toBe('SELECT');
+    expect(
+      within(dialog).getByRole('option', { name: 'ADJ-ERR · Səhv sənəd — düzəliş' }),
+    ).toBeInTheDocument();
+    // The group is the document's, and the server does the filtering.
+    expect(mocks.listReasonCodes).toHaveBeenCalledWith({ reasonGroup: 'ADJUSTMENT' });
+  });
+
+  it('posts the reversal with the id chosen from the real list', async () => {
+    const user = userEvent.setup();
+    mocks.listReasonCodes.mockResolvedValueOnce([
+      {
+        id: 2,
+        code: 'ADJ-COUNT',
+        name: 'Sayım fərqi',
+        reasonGroup: 'ADJUSTMENT',
+        requiresApproval: true,
+        requiresPhoto: false,
+        isActive: true,
+        rowVersion: 1,
+      },
+    ] as never);
+    await mountAt('/inventory/movement-groups/28', ['ADMIN']);
+    await waitFor(() => expect(screen.getByText('WS-2026-00067')).toBeInTheDocument());
+    await user.click(screen.getByRole('button', { name: 'Storno et' }));
+    const dialog = await screen.findByRole('dialog');
+    const select = await within(dialog).findByLabelText(/Səbəb kodu/);
+    await user.selectOptions(select, '2');
+    await user.click(within(dialog).getByRole('button', { name: 'Storno et' }));
+    await waitFor(() => expect(mocks.reverseMovementGroup).toHaveBeenCalledWith(28, 2, undefined));
+  });
+
   it('explains itself instead of rendering an empty dropdown', async () => {
     const user = userEvent.setup();
     await mountAt('/inventory/movement-groups/28', ['ADMIN']);
@@ -435,7 +545,7 @@ describe('mandatory reason code', () => {
     // Not a select with no options — a field that names the operation and its status.
     expect(within(dialog).queryByRole('combobox')).toBeNull();
     const hint = dialog.querySelector('.wms-field__hint');
-    expect(hint?.textContent).toContain('GET /master-data/reason-codes');
+    expect(hint?.textContent).toContain('GET /masterdata/reason-codes');
     expect(hint?.textContent).toContain('404');
     expect(hint?.textContent).toContain('ADJUSTMENT');
   });
@@ -556,5 +666,85 @@ describe('batch status dialog', () => {
     await mountAt('/inventory/batches', ['AUDITOR']);
     await waitFor(() => expect(screen.getByText('BSB-2602-B')).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: 'Status dəyiş' })).toBeNull();
+  });
+});
+
+describe('product units of measure', () => {
+  const HAM = {
+    id: 10,
+    sku: 'HAM',
+    name: 'Vetçina',
+    baseUomId: 1,
+    baseUomCode: 'G',
+    productType: 'FOOD',
+    requiresBatch: true,
+    requiresExpiry: true,
+    isActive: true,
+  };
+
+  const UOM_ROWS = [
+    {
+      id: 17,
+      productId: 10,
+      uomId: 1,
+      uomCode: 'G',
+      factorToBase: '1.00000000',
+      isPurchaseDefault: false,
+      isIssueDefault: true,
+      validFrom: '2026-01-01',
+    },
+    {
+      id: 18,
+      productId: 10,
+      uomId: 2,
+      uomCode: 'KG',
+      factorToBase: '1000.00000000',
+      isPurchaseDefault: true,
+      isIssueDefault: false,
+      validFrom: '2026-01-01',
+    },
+  ];
+
+  /**
+   * `GET /masterdata/products/{id}/uoms` was unrouted, so every creation screen built a
+   * one-element list out of the product's base unit and the select could never be changed —
+   * `QtyUomInput` could not do the one thing it exists for. These pin the wiring.
+   */
+  it('offers the product`s alternative units, not only the base one', async () => {
+    const user = userEvent.setup();
+    mocks.listProducts.mockResolvedValue(page([HAM]) as never);
+    mocks.listProductUoms.mockResolvedValue(UOM_ROWS as never);
+    await mountAt('/inventory/stock-requests/new', ['BRANCH_USER']);
+    await screen.findByText('Yeni mal tələbi');
+    await screen.findByRole('option', { name: 'HAM · Vetçina' });
+
+    await user.selectOptions(screen.getByLabelText(/məhsul/i), '10');
+    await waitFor(() => expect(mocks.listProductUoms).toHaveBeenCalledWith(10));
+
+    const uomSelect = await screen.findByLabelText('Ölçü vahidi');
+    expect(within(uomSelect).getByRole('option', { name: 'KG' })).toBeInTheDocument();
+    expect(within(uomSelect).getByRole('option', { name: 'G' })).toBeInTheDocument();
+    mocks.listProducts.mockResolvedValue(page([]) as never);
+  });
+
+  it('shows the base equivalent when a non-base unit is picked', async () => {
+    const user = userEvent.setup();
+    mocks.listProducts.mockResolvedValue(page([HAM]) as never);
+    mocks.listProductUoms.mockResolvedValue(UOM_ROWS as never);
+    await mountAt('/inventory/stock-requests/new', ['BRANCH_USER']);
+    await screen.findByText('Yeni mal tələbi');
+    await screen.findByRole('option', { name: 'HAM · Vetçina' });
+    await user.selectOptions(screen.getByLabelText(/məhsul/i), '10');
+
+    const uomSelect = await screen.findByLabelText('Ölçü vahidi');
+    await waitFor(() =>
+      expect(within(uomSelect).getByRole('option', { name: 'KG' })).toBeInTheDocument(),
+    );
+    await user.selectOptions(uomSelect, '2');
+    fireEvent.change(screen.getByLabelText(/Tələb olunan miqdar/), { target: { value: '8' } });
+
+    // 8 KG × 1000 = 8 000 G, computed through Decimal from the contract's decimal string.
+    expect(await screen.findByText(/8\s000,0000 G/)).toBeInTheDocument();
+    mocks.listProducts.mockResolvedValue(page([]) as never);
   });
 });

@@ -197,7 +197,7 @@ describe('RefPicker', () => {
         label="Təchizatçı"
         value=""
         options={options}
-        operation="GET /master-data/suppliers"
+        operation="GET /masterdata/suppliers"
         onChange={() => {}}
       />,
     );
@@ -217,14 +217,14 @@ describe('RefPicker', () => {
         value=""
         options={[]}
         listError={listError}
-        operation="GET /master-data/suppliers"
+        operation="GET /masterdata/suppliers"
         onChange={() => {}}
       />,
     );
     expect(container.querySelector('select')).toBeNull();
     const hint = container.querySelector('.wms-field__hint');
     // The reason is named, with the status — never a silently empty picker.
-    expect(hint?.textContent).toContain('GET /master-data/suppliers');
+    expect(hint?.textContent).toContain('GET /masterdata/suppliers');
     expect(hint?.textContent).toContain('404');
   });
 
@@ -241,7 +241,7 @@ describe('RefPicker', () => {
         value=""
         options={options}
         listError={listError}
-        operation="GET /master-data/suppliers"
+        operation="GET /masterdata/suppliers"
         onChange={() => {}}
       />,
     );

@@ -38,7 +38,10 @@ import { ReturnsScreen } from '@features/inventory/ReturnsScreen';
 import { ReturnCreateScreen } from '@features/inventory/ReturnCreateScreen';
 import { ReturnDetailScreen } from '@features/inventory/ReturnDetailScreen';
 import { ProductsScreen } from '@features/masterdata/ProductsScreen';
+import { ProductDetailScreen } from '@features/masterdata/ProductDetailScreen';
+import { CategoriesScreen } from '@features/masterdata/CategoriesScreen';
 import { SuppliersScreen } from '@features/masterdata/SuppliersScreen';
+import { SupplierDetailScreen } from '@features/masterdata/SupplierDetailScreen';
 import { LocationsScreen } from '@features/masterdata/LocationsScreen';
 import { UomsScreen } from '@features/masterdata/UomsScreen';
 import { ReasonCodesScreen } from '@features/masterdata/ReasonCodesScreen';
@@ -381,10 +384,34 @@ export function AppRoutes() {
             }
           />
           <Route
+            path="products/:id"
+            element={
+              <Guarded permission="master.product.view">
+                <ProductDetailScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="categories"
+            element={
+              <Guarded permission="master.product.view">
+                <CategoriesScreen />
+              </Guarded>
+            }
+          />
+          <Route
             path="suppliers"
             element={
               <Guarded permission="master.supplier.view">
                 <SuppliersScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="suppliers/:id"
+            element={
+              <Guarded permission="master.supplier.view">
+                <SupplierDetailScreen />
               </Guarded>
             }
           />

@@ -22,6 +22,7 @@ import {
   MetaGrid,
   ProductCell,
 } from '@/components/Page';
+import { AttachmentsCard } from '@/components/AttachmentsCard';
 
 /**
  * Waste document — docs/ux/screen-map.md §3.9, the screen the dashboard's pending-approval link
@@ -276,7 +277,7 @@ export function WasteDetailScreen() {
             <Meta label="Sətir sayı" value={<span className="wms-num">{doc.lines.length}</span>} />
           )}
           <Meta
-            label="Foto"
+            label="Sənədə bağlı foto"
             value={
               doc.attachmentIds.length > 0 ? (
                 <span className="wms-num">{doc.attachmentIds.length}</span>
@@ -284,11 +285,20 @@ export function WasteDetailScreen() {
                 <span className="wms-muted">yoxdur</span>
               )
             }
-            sub="requiresPhoto olduqda ən azı bir foto"
+            // `attachmentIds` is what the document was created with; files added afterwards
+            // live in the «Əlavələr» kartı below and are not counted here.
+            sub="sonradan əlavə edilənlər «Əlavələr» kartındadır"
           />
           <Meta label="Qeyd" value={doc.note ?? '—'} />
         </MetaGrid>
       </Card>
+
+      <AttachmentsCard
+        entityType="WASTE"
+        entityId={doc.id}
+        attachmentTypes={['WASTE_PHOTO', 'DISCREPANCY_PHOTO', 'OTHER']}
+        requiredNote="Səbəb kodu `requiresPhoto` olduqda sənəd ən azı bir foto olmadan təsdiqə göndərilmir."
+      />
 
       <Card title="Tullantı sətirləri" flush>
         <DataTable<WasteLine>

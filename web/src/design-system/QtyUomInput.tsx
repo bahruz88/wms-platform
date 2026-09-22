@@ -6,7 +6,12 @@ import { format } from './format';
 export interface ProductUom {
   id: string | number;
   code: string;
-  factorToBase: number;
+  /**
+   * `master_product_uom.factor_to_base`, DECIMAL(18,8). `index.d.ts` declares it `number`; the
+   * contract sends a string and that is what the app passes, so both are accepted and neither
+   * is parsed — the conversion below runs through `Decimal`.
+   */
+  factorToBase: string | number;
 }
 
 /**
@@ -63,7 +68,16 @@ export function QtyUomInput({
 
   const selected = uoms.find((u) => String(u.id) === String(uomId)) ?? uoms[0];
   const factor = selected?.factorToBase ?? 1;
-  const isBase = !baseUomCode || !selected || selected.code === baseUomCode || factor === 1;
+  // `factorToBase` arrives as DECIMAL(18,8), so the base row reads `"1.00000000"`, not `1`:
+  // the comparison goes through Decimal or a `CASE` whose factor is exactly one would still
+  // print a conversion line.
+  let factorIsOne = true;
+  try {
+    factorIsOne = new Decimal(String(factor)).equals(1);
+  } catch {
+    factorIsOne = true;
+  }
+  const isBase = !baseUomCode || !selected || selected.code === baseUomCode || factorIsOne;
 
   let baseEquivalent: string | null = null;
   if (!isBase && qty !== undefined && qty !== '' && baseUomCode) {

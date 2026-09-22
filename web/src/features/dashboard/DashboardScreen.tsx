@@ -16,7 +16,7 @@ import {
   type PendingApproval,
 } from '@api/endpoints';
 import { normalizeBalance } from '@api/adapters';
-import { settingsFallbackNote, useInventorySettings } from '@api/settings';
+import { settingsUnavailableNote, useInventorySettings } from '@api/settings';
 import { useAuth } from '@auth/index';
 import { Decimal, Money } from '@core/decimal';
 import { daysUntil, formatDate, formatDateTime, formatMoney, formatNumber } from '@core/format';
@@ -123,7 +123,11 @@ export function DashboardScreen() {
           location: row.location.name,
         };
       })
-      .filter((row) => row.daysLeft !== null && row.daysLeft <= warningDays);
+      // No tenant window means no claim about "expiring soon": the nearest expiries are still
+      // worth showing, but they are not filtered against a number nobody configured.
+      .filter(
+        (row) => row.daysLeft !== null && (warningDays === null || row.daysLeft <= warningDays),
+      );
     withExpiry.sort((a, b) => (a.daysLeft ?? 0) - (b.daysLeft ?? 0));
     return withExpiry.slice(0, 12);
   }, [rows, warningDays]);
@@ -163,7 +167,7 @@ export function DashboardScreen() {
       render: (row) =>
         row.daysLeft === null ? (
           <span className="wms-muted">—</span>
-        ) : row.daysLeft <= criticalDays ? (
+        ) : criticalDays !== null && row.daysLeft <= criticalDays ? (
           <Badge tone="danger" dot title={`expiry_critical_days = ${criticalDays}`}>
             {formatNumber(row.daysLeft, 0)}
           </Badge>
@@ -225,8 +229,12 @@ export function DashboardScreen() {
       ) : null}
 
       {settings.unavailable ? (
-        <Alert tone="info" title="Hədlər tenant parametrindən oxunmadı" code="NOT_FOUND">
-          {settingsFallbackNote(settings.status)}
+        <Alert
+          tone="warning"
+          title="Hədlər tenant parametrindən oxunmadı"
+          code={settings.code ?? undefined}
+        >
+          {settingsUnavailableNote(settings.status)}
         </Alert>
       ) : null}
 
@@ -270,7 +278,11 @@ export function DashboardScreen() {
           label={t('dashboard.kpiExpiring')}
           value={expiring.length}
           unit={t('dashboard.kpiExpiringUnit')}
-          hint={`expiry_warning_days = ${warningDays}`}
+          hint={
+            warningDays === null
+              ? 'expiry_warning_days oxunmadı — ən yaxın son istifadə tarixləri'
+              : `expiry_warning_days = ${warningDays}`
+          }
         />
         <KpiCard
           label={canViewCost ? t('dashboard.kpiBalanceRows') : t('dashboard.kpiOpenPos')}

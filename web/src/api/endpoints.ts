@@ -1,5 +1,6 @@
 import {
   consumptionApi,
+  documentsApi,
   identityApi,
   inventoryApi,
   masterDataApi,
@@ -11,6 +12,10 @@ import type {
   components as ConsumptionComponents,
   paths as ConsumptionPaths,
 } from './generated/consumption';
+import type {
+  components as DocumentsComponents,
+  paths as DocumentsPaths,
+} from './generated/documents';
 import type {
   components as IdentityComponents,
   paths as IdentityPaths,
@@ -55,11 +60,22 @@ export type Permission = IdentityComponents['schemas']['Permission'];
 export type Product = MasterDataComponents['schemas']['Product'];
 export type ProductSummary = MasterDataComponents['schemas']['ProductSummary'];
 export type Location = MasterDataComponents['schemas']['Location'];
+export type Supplier = MasterDataComponents['schemas']['Supplier'];
 export type SupplierSummary = MasterDataComponents['schemas']['SupplierSummary'];
+export type SupplierCertificate = MasterDataComponents['schemas']['SupplierCertificate'];
+export type Category = MasterDataComponents['schemas']['Category'];
 export type Uom = MasterDataComponents['schemas']['Uom'];
 export type ReasonCode = MasterDataComponents['schemas']['ReasonCode'];
 export type CurrencyRate = MasterDataComponents['schemas']['CurrencyRate'];
 export type ProductUomRow = MasterDataComponents['schemas']['ProductUom'];
+
+export type Attachment = DocumentsComponents['schemas']['Attachment'];
+export type AttachmentType = DocumentsComponents['schemas']['AttachmentType'];
+export type AttachmentEntityType = DocumentsComponents['schemas']['EntityType'];
+export type AllowedContentType = DocumentsComponents['schemas']['AllowedContentType'];
+export type PresignRequest = DocumentsComponents['schemas']['PresignRequest'];
+export type PresignResponse = DocumentsComponents['schemas']['PresignResponse'];
+export type DownloadUrlResponse = DocumentsComponents['schemas']['DownloadUrlResponse'];
 
 export type Balance = InventoryComponents['schemas']['Balance'];
 export type Batch = InventoryComponents['schemas']['Batch'];
@@ -154,8 +170,20 @@ export const listProductUoms = async (id: number) =>
 export const listLocations = async (query: Query<MasterDataPaths, '/locations'> = {}) =>
   unwrap(await masterDataApi.GET('/locations', { params: { query } }));
 
+export const getLocation = async (id: number) =>
+  unwrap(await masterDataApi.GET('/locations/{id}', { params: { path: { id } } }));
+
 export const listSuppliers = async (query: Query<MasterDataPaths, '/suppliers'> = {}) =>
   unwrap(await masterDataApi.GET('/suppliers', { params: { query } }));
+
+export const getSupplier = async (id: number) =>
+  unwrap(await masterDataApi.GET('/suppliers/{id}', { params: { path: { id } } }));
+
+export const listSupplierCertificates = async (id: number) =>
+  unwrap(await masterDataApi.GET('/suppliers/{id}/certificates', { params: { path: { id } } }));
+
+export const listCategories = async (query: Query<MasterDataPaths, '/categories'> = {}) =>
+  unwrap(await masterDataApi.GET('/categories', { params: { query } }));
 
 export const listUoms = async (query: Query<MasterDataPaths, '/uoms'> = {}) =>
   unwrap(await masterDataApi.GET('/uoms', { params: { query } }));
@@ -448,7 +476,7 @@ export const createReturnToVendor = async (body: ReturnToVendorCreate) =>
   unwrap(
     await inventoryApi.POST('/return-to-vendor', {
       params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
-      body: withWireClaimAmount(body),
+      body,
     }),
   );
 
@@ -473,25 +501,14 @@ export const closeReturnToVendor = async (
   unwrap(
     await inventoryApi.POST('/return-to-vendor/{id}/close', {
       params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
-      body: withWireClaimAmount({ rowVersion, outcome, claimAmount, outcomeNote }),
+      // `claimAmount` goes out in the contract's `Money { amount, currency }` shape. The
+      // service used to bind it as a bare decimal string and a flattening adapter sat here;
+      // it now accepts and answers with the object, so the adapter is gone. The regression is
+      // covered in `features/inventory/__tests__/screens.test.tsx` — if the wire body ever
+      // loses `currency` again, that test fails rather than a document going blank.
+      body: { rowVersion, outcome, claimAmount, outcomeNote },
     }),
   );
-
-/**
- * The return-to-vendor endpoints declare `claimAmount` as `Money { amount, currency }` but the
- * running service binds it as a bare decimal string: sending the object gets
- * `400 BAD_REQUEST — Failed to read parameter "ReturnToVendorCreateRequest request" from the
- * request body as JSON` (verified against the gateway on :5001, both create and close).
- *
- * Screens keep working in the contract's shape; the divergence is flattened here and only here,
- * so it is one line to delete when the service is corrected. The amount is never parsed into a
- * `number` on the way through (ADR-008).
- */
-function withWireClaimAmount<T extends { claimAmount?: MoneyDto | null }>(body: T): T {
-  if (body.claimAmount === undefined) return body;
-  const amount = body.claimAmount === null ? null : body.claimAmount.amount;
-  return { ...body, claimAmount: amount } as unknown as T;
-}
 
 // --- batches / reversal ----------------------------------------------------------------------------
 export const getBatch = async (id: number) =>
@@ -521,6 +538,43 @@ export const reverseMovementGroup = async (id: number, reasonCodeId: number, not
   );
 
 export const listInventorySettings = async () => unwrap(await inventoryApi.GET('/settings'));
+
+// --- documents / attachments ------------------------------------------------------------------
+/**
+ * The three-step upload the contract describes (documents.v1.yaml §«Əlavələr»): the server
+ * signs a MinIO `PUT`, the browser uploads straight to MinIO, then the server verifies the
+ * object and moves the row to `READY`. The bytes never pass through the gateway.
+ */
+export const listAttachments = async (query: Query<DocumentsPaths, '/attachments'>) =>
+  unwrap(await documentsApi.GET('/attachments', { params: { query } }));
+
+export const presignAttachment = async (body: PresignRequest) =>
+  unwrap(
+    await documentsApi.POST('/attachments/presign', {
+      params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body,
+    }),
+  );
+
+/** `PENDING → READY`: the server compares the uploaded object against the checksum. */
+export const completeAttachment = async (id: number, checksumSha256: string) =>
+  unwrap(
+    await documentsApi.POST('/attachments/{id}/complete', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { checksumSha256 },
+    }),
+  );
+
+export const getAttachmentDownloadUrl = async (id: number, inline = false) =>
+  unwrap(
+    await documentsApi.GET('/attachments/{id}/download-url', {
+      params: { path: { id }, query: { inline } },
+    }),
+  );
+
+export const deleteAttachment = async (id: number): Promise<void> => {
+  await documentsApi.DELETE('/attachments/{id}', { params: { path: { id } } });
+};
 
 // --- procurement ------------------------------------------------------------------------------------
 export const listRequisitions = async (query: Query<ProcurementPaths, '/requisitions'> = {}) =>

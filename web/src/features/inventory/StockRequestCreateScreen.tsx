@@ -10,6 +10,7 @@ import {
   type Location,
   type ProductSummary,
 } from '@api/endpoints';
+import { useProductUoms } from '@api/productUoms';
 import { Decimal } from '@core/decimal';
 import { Card, DocumentPage, ErrorState, MetaGrid } from '@/components/Page';
 import { RefPicker } from '@/components/RefPicker';
@@ -93,10 +94,20 @@ export function StockRequestCreateScreen() {
   const linesValid = lines.every((l) => Object.keys(lineErrors(l)).length === 0);
   const headerValid = Boolean(docDate && fromLocationId && toLocationId) && !sameLocation;
 
+  const productOf = (productId: string): ProductSummary | undefined =>
+    (products.data?.items ?? []).find((p) => String(p.id) === productId);
+
+  // The alternative units each product may be requested in, from
+  // `GET /masterdata/products/{id}/uoms`. The base unit is no longer assumed.
+  const productUoms = useProductUoms(
+    lines.map((l) => Number(l.productId)).filter((id) => Number.isFinite(id) && id > 0),
+    'issue',
+  );
+
   const uomOf = (line: DraftLine): number => {
     if (line.uomId) return Number(line.uomId);
-    const p = (products.data?.items ?? []).find((x) => String(x.id) === line.productId);
-    return p?.baseUomId ?? 0;
+    const p = productOf(line.productId);
+    return productUoms.uomsFor(p).defaultUomId ?? p?.baseUomId ?? 0;
   };
 
   const create = useMutation({
@@ -180,7 +191,7 @@ export function StockRequestCreateScreen() {
             required
             value={fromLocationId}
             placeholder="Mənbə lokasiya"
-            operation="GET /master-data/locations"
+            operation="GET /masterdata/locations"
             listError={locations.error}
             options={locationOptions}
             onChange={setFromLocationId}
@@ -190,7 +201,7 @@ export function StockRequestCreateScreen() {
             required
             value={toLocationId}
             placeholder="Təyinat lokasiya"
-            operation="GET /master-data/locations"
+            operation="GET /masterdata/locations"
             listError={locations.error}
             error={sameLocation ? 'Mənbə və təyinat eyni ola bilməz.' : undefined}
             options={locationOptions}
@@ -226,9 +237,8 @@ export function StockRequestCreateScreen() {
         <div className="wms-stack">
           {lines.map((line, index) => {
             const errors = line.dirty ? lineErrors(line) : {};
-            const product = (products.data?.items ?? []).find(
-              (p) => String(p.id) === line.productId,
-            );
+            const product = productOf(line.productId);
+            const uomSet = productUoms.uomsFor(product);
             return (
               <Card key={line.key}>
                 <MetaGrid columns={4}>
@@ -237,7 +247,7 @@ export function StockRequestCreateScreen() {
                     required
                     value={line.productId}
                     placeholder="Məhsul seçin"
-                    operation="GET /master-data/products"
+                    operation="GET /masterdata/products"
                     listError={products.error}
                     error={errors.productId}
                     options={(products.data?.items ?? []).map((p) => ({
@@ -250,20 +260,19 @@ export function StockRequestCreateScreen() {
                     label="Tələb olunan miqdar"
                     required
                     qty={line.qty}
-                    uomId={line.uomId || String(product?.baseUomId ?? '')}
+                    uomId={line.uomId || String(uomSet.defaultUomId ?? '')}
                     error={errors.qty}
                     baseUomCode={product?.baseUomCode}
                     decimals={4}
+                    hint={
+                      product && !uomSet.fromServer && productUoms.error
+                        ? `Vahid siyahısı oxunmadı (${productUoms.error.code} ${productUoms.error.status}) — yalnız base vahid`
+                        : undefined
+                    }
                     uoms={
-                      product
-                        ? [
-                            {
-                              id: product.baseUomId,
-                              code: product.baseUomCode ?? '—',
-                              factorToBase: 1,
-                            },
-                          ]
-                        : [{ id: '', code: '—', factorToBase: 1 }]
+                      uomSet.options.length > 0
+                        ? uomSet.options
+                        : [{ id: '', code: '—', factorToBase: '1' }]
                     }
                     onQtyChange={(value) => update(line.key, { qty: value })}
                     onUomChange={(value) => update(line.key, { uomId: value })}

@@ -64,8 +64,10 @@ export function CountDetailScreen() {
 
   const doc = count.data ?? null;
 
+  // The tenant's approval threshold. `null` means it could not be read — nothing on this screen
+  // substitutes a number for it, so the «Həddi aşan fərq» figure reads «—» instead of a count
+  // computed against a guess.
   const thresholdPct = settings.get('count_variance_approval_threshold_pct');
-  const thresholdIsFallback = settings.isFallback('count_variance_approval_threshold_pct');
 
   const invalidate = () => {
     setConfirmOpen(null);
@@ -173,7 +175,7 @@ export function CountDetailScreen() {
             counted={row.countedQty}
             uom={row.baseUomCode}
             decimals={3}
-            thresholdPct={thresholdPct}
+            thresholdPct={thresholdPct ?? undefined}
             reasonCode={row.reasonCodeId ? String(row.reasonCodeId) : undefined}
           />
         ),
@@ -315,10 +317,10 @@ export function CountDetailScreen() {
         <KpiCard label="Fərqi olan sətir" value={varianceCount} />
         <KpiCard
           label="Həddi aşan fərq"
-          value={overThreshold}
+          value={thresholdPct === null ? '—' : overThreshold}
           hint={
-            thresholdIsFallback
-              ? `count_variance_approval_threshold_pct = ${thresholdPct} (standart dəyər — tenant parametri oxunmadı)`
+            thresholdPct === null
+              ? 'count_variance_approval_threshold_pct oxunmadı — hədd tətbiq edilmir'
               : `count_variance_approval_threshold_pct = ${thresholdPct}`
           }
         />
@@ -485,8 +487,9 @@ function isZero(value: string | null | undefined): boolean {
 }
 
 /** `|variancePct| > threshold` — the same comparison `VarianceIndicator` makes. */
-export function exceeds(pct: string | null | undefined, thresholdPct: number): boolean {
-  if (pct === null || pct === undefined) return false;
+export function exceeds(pct: string | null | undefined, thresholdPct: number | null): boolean {
+  // No tenant threshold, no verdict: an unread setting never marks a line as over the limit.
+  if (pct === null || pct === undefined || thresholdPct === null) return false;
   try {
     return new Decimal(pct).abs().greaterThan(thresholdPct);
   } catch {

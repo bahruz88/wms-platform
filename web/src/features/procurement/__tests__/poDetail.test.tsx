@@ -107,6 +107,7 @@ async function mount(roles: string[]) {
           subject: 'sub',
           roles,
           permissions: permissionsForRoles(roles),
+          permissionSource: 'roles' as const,
           accessToken: 'token',
         }}
       >

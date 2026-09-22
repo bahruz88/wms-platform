@@ -15,6 +15,7 @@ import {
   MetaGrid,
   ProductCell,
 } from '@/components/Page';
+import { AttachmentsCard } from '@/components/AttachmentsCard';
 
 /**
  * Sample (AQTA and other authorities) — docs/ux/screen-map.md §3.10.
@@ -172,6 +173,13 @@ export function SampleDetailScreen() {
           />
         </MetaGrid>
       </Card>
+
+      <AttachmentsCard
+        entityType="SAMPLE"
+        entityId={doc.id}
+        attachmentTypes={['CERTIFICATE', 'OTHER']}
+        requiredNote="Nümunənin aktı və ya protokolu əlavə edilməlidir — sənəd yoxlama orqanına bu sənədlə bağlanır."
+      />
 
       <Card title="Nümunə sətirləri" flush>
         <DataTable<WasteLine>

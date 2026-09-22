@@ -10,7 +10,6 @@ import {
   type ReturnToVendor,
   type WasteLine,
 } from '@api/endpoints';
-import { moneyRef } from '@api/adapters';
 import { useAuth } from '@auth/index';
 import { Money } from '@core/decimal';
 import { formatDate, formatDateTime, formatMoney, formatNumber } from '@core/format';
@@ -23,6 +22,7 @@ import {
   MetaGrid,
   ProductCell,
 } from '@/components/Page';
+import { AttachmentsCard } from '@/components/AttachmentsCard';
 
 /**
  * Return-to-vendor document — screen-map §3.11, the whole life of the document on one page:
@@ -49,9 +49,9 @@ export function ReturnDetailScreen() {
 
   const rowVersion = rtv.data?.rowVersion ?? 1;
   const canViewCost = can('master.product.view_cost');
-  // The service answers `claimAmount` as a bare decimal string although the contract declares
-  // `Money`; `moneyRef` accepts either and always hands back the contract's object.
-  const claim = moneyRef(rtv.data?.claimAmount);
+  // `Money { amount, currency }` exactly as the contract declares it; the service answers in
+  // that shape now, so nothing normalises it on the way in.
+  const claim = rtv.data?.claimAmount ?? null;
 
   const run = useMutation({
     mutationFn: () =>
@@ -259,6 +259,12 @@ export function ReturnDetailScreen() {
           empty="Bu sənəddə sətir yoxdur."
         />
       </Card>
+
+      <AttachmentsCard
+        entityType="RETURN_TO_VENDOR"
+        entityId={doc.id}
+        attachmentTypes={['DISCREPANCY_PHOTO', 'DELIVERY_NOTE', 'OTHER']}
+      />
 
       <Card title="Sənəd izi">
         <MetaGrid columns={4}>

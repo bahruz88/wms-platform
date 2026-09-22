@@ -14,6 +14,7 @@ function sessionFor(roles: string[]): WmsSession {
     subject: 'sub',
     roles,
     permissions: permissionsForRoles(roles),
+    permissionSource: 'roles' as const,
     accessToken: 'token',
   };
 }

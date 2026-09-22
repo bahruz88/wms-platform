@@ -10,7 +10,8 @@ import {
 } from 'react';
 import type { User } from 'oidc-client-ts';
 import { setTokenProvider, setUnauthorizedHandler } from '@api/client';
-import { sessionFromUser, userManager, type WmsSession } from './session';
+import { getMe } from '@api/endpoints';
+import { sessionFromUser, userManager, withServerPermissions, type WmsSession } from './session';
 
 export type AuthStatus = 'loading' | 'anonymous' | 'authenticated' | 'error';
 
@@ -24,6 +25,11 @@ export interface AuthContextValue {
   can: (permission: string) => boolean;
   canAny: (permissions: readonly string[]) => boolean;
   hasRole: (role: string) => boolean;
+  /**
+   * Why the client's own role → permission port is still being used, when it is. `null` means
+   * the codes came from `GET /identity/me`, which is the normal path.
+   */
+  permissionFallbackReason: string | null;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -32,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [session, setSession] = useState<WmsSession | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [permissionFallbackReason, setPermissionFallbackReason] = useState<string | null>(null);
   const sessionRef = useRef<WmsSession | null>(null);
 
   // The API client pulls the token through a getter so it never imports React state.
@@ -57,6 +64,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(next);
       setStatus('authenticated');
       setError(null);
+
+      /*
+       * The permissions the server will actually enforce.
+       *
+       * `sessionRef` is already set, so the API client can read the bearer token; the screen
+       * renders immediately on the token-derived codes and is corrected the moment `/me`
+       * answers. A `/me` that fails is not fatal — the client port keeps the interface usable
+       * and the reason is recorded so a screen can say which list is on display.
+       */
+      void getMe()
+        .then((me) => {
+          if (sessionRef.current?.accessToken !== next.accessToken) return;
+          const merged = withServerPermissions(next, me);
+          sessionRef.current = merged;
+          setSession(merged);
+          setPermissionFallbackReason(
+            merged.permissionSource === 'server'
+              ? null
+              : 'GET /identity/me cavabında `permissions` sahəsi yoxdur — icazələr token rollarından hesablanır.',
+          );
+        })
+        .catch((meError: unknown) => {
+          if (sessionRef.current?.accessToken !== next.accessToken) return;
+          const detail =
+            typeof meError === 'object' && meError !== null && 'status' in meError
+              ? ` (${String((meError as { code?: string }).code ?? 'XƏTA')} ${String((meError as { status?: number }).status ?? 0)})`
+              : '';
+          setPermissionFallbackReason(
+            `GET /identity/me cavab vermədi${detail} — icazələr token rollarından hesablanır, serverin siyahısından yox.`,
+          );
+        });
     } catch (e) {
       sessionRef.current = null;
       setSession(null);
@@ -120,8 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       can: (permission) => session?.permissions.includes(permission) ?? false,
       canAny: (permissions) => permissions.some((p) => session?.permissions.includes(p) ?? false),
       hasRole: (role) => session?.roles.includes(role) ?? false,
+      permissionFallbackReason,
     }),
-    [status, session, error, signIn, signOut],
+    [status, session, error, signIn, signOut, permissionFallbackReason],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -151,6 +190,7 @@ export function TestAuthProvider({
       can: (permission) => session?.permissions.includes(permission) ?? false,
       canAny: (permissions) => permissions.some((p) => session?.permissions.includes(p) ?? false),
       hasRole: (role) => session?.roles.includes(role) ?? false,
+      permissionFallbackReason: null,
     }),
     [session],
   );

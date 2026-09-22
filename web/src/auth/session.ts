@@ -65,6 +65,9 @@ export interface AccessTokenClaims {
   sub?: string;
 }
 
+/** Where the session's permission codes came from. */
+export type PermissionSource = 'server' | 'roles';
+
 /** The signed-in user as the interface uses it. */
 export interface WmsSession {
   tenantId: number;
@@ -72,6 +75,16 @@ export interface WmsSession {
   subject: string;
   roles: string[];
   permissions: string[];
+  /**
+   * `server` — `GET /identity/me` answered and its `permissions` are what is in `permissions`;
+   * `roles` — the client resolved them from the token's roles because `/me` had not answered
+   * yet or did not carry the field.
+   */
+  permissionSource: PermissionSource;
+  /** The internal `iam_user.id`, once `/me` has answered. The token does not carry it. */
+  userId?: number;
+  /** The tenant's display name from `/me`, for the shell. */
+  tenantName?: string;
   accessToken: string;
   expiresAt?: number;
 }
@@ -114,9 +127,45 @@ export function sessionFromToken(accessToken: string, expiresAt?: number): WmsSe
     username: claims.preferred_username ?? claims.sub ?? 'naməlum',
     subject: claims.sub ?? '',
     roles,
+    // The starting point only. `AuthProvider` replaces this with the server's own list as soon
+    // as `GET /identity/me` answers; see `withServerPermissions` below.
     permissions: permissionsForRoles(roles),
+    permissionSource: 'roles',
     accessToken,
     expiresAt,
+  };
+}
+
+/**
+ * Folds `GET /identity/me` into the session.
+ *
+ * The client used to resolve permissions from the token's roles with a port of the server's
+ * `RolePermissionMap` — two copies of one rule, kept in step by hand, and wrong the moment a
+ * tenant defines a role of its own (`STOCKTAKER` exists in the running realm and no constant
+ * in this repo knows about it). `/me` now returns the effective codes, so the server is the
+ * single source and the port stays only as the fallback for the window before `/me` answers,
+ * or for a deployment whose `/me` omits the field.
+ *
+ * Roles still come from the token: `/me` agrees with `realm_access.roles` by contract, and the
+ * token is what the gateway authorises against.
+ */
+export function withServerPermissions(
+  session: WmsSession,
+  me: {
+    permissions?: string[] | null;
+    roles?: string[] | null;
+    user?: { id?: number } | null;
+    tenant?: { name?: string } | null;
+  },
+): WmsSession {
+  const permissions = Array.isArray(me.permissions) ? me.permissions : null;
+  return {
+    ...session,
+    roles: Array.isArray(me.roles) && me.roles.length > 0 ? me.roles : session.roles,
+    permissions: permissions ?? session.permissions,
+    permissionSource: permissions ? 'server' : session.permissionSource,
+    userId: me.user?.id ?? session.userId,
+    tenantName: me.tenant?.name ?? session.tenantName,
   };
 }
 

@@ -33,7 +33,7 @@ export function RefPicker({
   disabled?: boolean;
   /** The list query's error, when it failed. */
   listError?: ApiError | null;
-  /** The contract operation the picker reads, e.g. `GET /master-data/suppliers`. */
+  /** The contract operation the picker reads, e.g. `GET /masterdata/suppliers`. */
   operation: string;
   onChange: (value: string) => void;
 }) {

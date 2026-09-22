@@ -15,6 +15,7 @@ import {
   type SupplierSummary,
 } from '@api/endpoints';
 import { normalizeBalance } from '@api/adapters';
+import { useProductUoms } from '@api/productUoms';
 import { useAuth } from '@auth/index';
 import { Decimal } from '@core/decimal';
 import { Card, DocumentPage, ErrorState, Meta, MetaGrid } from '@/components/Page';
@@ -25,7 +26,7 @@ import { ReasonCodePicker } from '@/components/ReasonCodePicker';
  * New return to vendor — screen-map §3.11.
  *
  * The reason code is mandatory and its group is `RETURN`; it goes through `ReasonCodePicker`, so
- * when `GET /master-data/reason-codes` is unrouted the field says so and takes an id instead of
+ * when `GET /masterdata/reason-codes` is unrouted the field says so and takes an id instead of
  * rendering an empty dropdown that silently blocks the document.
  *
  * `receiptId` is optional but carried through from the goods-receipt screen when the user starts
@@ -97,6 +98,16 @@ export function ReturnCreateScreen() {
     { enabled: Boolean(locationId), retry: false },
   );
 
+  const productOf = (productId: string): ProductSummary | undefined =>
+    (products.data?.items ?? []).find((p) => String(p.id) === productId);
+
+  // `master_product_uom` for every product currently on a line — the alternative units the
+  // quantity may be entered in. One query per product, cached by id.
+  const productUoms = useProductUoms(
+    lines.map((l) => Number(l.productId)).filter((id) => Number.isFinite(id) && id > 0),
+    'issue',
+  );
+
   const batchesFor = useMemo(() => {
     const rows = (stock.data?.items ?? []).map((row) => normalizeBalance(row));
     const byProduct = new Map<string, Array<{ id: number; batchNo: string; available: string }>>();
@@ -134,11 +145,14 @@ export function ReturnCreateScreen() {
   const headerValid = Boolean(docDate && supplierId && locationId && reasonCodeId);
   const linesValid = lines.every((l) => Object.keys(lineErrors(l)).length === 0);
 
-  /** The UoM defaults to the product's base unit until `GET /products/{id}/uoms` is routed. */
+  /**
+   * The UoM the line is entered in: what the user chose, else the product's issue default from
+   * `GET /masterdata/products/{id}/uoms`. Nothing here guesses the base unit any more.
+   */
   const uomOf = (line: DraftLine): number => {
     if (line.uomId) return Number(line.uomId);
-    const p = (products.data?.items ?? []).find((x) => String(x.id) === line.productId);
-    return p?.baseUomId ?? 0;
+    const p = productOf(line.productId);
+    return productUoms.uomsFor(p).defaultUomId ?? p?.baseUomId ?? 0;
   };
 
   const create = useMutation({
@@ -223,7 +237,7 @@ export function ReturnCreateScreen() {
             required
             value={supplierId}
             placeholder="Təchizatçı seçin"
-            operation="GET /master-data/suppliers"
+            operation="GET /masterdata/suppliers"
             listError={suppliers.error}
             options={(suppliers.data?.items ?? []).map((s) => ({
               value: String(s.id),
@@ -236,7 +250,7 @@ export function ReturnCreateScreen() {
             required
             value={locationId}
             placeholder="Lokasiya seçin"
-            operation="GET /master-data/locations"
+            operation="GET /masterdata/locations"
             listError={locations.error}
             options={(locations.data?.items ?? [])
               .filter((l) => !l.isVirtual)
@@ -288,9 +302,8 @@ export function ReturnCreateScreen() {
         <div className="wms-stack">
           {lines.map((line, index) => {
             const errors = line.dirty ? lineErrors(line) : {};
-            const product = (products.data?.items ?? []).find(
-              (p) => String(p.id) === line.productId,
-            );
+            const product = productOf(line.productId);
+            const uomSet = productUoms.uomsFor(product);
             const batchOptions = batchesFor.get(line.productId) ?? [];
             return (
               <Card key={line.key}>
@@ -300,7 +313,7 @@ export function ReturnCreateScreen() {
                     required
                     value={line.productId}
                     placeholder="Məhsul seçin"
-                    operation="GET /master-data/products"
+                    operation="GET /masterdata/products"
                     listError={products.error}
                     error={errors.productId}
                     options={(products.data?.items ?? []).map((p) => ({
@@ -333,20 +346,19 @@ export function ReturnCreateScreen() {
                     label="Qaytarılan miqdar"
                     required
                     qty={line.qty}
-                    uomId={line.uomId || String(product?.baseUomId ?? '')}
+                    uomId={line.uomId || String(uomSet.defaultUomId ?? '')}
                     error={errors.qty}
                     baseUomCode={product?.baseUomCode}
                     decimals={4}
+                    hint={
+                      product && !uomSet.fromServer && productUoms.error
+                        ? `Vahid siyahısı oxunmadı (${productUoms.error.code} ${productUoms.error.status}) — yalnız base vahid`
+                        : undefined
+                    }
                     uoms={
-                      product
-                        ? [
-                            {
-                              id: product.baseUomId,
-                              code: product.baseUomCode ?? '—',
-                              factorToBase: 1,
-                            },
-                          ]
-                        : [{ id: '', code: '—', factorToBase: 1 }]
+                      uomSet.options.length > 0
+                        ? uomSet.options
+                        : [{ id: '', code: '—', factorToBase: '1' }]
                     }
                     onQtyChange={(value) => update(line.key, { qty: value })}
                     onUomChange={(value) => update(line.key, { uomId: value })}

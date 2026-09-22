@@ -27,6 +27,7 @@ import {
   type ReasonCode,
 } from '@api/endpoints';
 import { normalizeBalance } from '@api/adapters';
+import { useProductUoms } from '@api/productUoms';
 import { Decimal } from '@core/decimal';
 import { formatDate } from '@core/format';
 import { Card, DocumentPage, ErrorState, Meta, MetaGrid } from '@/components/Page';
@@ -117,6 +118,12 @@ export function IssueCreateScreen() {
   const activeIndex = lines.findIndex((l) => l.key === active?.key);
 
   const product = (products.data?.items ?? []).find((p) => String(p.id) === active?.productId);
+  // The alternative units the issue may be entered in (`master_product_uom`), from the server.
+  const productUoms = useProductUoms(
+    lines.map((l) => Number(l.productId)).filter((id) => Number.isFinite(id) && id > 0),
+    'issue',
+  );
+  const activeUoms = productUoms.uomsFor(product);
   const fromLocation = (locations.data?.items ?? []).find((l) => String(l.id) === fromLocationId);
   const toLocation = (locations.data?.items ?? []).find((l) => String(l.id) === toLocationId);
 
@@ -240,7 +247,9 @@ export function IssueCreateScreen() {
           qty: l.qty,
           uomId: Number(
             l.uomId ||
-              (products.data?.items ?? []).find((p) => String(p.id) === l.productId)?.baseUomId ||
+              productUoms.uomsFor(
+                (products.data?.items ?? []).find((p) => String(p.id) === l.productId),
+              ).defaultUomId ||
               1,
           ),
           ...(l.batchId ? { batchId: Number(l.batchId) } : {}),
@@ -329,7 +338,7 @@ export function IssueCreateScreen() {
               label="Mənbə lokasiya"
               required
               value={fromLocationId}
-              operation="GET /master-data/locations"
+              operation="GET /masterdata/locations"
               listError={locations.error ?? null}
               placeholder="Lokasiya seçin"
               options={(locations.data?.items ?? [])
@@ -341,7 +350,7 @@ export function IssueCreateScreen() {
               label="Hədəf lokasiya"
               required
               value={toLocationId}
-              operation="GET /master-data/locations"
+              operation="GET /masterdata/locations"
               listError={locations.error ?? null}
               placeholder="Lokasiya seçin"
               error={
@@ -407,7 +416,7 @@ export function IssueCreateScreen() {
                   label=""
                   required
                   value={active.productId}
-                  operation="GET /master-data/products"
+                  operation="GET /masterdata/products"
                   listError={products.error ?? null}
                   placeholder="Məhsul seçin"
                   error={errors.productId}
@@ -416,12 +425,8 @@ export function IssueCreateScreen() {
                     label: `${p.sku} · ${p.name}`,
                   }))}
                   onChange={(value) => {
-                    const picked = (products.data?.items ?? []).find((p) => String(p.id) === value);
-                    update(active.key, {
-                      productId: value,
-                      uomId: picked ? String(picked.baseUomId) : '',
-                      batchId: '',
-                    });
+                    // The unit comes from the new product's own rows, not from the old line.
+                    update(active.key, { productId: value, uomId: '', batchId: '' });
                   }}
                 />
                 {product ? (
@@ -451,14 +456,14 @@ export function IssueCreateScreen() {
                 label="Veriləcək miqdar"
                 required
                 qty={active.qty}
-                uomId={active.uomId}
+                uomId={active.uomId || String(activeUoms.defaultUomId ?? '')}
                 error={errors.qty}
                 baseUomCode={product?.baseUomCode}
                 decimals={4}
                 uoms={
-                  product
-                    ? [{ id: product.baseUomId, code: product.baseUomCode ?? '—', factorToBase: 1 }]
-                    : [{ id: '', code: '—', factorToBase: 1 }]
+                  activeUoms.options.length > 0
+                    ? activeUoms.options
+                    : [{ id: '', code: '—', factorToBase: '1' }]
                 }
                 onQtyChange={(value) => update(active.key, { qty: value })}
                 onUomChange={(value) => update(active.key, { uomId: value })}

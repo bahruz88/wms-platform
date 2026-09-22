@@ -3,6 +3,7 @@ import { Badge, DataTable, TextField, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listUsers, type UserSummary } from '@api/endpoints';
 import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
+import { AdminTabs } from './AdminTabs';
 import { Pager } from '@/components/Pager';
 
 /**
@@ -44,6 +45,8 @@ export function UsersScreen() {
       title="İstifadəçilər"
       subtitle="Keycloak subject bağlanması, rollar və lokasiya girişi (boş = hamısı)"
     >
+      <AdminTabs />
+
       <Card>
         <div className="wms-toolbar">
           <TextField

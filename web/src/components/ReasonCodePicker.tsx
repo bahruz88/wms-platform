@@ -9,18 +9,22 @@ import { isApiError } from '@api/problem';
  * The mandatory reason code, as a control that explains itself.
  *
  * Every cancellation, waste, adjustment, batch block, off-FEFO pick and reversal in the spec
- * needs a reason code, and every one of them is blocked when the code cannot be chosen. A plain
- * `Select` bound to `GET /master-data/reason-codes` renders an **empty dropdown with no
- * explanation** while that endpoint is unrouted (it answers 404 on the gateway today), which
- * silently stops the user without telling them why.
+ * needs a reason code, and every one of them is blocked when the code cannot be chosen.
  *
- * So this control has three states and never a silent one:
+ * `GET /masterdata/reason-codes` serves now, so the normal path is what it always should have
+ * been: a real `Select` of the codes in this document's `reasonGroup`, filtered server-side by
+ * the contract's own parameter. The id field is what is left of the period when the list
+ * answered 404 — it is an **error state**, not a second normal path, and a user only reaches it
+ * when the call genuinely fails. Keeping it means a gateway outage degrades the document to
+ * "type the id you know" rather than to "an empty dropdown that silently blocks you".
  *
- *   · the list answers → an ordinary `Select`, grouped by `reasonGroup`;
- *   · the list is not routed (404 / 405) → a mono id field that names the missing operation and
- *     its status, so the document can still be written by someone who knows the id;
+ * Three states, never a silent one:
+ *
+ *   · the list answers → an ordinary `Select`, ordered as the server sends it;
+ *   · the route is missing (404 / 405) or the call failed → a mono id field naming the
+ *     operation and its status;
  *   · the list answers but is empty for this group → the select stays, and says which group was
- *     asked for and that master data has to define one first.
+ *     asked for and that master data has to define a code first.
  *
  * It owns its own query so that a screen cannot forget `retry: false` and leave the user waiting
  * on three retries of a route that does not exist.
@@ -40,7 +44,7 @@ export interface ReasonCodePickerProps {
   onChange: (value: string) => void;
 }
 
-export const REASON_CODES_OPERATION = 'GET /master-data/reason-codes';
+export const REASON_CODES_OPERATION = 'GET /masterdata/reason-codes';
 
 /**
  * True when the failure is "the gateway does not route this yet", not "the request was wrong".
@@ -95,7 +99,7 @@ export function ReasonCodePicker({
         value={value}
         disabled={disabled}
         placeholder="id"
-        hint={`${REASON_CODES_OPERATION} hələ açılmayıb (${status}) — seçim siyahısı yoxdur, səbəb kodunun id-sini yazın. ${groupNote}.`}
+        hint={`${REASON_CODES_OPERATION} cavab vermədi (${status}) — seçim siyahısı yüklənmədi, səbəb kodunun id-sini yazın. ${groupNote}.`}
         error={error}
         onChange={(e) => onChange(e.target.value)}
       />

@@ -1,9 +1,26 @@
-import { Alert, Badge, DataTable, type Column } from '@ds/index';
+import { useMemo, useState } from 'react';
+import { Alert, Badge, DataTable, Select, TextField, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listPermissions, listRoles, type Permission, type RoleSummary } from '@api/endpoints';
 import { useAuth } from '@auth/index';
-import { PERMISSION_CATALOGUE, ROLE_PERMISSIONS, roleAllows } from '@auth/permissions';
+import { ROLE_PERMISSIONS, roleAllows } from '@auth/permissions';
 import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
+import { AdminTabs } from './AdminTabs';
+
+/**
+ * Roles and permissions — docs/ux/screen-map.md §5.4.
+ *
+ * The matrix is the tenant's: the rows come from `GET /identity/permissions` (`iam_permission`)
+ * and the columns from `GET /identity/roles` (`iam_role`), including the roles a tenant added
+ * itself — `STOCKTAKER` and `WASTE_TESTER` are in the running realm and no TypeScript constant
+ * knows about them.
+ *
+ * Each role carries its own granted codes, so a cell is a fact about `iam_role_permission`, not
+ * a re-derivation of the bootstrap map. That distinction is the whole point of this screen: an
+ * administrator must not act on a matrix they believe is the tenant's when it is a constant
+ * compiled into the interface. The bootstrap map is still imported, but only as a **fallback**
+ * for a role the server sends without a permission list, and every such column says so.
+ */
 
 interface PermissionRow {
   code: string;
@@ -14,61 +31,59 @@ interface PermissionRow {
 }
 
 /**
- * Roles and permissions — docs/ux/screen-map.md §5.4.
- *
- * Two sources, in this order:
- *
- *   · `GET /identity/permissions` and `GET /identity/roles` — the tenant's real `iam_permission`
- *     and `iam_role` rows. When they answer, the matrix is the server's;
- *   · the bootstrap `RolePermissionMap` port in `src/auth/permissions.ts` — the same algorithm
- *     the gateway falls back to today, because `iam_role_permission` is empty and the endpoints
- *     are unrouted.
- *
- * Which one is on screen is stated at the top rather than left to be guessed: a matrix that
- * claims to be the tenant's configuration while actually coming from a TypeScript constant is
- * the kind of thing an administrator acts on and is wrong about.
+ * `identity.v1.yaml` declares `RoleSummary` without its granted codes; the running service sends
+ * them on `GET /identity/roles`. Reading them is what makes the matrix the tenant's, so the
+ * extension is accepted here explicitly rather than by widening the generated type.
  */
+type RoleRow = RoleSummary & { permissions?: string[] };
+
+const grantedBy = (role: RoleRow): string[] | null =>
+  Array.isArray(role.permissions) ? role.permissions : null;
+
 export function RolesScreen() {
-  const { session } = useAuth();
-  const roles = useApiPage<RoleSummary>(['roles'], () => listRoles(), 100, { retry: false });
+  const { session, permissionFallbackReason } = useAuth();
+  const [search, setSearch] = useState('');
+  const [module, setModule] = useState('');
+
+  const roles = useApiPage<RoleRow>(['roles'], () => listRoles(), 200, { retry: false });
   const permissions = useApiPage<Permission>(['permissions'], () => listPermissions(), 500, {
     retry: false,
   });
 
-  const unrouted = (status: number | undefined | null) => status === 404 || status === 405;
-  const permissionsUnrouted = permissions.isError && unrouted(permissions.error?.status);
-  const rolesUnrouted = roles.isError && unrouted(roles.error?.status);
-  const fromServer = !permissionsUnrouted && (permissions.data?.items ?? []).length > 0;
+  const roleRows = useMemo(() => roles.data?.items ?? [], [roles.data]);
+  const permissionRows = useMemo(() => permissions.data?.items ?? [], [permissions.data]);
 
-  // The role columns: the tenant's own roles when they are readable, else the bootstrap map's.
-  const roleCodes =
-    (roles.data?.items ?? []).length > 0
-      ? (roles.data?.items ?? []).map((r) => r.code)
-      : Object.keys(ROLE_PERMISSIONS);
+  /** Columns whose cells are derived rather than read: the server sent no granted list. */
+  const derivedRoles = roleRows.filter((r) => grantedBy(r) === null).map((r) => r.code);
 
-  const catalogue: Array<{
-    code: string;
-    module: string;
-    isCritical: boolean;
-    description?: string | null;
-  }> = fromServer
-    ? (permissions.data?.items ?? []).map((p) => ({
+  const rows: PermissionRow[] = useMemo(
+    () =>
+      permissionRows.map((p) => ({
         code: p.code,
         module: p.module,
         isCritical: p.isCritical ?? false,
         description: p.description,
-      }))
-    : PERMISSION_CATALOGUE.map((code) => ({
-        code,
-        module: code.split('.')[0] ?? '',
-        isCritical:
-          code.endsWith('view_cost') || code.endsWith('approve') || code.endsWith('reverse'),
-      }));
+        roles: roleRows
+          .filter((role) => {
+            const granted = grantedBy(role);
+            // The tenant's own rows when the service sends them; the bootstrap algorithm only
+            // for a role that arrived without a list, and that column is labelled.
+            return granted ? granted.includes(p.code) : roleAllows([role.code], p.code);
+          })
+          .map((role) => role.code),
+      })),
+    [permissionRows, roleRows],
+  );
 
-  const rows: PermissionRow[] = catalogue.map((entry) => ({
-    ...entry,
-    roles: roleCodes.filter((role) => roleAllows([role], entry.code)),
-  }));
+  const modules = [...new Set(permissionRows.map((p) => p.module))].sort();
+  const needle = search.trim().toLowerCase();
+  const visibleRows = rows.filter(
+    (row) =>
+      (module === '' || row.module === module) &&
+      (needle === '' ||
+        row.code.toLowerCase().includes(needle) ||
+        (row.description ?? '').toLowerCase().includes(needle)),
+  );
 
   const matrixColumns: Column<PermissionRow>[] = [
     {
@@ -90,13 +105,13 @@ export function RolesScreen() {
         </div>
       ),
     },
-    ...roleCodes.map<Column<PermissionRow>>((role) => ({
-      key: role,
-      header: role,
+    ...roleRows.map<Column<PermissionRow>>((role) => ({
+      key: role.code,
+      header: role.code,
       align: 'center',
       render: (row) =>
-        row.roles.includes(role) ? (
-          <Badge tone="success" title={`${role} → ${row.code}`}>
+        row.roles.includes(role.code) ? (
+          <Badge tone="success" title={`${role.code} → ${row.code}`}>
             Var
           </Badge>
         ) : (
@@ -105,7 +120,7 @@ export function RolesScreen() {
     })),
   ];
 
-  const roleColumns: Column<RoleSummary>[] = [
+  const roleColumns: Column<RoleRow>[] = [
     { key: 'code', header: 'Kod', render: (row) => <span className="wms-doc-no">{row.code}</span> },
     { key: 'name', header: 'Ad' },
     {
@@ -118,39 +133,57 @@ export function RolesScreen() {
           <Badge tone="neutral">Tenant rolu</Badge>
         ),
     },
+    {
+      key: 'granted',
+      header: 'İcazə sayı',
+      width: '130px',
+      numeric: true,
+      decimals: 0,
+      render: (row) => {
+        const granted = grantedBy(row);
+        return granted ? (
+          granted.length
+        ) : (
+          <Badge tone="warning" dot title="Server bu rol üçün icazə siyahısı göndərmədi">
+            hesablanıb
+          </Badge>
+        );
+      },
+    },
   ];
+
+  const loading = roles.isLoading || permissions.isLoading;
+  const failed = roles.isError || permissions.isError;
 
   return (
     <Page
       title="Rollar və icazələr"
-      subtitle="Rol → icazə xəritəsi, serverin öz alqoritmi ilə"
+      subtitle="Tenantın `iam_role` × `iam_permission` matrisi"
       actions={
-        fromServer ? (
-          <Badge tone="success">Mənbə: server</Badge>
-        ) : (
-          <Badge tone="warning" dot>
-            Mənbə: bootstrap xəritəsi
+        failed ? (
+          <Badge tone="danger" dot>
+            Matris oxunmadı
           </Badge>
+        ) : (
+          <Badge tone="success">Mənbə: tenant</Badge>
         )
       }
     >
-      {permissionsUnrouted ? (
-        <Alert
-          tone="warning"
-          title="Matris serverdən deyil, bootstrap xəritəsindən qurulub"
-          code={permissions.error?.code}
-        >
-          <span className="wms-num">GET /identity/permissions</span> açılmayıb (
-          <span className="wms-num">{permissions.error?.status ?? 404}</span>)
-          {rolesUnrouted ? (
-            <>
-              , <span className="wms-num">GET /identity/roles</span> də
-            </>
-          ) : null}
-          . Aşağıdakı matris <span className="wms-num">RolePermissionMap</span> portundan hesablanır
-          — serverin bu gün faktiki tətbiq etdiyi qayda da elə budur, çünki{' '}
-          <span className="wms-num">iam_role_permission</span> cədvəli boşdur. Endpoint açılan kimi
-          matris tenantın öz sətirlərindən qurulacaq.
+      <AdminTabs />
+
+      {permissionFallbackReason ? (
+        <Alert tone="warning" title="Sizin öz icazələriniz serverdən oxunmadı">
+          {permissionFallbackReason} Aşağıdakı matris tenantın sətirlərindəndir, lakin sizin
+          gördüyünüz menyu və düymələr token rollarından hesablanıb — yeganə həqiqi yoxlama serverin{' '}
+          <span className="wms-num">x-permission</span> yoxlamasıdır.
+        </Alert>
+      ) : null}
+
+      {derivedRoles.length > 0 ? (
+        <Alert tone="warning" title="Bir neçə sütun serverdən deyil, hesablanıb">
+          <span className="wms-num">{derivedRoles.join(', ')}</span> rolu üçün server icazə siyahısı
+          göndərmədi; həmin sütunlar <span className="wms-num">RolePermissionMap</span>{' '}
+          alqoritmindən hesablanır və tenantın faktiki sətirlərini əks etdirməyə bilər.
         </Alert>
       ) : null}
 
@@ -160,44 +193,75 @@ export function RolesScreen() {
         <span className="wms-num">422</span> ilə rədd edilir.
       </Alert>
 
-      <Card title="Tenant rolları" subtitle={`${roleCodes.length} rol`} flush>
+      <Card
+        title="Tenant rolları"
+        subtitle={`${roleRows.length} rol · ${roleRows.filter((r) => !r.isSystem).length} tenant rolu`}
+        flush
+      >
         {roles.isLoading ? (
           <LoadingState />
-        ) : rolesUnrouted ? (
-          <div className="wms-card__body">
-            <div className="wms-muted">
-              <span className="wms-num">GET /identity/roles</span> açılmayıb (
-              <span className="wms-num">{roles.error?.status ?? 404}</span>) — sütun başlıqları
-              realm rollarından gəlir.
-            </div>
-          </div>
         ) : roles.isError ? (
           <div className="wms-card__body">
             <ErrorState error={roles.error} onRetry={() => void roles.refetch()} />
           </div>
         ) : (
-          <DataTable<RoleSummary>
+          <DataTable<RoleRow>
             columns={roleColumns}
-            rows={roles.data?.items ?? []}
+            rows={roleRows}
             rowKey={(row) => row.id}
             label="Rollar"
-            empty="Tenant-a məxsus rol yoxdur — yalnız realm rolları istifadə olunur."
+            empty="Tenant üçün rol yazılmayıb. `iam_role` cədvəli doldurulmalıdır."
           />
         )}
       </Card>
 
-      <Card title="İcazə matrisi" subtitle={`${rows.length} icazə · ${roleCodes.length} rol`} flush>
-        <DataTable<PermissionRow>
-          columns={matrixColumns}
-          rows={rows}
-          rowKey={(row) => row.code}
-          maxHeight="640px"
-          label="Rol × icazə matrisi"
-          caption={`Sizin rolunuz: ${session?.roles.join(', ') || '—'} · ${
-            session?.permissions.length ?? 0
-          } icazə`}
-          empty="İcazə kataloqu boşdur."
-        />
+      <Card>
+        <div className="wms-toolbar">
+          <TextField
+            label="Axtarış"
+            value={search}
+            placeholder="İcazə kodu və ya izah"
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Select
+            label="Modul"
+            value={module}
+            placeholder="Bütün modullar"
+            options={modules.map((m) => ({ value: m, label: m }))}
+            onChange={(e) => setModule(e.target.value)}
+          />
+          <div className="wms-toolbar__spacer" />
+        </div>
+      </Card>
+
+      <Card
+        title="İcazə matrisi"
+        subtitle={`${visibleRows.length} / ${rows.length} icazə · ${roleRows.length} rol`}
+        flush
+      >
+        {loading ? (
+          <LoadingState />
+        ) : permissions.isError ? (
+          <div className="wms-card__body">
+            <ErrorState error={permissions.error} onRetry={() => void permissions.refetch()} />
+          </div>
+        ) : (
+          <DataTable<PermissionRow>
+            columns={matrixColumns}
+            rows={visibleRows}
+            rowKey={(row) => row.code}
+            maxHeight="640px"
+            label="Rol × icazə matrisi"
+            caption={`Sizin rolunuz: ${session?.roles.join(', ') || '—'} · ${
+              session?.permissions.length ?? 0
+            } icazə · bootstrap xəritəsi ${Object.keys(ROLE_PERMISSIONS).length} rol tanıyır`}
+            empty={
+              rows.length === 0
+                ? 'İcazə kataloqu boşdur — `iam_permission` cədvəli doldurulmalıdır.'
+                : 'Bu filtrə uyğun icazə yoxdur. Axtarışı və ya modulu dəyişin.'
+            }
+          />
+        )}
       </Card>
     </Page>
   );

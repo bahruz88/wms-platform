@@ -28,6 +28,7 @@ import {
   NotOpenYet,
   ProductCell,
 } from '@/components/Page';
+import { AttachmentsCard } from '@/components/AttachmentsCard';
 import { ReasonCodePicker, isUnrouted } from '@/components/ReasonCodePicker';
 
 type Line = GoodsReceipt['lines'][number];
@@ -344,6 +345,12 @@ export function GoodsReceiptDetailScreen() {
           <Meta label="rowVersion" value={<span className="wms-num">{doc.rowVersion}</span>} />
         </MetaGrid>
       </Card>
+
+      <AttachmentsCard
+        entityType="GOODS_RECEIPT"
+        entityId={doc.id}
+        attachmentTypes={['DELIVERY_NOTE', 'INVOICE', 'CERTIFICATE', 'TEMP_PHOTO', 'OTHER']}
+      />
 
       <Dialog
         open={postOpen}

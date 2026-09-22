@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { MissingTenantError, decodeAccessToken, oidcSettings, sessionFromToken } from '../session';
+import {
+  MissingTenantError,
+  decodeAccessToken,
+  oidcSettings,
+  sessionFromToken,
+  withServerPermissions,
+} from '../session';
 
 function makeToken(payload: Record<string, unknown>): string {
   const b64 = (obj: unknown) =>
@@ -91,5 +97,69 @@ describe('oidcSettings', () => {
   it('persists the session across a reload', () => {
     expect(oidcSettings.userStore).toBeDefined();
     expect(oidcSettings.stateStore).toBeDefined();
+  });
+});
+
+/**
+ * `GET /identity/me` is the authority on what the signed-in user may do.
+ *
+ * The client's `RolePermissionMap` port was the only source until the endpoint carried
+ * `permissions`; keeping both in step by hand is exactly the failure this replaces — the running
+ * realm has a `STOCKTAKER` role that no constant in this repo knows about, and a client-side
+ * resolution grants it nothing. These tests pin the handover: the server wins when it answers,
+ * the port is what is left when it does not, and the session says which one is in force.
+ */
+describe('withServerPermissions', () => {
+  const token = makeToken({
+    tenant_id: 1,
+    preferred_username: 'keeper',
+    realm_access: { roles: ['WAREHOUSE_KEEPER'] },
+  });
+
+  it('replaces the client-resolved codes with the server`s list', () => {
+    const base = sessionFromToken(token);
+    expect(base.permissionSource).toBe('roles');
+
+    const merged = withServerPermissions(base, {
+      permissions: ['inv.receipt.post', 'inv.count.enter'],
+      roles: ['WAREHOUSE_KEEPER'],
+      user: { id: 4 },
+      tenant: { name: 'WMS platforması' },
+    });
+
+    expect(merged.permissions).toEqual(['inv.receipt.post', 'inv.count.enter']);
+    expect(merged.permissionSource).toBe('server');
+    expect(merged.userId).toBe(4);
+    expect(merged.tenantName).toBe('WMS platforması');
+  });
+
+  it('takes a permission the client map does not know about', () => {
+    const base = sessionFromToken(token);
+    expect(base.permissions).not.toContain('inv.count.recount');
+    const merged = withServerPermissions(base, { permissions: ['inv.count.recount'] });
+    expect(merged.permissions).toContain('inv.count.recount');
+  });
+
+  it('drops a permission the client map granted but the server did not', () => {
+    const base = sessionFromToken(token);
+    expect(base.permissions).toContain('inv.receipt.post');
+    const merged = withServerPermissions(base, { permissions: ['inv.balance.view'] });
+    expect(merged.permissions).not.toContain('inv.receipt.post');
+  });
+
+  it('keeps the client fallback, and says so, when /me carries no permissions', () => {
+    const base = sessionFromToken(token);
+    const merged = withServerPermissions(base, { roles: ['WAREHOUSE_KEEPER'] });
+    expect(merged.permissions).toEqual(base.permissions);
+    expect(merged.permissionSource).toBe('roles');
+  });
+
+  it('takes a tenant role the token does not carry', () => {
+    const base = sessionFromToken(token);
+    const merged = withServerPermissions(base, {
+      roles: ['WAREHOUSE_KEEPER', 'STOCKTAKER'],
+      permissions: ['inv.count.enter'],
+    });
+    expect(merged.roles).toEqual(['WAREHOUSE_KEEPER', 'STOCKTAKER']);
   });
 });

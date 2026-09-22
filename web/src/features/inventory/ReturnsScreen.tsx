@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Badge, Button, DataTable, DocStatusBadge, Select, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listReturnsToVendor, type ReturnToVendorSummary, type RtvStatus } from '@api/endpoints';
-import { moneyRef } from '@api/adapters';
 import { useAuth } from '@auth/index';
 import { formatDate, formatMoney } from '@core/format';
 import { Money } from '@core/decimal';
@@ -99,10 +98,10 @@ export function ReturnsScreen() {
       width: '140px',
       numeric: true,
       permission: 'master.product.view_cost',
-      // `moneyRef` because the service sends a bare decimal string here, not the contract's
-      // `Money` object; without it the cell would read `[object Object]`.
+      // The contract's `Money { amount, currency }`, straight from the service — the adapter
+      // that used to absorb a bare decimal string here is gone.
       render: (row) => {
-        const claim = moneyRef(row.claimAmount);
+        const claim = row.claimAmount;
         return claim ? formatMoney(Money.parse(claim.amount, claim.currency), 2) : '—';
       },
     },

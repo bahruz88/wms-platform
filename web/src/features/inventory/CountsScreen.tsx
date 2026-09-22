@@ -234,7 +234,7 @@ export function CountsScreen() {
             label="Lokasiya"
             required
             value={locationId}
-            operation="GET /master-data/locations"
+            operation="GET /masterdata/locations"
             listError={locations.error ?? null}
             placeholder="Lokasiya seçin"
             hint="Eyni lokasiyada açıq sayım varsa server 422 qaytarır."

@@ -23,6 +23,7 @@ import {
   type ProductSummary,
   type SupplierSummary,
 } from '@api/endpoints';
+import { useProductUoms } from '@api/productUoms';
 import { useAuth } from '@auth/index';
 import { Decimal } from '@core/decimal';
 import { formatDate, formatNumber } from '@core/format';
@@ -125,6 +126,11 @@ export function GoodsReceiptCreateScreen() {
     () => new Map((products.data?.items ?? []).map((p) => [String(p.id), p])),
     [products.data],
   );
+  // `master_product_uom` for every product on a line; a receipt defaults to the purchase unit.
+  const productUoms = useProductUoms(
+    lines.map((l) => Number(l.productId)).filter((id) => Number.isFinite(id) && id > 0),
+    'purchase',
+  );
   const supplier = (suppliers.data?.items ?? []).find((s) => String(s.id) === supplierId);
 
   const update = (key: string, patch: Partial<DraftLine>) =>
@@ -199,7 +205,12 @@ export function GoodsReceiptCreateScreen() {
           productId: Number(l.productId),
           receivedQty: l.receivedQty,
           rejectedQty: l.rejectedQty || '0',
-          uomId: Number(l.uomId || productById.get(l.productId)?.baseUomId || 1),
+          uomId: Number(
+            l.uomId ||
+              productUoms.uomsFor(productById.get(l.productId)).defaultUomId ||
+              productById.get(l.productId)?.baseUomId ||
+              1,
+          ),
           ...(l.batchNo ? { batchNo: l.batchNo } : {}),
           ...(l.expiryDate ? { expiryDate: l.expiryDate } : {}),
           ...(l.varianceNote ? { varianceNote: l.varianceNote } : {}),
@@ -254,11 +265,8 @@ export function GoodsReceiptCreateScreen() {
               label: `${p.sku} · ${p.name}`,
             }))}
             onChange={(e) => {
-              const picked = productById.get(e.target.value);
-              update(row.key, {
-                productId: e.target.value,
-                uomId: picked ? String(picked.baseUomId) : '',
-              });
+              // The unit is re-resolved from the new product's own rows, not carried over.
+              update(row.key, { productId: e.target.value, uomId: '' });
             }}
           />
         );
@@ -352,18 +360,21 @@ export function GoodsReceiptCreateScreen() {
             <span className="wms-muted">—</span>
           );
         }
+        // `master_product_uom`: a receipt is normally entered in the purchase unit (CASE),
+        // not in the base unit, and the field shows the base equivalent underneath.
+        const uomSet = productUoms.uomsFor(product);
         return (
           <QtyUomInput
             qty={row.receivedQty}
-            uomId={row.uomId}
+            uomId={row.uomId || String(uomSet.defaultUomId ?? '')}
             required
             error={shownErrors[i]?.receivedQty}
             baseUomCode={product?.baseUomCode}
             decimals={4}
             uoms={
-              product
-                ? [{ id: product.baseUomId, code: product.baseUomCode ?? '—', factorToBase: 1 }]
-                : [{ id: '', code: '—', factorToBase: 1 }]
+              uomSet.options.length > 0
+                ? uomSet.options
+                : [{ id: '', code: '—', factorToBase: '1' }]
             }
             onQtyChange={(value) => update(row.key, { receivedQty: value })}
             onUomChange={(value) => update(row.key, { uomId: value })}
@@ -525,7 +536,7 @@ export function GoodsReceiptCreateScreen() {
             label="Təchizatçı"
             required
             value={supplierId}
-            operation="GET /master-data/suppliers"
+            operation="GET /masterdata/suppliers"
             listError={suppliers.error ?? null}
             placeholder="Təchizatçı seçin"
             hint="Qida məhsulu üçün təchizatçı təsdiqli olmalıdır"
@@ -547,7 +558,7 @@ export function GoodsReceiptCreateScreen() {
             label="Qəbul lokasiyası"
             required
             value={locationId}
-            operation="GET /master-data/locations"
+            operation="GET /masterdata/locations"
             listError={locations.error ?? null}
             placeholder="Lokasiya seçin"
             hint="Yalnız icazəniz olan lokasiyalar"

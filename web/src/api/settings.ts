@@ -9,31 +9,35 @@ import { listInventorySettings, type InventorySetting } from './endpoints';
  * `const DEFAULT_…` and silently using it, which is the opposite of that requirement: a tenant
  * whose warning window is 45 days saw 30 with nothing saying where 30 came from.
  *
- * `GET /inventory/settings` is not routed on the gateway yet (404). Until it is, this hook keeps
- * one copy of every fallback, in one file, and tells the screen it is using one — so the screen
- * can say so on the surface instead of presenting a guess as the tenant's configuration. When
- * the endpoint lands nothing else has to change.
+ * `GET /inventory/settings` serves the tenant's rows now, so there is no default left in this
+ * file either: `get()` answers `null` when a key could not be read, and a screen that gets
+ * `null` says the threshold is unknown instead of colouring a row against a number nobody
+ * configured. The "falling back" wording stayed behind only as an **error state** — the notice a
+ * screen shows when the call itself failed.
  */
 
-/** The keys the interface reads, with the value used while the endpoint is unavailable. */
-export const SETTING_FALLBACKS = {
-  expiry_warning_days: 30,
-  expiry_critical_days: 7,
-  count_variance_approval_threshold_pct: 2,
-  receipt_over_tolerance_pct: 0,
-} as const;
+/** The keys the interface reads. Their values live in the tenant's `inv_setting` rows, not here. */
+export const SETTING_KEYS = [
+  'expiry_warning_days',
+  'expiry_critical_days',
+  'count_variance_approval_threshold_pct',
+  'receipt_over_tolerance_pct',
+] as const;
 
-export type SettingKey = keyof typeof SETTING_FALLBACKS;
+export type SettingKey = (typeof SETTING_KEYS)[number];
 
 export interface InventorySettings {
-  /** The tenant's value, or the documented fallback when the endpoint has not answered. */
-  get: (key: SettingKey) => number;
-  /** True when `key` came from `SETTING_FALLBACKS` rather than from the server. */
-  isFallback: (key: SettingKey) => boolean;
-  /** True when no setting at all could be read — the endpoint is unrouted or failed. */
+  /** The tenant's value, or `null` when this key is not in the answer. Never a guess. */
+  get: (key: SettingKey) => number | null;
+  /** The stored string, for the keys that are not numbers (`costing_method`, booleans). */
+  raw: (key: string) => string | null;
+  /** True once the query has settled without a single readable setting. */
   unavailable: boolean;
   /** The status the endpoint answered with, for the notice the screen shows. */
   status: number | null;
+  /** The RFC 7807 `code`, so the notice can show it (brand book: the code is always visible). */
+  code: string | null;
+  isLoading: boolean;
 }
 
 export function useInventorySettings(scope: string): InventorySettings {
@@ -44,23 +48,36 @@ export function useInventorySettings(scope: string): InventorySettings {
     { retry: false },
   );
 
-  const raw = (key: SettingKey): number | null => {
-    const found = (settings.data?.items ?? []).find((s) => s.key === key)?.value;
-    if (found === undefined) return null;
+  const rows = settings.data?.items ?? [];
+  const raw = (key: string): string | null => rows.find((s) => s.key === key)?.value ?? null;
+
+  const numeric = (key: SettingKey): number | null => {
+    const found = raw(key);
+    if (found === null) return null;
     const parsed = Number(found);
     return Number.isFinite(parsed) ? parsed : null;
   };
 
   return {
-    get: (key) => raw(key) ?? SETTING_FALLBACKS[key],
-    isFallback: (key) => raw(key) === null,
-    unavailable: settings.isError || (settings.data?.items ?? []).length === 0,
+    get: numeric,
+    raw,
+    unavailable: !settings.isLoading && (settings.isError || rows.length === 0),
     status: settings.error?.status ?? null,
+    code: settings.error?.code ?? null,
+    isLoading: settings.isLoading,
   };
 }
 
-/** The sentence a screen shows when it is displaying fallbacks rather than tenant settings. */
-export function settingsFallbackNote(status: number | null): string {
-  const suffix = status ? ` (${status})` : '';
-  return `GET /inventory/settings hələ açılmayıb${suffix} — aşağıdakı hədlər tenant parametri deyil, sənəddə yazılmış standart dəyərlərdir. Endpoint açılan kimi tenant dəyərləri işləyəcək.`;
+/**
+ * The sentence a screen shows when the settings call did not answer.
+ *
+ * This is an error state, not a substitute configuration: nothing on the screen is computed
+ * from a default, so the notice says which thresholds are simply unknown.
+ */
+export function settingsUnavailableNote(status: number | null): string {
+  const cause =
+    status === null
+      ? 'GET /inventory/settings boş cavab qaytardı — tenant üçün `inv_setting` sətri yazılmayıb'
+      : `GET /inventory/settings cavab vermədi (${status})`;
+  return `${cause}. Ekran heç bir standart dəyər işlətmir: hədd tələb edən göstəricilər «—» ilə qalır. Parametrləri «Sistem · Parametrlər» ekranından yoxlayın.`;
 }

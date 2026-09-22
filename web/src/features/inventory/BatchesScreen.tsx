@@ -13,7 +13,7 @@ import {
 } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { changeBatchStatus, listBatches, type Batch } from '@api/endpoints';
-import { settingsFallbackNote, useInventorySettings } from '@api/settings';
+import { settingsUnavailableNote, useInventorySettings } from '@api/settings';
 import { useAuth } from '@auth/index';
 import { formatDate, formatNumber } from '@core/format';
 import { Card, ErrorState, LoadingState, Page, ProductCell } from '@/components/Page';
@@ -47,7 +47,8 @@ export function isManuallyChangeable(status: string): boolean {
 export function BatchesScreen() {
   const { can } = useAuth();
   // The expiry badges used to compare against 7 and 30 written into this file. They are tenant
-  // settings (TOR §36); the hook holds the one documented fallback and says when it is in use.
+  // settings (TOR §36) and are read as such: when a threshold is not in the answer the badge is
+  // not drawn at all, because a colour is a claim about the tenant's configuration.
   const settings = useInventorySettings('batches');
   const warningDays = settings.get('expiry_warning_days');
   const criticalDays = settings.get('expiry_critical_days');
@@ -122,13 +123,13 @@ export function BatchesScreen() {
           <span className="wms-muted">—</span>
         ) : row.daysToExpiry < 0 ? (
           <Badge tone="danger" dot>{`${Math.abs(row.daysToExpiry)} gün keçib`}</Badge>
-        ) : row.daysToExpiry <= criticalDays ? (
+        ) : criticalDays !== null && row.daysToExpiry <= criticalDays ? (
           <Badge
             tone="danger"
             dot
             title={`expiry_critical_days = ${criticalDays}`}
           >{`${row.daysToExpiry} gün`}</Badge>
-        ) : row.daysToExpiry <= warningDays ? (
+        ) : warningDays !== null && row.daysToExpiry <= warningDays ? (
           <Badge
             tone="warning"
             dot
@@ -172,8 +173,12 @@ export function BatchesScreen() {
   return (
     <Page title="Partiyalar" subtitle="FEFO/FIFO sırası, expiry vəziyyəti və partiya blokları">
       {settings.unavailable ? (
-        <Alert tone="info" title="Expiry hədləri tenant parametrindən oxunmadı" code="NOT_FOUND">
-          {settingsFallbackNote(settings.status)}
+        <Alert
+          tone="warning"
+          title="Expiry hədləri tenant parametrindən oxunmadı"
+          code={settings.code ?? undefined}
+        >
+          {settingsUnavailableNote(settings.status)}
         </Alert>
       ) : null}
 
