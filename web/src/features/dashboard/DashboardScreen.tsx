@@ -255,11 +255,11 @@ export function DashboardScreen() {
           <KpiCard
             label={t('dashboard.kpiStockValue')}
             value={
-              kpiByKey('stock_value')
-                ? formatNumber(kpiByKey('stock_value')?.value ?? '0', 2)
+              kpiByKey('stockValueTotal')
+                ? formatNumber(kpiByKey('stockValueTotal')?.value ?? '0', 2)
                 : formatMoney(Money.parse(stockValue.toFixed(4), 'AZN'), 2)
             }
-            unit={kpiByKey('stock_value') ? 'AZN' : undefined}
+            unit={kpiByKey('stockValueTotal') ? 'AZN' : undefined}
             hint={t('dashboard.kpiStockValueHint')}
           />
         ) : (

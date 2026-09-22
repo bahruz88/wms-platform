@@ -45,6 +45,7 @@ public sealed class ModuleDependencyTests
     [InlineData("consumption", "inventory,masterdata")]
     [InlineData("inventory,consumption", "masterdata")]
     [InlineData("masterdata", "identity")]
+    [InlineData("reporting", "inventory,masterdata")]
     public void A_partial_deployment_reports_the_modules_it_cannot_reach_in_process(string modules, string expected)
     {
         var missing = ModuleRegistry.MissingDependencies(ModuleRegistry.Resolve(modules));
@@ -55,7 +56,6 @@ public sealed class ModuleDependencyTests
     [Theory]
     [InlineData("identity")]
     [InlineData("notification,integration")]
-    [InlineData("reporting")]
     [InlineData("documents")]
     public void A_self_contained_deployment_needs_no_remote_modules(string modules)
     {

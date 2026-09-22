@@ -50,7 +50,7 @@ public static class ModuleRegistry
             ["procurement"] = ["masterdata", "inventory"],
             ["documents"] = [],
             ["notification"] = [],
-            ["reporting"] = [],
+            ["reporting"] = ["inventory", "masterdata"],
             ["integration"] = [],
         };
 

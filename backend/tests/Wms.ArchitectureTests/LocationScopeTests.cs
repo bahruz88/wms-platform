@@ -22,12 +22,18 @@ public sealed class LocationScopeTests
     /// deliberately tenant-wide. Procurement is Faza 2 and has one read endpoint; its delivery-location
     /// scoping belongs to that phase.
     /// </summary>
-    private static readonly string[] StockModules = ["Wms.Inventory.Application", "Wms.Consumption.Application"];
+    private static readonly string[] StockModules =
+        ["Wms.Inventory.Application", "Wms.Consumption.Application", "Wms.Reporting.Application"];
 
     /// <summary>Filters inside those modules that genuinely touch nothing location-scoped.</summary>
     private static readonly HashSet<string> NotLocationScoped = new(StringComparer.Ordinal)
     {
         "MenuItemFilter", // cons_menu_item — a recipe catalogue, tenant-wide by definition
+
+        // rpt_export_job rows belong to the user who asked for them ("Mənim export işlərim"), so the filter is
+        // scoped by requestedBy. The location scope that applies to the report DATA is frozen onto the job row
+        // at creation time, because the worker that renders it has no HTTP principal (README §8.17).
+        "ExportJobFilter",
     };
 
     public static TheoryData<string, string> Filters()

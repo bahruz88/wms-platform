@@ -135,6 +135,149 @@ namespace Wms.Reporting.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Wms.Reporting.Domain.Entities.ExportJob", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("error_message");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("file_name");
+
+                    b.Property<string>("Format")
+                        .IsRequired()
+                        .HasColumnType("enum('XLSX','CSV','PDF')")
+                        .HasColumnName("format");
+
+                    b.Property<Guid>("IdempotencyKey")
+                        .HasMaxLength(36)
+                        .HasColumnType("char(36)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<bool>("IncludeCost")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("include_cost");
+
+                    b.Property<string>("Locale")
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)")
+                        .HasColumnName("locale");
+
+                    b.Property<string>("LocationScopeJson")
+                        .HasColumnType("json")
+                        .HasColumnName("location_scope_json");
+
+                    b.Property<string>("ParametersJson")
+                        .IsRequired()
+                        .HasColumnType("json")
+                        .HasColumnName("parameters_json");
+
+                    b.Property<byte?>("ProgressPct")
+                        .HasColumnType("tinyint unsigned")
+                        .HasColumnName("progress_pct");
+
+                    b.Property<string>("ReportCode")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("varchar(48)")
+                        .HasColumnName("report_code");
+
+                    b.Property<DateTimeOffset>("RequestedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("requested_at");
+
+                    b.Property<uint>("RequestedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("requested_by");
+
+                    b.Property<long?>("RowCount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("row_count");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
+                    b.Property<long?>("SizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("size_bytes");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("enum('QUEUED','RUNNING','COMPLETED','FAILED','CANCELLED')")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StorageKey")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("storage_key");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint?>("UpdatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_rpt_export_job");
+
+                    b.HasIndex("TenantId", "RequestedBy", "IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("uq_rpt_export_idem");
+
+                    b.HasIndex("TenantId", "RequestedBy", "RequestedAt")
+                        .HasDatabaseName("ix_rpt_export_user");
+
+                    b.HasIndex("TenantId", "Status", "RequestedAt")
+                        .HasDatabaseName("ix_rpt_export_status");
+
+                    b.ToTable("rpt_export_job", (string)null);
+                });
+
             modelBuilder.Entity("Wms.Reporting.Domain.Entities.ReportDefinition", b =>
                 {
                     b.Property<ushort>("Id")
@@ -156,15 +299,48 @@ namespace Wms.Reporting.Infrastructure.Persistence.Migrations
                         .HasColumnType("varchar(48)")
                         .HasColumnName("code");
 
+                    b.Property<string>("ColumnsJson")
+                        .IsRequired()
+                        .HasColumnType("json")
+                        .HasColumnName("columns_json");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("description");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("is_active");
+
+                    b.Property<int>("MaxSyncRows")
+                        .HasColumnType("int")
+                        .HasColumnName("max_sync_rows");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)")
                         .HasColumnName("name");
+
+                    b.Property<string>("ParametersJson")
+                        .IsRequired()
+                        .HasColumnType("json")
+                        .HasColumnName("parameters_json");
+
+                    b.Property<bool>("RequiresCostPermission")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("requires_cost_permission");
+
+                    b.Property<ushort>("SortOrder")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("sort_order");
+
+                    b.Property<string>("SupportedFormats")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("supported_formats");
 
                     b.Property<bool>("SupportsExcelExport")
                         .HasColumnType("tinyint(1)")
@@ -174,12 +350,20 @@ namespace Wms.Reporting.Infrastructure.Persistence.Migrations
                         .HasColumnType("int unsigned")
                         .HasColumnName("tenant_id");
 
+                    b.Property<string>("TorRef")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("tor_ref");
+
                     b.HasKey("Id")
                         .HasName("pk_rpt_report_definition");
 
                     b.HasIndex("TenantId", "Code")
                         .IsUnique()
                         .HasDatabaseName("uq_rpt_report");
+
+                    b.HasIndex("TenantId", "Category", "SortOrder")
+                        .HasDatabaseName("ix_rpt_report_cat");
 
                     b.ToTable("rpt_report_definition", (string)null);
                 });

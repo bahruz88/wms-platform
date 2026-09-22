@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Wms.Common.Infrastructure.Storage;
 using Wms.Documents.Infrastructure.Antivirus;
-using Wms.Documents.Infrastructure.Storage;
 
 namespace Wms.Documents.UnitTests;
 
@@ -132,7 +132,9 @@ public sealed class MinioOptionsTests
     {
         var disposition = MinioObjectStorage.ContentDisposition("qaimə.pdf", inline);
 
-        Assert.StartsWith(expected + "; filename=\"", disposition, StringComparison.Ordinal);
+        // No optional whitespace: the value is copied unescaped into the presigned URL's query string.
+        Assert.StartsWith(expected + ";filename=\"", disposition, StringComparison.Ordinal);
+        Assert.DoesNotContain(" ", disposition, StringComparison.Ordinal);
         Assert.Contains("filename*=UTF-8''", disposition, StringComparison.Ordinal);
     }
 

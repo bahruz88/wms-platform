@@ -38,36 +38,3 @@ public sealed class StockSnapshot : Entity<long>, ITenantEntity
             BuiltAt = builtAt,
         };
 }
-
-/// <summary><c>rpt_report_definition</c>: catalogue of the reports of TOR §29.</summary>
-public sealed class ReportDefinition : Entity<ushort>, ITenantEntity
-{
-    private ReportDefinition()
-    {
-    }
-
-    public uint TenantId { get; private set; }
-
-    public string Code { get; private set; } = string.Empty;
-
-    public string Name { get; private set; } = string.Empty;
-
-    public string Category { get; private set; } = string.Empty;
-
-    public bool SupportsExcelExport { get; private set; } = true;
-
-    public bool IsActive { get; private set; } = true;
-
-    public static ReportDefinition Create(uint tenantId, string code, string name, string category, bool supportsExcelExport = true)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(code);
-        return new ReportDefinition
-        {
-            TenantId = tenantId,
-            Code = code.Trim().ToUpperInvariant(),
-            Name = (name ?? string.Empty).Trim(),
-            Category = (category ?? string.Empty).Trim(),
-            SupportsExcelExport = supportsExcelExport,
-        };
-    }
-}

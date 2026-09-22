@@ -21,7 +21,7 @@ public static class WmsAssemblies
             ["Procurement"] = ["MasterData", "Inventory"],
             ["Documents"] = [],
             ["Notification"] = [],
-            ["Reporting"] = [],
+            ["Reporting"] = ["MasterData", "Inventory"],
             ["Integration"] = [],
         };
 

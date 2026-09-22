@@ -3,14 +3,15 @@ using System.Security.Cryptography;
 using Wms.Common.Application.Abstractions;
 using Wms.Common.Application.Auditing;
 using Wms.Common.Application.Security;
+using Wms.Common.Application.Storage;
 using Wms.Common.Contracts;
 using Wms.Common.Domain;
-using Wms.Documents.Application;
 using Wms.Documents.Application.Abstractions;
+using Wms.Documents.Application;
 using Wms.Documents.Contracts;
-using Wms.Documents.Domain;
 using Wms.Documents.Domain.Entities;
 using Wms.Documents.Domain.Enums;
+using Wms.Documents.Domain;
 
 namespace Wms.Documents.UnitTests;
 
@@ -177,6 +178,13 @@ public sealed class FakeObjectStorage : IObjectStorage
         LastDownloadLifetime = lifetime;
         LastDownloadInline = inline;
         return Task.FromResult(new Uri($"http://localhost:9000/wms-attachments/{key}?X-Amz-Expires={(int)lifetime.TotalSeconds}&X-Amz-Signature=fake"));
+    }
+
+    public Task<StoredObject> PutAsync(string key, ReadOnlyMemory<byte> content, string contentType, CancellationToken cancellationToken)
+    {
+        var bytes = content.ToArray();
+        Objects[key] = new FakeStoredBlob(bytes, contentType, "\"fake-etag\"");
+        return Task.FromResult(new StoredObject(key, (ulong)bytes.Length, contentType, "\"fake-etag\""));
     }
 
     public Task<StoredObject?> StatAsync(string key, CancellationToken cancellationToken) =>

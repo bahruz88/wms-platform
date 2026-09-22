@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Unit tests of the Reporting module: the report catalogue, parameter validation, cost-column and location scoping, the export lifecycle and the XLSX/CSV writers.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Reporting/Wms.Reporting.Domain/Wms.Reporting.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Reporting/Wms.Reporting.Application/Wms.Reporting.Application.csproj" />
+    <ProjectReference Include="../../src/Modules/Reporting/Wms.Reporting.Infrastructure/Wms.Reporting.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -93,6 +93,7 @@
     <Project Path="tests/Wms.Consumption.UnitTests/Wms.Consumption.UnitTests.csproj" />
     <Project Path="tests/Wms.Documents.UnitTests/Wms.Documents.UnitTests.csproj" />
     <Project Path="tests/Wms.Consumption.IntegrationTests/Wms.Consumption.IntegrationTests.csproj" />
+    <Project Path="tests/Wms.Reporting.UnitTests/Wms.Reporting.UnitTests.csproj" />
     <Project Path="tests/Wms.Api.ContractTests/Wms.Api.ContractTests.csproj" />
   </Folder>
 </Solution>

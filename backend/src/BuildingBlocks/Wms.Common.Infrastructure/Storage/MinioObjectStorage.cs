@@ -4,10 +4,9 @@ using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
 using Minio.Exceptions;
-using Wms.Documents.Application.Abstractions;
-using Wms.Documents.Domain;
+using Wms.Common.Application.Storage;
 
-namespace Wms.Documents.Infrastructure.Storage;
+namespace Wms.Common.Infrastructure.Storage;
 
 /// <summary>
 /// MinIO implementation of <see cref="IObjectStorage"/> (spec §3: file bytes never pass through the API and
@@ -55,7 +54,7 @@ public sealed class MinioObjectStorage : IObjectStorage, IDisposable
 
         var headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Content-Type"] = AttachmentPolicy.Normalise(contentType),
+            ["Content-Type"] = MediaType.Normalise(contentType),
         };
 
         return new PresignedUpload(new Uri(url, UriKind.Absolute), headers);
@@ -74,7 +73,7 @@ public sealed class MinioObjectStorage : IObjectStorage, IDisposable
         // These become signed `response-*` query parameters, so the disposition cannot be tampered with.
         var headers = new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["response-content-type"] = AttachmentPolicy.Normalise(contentType),
+            ["response-content-type"] = MediaType.Normalise(contentType),
             ["response-content-disposition"] = ContentDisposition(fileName, inline),
         };
 
@@ -85,6 +84,22 @@ public sealed class MinioObjectStorage : IObjectStorage, IDisposable
             .WithExpiry(ToSeconds(lifetime))).ConfigureAwait(false);
 
         return new Uri(url, UriKind.Absolute);
+    }
+
+    public async Task<StoredObject> PutAsync(string key, ReadOnlyMemory<byte> content, string contentType, CancellationToken cancellationToken)
+    {
+        using var stream = new MemoryStream(content.ToArray(), writable: false);
+        var normalised = MediaType.Normalise(contentType);
+        await _internalClient.PutObjectAsync(
+            new PutObjectArgs()
+                .WithBucket(_options.Bucket)
+                .WithObject(key)
+                .WithStreamData(stream)
+                .WithObjectSize(stream.Length)
+                .WithContentType(normalised),
+            cancellationToken).ConfigureAwait(false);
+
+        return new StoredObject(key, (ulong)content.Length, normalised, null);
     }
 
     public async Task<StoredObject?> StatAsync(string key, CancellationToken cancellationToken)
@@ -174,7 +189,8 @@ public sealed class MinioObjectStorage : IObjectStorage, IDisposable
         var ascii = new StringBuilder(fileName.Length);
         foreach (var c in fileName)
         {
-            ascii.Append(c is >= ' ' and <= '~' && c is not ('"' or '\\') ? c : '_');
+            // The space goes too: this value is copied unescaped into the presigned URL's query string.
+            ascii.Append(c is > ' ' and <= '~' && c is not ('"' or '\\') ? c : '_');
         }
 
         var fallback = ascii.ToString().Trim();
@@ -183,9 +199,12 @@ public sealed class MinioObjectStorage : IObjectStorage, IDisposable
             fallback = "download";
         }
 
+        // No optional whitespace after the semicolons (RFC 6266 allows none): this string is copied verbatim
+        // into the presigned URL's response-content-disposition parameter, and the MinIO client does not
+        // escape spaces there — the resulting link is rejected outright by curl and by any strict URL parser.
         return string.Create(
             CultureInfo.InvariantCulture,
-            $"{disposition}; filename=\"{fallback}\"; filename*=UTF-8''{Uri.EscapeDataString(fileName)}");
+            $"{disposition};filename=\"{fallback}\";filename*=UTF-8''{Uri.EscapeDataString(fileName)}");
     }
 
     private static int ToSeconds(TimeSpan lifetime) =>
@@ -198,4 +217,24 @@ public sealed class MinioObjectStorage : IObjectStorage, IDisposable
             .WithRegion(options.Region)
             .WithSSL(endpoint.UseSsl)
             .Build();
+}
+
+/// <summary>
+/// Strips the <c>; charset=…</c> parameters MinIO echoes back. It used to live on
+/// <c>Wms.Documents.Domain.AttachmentPolicy</c>, which still owns the attachment allow-list; the storage class
+/// only needs the media type itself.
+/// </summary>
+public static class MediaType
+{
+    public static string Normalise(string? contentType)
+    {
+        if (string.IsNullOrWhiteSpace(contentType))
+        {
+            return string.Empty;
+        }
+
+        var separator = contentType.IndexOf(';', StringComparison.Ordinal);
+        var media = separator < 0 ? contentType : contentType[..separator];
+        return media.Trim();
+    }
 }

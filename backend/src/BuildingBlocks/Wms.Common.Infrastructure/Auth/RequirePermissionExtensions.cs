@@ -27,4 +27,16 @@ public static class RequirePermissionExtensions
         builder.AddEndpointFilter(new IdempotencyEndpointFilter());
         return builder;
     }
+
+    /// <summary>
+    /// Requires the <c>Idempotency-Key</c> header but does NOT replay a cached response — for a POST that
+    /// reads rather than creates (see <see cref="IdempotencyKeyRequiredFilter"/>).
+    /// </summary>
+    public static TBuilder RequireIdempotencyKeyHeader<TBuilder>(this TBuilder builder)
+        where TBuilder : IEndpointConventionBuilder
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.AddEndpointFilter(new IdempotencyKeyRequiredFilter());
+        return builder;
+    }
 }

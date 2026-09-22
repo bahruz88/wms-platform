@@ -1,12 +1,8 @@
 using Wms.Common.Application.Abstractions;
-using Wms.Common.Application.Messaging;
-using Wms.Common.Infrastructure.Auth;
-using Wms.Common.Infrastructure.Http;
 using Wms.Common.Infrastructure.Modules;
-using Wms.Reporting.Application;
-using Wms.Reporting.Application.Queries;
 using Wms.Reporting.Contracts;
 using Wms.Reporting.Infrastructure;
+using Wms.Reporting.Application;
 
 namespace Wms.Reporting.Endpoints;
 
@@ -31,12 +27,6 @@ public sealed class ReportingModule : IModule
                 TypedResults.Ok(new ModulePing(ModuleName, tenant.TenantId, user.Username, clock.UtcNow)))
             .WithName("ReportingPing");
 
-        group.MapGet("/reports", async ([AsParameters] PagingRequest paging, IDispatcher dispatcher, CancellationToken cancellationToken) =>
-            {
-                var result = await dispatcher.QueryAsync(new GetReportsQuery(paging.ToPageRequest()), cancellationToken).ConfigureAwait(false);
-                return result.ToOk();
-            })
-            .RequirePermission(ReportingPermissions.ReportView)
-            .WithName("GetReports");
+        ReportingEndpoints.Map(group);
     }
 }

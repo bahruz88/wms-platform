@@ -21,6 +21,8 @@ public sealed class ReportingDbContext(
 
     public DbSet<ReportDefinition> ReportDefinitions => Set<ReportDefinition>();
 
+    public DbSet<ExportJob> ExportJobs => Set<ExportJob>();
+
     protected override void ConfigureModule(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ReportingDbContext).Assembly);
 }

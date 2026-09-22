@@ -313,6 +313,12 @@ Anbar sənədləri (bu buraxılış) iki miqrasiya əlavə etdi:
 | `20260921_Inventory_Count` | `InventoryDbContext` | `inv_count`, `inv_count_line` (SPEC §9.6, §12.7) |
 | `20260921_Inventory_WarehouseDocuments` | `InventoryDbContext` | `inv_stock_request(_line)`, `inv_issue(_line)`, `inv_waste(_line)`, `inv_sample(_line)`, `inv_return_to_vendor(_line)` |
 
+Hesabat modulu (bu buraxılış) bir miqrasiya əlavə etdi:
+
+| Miqrasiya | Kontekst | Nə edir |
+|---|---|---|
+| `20260922_Reporting_CatalogueAndExports` | `ReportingDbContext` | `rpt_report_definition`-a `description`, `tor_ref`, `supported_formats`, `requires_cost_permission`, `max_sync_rows`, `sort_order`, `parameters_json`, `columns_json` + `ix_rpt_report_cat`; yeni `rpt_export_job` cədvəli (§13) |
+
 Bu buraxılış (Faza 1) iki miqrasiya əlavə etdi:
 
 | Miqrasiya | Kontekst | Nə edir |
@@ -823,8 +829,9 @@ Bunlar SPEC-də var, layihə strukturunda yeri hazırdır, amma məntiqi növbə
   `GET /documents/attachments?entityType=GOODS_RECEIPT&entityId=…` ilə oxuyur.
 - `GoodsReceiptSummary.poDocNo` / `IssueSummary.requestDocNo` siyahı cavablarında `null`-dır (detal cavabında
   doludur) — siyahı üçün əlavə join hələ yazılmayıb; kontraktda hər ikisi nullable-dır.
-- Notification/Reporting/Integration consumer-ləri: cədvəllər və idempotentlik indeksləri hazırdır,
-  RabbitMQ consumer-ləri Faza 3-də əlavə olunacaq.
+- Notification/Integration consumer-ləri: cədvəllər və idempotentlik indeksləri hazırdır,
+  RabbitMQ consumer-ləri Faza 3-də əlavə olunacaq. Reporting artıq event gözləmir — hesabatlar birbaşa
+  əməliyyat cədvəllərindən oxunur (§13.3).
 - `IdempotencyEndpointFilter` Redis cache-i işləkdir, lakin cavabın tam replay-i sadələşdirilmiş formadadır.
 - **Əlavələr:** `AttachmentOrphanCleaner` (SPEC §15) job-u yoxdur — silinmə və rədd anında obyekt onsuz da
   best-effort silinir; `thumbnailAvailable` həmişə `false`; POSTED sənədə bağlı əlavənin silinməsində
@@ -1087,3 +1094,139 @@ default görünür). `PUT /settings/{key}` dəyəri **açarın tipinə görə** 
 (`true/1/yes` → `true`), `ENUM` (`MOVING_AVERAGE` | `FIFO`). Səhv dəyər `422 INVALID_SETTING_VALUE`,
 naməlum açar `404 SETTING_NOT_FOUND`. Dəyişiklik `common_audit_log`-a köhnə/yeni dəyərlə düşür.
 `inv.settings.manage` kritik icazədir: defolt qrantlarda yalnız ADMIN-dədir.
+
+---
+
+## 13. Reporting modulu (`/api/v1/reporting`) — 8/8 əməliyyat
+
+Kontrakt: [reporting.v1.yaml](../contracts/openapi/reporting.v1.yaml).
+
+| Endpoint | İcazə | Qeyd |
+|---|---|---|
+| `GET /dashboard/summary` | `rpt.dashboard.view` | KPI + alert + gündəlik seriya; `Cache-Control: private, max-age=60` |
+| `GET /reports` | `rpt.report.view` | kontrakta uyğun **massiv** (səhifə zərfi deyil), `category` filtri |
+| `GET /reports/{code}` | `rpt.report.view` | parametr sxemi + sütun siyahısı (client formanı bundan qurur) |
+| `POST /reports/{code}/run` | `rpt.report.view` | `Idempotency-Key` məcburidir, **lakin cavab keşlənmir** (§13.4) |
+| `GET /exports` | `rpt.export.create` | cari istifadəçinin son 30 günlük işləri |
+| `POST /exports` | `rpt.export.create` | `202` + `Location`; `409 IDEMPOTENT_REPLAY`, `422 TOO_MANY_ACTIVE_EXPORTS`, `422 UNSUPPORTED_FORMAT` |
+| `GET /exports/{id}` | `rpt.export.create` | `COMPLETED` olduqda hər çağırışda təzə 5 dəqiqəlik presigned `downloadUrl` |
+| `DELETE /exports/{id}` | `rpt.export.create` | `204`; obyekt MinIO-dan silinir, sətir `CANCELLED` olur |
+
+İki qayda bütün cavablara şamildir:
+
+- **Maya dəyəri.** `master.product.view_cost` olmayan istifadəçi üçün `isCost` sütunları həm `columns`
+  siyahısından, həm sətirlərdən **çıxarılır** (maskalanmır), `stockValueTotal` və `wasteValuePeriod`
+  KPI-ları ümumiyyətlə göndərilmir (SPEC §16, TOR §3.1).
+- **Lokasiya.** Hər sorğu `LocationScope` ilə məhdudlaşır (README §8.17). Filial istifadəçisinin
+  dashboard-u onun filialını təsvir edir; `iam_user_location`-da olmayan `locationId` sorulduqda cavab
+  **403**-dür, sükutla genişləndirilmir.
+
+### 13.1. Hesabat kataloqu — 24-dən 9-u
+
+**TOR §29-dakı 24 hesabatın siyahısı repoda yoxdur.** SPEC §20 + iki əlavə ilə bitir, §29 ümumiyyətlə yoxdur;
+`docs/ROADMAP.md` §3 də bunu açıq yazır ("həmin 24-ün siyahısı repoda yoxdur"). Ona görə kataloq **uydurulmayıb**:
+`reporting.v1.yaml`-ın `ReportCode` təsvirində adı çəkilən 12 koddan mövcud sxemlərin cavab verə bildiyi
+**doqquzu** yazılıb.
+
+| Kod | Kateqoriya | Mənbə |
+|---|---|---|
+| `STOCK_BALANCE` | STOCK | `inv_balance` (partiyalar üzrə cəm) |
+| `STOCK_BY_BATCH` | STOCK | `inv_balance` × `inv_batch` |
+| `EXPIRY` | QUALITY | `inv_batch.expiry_date`, defolt pəncərə `inv_setting.expiry_warning_days` |
+| `STOCK_COVERAGE` | STOCK | qalıq ÷ son dövrün orta gündəlik məxarici; `min_stock` MasterData-dan |
+| `MOVEMENT_LEDGER` | MOVEMENT | `inv_movement` × `inv_movement_group` |
+| `BRANCH_CONSUMPTION` | MOVEMENT | `doc_type = CONSUMPTION` hərəkətləri (ADR-012) |
+| `WASTE_SUMMARY` | QUALITY | `doc_type = WASTE` hərəkətləri |
+| `COUNT_VARIANCE` | AUDIT | `inv_count_line.variance_qty` |
+| `RECEIPT_VARIANCE` | PROCUREMENT | `inv_goods_receipt_line` sifariş/qəbul/rədd fərqi |
+
+Qalan üçü — `PO_STATUS`, `PRICE_TREND`, `SUPPLIER_PERFORMANCE` — **Procurement-indir**: modulun yazı tərəfi
+və `proc_price_history` cədvəli hələ yoxdur (§8.8, Faza 2). Onlar Faza 2 ilə birlikdə əlavə olunmalıdır.
+Adı ümumiyyətlə məlum olmayan **12 hesabat** üçün TOR §29 mətni lazımdır.
+
+Kataloq **koddadır** (`ReportCatalog`), **mənbəyi isə cədvəldir**: migrator hər işə düşəndə
+`rpt_report_definition`-a upsert edir (eyni qayda `iam` kataloqunda olduğu kimi — bu, demo datası deyil,
+sistem arayış datasıdır), `listReports`/`getReportDefinition` isə yalnız cədvəli oxuyur. Parametr və sütun
+sxemləri `json` sütunlarında saxlanılır, ona görə yeni hesabat əlavə etmək API dəyişikliyi deyil.
+
+Hər parametr **opsionaldır**: `dateRange` verilməyəndə son 30 gün, `withinDays`/`windowDays` 30,
+`onlyVariances` `true`. Yəni `{"parameters":{}}` gövdəsi hər hesabatı işlədir.
+
+### 13.2. Modul sərhədi: Reporting artıq Inventory və MasterData kontraktlarını oxuyur
+
+SPEC §5 Reporting üçün "asılılıq yoxdur (read replica)" yazır, çünki oradakı modeldə `rpt_` read-model-i
+integration event-lərdən qurulur. RabbitMQ abunəçiləri Faza 3-dədir (§8.8), yəni bu gün belə bir read-model
+heç nə ilə dolmur. Hesabat isə **indi** lazımdır, ona görə:
+
+- `Wms.Inventory.Contracts`-a `IInventoryReportingSource` əlavə olundu — dashboard, qalıq, partiya, ledger,
+  aqreqat, sayım fərqi, qəbul fərqi və örtüm sorğuları. Tətbiqi Inventory-nin daxilindədir (Dapper, `inv_`),
+  uzaq halda `POST /api/v1/inventory/internal/reporting/*` üzərindən.
+- Reporting `Wms.MasterData.Contracts` ilə etiketləri (SKU, məhsul adı, vahid, lokasiya, təchizatçı,
+  `min_stock`) həll edir.
+- `ModuleRegistry.ModuleDependencies["reporting"]` və `WmsAssemblies.AllowedContractDependencies["Reporting"]`
+  buna uyğun yeniləndi; `ModuleDependencyTests` artıq `reporting`-i "özü-özünə yetərli" saymır.
+- **Reporting heç bir `inv_`/`master_` cədvəlinə toxunmur** — arxitektura testi bunu yoxlayır.
+
+Arayış sorğuları 200-lük hissələrə bölünür: kontraktların HTTP stub-ları identifikatorları query string-də
+ötürür və təxminən 1 300-də HTTP 414 verir (ROADMAP §4). Hesabat filtrləri isə query string-ə sığmadığı üçün
+yeni `internal` marşrutlar **POST**-dur.
+
+### 13.3. `ReportingProjector` yazılmadı — və niyə
+
+SPEC §15 hər dəqiqə işləyən `ReportingProjector` job-u nəzərdə tutur. **Yazılmadı və bu şüurlu qərardır:**
+bütün doqquz hesabat və dashboard birbaşa əməliyyat cədvəllərinə (`inv_*`) Dapper ilə gedir, cari həcmdə
+(canlı bazada bir neçə yüz `inv_balance` sətri və bir neçə yüz ledger sətri) proyeksiya heç bir sorğunu
+sürətləndirmir, əvəzində bir dəqiqəlik gecikmə və həqiqətin ikinci nüsxəsini gətirərdi. Ona görə cavabdakı
+`dataAsOf` = `generatedAt`: **rəqəm canlıdır**. SPEC §20.3 (həcm göstəriciləri) bağlananda və ya §17.3 yük
+testi p95 > 2 saniyə göstərəndə `rpt_stock_snapshot` üzərində proyeksiya yenidən qiymətləndirilməlidir;
+cədvəl və indeks onsuz da hazırdır.
+
+`totals` sətri yalnız **export**-da doldurulur. Sinxron səhifədə 200 sətrin cəmi bütün hesabatın cəmi kimi
+oxunardı və yanlış olardı, ona görə orada `null`-dır.
+
+### 13.4. Export axını
+
+```
+POST /exports  → rpt_export_job (QUEUED) + common_audit_log(EXPORT)
+      ↓ wms-worker: reporting-export-runner (hər dəqiqə)
+   RUNNING → hesabat icra olunur (maks. 20 000 sətir) → XLSX/CSV → MinIO → COMPLETED
+      ↓
+GET /exports/{id} → presigned downloadUrl (5 dəq, hər çağırışda yenilənir), fayl 7 gün saxlanılır
+```
+
+- **Niyə növbə, `Enqueue` deyil.** API konteynerləri `Jobs__Enabled=false` ilə işləyir, yəni onlarda
+  `IBackgroundJobClient` ümumiyyətlə yoxdur. Sorğu yalnız sətri yazır; tək `wms-worker` onu götürür.
+  Nəticədə export hansı konteynerin cavab verdiyindən asılı olmur.
+- **İcazə və lokasiya donur.** Worker-in HTTP principal-ı yoxdur və `CurrentUser.LocationScope` orada
+  `Unrestricted`-dir (README §8.17). Ona görə sifariş anındakı `LocationScope` və `view_cost` bayrağı
+  `rpt_export_job` sətrinə yazılır və render zamanı oradan oxunur — filialın export-u filialın export-u
+  olaraq qalır.
+- **Format.** `XLSX` və `CSV`. `PDF` kontraktın enum-undadır, amma heç bir hesabatın
+  `supportedFormats`-ında yoxdur və `422 UNSUPPORTED_FORMAT` verir: PDF generatoru yoxdur, əlavə kitabxana
+  isə lisenziya sualı açardı (§8.2).
+- **XLSX əl ilə yazılır** (`XlsxWriter`): `System.IO.Compression` + bir neçə yüz bayt SpreadsheetML.
+  Alternativlər kommersiya lisenziyası (EPPlus) və ya daha bir üçüncü tərəf asılılığıdır; export vərəqinə
+  stil mühərriki lazım deyil. Rəqəmi sütunlar vərəqdə **ədəd** kimi düşür, yəni Excel onları cəmləyə bilir.
+- **`runReport` POST-dur, amma keşlənmir.** `Idempotency-Key` ortaq qayda olaraq məcburidir
+  (`RequireIdempotencyKeyHeader()`), lakin `IdempotencyEndpointFilter`-in 24 saatlıq replay-i tətbiq
+  olunmur — kontrakt "təkrar açar sadəcə yenidən icra edir" deyir, keş isə dünənki qalığı qaytarardı.
+
+### 13.5. İcazə qrantlarına əlavə
+
+`rpt.*` əvvəlcə yalnız ADMIN, AUDITOR və satınalma rollarında idi, yəni anbardar və filial istifadəçisi öz
+ana ekranından **403** alırdı. Dashboard hər rolun ilk ekranıdır, ona görə:
+
+- `WAREHOUSE_KEEPER` → `rpt.dashboard.view`, `rpt.report.view`, `rpt.export.create`
+  (`master.product.view_cost` **verilmir** — SPEC §7.1 pozulmur, sadəcə pul sütunları cavabda olmur).
+- `BRANCH_USER` → `rpt.dashboard.view`, `rpt.report.view` (lokasiya filtri qüvvədə qalır).
+
+Dəyişiklik həm `PermissionCatalog.DefaultRoleGrants`, həm `RolePermissionMap`-dədir (arxitektura testi
+ikisini hərfi müqayisə edir) və migrator-un növbəti işində `iam_role_permission`-a açılır.
+
+### 13.6. `systemHealth` hələ boşdur
+
+Kontrakt `lastBalanceReconciliationAt` / `balanceReconciliationOk` və ikili yazılış yoxlamasının eynisini
+istəyir. `BalanceReconciliationJob` və `DoubleEntryCheckJob` nəticəni **yalnız loga** yazır (§8.8), yəni
+oxunacaq bir şey yoxdur. Dashboard bu dörd sahəni `null` qaytarır və yaşıl işarə uydurmur; doldurulan
+yeganə sahə `outboxPending`-dir (`common_outbox`). Bu sahələri işə salmaq üçün həmin iki job nəticəsini
+saxlamalıdır — dəyişiklik Inventory tərəfindədir.

@@ -21,6 +21,8 @@
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="RabbitMQ.Client" />
     <PackageReference Include="StackExchange.Redis" />
+    <!-- Official MinIO .NET client: presigned PUT/GET, StatObject, GetObject, RemoveObject. -->
+    <PackageReference Include="Minio" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
     <PackageReference Include="OpenTelemetry.Extensions.Hosting" />
     <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" />

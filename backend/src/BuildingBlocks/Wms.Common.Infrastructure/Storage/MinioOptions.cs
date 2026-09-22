@@ -1,9 +1,10 @@
 using System.Globalization;
 
-namespace Wms.Documents.Infrastructure.Storage;
+namespace Wms.Common.Infrastructure.Storage;
 
 /// <summary>
-/// Bound from the <c>Minio</c> configuration section (CONVENTIONS.md). Every key is a plain
+/// Bound from the <c>Minio</c> configuration section (CONVENTIONS.md), shared by the attachment flow and the
+/// report exports. Every key is a plain
 /// <c>[A-Za-z0-9_]</c> identifier in env-var form, as README §8.7 requires.
 /// </summary>
 public sealed class MinioOptions

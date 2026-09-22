@@ -44,6 +44,18 @@ using (var catalogueScope = provider.CreateScope())
     }
 }
 
+// The report catalogue (TOR §29) is reference data too: with rpt_report_definition empty the reports screen
+// is blank and every report code answers 404. Idempotent, like the iam catalogue.
+using (var reportScope = provider.CreateScope())
+{
+    var reportSeeder = ActivatorUtilities.CreateInstance<ReportCatalogSeeder>(reportScope.ServiceProvider);
+    var reportExit = await reportSeeder.SeedAsync(cancellation.Token).ConfigureAwait(false);
+    if (reportExit != 0)
+    {
+        return reportExit;
+    }
+}
+
 // --seed fills the demo/warehouse data set. It is idempotent: re-running changes nothing.
 // AddCommandLine drops a valueless switch, so the bare "--seed" form is matched against args directly.
 var seedRequested = args.Any(a => string.Equals(a, "--seed", StringComparison.OrdinalIgnoreCase))

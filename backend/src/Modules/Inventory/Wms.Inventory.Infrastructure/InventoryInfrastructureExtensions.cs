@@ -58,6 +58,7 @@ public static class InventoryInfrastructureExtensions
         services.AddScoped<IStockBalanceReader, StockBalanceReader>();
         services.AddScoped<IStockPostingService, StockPostingService>();
         services.AddScoped<IStockMovementReader, StockMovementReader>();
+        services.AddScoped<IInventoryReportingSource, InventoryReportingSource>();
 
         services.AddScoped<ExpiryScannerJob>();
         services.AddScoped<BalanceReconciliationJob>();
@@ -72,6 +73,7 @@ public static class InventoryInfrastructureExtensions
         services.AddModuleHttpClient<IStockBalanceReader, HttpStockBalanceReader>(configuration, InventoryRoutes.ModuleName);
         services.AddModuleHttpClient<IStockPostingService, HttpStockPostingService>(configuration, InventoryRoutes.ModuleName);
         services.AddModuleHttpClient<IStockMovementReader, HttpStockMovementReader>(configuration, InventoryRoutes.ModuleName);
+        services.AddModuleHttpClient<IInventoryReportingSource, HttpInventoryReportingSource>(configuration, InventoryRoutes.ModuleName);
         return services;
     }
 }

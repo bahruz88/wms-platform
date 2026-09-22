@@ -1,4 +1,4 @@
-namespace Wms.Documents.Application.Abstractions;
+namespace Wms.Common.Application.Storage;
 
 /// <summary>What MinIO reports about a stored object (<c>StatObject</c>).</summary>
 public sealed record StoredObject(string Key, ulong SizeBytes, string ContentType, string? ETag);
@@ -7,8 +7,11 @@ public sealed record StoredObject(string Key, ulong SizeBytes, string ContentTyp
 public sealed record PresignedUpload(Uri UploadUrl, IReadOnlyDictionary<string, string> Headers);
 
 /// <summary>
-/// Object store behind the attachment flow. Kept as an interface so the upload rules can be unit tested
-/// without a MinIO container, and so the handlers never see a provider exception.
+/// The platform's object store (MinIO). It started as the attachment flow's port and now also carries the
+/// rendered report exports, so it lives in BuildingBlocks rather than in Documents: ADR-001 forbids Reporting
+/// from referencing another module's internals, and a second MinIO client would be the same code twice.
+/// Kept as an interface so the upload rules can be unit tested without a MinIO container, and so the handlers
+/// never see a provider exception.
 /// </summary>
 public interface IObjectStorage
 {
@@ -23,6 +26,13 @@ public interface IObjectStorage
         bool inline,
         TimeSpan lifetime,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Writes an object from the server itself. The attachment flow never uses this — a browser upload goes
+    /// straight to MinIO through a presigned PUT (spec §3) — but a report export is rendered on the worker,
+    /// so its bytes are already in hand.
+    /// </summary>
+    Task<StoredObject> PutAsync(string key, ReadOnlyMemory<byte> content, string contentType, CancellationToken cancellationToken);
 
     /// <summary>Metadata of the stored object, or <c>null</c> when nothing was uploaded.</summary>
     Task<StoredObject?> StatAsync(string key, CancellationToken cancellationToken);

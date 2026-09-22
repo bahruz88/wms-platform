@@ -1,15 +1,16 @@
 using Microsoft.Extensions.Options;
+using Wms.Common.Application.Storage;
 using Wms.Common.Infrastructure.Modules;
 using Wms.Common.Infrastructure.Persistence;
-using Wms.Documents.Application;
+using Wms.Common.Infrastructure.Storage;
 using Wms.Documents.Application.Abstractions;
+using Wms.Documents.Application;
 using Wms.Documents.Contracts;
 using Wms.Documents.Infrastructure.Antivirus;
 using Wms.Documents.Infrastructure.Contracts;
-using Wms.Documents.Infrastructure.Persistence;
 using Wms.Documents.Infrastructure.Persistence.Repositories;
+using Wms.Documents.Infrastructure.Persistence;
 using Wms.Documents.Infrastructure.Queries;
-using Wms.Documents.Infrastructure.Storage;
 
 namespace Wms.Documents.Infrastructure;
 
@@ -32,10 +33,9 @@ public static class DocumentsInfrastructureExtensions
     {
         ArgumentNullException.ThrowIfNull(configuration);
 
-        services.Configure<MinioOptions>(configuration.GetSection(MinioOptions.SectionName));
+        services.AddWmsObjectStorage(configuration);
         services.Configure<AntivirusOptions>(configuration.GetSection(AntivirusOptions.SectionName));
 
-        services.AddSingleton<IObjectStorage, MinioObjectStorage>();
         services.AddSingleton(sp =>
         {
             var minio = sp.GetRequiredService<IOptions<MinioOptions>>().Value;

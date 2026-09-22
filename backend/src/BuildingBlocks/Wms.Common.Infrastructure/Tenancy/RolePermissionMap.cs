@@ -56,7 +56,7 @@ public static class RolePermissionMap
             "inv.batch.manage", "inv.batch.view", "inv.balance.view", "inv.request.view",
             "inv.settings.view", "master.product.view", "master.location.view", "master.supplier.view",
             "master.category.view", "master.uom.view", "master.reason.view", "master.sequence.view",
-            "proc.po.view_for_receipt", "notif.*", "iam.me.view", ViewAllLocations,
+            "proc.po.view_for_receipt", "rpt.dashboard.view", "rpt.report.view", "rpt.export.create", "notif.*", "iam.me.view", ViewAllLocations,
             // Not doc.attachment.* : that also grants doc.attachment.manage, i.e. deleting somebody
             // else's upload. A keeper may delete only their own.
             "doc.attachment.view", "doc.attachment.upload", "doc.attachment.delete",
@@ -68,7 +68,7 @@ public static class RolePermissionMap
             "inv.waste.create", "inv.waste.view", "inv.count.enter", "inv.count.view",
             "inv.issue.view", "inv.movement.view", "inv.balance.view", "inv.batch.view",
             "master.product.view", "master.location.view", "master.reason.view", "cons.recipe.view",
-            "cons.sales.import", "cons.variance.view", "notif.*", "iam.me.view",
+            "cons.sales.import", "cons.variance.view", "rpt.dashboard.view", "rpt.report.view", "notif.*", "iam.me.view",
             "doc.attachment.view", "doc.attachment.upload", "doc.attachment.delete",
         ],
         ["AUDITOR"] =

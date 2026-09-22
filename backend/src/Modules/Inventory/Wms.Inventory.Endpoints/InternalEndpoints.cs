@@ -43,10 +43,68 @@ public static class InternalEndpoints
             .WithName("InternalPeriodFlows")
             .ExcludeFromDescription();
 
+        MapReporting(group);
+
         group.MapGet("/internal/locations/{locationId:long}/frozen",
                 async (long locationId, IStockPostingService posting, CancellationToken cancellationToken) =>
                     Results.Ok(new { frozen = await posting.IsLocationFrozenAsync((uint)locationId, cancellationToken).ConfigureAwait(false) }))
             .WithName("InternalLocationFrozen")
+            .ExcludeFromDescription();
+    }
+
+    /// <summary>
+    /// Aggregations behind <see cref="IInventoryReportingSource"/>. They are POSTs because a report filter does
+    /// not fit a query string safely, and they stay out of the OpenAPI document like every other
+    /// <c>/internal/*</c> route (README §8.15).
+    /// </summary>
+    private static void MapReporting(RouteGroupBuilder group)
+    {
+        group.MapPost("/internal/reporting/dashboard",
+                async (InventoryDashboardRequest request, IInventoryReportingSource source, CancellationToken cancellationToken) =>
+                    Results.Ok(await source.GetDashboardAsync(request, cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalReportDashboard")
+            .ExcludeFromDescription();
+
+        group.MapPost("/internal/reporting/stock-balances",
+                async (StockBalanceReportRequest request, IInventoryReportingSource source, CancellationToken cancellationToken) =>
+                    Results.Ok(await source.GetStockBalancesAsync(request, cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalReportStockBalances")
+            .ExcludeFromDescription();
+
+        group.MapPost("/internal/reporting/batch-stock",
+                async (BatchStockReportRequest request, IInventoryReportingSource source, CancellationToken cancellationToken) =>
+                    Results.Ok(await source.GetBatchStockAsync(request, cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalReportBatchStock")
+            .ExcludeFromDescription();
+
+        group.MapPost("/internal/reporting/movements",
+                async (MovementReportRequest request, IInventoryReportingSource source, CancellationToken cancellationToken) =>
+                    Results.Ok(await source.GetMovementsAsync(request, cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalReportMovements")
+            .ExcludeFromDescription();
+
+        group.MapPost("/internal/reporting/movement-aggregate",
+                async (MovementAggregateReportRequest request, IInventoryReportingSource source, CancellationToken cancellationToken) =>
+                    Results.Ok(await source.GetMovementAggregateAsync(request, cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalReportMovementAggregate")
+            .ExcludeFromDescription();
+
+        group.MapPost("/internal/reporting/count-variances",
+                async (CountVarianceReportRequest request, IInventoryReportingSource source, CancellationToken cancellationToken) =>
+                    Results.Ok(await source.GetCountVariancesAsync(request, cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalReportCountVariances")
+            .ExcludeFromDescription();
+
+        group.MapPost("/internal/reporting/receipt-variances",
+                async (ReceiptVarianceReportRequest request, IInventoryReportingSource source, CancellationToken cancellationToken) =>
+                    Results.Ok(await source.GetReceiptVariancesAsync(request, cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalReportReceiptVariances")
+            .ExcludeFromDescription();
+
+        group.MapPost("/internal/reporting/stock-coverage",
+                async (StockCoverageReportRequest request, IInventoryReportingSource source, CancellationToken cancellationToken) =>
+                    Results.Ok(await source.GetStockCoverageAsync(request, cancellationToken).ConfigureAwait(false)))
+            .WithName("InternalReportStockCoverage")
             .ExcludeFromDescription();
     }
 }

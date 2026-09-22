@@ -1,9 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Reporting persistence, contract implementations and jobs.</Description>
+    <Description>Reporting persistence, report execution, exports and jobs.</Description>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../Wms.Reporting.Application/Wms.Reporting.Application.csproj" />
     <ProjectReference Include="../../../BuildingBlocks/Wms.Common.Infrastructure/Wms.Common.Infrastructure.csproj" />
+    <!--
+      Spec §5 gives Reporting no operational table of its own, so every figure it serves comes from another
+      module. ADR-001: only through the *.Contracts assemblies, never the tables.
+    -->
+    <ProjectReference Include="../../Inventory/Wms.Inventory.Contracts/Wms.Inventory.Contracts.csproj" />
+    <ProjectReference Include="../../MasterData/Wms.MasterData.Contracts/Wms.MasterData.Contracts.csproj" />
   </ItemGroup>
 </Project>
