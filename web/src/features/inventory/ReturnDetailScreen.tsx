@@ -32,7 +32,7 @@ import { AttachmentsCard } from '@/components/AttachmentsCard';
  *   `SENT → ACCEPTED | REJECTED → CLOSED` — `closeReturnToVendor` in one step, recording the
  *     supplier's answer and the amount they actually accepted.
  *
- * Both operations are `inv.return.create` on the service. The final claim amount is a decimal
+ * Both operations are `inv.rtv.create` on the service. The final claim amount is a decimal
  * **string** all the way through — it is never parsed into a `number` (ADR-008).
  */
 export function ReturnDetailScreen() {
@@ -162,18 +162,18 @@ export function ReturnDetailScreen() {
             Çap et
           </Button>
           {isDraft ? (
-            can('inv.return.create') ? (
+            can('inv.rtv.create') ? (
               <Button variant="primary" onClick={() => setAction('send')}>
                 Təchizatçıya göndər
               </Button>
             ) : (
-              <Button disabled title="`inv.return.create` icazəniz yoxdur">
+              <Button disabled title="`inv.rtv.create` icazəniz yoxdur">
                 Təchizatçıya göndər
               </Button>
             )
           ) : null}
           {isSent ? (
-            can('inv.return.create') ? (
+            can('inv.rtv.create') ? (
               <Button
                 variant="primary"
                 onClick={() => {
@@ -186,7 +186,7 @@ export function ReturnDetailScreen() {
                 Cavabı qeyd et
               </Button>
             ) : (
-              <Button disabled title="`inv.return.create` icazəniz yoxdur">
+              <Button disabled title="`inv.rtv.create` icazəniz yoxdur">
                 Cavabı qeyd et
               </Button>
             )

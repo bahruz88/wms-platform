@@ -1,0 +1,20 @@
+{
+  "name": "wms-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright end-to-end suite for the WMS platform — runs against the live stack, never mocks.",
+  "scripts": {
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
+    "e2e:ui": "playwright test --ui",
+    "e2e:report": "playwright show-report",
+    "e2e:auth": "playwright test --project=setup"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "^26.6.2",
+    "mysql2": "^3.15.3",
+    "typescript": "^5.9.3"
+  }
+}

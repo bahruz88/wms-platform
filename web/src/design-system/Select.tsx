@@ -24,6 +24,12 @@ export interface SelectProps extends FieldProps {
   placeholder?: string;
   onChange?: (e: ChangeEvent<HTMLSelectElement>) => void;
   disabled?: boolean;
+  /**
+   * Accessible name for a control with no visible `label` — a select inside a table cell, where
+   * the column header names it for a sighted user but not for a screen reader. Brand book §
+   * "Əlçatanlıq": every control carries a name.
+   */
+  ariaLabel?: string;
 }
 
 export function Select({
@@ -34,6 +40,7 @@ export function Select({
   placeholder,
   onChange,
   disabled,
+  ariaLabel,
   label,
   required,
   hint,
@@ -61,6 +68,7 @@ export function Select({
           onChange={onChange}
           disabled={disabled}
           required={required}
+          aria-label={label === undefined ? ariaLabel : undefined}
           aria-invalid={error ? true : undefined}
           aria-describedby={hint || error ? describeId : undefined}
         >

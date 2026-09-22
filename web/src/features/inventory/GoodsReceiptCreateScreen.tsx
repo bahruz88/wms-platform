@@ -257,6 +257,7 @@ export function GoodsReceiptCreateScreen() {
         return (
           <Select
             value={row.productId}
+            ariaLabel="Məhsul"
             placeholder="Məhsul seçin"
             required
             error={shownErrors[i]?.productId}
@@ -288,6 +289,7 @@ export function GoodsReceiptCreateScreen() {
         return (
           <TextField
             value={row.batchNo}
+            ariaLabel="Partiya nömrəsi"
             mono
             required={product?.requiresBatch}
             error={shownErrors[i]?.batchNo}
@@ -314,6 +316,7 @@ export function GoodsReceiptCreateScreen() {
           <TextField
             type="date"
             value={row.expiryDate}
+            ariaLabel="Son istifadə tarixi"
             required={product?.requiresExpiry}
             error={shownErrors[i]?.expiryDate}
             onChange={(e) => update(row.key, { expiryDate: e.target.value })}
@@ -338,6 +341,7 @@ export function GoodsReceiptCreateScreen() {
         return (
           <TextField
             value={row.orderedQty}
+            ariaLabel="Sifariş edilən miqdar"
             align="right"
             mono
             placeholder="PO-suz"
@@ -366,6 +370,7 @@ export function GoodsReceiptCreateScreen() {
         return (
           <QtyUomInput
             qty={row.receivedQty}
+            ariaLabel="Qəbul edilən miqdar"
             uomId={row.uomId || String(uomSet.defaultUomId ?? '')}
             required
             error={shownErrors[i]?.receivedQty}
@@ -393,6 +398,7 @@ export function GoodsReceiptCreateScreen() {
         ) : (
           <TextField
             value={row.rejectedQty}
+            ariaLabel="Rədd edilən miqdar"
             align="right"
             mono
             onChange={(e) => update(row.key, { rejectedQty: e.target.value })}
@@ -425,6 +431,7 @@ export function GoodsReceiptCreateScreen() {
             {editingKey === row.key && !result.variance.isZero() ? (
               <TextField
                 value={row.varianceNote}
+                ariaLabel="Fərqin səbəbi"
                 error={shownErrors[i]?.varianceNote}
                 placeholder="Fərqin səbəbi — məcburi"
                 onChange={(e) => update(row.key, { varianceNote: e.target.value })}
@@ -451,6 +458,7 @@ export function GoodsReceiptCreateScreen() {
         ) : (
           <TextField
             value={row.unitPrice}
+            ariaLabel="Vahid qiymət"
             align="right"
             mono
             placeholder="0,0000"

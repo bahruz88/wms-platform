@@ -22,6 +22,12 @@ export interface TextFieldProps extends FieldProps {
   mono?: boolean;
   align?: 'left' | 'right';
   autoFocus?: boolean;
+  /**
+   * Accessible name for a control with no visible `label` — an input inside a table cell, where
+   * the column header names it for a sighted user but not for a screen reader. Brand book §
+   * "Əlçatanlıq": every control carries a name.
+   */
+  ariaLabel?: string;
 }
 
 export function TextField({
@@ -37,6 +43,7 @@ export function TextField({
   mono,
   align,
   autoFocus,
+  ariaLabel,
   label,
   required,
   hint,
@@ -68,6 +75,7 @@ export function TextField({
         maxLength={maxLength}
         autoFocus={autoFocus}
         required={required}
+        aria-label={label === undefined ? ariaLabel : undefined}
         aria-invalid={error ? true : undefined}
         aria-describedby={hint || error ? describeId : undefined}
         style={align === 'right' ? { textAlign: 'right' } : undefined}

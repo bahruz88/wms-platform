@@ -413,7 +413,7 @@ export function IssueCreateScreen() {
               <div>
                 <div className="wms-meta__k">Məhsul</div>
                 <RefPicker
-                  label=""
+                  ariaLabel="Məhsul"
                   required
                   value={active.productId}
                   operation="GET /masterdata/products"

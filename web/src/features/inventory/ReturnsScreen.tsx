@@ -16,7 +16,7 @@ import { Pager } from '@/components/Pager';
  * supplier's answer and the closing decision are office work. `claimAmount` is permission-bound
  * and the column is absent without `master.product.view_cost`, never masked (SPEC §16).
  *
- * The contract spells the permission `inv.rtv.*`; the running service enforces `inv.return.*`
+ * The contract spells the permission `inv.rtv.*` and the running service enforces the same
  * (`InventoryPermissions.cs`), and the guards follow the service.
  */
 export const RTV_STATUS_OPTIONS = [
@@ -112,12 +112,12 @@ export function ReturnsScreen() {
       title="Təchizatçıya qaytarma"
       subtitle="Qaytarma sənədləri, iddia məbləği və təchizatçının cavabı"
       actions={
-        can('inv.return.create') ? (
+        can('inv.rtv.create') ? (
           <Button variant="primary" onClick={() => navigate('/inventory/returns/new')}>
             Yeni qaytarma
           </Button>
         ) : (
-          <Button disabled title="`inv.return.create` icazəniz yoxdur">
+          <Button disabled title="`inv.rtv.create` icazəniz yoxdur">
             Yeni qaytarma
           </Button>
         )

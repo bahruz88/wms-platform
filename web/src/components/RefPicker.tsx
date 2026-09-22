@@ -12,6 +12,7 @@ import type { ApiError } from '@api/problem';
  */
 export function RefPicker({
   label,
+  ariaLabel,
   required,
   value,
   options,
@@ -23,7 +24,10 @@ export function RefPicker({
   operation,
   onChange,
 }: {
-  label: ReactNode;
+  /** Omit when the field is named by something beside it; pass `ariaLabel` instead. */
+  label?: ReactNode;
+  /** Accessible name when there is no visible `label` — brand book § "Əlçatanlıq". */
+  ariaLabel?: string;
   required?: boolean;
   value: string;
   options: SelectOption[];
@@ -43,6 +47,7 @@ export function RefPicker({
     return (
       <TextField
         label={label}
+        ariaLabel={ariaLabel}
         required={required}
         mono
         value={value}
@@ -58,6 +63,7 @@ export function RefPicker({
   return (
     <Select
       label={label}
+      ariaLabel={ariaLabel}
       required={required}
       value={value}
       options={options}

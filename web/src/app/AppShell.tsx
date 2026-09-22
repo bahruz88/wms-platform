@@ -5,6 +5,7 @@ import { Button, Icons } from '@ds/index';
 import { useApiQuery } from '@api/hooks';
 import { getTenant } from '@api/endpoints';
 import { useAuth } from '@auth/index';
+import { identityCached } from '@auth/identityCache';
 import {
   LANGUAGE_NAMES,
   SUPPORTED_LANGUAGES,
@@ -71,11 +72,22 @@ export function AppShell() {
 
   // `GET /identity/tenant` carries the tenant's own name for the brand line. Until the gateway
   // routes it the line falls back to the `tenant_id` claim — an id, not an invented name.
-  const tenant = useApiQuery(['identity', 'tenant'], getTenant, {
-    retry: false,
-    staleTime: Infinity,
-    gcTime: Infinity,
-  });
+  //
+  // `staleTime: Infinity` only keeps it out of a *refetch* inside one page's lifetime; the shell
+  // is rebuilt from nothing on every document load, so the call went out again on each of them.
+  // `identityCached` carries the answer across those boots for the length of the session, which
+  // is how long the tenant's name is good for (`auth/identityCache.ts`).
+  const subject = session?.subject ?? '';
+  const tenant = useApiQuery(
+    ['identity', 'tenant', subject],
+    () => identityCached('tenant', subject, getTenant),
+    {
+      enabled: Boolean(subject),
+      retry: false,
+      staleTime: Infinity,
+      gcTime: Infinity,
+    },
+  );
 
   const groups = visibleNavGroups(session?.permissions ?? []);
   const username = session?.username ?? '—';

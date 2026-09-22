@@ -89,10 +89,10 @@ export const NAV_GROUPS: NavGroup[] = [
       },
       {
         // Screen-map §3.11. The contract spells the permission `inv.rtv.view`; the running
-        // service enforces `inv.return.view`, so that is what the entry is filtered on.
+        // service enforces `inv.rtv.view`, so that is what the entry is filtered on.
         to: '/inventory/returns',
         labelKey: 'nav.returns',
-        permission: 'inv.return.view',
+        permission: 'inv.rtv.view',
       },
       { to: '/inventory/balances', labelKey: 'nav.balances', permission: 'inv.balance.view' },
       { to: '/inventory/batches', labelKey: 'nav.batches', permission: 'inv.batch.view' },

@@ -86,8 +86,8 @@ describe('roleAllows', () => {
       'inv.waste.view',
       'inv.waste.post',
       'inv.sample.view',
-      'inv.return.view',
-      'inv.return.create',
+      'inv.rtv.view',
+      'inv.rtv.create',
       'inv.movement.view',
       'inv.count.view',
       'inv.count.enter',
@@ -103,7 +103,7 @@ describe('roleAllows', () => {
 
   it('refuses the branch user the documents the gateway refuses them', () => {
     // Gateway evidence: branch1 gets 403 on /return-to-vendor, /samples and /goods-receipts.
-    expect(roleAllows(['BRANCH_USER'], 'inv.return.view')).toBe(false);
+    expect(roleAllows(['BRANCH_USER'], 'inv.rtv.view')).toBe(false);
     expect(roleAllows(['BRANCH_USER'], 'inv.sample.view')).toBe(false);
     expect(roleAllows(['BRANCH_USER'], 'inv.receipt.view')).toBe(false);
     // ... and grants the ones that answer 200.
@@ -131,7 +131,7 @@ describe('roleAllows', () => {
     expect(roleAllows(['PROCUREMENT_MANAGER'], 'inv.adjustment.approve')).toBe(true);
     expect(roleAllows(['PROCUREMENT_MANAGER'], 'inv.receipt.create')).toBe(false);
     // `inv.*.view` now reaches the deeper reads as well.
-    expect(roleAllows(['PROCUREMENT_MANAGER'], 'inv.return.view')).toBe(true);
+    expect(roleAllows(['PROCUREMENT_MANAGER'], 'inv.rtv.view')).toBe(true);
   });
 
   it('unions permissions across several roles', () => {

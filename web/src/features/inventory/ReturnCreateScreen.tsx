@@ -252,9 +252,13 @@ export function ReturnCreateScreen() {
             placeholder="Lokasiya seçin"
             operation="GET /masterdata/locations"
             listError={locations.error}
+            // One spelling for a location everywhere: «ad (kod)», as the balances, count,
+            // receipt, issue, variance and sales-import screens already render it. This screen
+            // and the stock request were the two that printed «kod · ad», so the same warehouse
+            // read differently depending on which document the user had open.
             options={(locations.data?.items ?? [])
               .filter((l) => !l.isVirtual)
-              .map((l) => ({ value: String(l.id), label: `${l.code} · ${l.name}` }))}
+              .map((l) => ({ value: String(l.id), label: `${l.name} (${l.code})` }))}
             onChange={setLocationId}
           />
           <TextField

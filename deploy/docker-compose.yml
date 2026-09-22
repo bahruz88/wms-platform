@@ -48,6 +48,16 @@ x-backend-env: &backend-env
   Keycloak__Authority: http://keycloak:8080/realms/wms
   Keycloak__Audience: wms-api
   Seq__Url: http://seq:5341
+  # DEV STACK ONLY. The per-user quota is a production control and keeps its default of 100/min
+  # everywhere else: `RateLimiting:PermitPerMinute` in Wms.Host.Api/appsettings.json, read by
+  # WmsCommonServiceCollectionExtensions.AddRateLimiting. It is raised here because the
+  # end-to-end suite drives forty-five screens as a single user inside one minute, which is not
+  # a rate any human produces and not what the limiter is defending against. The waste that
+  # made the limit bite for a *real* user — `GET /identity/me` and `GET /identity/tenant`
+  # re-fetched on every page load — was fixed in the interface (web/src/auth/identityCache.ts);
+  # this only stops the test harness from tripping a control it is not the subject of.
+  # Must NOT be copied into docker-compose.onprem.yml or the k8s overlays.
+  RateLimiting__PermitPerMinute: ${RATE_LIMIT_PER_MINUTE:-1000}
   # Shared secret for the /api/v1/<module>/internal/* routes (spec §4.2). The gateway refuses the
   # `internal` path segment outright and every host demands this header, so the module-to-module routes
   # are unreachable from a browser or a phone even if someone points one straight at a module container.

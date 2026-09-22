@@ -346,12 +346,12 @@ export function AppRoutes() {
             }
           />
           {/* Return to vendor — screen-map §3.11. The contract writes the permission as
-              `inv.rtv.*`; the service enforces `inv.return.*`, and the guard follows the
+              `inv.rtv.*`, and the service now enforces the same codes (aligned 22.09.2026); the guard follows the
               service, which is the only real check. */}
           <Route
             path="returns"
             element={
-              <Guarded permission="inv.return.view">
+              <Guarded permission="inv.rtv.view">
                 <ReturnsScreen />
               </Guarded>
             }
@@ -359,7 +359,7 @@ export function AppRoutes() {
           <Route
             path="returns/new"
             element={
-              <Guarded permission="inv.return.create">
+              <Guarded permission="inv.rtv.create">
                 <ReturnCreateScreen />
               </Guarded>
             }
@@ -367,7 +367,7 @@ export function AppRoutes() {
           <Route
             path="returns/:id"
             element={
-              <Guarded permission="inv.return.view">
+              <Guarded permission="inv.rtv.view">
                 <ReturnDetailScreen />
               </Guarded>
             }

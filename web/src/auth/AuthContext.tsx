@@ -11,6 +11,7 @@ import {
 import type { User } from 'oidc-client-ts';
 import { setTokenProvider, setUnauthorizedHandler } from '@api/client';
 import { getMe } from '@api/endpoints';
+import { clearIdentityCache, identityCached } from './identityCache';
 import { sessionFromUser, userManager, withServerPermissions, type WmsSession } from './session';
 
 export type AuthStatus = 'loading' | 'anonymous' | 'authenticated' | 'error';
@@ -46,6 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setTokenProvider(() => sessionRef.current?.accessToken ?? null);
     setUnauthorizedHandler(() => {
       sessionRef.current = null;
+      clearIdentityCache();
       setSession(null);
       setStatus('anonymous');
     });
@@ -54,6 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const apply = useCallback((user: User | null) => {
     if (!user || user.expired) {
       sessionRef.current = null;
+      clearIdentityCache();
       setSession(null);
       setStatus('anonymous');
       return;
@@ -72,8 +75,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
        * renders immediately on the token-derived codes and is corrected the moment `/me`
        * answers. A `/me` that fails is not fatal — the client port keeps the interface usable
        * and the reason is recorded so a screen can say which list is on display.
+       *
+       * The answer is cached for the session (`identityCache.ts`): the application boots afresh
+       * on every document load, and re-asking the identity module on each one spent the
+       * gateway's per-user request budget on facts that change at sign-in, not at navigation.
        */
-      void getMe()
+      void identityCached('me', next.subject, getMe)
         .then((me) => {
           if (sessionRef.current?.accessToken !== next.accessToken) return;
           const merged = withServerPermissions(next, me);
@@ -144,6 +151,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    // The next user on this tab must never be handed the previous one's permissions.
+    clearIdentityCache();
     // post_logout_redirect_uri ends the Keycloak SSO session, not just the local one.
     await userManager().signoutRedirect();
   }, []);

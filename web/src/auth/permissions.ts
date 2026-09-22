@@ -58,7 +58,7 @@ export const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
     'inv.receipt.view',
     'inv.issue.create',
     'inv.issue.dispatch',
-    'inv.transfer.create',
+    'inv.issue.create',
     'inv.count.create',
     'inv.count.freeze',
     'inv.count.enter',
@@ -69,12 +69,12 @@ export const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
     'inv.waste.post',
     'inv.sample.create',
     'inv.sample.view',
-    'inv.return.view',
+    'inv.rtv.view',
     'inv.issue.view',
     'inv.movement.view',
     'inv.batch.manage',
-    'inv.transfer.confirm',
-    'inv.return.create',
+    'inv.issue.confirm',
+    'inv.rtv.create',
     'inv.balance.view',
     'inv.batch.view',
     'inv.request.view',
@@ -87,7 +87,7 @@ export const ROLE_PERMISSIONS: Record<string, readonly string[]> = {
   BRANCH_USER: [
     'inv.request.create',
     'inv.request.view',
-    'inv.transfer.confirm',
+    'inv.issue.confirm',
     'inv.waste.create',
     'inv.count.enter',
     'inv.count.view',
@@ -173,8 +173,8 @@ export function roleAllows(roles: readonly string[], permission: string): boolea
  * Three such divergences are live today (verified against the gateway on :5001):
  *
  *   · return to vendor — contract `inv.rtv.{view,create,post}`,
- *     service `inv.return.{view,create}` (`InventoryPermissions.cs`);
- *   · branch confirmation — contract `inv.issue.confirm`, service `inv.transfer.confirm`;
+ *     service `inv.rtv.{view,create,post}` (`InventoryPermissions.cs`), aligned to the contract 22.09.2026;
+ *   · branch confirmation — contract `inv.issue.confirm`, service `inv.issue.confirm`;
  *   · count entry — contract and service agree on `inv.count.enter`; the old `inv.count.count`
  *     this file used existed in neither and is gone.
  *
@@ -219,8 +219,8 @@ export const PERMISSION_CATALOGUE: readonly string[] = [
   'inv.issue.create',
   'inv.issue.dispatch',
   'inv.issue.confirm',
-  'inv.transfer.create',
-  'inv.transfer.confirm',
+  'inv.issue.create',
+  'inv.issue.confirm',
   'inv.count.view',
   'inv.count.create',
   'inv.count.freeze',
@@ -237,8 +237,8 @@ export const PERMISSION_CATALOGUE: readonly string[] = [
   'inv.rtv.view',
   'inv.rtv.create',
   'inv.rtv.post',
-  'inv.return.view',
-  'inv.return.create',
+  'inv.rtv.view',
+  'inv.rtv.create',
   'inv.movement.view',
   'inv.movement.reverse',
   'inv.settings.view',

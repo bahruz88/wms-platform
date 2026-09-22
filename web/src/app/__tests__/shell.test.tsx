@@ -61,8 +61,8 @@ describe('navigation', () => {
 
   it('filters «Qaytarma» on the code the service enforces, not the contract spelling', () => {
     const returns = NAV_GROUPS.flatMap((g) => g.items).find((i) => i.to === '/inventory/returns');
-    // The contract writes `inv.rtv.view`; the gateway checks `inv.return.view`.
-    expect(returns?.permission).toBe('inv.return.view');
+    // The contract writes `inv.rtv.view`; the gateway checks `inv.rtv.view`.
+    expect(returns?.permission).toBe('inv.rtv.view');
     expect(
       visibleNavGroups(permissionsForRoles(['WAREHOUSE_KEEPER'])).flatMap((g) => g.items),
     ).toContainEqual(expect.objectContaining({ to: '/inventory/returns' }));

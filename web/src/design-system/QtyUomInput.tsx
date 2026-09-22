@@ -43,6 +43,14 @@ export interface QtyUomInputProps extends FieldProps {
   onUomChange?: (uomId: string, e: ChangeEvent<HTMLSelectElement>) => void;
   disabled?: boolean;
   placeholder?: string;
+  /**
+   * Accessible name for the quantity box when the control carries no visible `label` — inside a
+   * document's line table, where the column header names it for a sighted user and for nobody
+   * else. The unit select beside it has always been named «Ölçü vahidi»; the number field was
+   * the one control on the goods-receipt screen a screen reader could not announce.
+   * Brand book «Əlçatanlıq»: every control carries a name.
+   */
+  ariaLabel?: string;
 }
 
 export function QtyUomInput({
@@ -57,6 +65,7 @@ export function QtyUomInput({
   onUomChange,
   disabled,
   placeholder,
+  ariaLabel,
   label,
   required,
   hint,
@@ -117,6 +126,7 @@ export function QtyUomInput({
           disabled={disabled}
           placeholder={placeholder}
           required={required}
+          aria-label={label === undefined ? ariaLabel : undefined}
           aria-invalid={error ? true : undefined}
           aria-describedby={hint || error ? describeId : undefined}
         />

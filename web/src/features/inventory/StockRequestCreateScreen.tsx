@@ -136,9 +136,11 @@ export function StockRequestCreateScreen() {
   if (sameLocation) blockers.push('fərqli lokasiyalar');
   if (!linesValid) blockers.push('sətirlər');
 
+  // «ad (kod)» is how every other screen spells a location; see the note in
+  // `ReturnCreateScreen.tsx`.
   const locationOptions = (locations.data?.items ?? [])
     .filter((l) => !l.isVirtual)
-    .map((l) => ({ value: String(l.id), label: `${l.code} · ${l.name}` }));
+    .map((l) => ({ value: String(l.id), label: `${l.name} (${l.code})` }));
 
   return (
     <DocumentPage

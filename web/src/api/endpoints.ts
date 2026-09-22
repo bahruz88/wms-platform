@@ -463,7 +463,7 @@ export const cancelStockRequest = async (id: number, rowVersion: number) =>
 // --- return to vendor ------------------------------------------------------------------------------
 /**
  * Screen-map §3.11. The contract writes these operations' permission as `inv.rtv.*`, but the
- * running service enforces `inv.return.*` (`InventoryPermissions.cs`) — the guards use the
+ * running service enforces the same `inv.rtv.*` codes (aligned 22.09.2026) — the guards use the
  * service's spelling, because the server is the only real check.
  */
 export const listReturnsToVendor = async (query: Query<InventoryPaths, '/return-to-vendor'> = {}) =>
