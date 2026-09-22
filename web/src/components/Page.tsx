@@ -263,11 +263,16 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   const { t } = useTranslation();
   const problem: ProblemDetails | null = isApiError(error) ? error.problem : null;
 
+  // A 404/405 here is not an error the user made and not one support can act on — the feature
+  // simply is not built yet. So no `code`: `NOT_FOUND` on a screen that says "being prepared" is
+  // noise. A real failure below keeps its code and traceId, which is what support works from.
   if (problem && (problem.status === 404 || problem.status === 405)) {
     return (
-      <Alert tone="info" title={t('state.notImplementedTitle')} code={problem.code}>
-        {t('state.notImplementedBody', { status: problem.status })}
-      </Alert>
+      <div data-wms-operation={`${problem.status} ${problem.code ?? ''}`.trim()}>
+        <Alert tone="info" title={t('state.notImplementedTitle')}>
+          {t('state.notImplementedBody')}
+        </Alert>
+      </div>
     );
   }
 

@@ -70,11 +70,16 @@ export function DashboardScreen() {
     200,
   );
 
+  // `listPendingApprovals` carries `proc.approval.view`, which the keeper and the branch user do
+  // not hold. Asking anyway put a raw `FORBIDDEN` with a trace id on the first screen those two
+  // roles see after signing in. The navigation rule is the same one the cost columns follow:
+  // an element a role has no permission for is not rendered, not shown broken (screen-map §2).
+  const canViewApprovals = can('proc.approval.view');
   const approvals = useApiPage<PendingApproval>(
     ['dashboard', 'approvals'],
     () => listPendingApprovals({ page: 1, size: 20 }),
     20,
-    { retry: false },
+    { retry: false, enabled: canViewApprovals },
   );
 
   const receipts = useApiPage<GoodsReceiptSummary>(
@@ -269,11 +274,13 @@ export function DashboardScreen() {
             hint={t('dashboard.kpiBalanceRowsHint')}
           />
         )}
-        <KpiCard
-          label={t('dashboard.kpiPendingDocs')}
-          value={pendingCount}
-          hint={t('dashboard.kpiPendingHint')}
-        />
+        {canViewApprovals ? (
+          <KpiCard
+            label={t('dashboard.kpiPendingDocs')}
+            value={pendingCount}
+            hint={t('dashboard.kpiPendingHint')}
+          />
+        ) : null}
         <KpiCard
           label={t('dashboard.kpiExpiring')}
           value={expiring.length}
@@ -317,75 +324,77 @@ export function DashboardScreen() {
           )}
         </Card>
 
-        <Card
-          title={t('dashboard.pendingApprovals')}
-          actions={
-            pendingCount > 0 ? (
-              <Badge tone="warning" dot>
-                {formatNumber(pendingCount, 0)}
-              </Badge>
-            ) : undefined
-          }
-          rows
-        >
-          {approvals.isError ? (
-            approvals.error.status === 404 || approvals.error.status === 405 ? (
-              // One muted line rather than a second Alert. The route and status go in a data
-              // attribute for whoever builds the endpoint; the keeper gets a sentence.
-              <div
-                className="wms-muted"
-                style={{ padding: '8px 16px' }}
-                data-wms-operation={`GET /procurement/approvals/pending → ${approvals.error.status}`}
-              >
-                {t('state.notImplementedBody')}
+        {!canViewApprovals ? null : (
+          <Card
+            title={t('dashboard.pendingApprovals')}
+            actions={
+              pendingCount > 0 ? (
+                <Badge tone="warning" dot>
+                  {formatNumber(pendingCount, 0)}
+                </Badge>
+              ) : undefined
+            }
+            rows
+          >
+            {approvals.isError ? (
+              approvals.error.status === 404 || approvals.error.status === 405 ? (
+                // One muted line rather than a second Alert. The route and status go in a data
+                // attribute for whoever builds the endpoint; the keeper gets a sentence.
+                <div
+                  className="wms-muted"
+                  style={{ padding: '8px 16px' }}
+                  data-wms-operation={`GET /procurement/approvals/pending → ${approvals.error.status}`}
+                >
+                  {t('state.notImplementedBody')}
+                </div>
+              ) : (
+                <div style={{ padding: '8px 16px' }}>
+                  <ErrorState error={approvals.error} onRetry={() => void approvals.refetch()} />
+                </div>
+              )
+            ) : (approvals.data?.items ?? []).length === 0 ? (
+              <div className="wms-muted" style={{ padding: '8px 16px' }}>
+                {t('dashboard.pendingEmpty')}
               </div>
             ) : (
-              <div style={{ padding: '8px 16px' }}>
-                <ErrorState error={approvals.error} onRetry={() => void approvals.refetch()} />
-              </div>
-            )
-          ) : (approvals.data?.items ?? []).length === 0 ? (
-            <div className="wms-muted" style={{ padding: '8px 16px' }}>
-              {t('dashboard.pendingEmpty')}
-            </div>
-          ) : (
-            <div className="wms-doclist">
-              {(approvals.data?.items ?? []).map((row) => (
-                <div className="wms-doclist__row" key={row.approvalId}>
-                  <div className="wms-doclist__main">
-                    <div className="wms-doclist__title">
-                      <span className="wms-num wms-doclist__no">{row.docNo}</span>
-                      <DocStatusBadge status="PENDING_APPROVAL" />
+              <div className="wms-doclist">
+                {(approvals.data?.items ?? []).map((row) => (
+                  <div className="wms-doclist__row" key={row.approvalId}>
+                    <div className="wms-doclist__main">
+                      <div className="wms-doclist__title">
+                        <span className="wms-num wms-doclist__no">{row.docNo}</span>
+                        <DocStatusBadge status="PENDING_APPROVAL" />
+                      </div>
+                      <div className="wms-doclist__meta">
+                        {[
+                          row.summary,
+                          canViewCost && row.amountBase
+                            ? `${formatNumber(row.amountBase, 2)} AZN`
+                            : null,
+                          row.viaDelegationFrom
+                            ? `delegasiya: ${row.viaDelegationFrom.username}`
+                            : null,
+                          t('dashboard.waitingSince', {
+                            days: Math.max(0, -(daysUntil(row.waitingSince) ?? 0)),
+                          }),
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </div>
                     </div>
-                    <div className="wms-doclist__meta">
-                      {[
-                        row.summary,
-                        canViewCost && row.amountBase
-                          ? `${formatNumber(row.amountBase, 2)} AZN`
-                          : null,
-                        row.viaDelegationFrom
-                          ? `delegasiya: ${row.viaDelegationFrom.username}`
-                          : null,
-                        t('dashboard.waitingSince', {
-                          days: Math.max(0, -(daysUntil(row.waitingSince) ?? 0)),
-                        }),
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </div>
+                    <Link
+                      to={approvalLink(row)}
+                      className="wms-btn wms-btn--secondary wms-btn--sm"
+                      aria-label={`${row.docNo} — ${t('common.view')}`}
+                    >
+                      {t('common.view')}
+                    </Link>
                   </div>
-                  <Link
-                    to={approvalLink(row)}
-                    className="wms-btn wms-btn--secondary wms-btn--sm"
-                    aria-label={`${row.docNo} — ${t('common.view')}`}
-                  >
-                    {t('common.view')}
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
+                ))}
+              </div>
+            )}
+          </Card>
+        )}
       </div>
     </Page>
   );

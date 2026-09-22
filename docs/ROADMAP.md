@@ -8,6 +8,19 @@ Hər bənd audit tərəfindən sübutla təsdiqlənib — fayl yolu, marşrut, t
 
 ---
 
+> **⚠️ Bu sənəd 21.09.2026 auditinin nəticəsidir və bir gün sonra xeyli hissəsi köhnəldi.**
+> Cari vəziyyət üçün [ux/user-flows.md](ux/user-flows.md) sənədinə baxın — o, brauzerdə
+> yoxlanmış axınları və qırılan yerləri göstərir.
+>
+> 22.09.2026 tarixinə bağlananlar: §2-dəki hər iki təhlükəsizlik boşluğu (filial filtri
+> işləyir, `/internal/*` gateway-dən 404), Faza 1 tam (Identity 17/17, MasterData 29/29,
+> Documents 6/6), Faza 2 tam (Procurement 36/36 və nümunə data), hesabat modulu 8/8 və
+> doqquz hesabat, `created_by` sahələri dolur, Playwright ilə 72 uçdan-uca test.
+>
+> Açıq qalanlar: bildirişlər heç yerə çatdırılmır (RabbitMQ-da abunəçi yoxdur,
+> `notif_message` boşdur), mobil tətbiq hazırkı API ilə işləmir, web-də yazma ekranlarının
+> bir hissəsi yoxdur, data köçürmə aləti yoxdur, yük testi yoxdur.
+
 ## 1. Bir baxışda
 
 ### Kontrakt əhatəsi

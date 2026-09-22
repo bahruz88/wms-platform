@@ -243,11 +243,21 @@ export function CountsScreen() {
               .map((l) => ({ value: String(l.id), label: `${l.name} (${l.code})` }))}
             onChange={setLocationId}
           />
+          {/* CYCLE and SPOT carry a scope (`categoryIds` / `productIds`) that this dialog does not
+              collect, so the server answers every such request with
+              `422 COUNT_SCOPE_REQUIRED`. Until the scope picker exists the two options stay
+              visible — they are real count types and the table labels them — but are not
+              selectable, with the reason named rather than left to be discovered at submit. */}
           <Select
             label="Sayım tipi"
             required
             value={countType}
-            options={Object.entries(COUNT_TYPE_LABELS).map(([value, label]) => ({ value, label }))}
+            hint="Dövri və nöqtəvi sayım əhatə (kateqoriya və ya məhsul siyahısı) tələb edir; bu ekran hələ onu toplamır."
+            options={Object.entries(COUNT_TYPE_LABELS).map(([value, label]) => ({
+              value,
+              label,
+              disabled: value !== 'FULL',
+            }))}
             onChange={(e) => setCountType(e.target.value as typeof countType)}
           />
           <TextField

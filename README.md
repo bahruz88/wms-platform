@@ -277,6 +277,12 @@ Satış məlumatı `POS`, `CSV` və ya `MANUAL` mənbəyindən gəlir — POS in
 - Kontrakt: [contracts/openapi/consumption.v1.yaml](contracts/openapi/consumption.v1.yaml)
 - Modul: `Consumption` (`cons_`, `--Modules=consumption`)
 
+## İstifadəçi axınları
+
+Dörd tərəf — mərkəzi satınalma, mərkəzi anbar, 15 filial və təchizatçı — və aralarındakı
+bütün ötürmələr: [docs/ux/user-flows.md](docs/ux/user-flows.md). Hər axın brauzerdə
+keçilib və nəticəsi bazadan yoxlanılıb; qırılan addımlar açıq göstərilib.
+
 ## Vəziyyət və yol xəritəsi
 
 Repo boyunca aparılmış auditin nəticəsi, fazalar üzrə: [docs/ROADMAP.md](docs/ROADMAP.md).
