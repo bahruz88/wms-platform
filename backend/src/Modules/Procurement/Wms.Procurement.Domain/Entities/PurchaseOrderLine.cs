@@ -2,7 +2,11 @@ using Wms.Common.Domain;
 
 namespace Wms.Procurement.Domain.Entities;
 
-/// <summary><c>proc_purchase_order_line</c>.</summary>
+/// <summary>
+/// <c>proc_purchase_order_line</c>. Per <c>procurement.v1.yaml</c> the stored
+/// <see cref="LineTotal"/> is <c>qty × unitPrice × (1 + vatRate/100)</c>, i.e. VAT included;
+/// the PO header's <c>subtotal</c> is the sum of the net amounts.
+/// </summary>
 public sealed class PurchaseOrderLine : Entity<long>, ITenantEntity
 {
     private PurchaseOrderLine()
@@ -61,21 +65,27 @@ public sealed class PurchaseOrderLine : Entity<long>, ITenantEntity
             return ProcurementErrors.InvalidPurchaseOrder($"Line {lineNo}: vat_rate must be between 0 and 100.");
         }
 
+        var net = Quantity.Round(qty * unitPrice, Money.StorageDecimals);
         return new PurchaseOrderLine
         {
             TenantId = tenantId,
             LineNo = lineNo,
             RequisitionLineId = requisitionLineId,
             ProductId = productId,
-            Qty = qty,
+            Qty = Quantity.Round(qty, Quantity.StorageDecimals),
             UomId = uomId,
-            UnitPrice = unitPrice,
+            UnitPrice = Quantity.Round(unitPrice, Money.StorageDecimals),
             VatRate = vatRate,
-            LineTotal = Quantity.Round(qty * unitPrice, Money.StorageDecimals),
+            LineTotal = Quantity.Round(net + (net * vatRate / 100m), Money.StorageDecimals),
         };
     }
 
-    public decimal VatAmount() => Quantity.Round(LineTotal * VatRate / 100m, Money.StorageDecimals);
+    /// <summary>Net amount, VAT excluded — the PO header's <c>subtotal</c> is the sum of these.</summary>
+    public decimal LineNet() => Quantity.Round(Qty * UnitPrice, Money.StorageDecimals);
+
+    public decimal VatAmount() => Quantity.Round(LineNet() * VatRate / 100m, Money.StorageDecimals);
+
+    public decimal RemainingQty() => Math.Max(0m, Qty - ReceivedQty);
 
     public bool IsFullyReceived() => ReceivedQty >= Qty;
 
@@ -86,7 +96,7 @@ public sealed class PurchaseOrderLine : Entity<long>, ITenantEntity
             return ProcurementErrors.InvalidPurchaseOrder("Received quantity must be positive.");
         }
 
-        ReceivedQty += receivedQty;
+        ReceivedQty = Quantity.Round(ReceivedQty + receivedQty, Quantity.StorageDecimals);
         return Result.Success();
     }
 }

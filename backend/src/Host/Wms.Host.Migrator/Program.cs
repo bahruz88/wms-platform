@@ -73,6 +73,16 @@ if (demoExit != 0)
     return demoExit;
 }
 
-// Dev users come last: their location grants reference master_location rows the demo seeder creates.
+// Dev users come next: their location grants reference master_location rows the demo seeder creates.
 var devUserSeeder = ActivatorUtilities.CreateInstance<IamSeeder>(seedScope.ServiceProvider);
-return await devUserSeeder.SeedDevUsersAsync(cancellation.Token).ConfigureAwait(false);
+var devUserExit = await devUserSeeder.SeedDevUsersAsync(cancellation.Token).ConfigureAwait(false);
+if (devUserExit != 0)
+{
+    return devUserExit;
+}
+
+// Procurement comes last of all: it reuses the demo catalogue AND needs real iam_user ids, because the
+// approval inbox hides a document from whoever raised it (spec §12.6) — a seeded approval is only visible
+// if its requester is a different person from the one looking at the screen.
+var procurementSeeder = ActivatorUtilities.CreateInstance<ProcurementSeeder>(seedScope.ServiceProvider);
+return await procurementSeeder.RunAsync(cancellation.Token).ConfigureAwait(false);

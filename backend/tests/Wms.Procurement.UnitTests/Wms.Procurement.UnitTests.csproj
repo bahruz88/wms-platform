@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Unit tests of the Procurement domain (spec §17.1): approval-rule selection, delegation, the cheapest-quotation rule, the PR-splitting window and the price-difference arithmetic.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Procurement/Wms.Procurement.Domain/Wms.Procurement.Domain.csproj" />
+  </ItemGroup>
+</Project>

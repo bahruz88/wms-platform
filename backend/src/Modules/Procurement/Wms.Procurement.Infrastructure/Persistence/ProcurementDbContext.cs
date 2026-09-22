@@ -21,6 +21,16 @@ public sealed class ProcurementDbContext(
 
     public DbSet<RequisitionLine> RequisitionLines => Set<RequisitionLine>();
 
+    public DbSet<Rfq> Rfqs => Set<Rfq>();
+
+    public DbSet<RfqLine> RfqLines => Set<RfqLine>();
+
+    public DbSet<RfqSupplier> RfqSuppliers => Set<RfqSupplier>();
+
+    public DbSet<Quotation> Quotations => Set<Quotation>();
+
+    public DbSet<QuotationLine> QuotationLines => Set<QuotationLine>();
+
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
 
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
@@ -30,6 +40,10 @@ public sealed class ProcurementDbContext(
     public DbSet<ApprovalInstance> ApprovalInstances => Set<ApprovalInstance>();
 
     public DbSet<ApprovalStep> ApprovalSteps => Set<ApprovalStep>();
+
+    public DbSet<PriceHistoryEntry> PriceHistory => Set<PriceHistoryEntry>();
+
+    public DbSet<SplitCheckLog> SplitCheckLogs => Set<SplitCheckLog>();
 
     protected override void ConfigureModule(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProcurementDbContext).Assembly);

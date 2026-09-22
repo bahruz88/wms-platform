@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Testcontainers + real MySQL 8.4: the PR -&gt; RFQ -&gt; quotation -&gt; PO -&gt; approval path of Faza 2. Marked Category=Integration.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Modules/Procurement/Wms.Procurement.Infrastructure/Wms.Procurement.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Modules/Inventory/Wms.Inventory.Infrastructure/Wms.Inventory.Infrastructure.csproj" />
+    <ProjectReference Include="../../src/Modules/MasterData/Wms.MasterData.Infrastructure/Wms.MasterData.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Testcontainers.MySql" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+  </ItemGroup>
+</Project>

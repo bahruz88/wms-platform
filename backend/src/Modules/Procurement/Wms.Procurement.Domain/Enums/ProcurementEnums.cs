@@ -34,6 +34,15 @@ public enum RequisitionStatus
     Closed,
 }
 
+/// <summary><c>proc_rfq.status</c>.</summary>
+public enum RfqStatus
+{
+    Draft,
+    Sent,
+    Closed,
+    Cancelled,
+}
+
 /// <summary><c>proc_purchase_order.status</c>.</summary>
 public enum PurchaseOrderStatus
 {
@@ -63,4 +72,24 @@ public enum ApprovalDecision
     Pending,
     Approved,
     Rejected,
+}
+
+/// <summary><c>proc_approval_rule.doc_type</c> / <c>proc_approval_instance.doc_type</c> (spec §10, VARCHAR(24)).</summary>
+public enum ApprovalDocType
+{
+    /// <summary>Purchase order.</summary>
+    Po,
+
+    /// <summary>Waste document approved in Inventory.</summary>
+    Waste,
+
+    /// <summary>Stock-count adjustment approved in Inventory.</summary>
+    CountAdjust,
+}
+
+public static class ApprovalProductTypes
+{
+    /// <summary>Widens a document's product type into the rule's three-valued enum.</summary>
+    public static ApprovalProductType From(ProductType productType) =>
+        productType == ProductType.Food ? ApprovalProductType.Food : ApprovalProductType.NonFood;
 }

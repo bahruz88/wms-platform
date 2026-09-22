@@ -33,6 +33,9 @@ public sealed class Requisition : AuditableAggregateRoot<long>, ITenantEntity
 
     public string? Note { get; private set; }
 
+    /// <summary>Why the procurement officer sent the request back (contract: <c>rejectComment</c>).</summary>
+    public string? RejectComment { get; private set; }
+
     public IReadOnlyList<RequisitionLine> Lines => _lines.AsReadOnly();
 
     public static Result<Requisition> CreateDraft(
@@ -64,8 +67,36 @@ public sealed class Requisition : AuditableAggregateRoot<long>, ITenantEntity
             ProductType = productType,
             Priority = priority,
             RequiredDate = requiredDate,
-            Note = note is { Length: > NoteMaxLength } n ? n[..NoteMaxLength] : note,
+            Note = Truncate(note, NoteMaxLength),
         };
+    }
+
+    /// <summary>Header edit of a DRAFT PR; the document number never changes.</summary>
+    public Result UpdateHeader(
+        DateOnly docDate,
+        uint requesterLocationId,
+        ProductType productType,
+        Priority priority,
+        DateOnly? requiredDate,
+        string? note)
+    {
+        if (Status != RequisitionStatus.Draft)
+        {
+            return ProcurementErrors.InvalidStatusTransition(nameof(Requisition), Status.ToString(), "updated");
+        }
+
+        if (requesterLocationId == 0)
+        {
+            return ProcurementErrors.InvalidRequisition("requester_location_id is required.");
+        }
+
+        DocDate = docDate;
+        RequesterLocationId = requesterLocationId;
+        ProductType = productType;
+        Priority = priority;
+        RequiredDate = requiredDate;
+        Note = Truncate(note, NoteMaxLength);
+        return Result.Success();
     }
 
     public Result<RequisitionLine> AddLine(uint productId, decimal qty, ushort uomId, string? note = null)
@@ -85,6 +116,39 @@ public sealed class Requisition : AuditableAggregateRoot<long>, ITenantEntity
         return line.Value;
     }
 
+    /// <summary>Replaces every line of a DRAFT PR; line numbers are re-issued from 1.</summary>
+    public Result ReplaceLines(IEnumerable<RequisitionLineDraft> lines)
+    {
+        ArgumentNullException.ThrowIfNull(lines);
+        if (Status != RequisitionStatus.Draft)
+        {
+            return ProcurementErrors.InvalidStatusTransition(nameof(Requisition), Status.ToString(), "lines replaced");
+        }
+
+        var replacement = new List<RequisitionLine>();
+        ushort lineNo = 1;
+        foreach (var draft in lines)
+        {
+            var line = RequisitionLine.Create(TenantId, lineNo, draft.ProductId, draft.Qty, draft.UomId, draft.Note);
+            if (line.IsFailure)
+            {
+                return line.Error;
+            }
+
+            replacement.Add(line.Value);
+            lineNo++;
+        }
+
+        if (replacement.Count == 0)
+        {
+            return ProcurementErrors.InvalidRequisition("A requisition needs at least one line.");
+        }
+
+        _lines.Clear();
+        _lines.AddRange(replacement);
+        return Result.Success();
+    }
+
     public Result Submit()
     {
         if (Status != RequisitionStatus.Draft)
@@ -101,24 +165,60 @@ public sealed class Requisition : AuditableAggregateRoot<long>, ITenantEntity
         return Result.Success();
     }
 
-    public Result Reject()
+    public Result Reject(string comment)
     {
         if (Status is not (RequisitionStatus.Submitted or RequisitionStatus.InProcurement))
         {
             return ProcurementErrors.InvalidStatusTransition(nameof(Requisition), Status.ToString(), nameof(RequisitionStatus.Rejected));
         }
 
+        if (string.IsNullOrWhiteSpace(comment))
+        {
+            return ProcurementErrors.CommentRequired("comment");
+        }
+
         Status = RequisitionStatus.Rejected;
+        RejectComment = Truncate(comment, NoteMaxLength);
         return Result.Success();
     }
 
-    /// <summary>Records how much of each line went into a PO; the PR closes once every line is fully converted.</summary>
-    public Result RegisterConversion(ushort lineNo, decimal convertedQty)
+    /// <summary>Cancelled by the requester while nothing has been procured yet.</summary>
+    public Result Cancel(string? comment)
     {
-        var line = _lines.Find(l => l.LineNo == lineNo);
+        if (Status is not (RequisitionStatus.Draft or RequisitionStatus.Submitted))
+        {
+            return ProcurementErrors.InvalidStatusTransition(nameof(Requisition), Status.ToString(), nameof(RequisitionStatus.Cancelled));
+        }
+
+        Status = RequisitionStatus.Cancelled;
+        RejectComment = Truncate(comment, NoteMaxLength);
+        return Result.Success();
+    }
+
+    /// <summary>An RFQ built from this PR moves it into procurement (contract: <c>createRfq</c>).</summary>
+    public Result MarkInProcurement()
+    {
+        if (Status is RequisitionStatus.Submitted or RequisitionStatus.InProcurement)
+        {
+            Status = RequisitionStatus.InProcurement;
+            return Result.Success();
+        }
+
+        return ProcurementErrors.InvalidStatusTransition(nameof(Requisition), Status.ToString(), nameof(RequisitionStatus.InProcurement));
+    }
+
+    /// <summary>Records how much of one line went into a PO; the PR closes once every line is fully converted (spec §12.8).</summary>
+    public Result RegisterConversion(long lineId, decimal convertedQty)
+    {
+        if (Status is RequisitionStatus.Rejected or RequisitionStatus.Cancelled or RequisitionStatus.Closed)
+        {
+            return ProcurementErrors.InvalidStatusTransition(nameof(Requisition), Status.ToString(), "converted");
+        }
+
+        var line = _lines.Find(l => l.Id == lineId);
         if (line is null)
         {
-            return ProcurementErrors.InvalidRequisition($"Line {lineNo} does not exist.");
+            return ProcurementErrors.InvalidRequisition($"Line {lineId} does not belong to requisition {DocNo}.");
         }
 
         var registered = line.RegisterConversion(convertedQty);
@@ -132,4 +232,10 @@ public sealed class Requisition : AuditableAggregateRoot<long>, ITenantEntity
             : RequisitionStatus.InProcurement;
         return Result.Success();
     }
+
+    internal static string? Truncate(string? value, int maxLength) =>
+        value is { Length: > 0 } && value.Length > maxLength ? value[..maxLength] : value;
 }
+
+/// <summary>Input shape of <see cref="Requisition.ReplaceLines"/>; keeps the aggregate free of DTO types.</summary>
+public sealed record RequisitionLineDraft(uint ProductId, decimal Qty, ushort UomId, string? Note);

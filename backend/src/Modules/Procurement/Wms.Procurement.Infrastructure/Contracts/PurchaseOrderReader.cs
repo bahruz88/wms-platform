@@ -10,7 +10,7 @@ namespace Wms.Procurement.Infrastructure.Contracts;
 public sealed class PurchaseOrderReader(IProcurementQueries queries) : IPurchaseOrderReader
 {
     public Task<PurchaseOrderDto?> GetAsync(long purchaseOrderId, CancellationToken cancellationToken) =>
-        queries.GetPurchaseOrderAsync(purchaseOrderId, cancellationToken);
+        queries.GetPurchaseOrderContractAsync(purchaseOrderId, cancellationToken);
 }
 
 /// <summary>HTTP implementation used when Procurement runs in another container (<c>ModuleTransport=Http</c>).</summary>

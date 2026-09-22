@@ -7,7 +7,6 @@
     <ProjectReference Include="../../src/BuildingBlocks/Wms.Common.Application/Wms.Common.Application.csproj" />
     <ProjectReference Include="../../src/Modules/Inventory/Wms.Inventory.Application/Wms.Inventory.Application.csproj" />
     <ProjectReference Include="../../src/Modules/Inventory/Wms.Inventory.Domain/Wms.Inventory.Domain.csproj" />
-    <ProjectReference Include="../../src/Modules/Procurement/Wms.Procurement.Domain/Wms.Procurement.Domain.csproj" />
     <ProjectReference Include="../../src/Modules/MasterData/Wms.MasterData.Domain/Wms.MasterData.Domain.csproj" />
   </ItemGroup>
 </Project>

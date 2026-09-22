@@ -144,6 +144,20 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<decimal?>("AmountBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("amount_base");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
                     b.Property<byte>("CurrentStep")
                         .HasColumnType("tinyint unsigned")
                         .HasColumnName("current_step");
@@ -152,11 +166,32 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("doc_id");
 
+                    b.Property<string>("DocNo")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("doc_no");
+
                     b.Property<string>("DocType")
                         .IsRequired()
                         .HasMaxLength(24)
                         .HasColumnType("varchar(24)")
                         .HasColumnName("doc_type");
+
+                    b.Property<uint>("RequestedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("requested_by");
+
+                    b.Property<string>("RequestedByUsername")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("requested_by_username");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -167,8 +202,20 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                         .HasColumnType("int unsigned")
                         .HasColumnName("tenant_id");
 
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint?>("UpdatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("updated_by");
+
                     b.HasKey("Id")
                         .HasName("pk_proc_approval_instance");
+
+                    b.HasIndex("TenantId", "Status")
+                        .HasDatabaseName("ix_ai_status");
 
                     b.HasIndex("TenantId", "DocType", "DocId")
                         .HasDatabaseName("ix_ai");
@@ -185,9 +232,24 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<uint>("Id"));
 
+                    b.Property<string>("ApproverRoleCode")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("varchar(48)")
+                        .HasColumnName("approver_role_code");
+
                     b.Property<uint>("ApproverRoleId")
                         .HasColumnType("int unsigned")
                         .HasColumnName("approver_role_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
 
                     b.Property<string>("DocType")
                         .IsRequired()
@@ -214,6 +276,12 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                         .HasColumnType("enum('FOOD','NON_FOOD','ANY')")
                         .HasColumnName("product_type");
 
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
                     b.Property<byte>("StepNo")
                         .HasColumnType("tinyint unsigned")
                         .HasColumnName("step_no");
@@ -221,6 +289,15 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                     b.Property<uint>("TenantId")
                         .HasColumnType("int unsigned")
                         .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint?>("UpdatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("updated_by");
 
                     b.HasKey("Id")
                         .HasName("pk_proc_approval_rule");
@@ -240,9 +317,24 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("ApproverRoleCode")
+                        .IsRequired()
+                        .HasMaxLength(48)
+                        .HasColumnType("varchar(48)")
+                        .HasColumnName("approver_role_code");
+
+                    b.Property<uint>("ApproverRoleId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("approver_role_id");
+
                     b.Property<uint?>("ApproverUserId")
                         .HasColumnType("int unsigned")
                         .HasColumnName("approver_user_id");
+
+                    b.Property<string>("ApproverUsername")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("approver_username");
 
                     b.Property<string>("Comment")
                         .HasMaxLength(1000)
@@ -263,6 +355,11 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                         .HasColumnType("int unsigned")
                         .HasColumnName("delegated_from_user_id");
 
+                    b.Property<string>("DelegatedFromUsername")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("delegated_from_username");
+
                     b.Property<long>("InstanceId")
                         .HasColumnType("bigint")
                         .HasColumnName("instance_id");
@@ -274,10 +371,93 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_proc_approval_step");
 
+                    b.HasIndex("ApproverRoleCode", "Decision")
+                        .HasDatabaseName("ix_as_pending");
+
                     b.HasIndex("InstanceId", "StepNo")
                         .HasDatabaseName("ix_as");
 
                     b.ToTable("proc_approval_step", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.PriceHistoryEntry", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("char(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<decimal?>("DiffAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("diff_amount");
+
+                    b.Property<decimal?>("DiffPct")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("decimal(9,4)")
+                        .HasColumnName("diff_pct");
+
+                    b.Property<long?>("PoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("po_id");
+
+                    b.Property<decimal?>("PrevPriceBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("prev_price_base");
+
+                    b.Property<DateOnly>("PriceDate")
+                        .HasColumnType("date")
+                        .HasColumnName("price_date");
+
+                    b.Property<uint>("ProductId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("product_id");
+
+                    b.Property<uint>("SupplierId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("unit_price");
+
+                    b.Property<decimal>("UnitPriceBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("unit_price_base");
+
+                    b.HasKey("Id")
+                        .HasName("pk_proc_price_history");
+
+                    b.HasIndex("TenantId", "PriceDate")
+                        .HasDatabaseName("ix_ph_date");
+
+                    b.HasIndex("TenantId", "ProductId", "SupplierId", "PriceDate")
+                        .HasDatabaseName("ix_ph");
+
+                    b.ToTable("proc_price_history", (string)null);
                 });
 
             modelBuilder.Entity("Wms.Procurement.Domain.Entities.PurchaseOrder", b =>
@@ -331,6 +511,30 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                         .HasColumnType("varchar(16)")
                         .HasColumnName("incoterms");
 
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("PaymentTerms")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("payment_terms");
+
+                    b.Property<string>("ProductType")
+                        .IsRequired()
+                        .HasColumnType("enum('FOOD','NON_FOOD')")
+                        .HasColumnName("product_type");
+
+                    b.Property<long?>("QuotationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("quotation_id");
+
+                    b.Property<string>("RejectComment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("reject_comment");
+
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
                         .HasColumnType("int unsigned")
@@ -341,6 +545,11 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                         .HasPrecision(3)
                         .HasColumnType("datetime(3)")
                         .HasColumnName("sent_at");
+
+                    b.Property<string>("SplitCheckWarning")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("split_check_warning");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -390,6 +599,12 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "DocNo")
                         .IsUnique()
                         .HasDatabaseName("uq_po");
+
+                    b.HasIndex("TenantId", "Status", "DocDate")
+                        .HasDatabaseName("ix_po_status");
+
+                    b.HasIndex("TenantId", "SupplierId", "DocDate")
+                        .HasDatabaseName("ix_po_supplier");
 
                     b.ToTable("proc_purchase_order", (string)null);
                 });
@@ -458,11 +673,196 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                     b.HasIndex("PoId")
                         .HasDatabaseName("ix_proc_purchase_order_line_po_id");
 
+                    b.HasIndex("TenantId", "RequisitionLineId")
+                        .HasDatabaseName("ix_pol_pr_line");
+
                     b.HasIndex("TenantId", "PoId", "LineNo")
                         .IsUnique()
                         .HasDatabaseName("uq_pol");
 
                     b.ToTable("proc_purchase_order_line", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.Quotation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("char(3)")
+                        .HasColumnName("currency");
+
+                    b.Property<ushort?>("DeliveryDays")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("delivery_days");
+
+                    b.Property<decimal>("FxRate")
+                        .HasPrecision(18, 8)
+                        .HasColumnType("decimal(18,8)")
+                        .HasColumnName("fx_rate");
+
+                    b.Property<bool>("IsSelected")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_selected");
+
+                    b.Property<string>("PaymentTerms")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("payment_terms");
+
+                    b.Property<DateOnly>("QuoteDate")
+                        .HasColumnType("date")
+                        .HasColumnName("quote_date");
+
+                    b.Property<string>("QuoteNo")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("quote_no");
+
+                    b.Property<long?>("RfqId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("rfq_id");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("SelectionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("selection_note");
+
+                    b.Property<uint>("SupplierId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("total_amount");
+
+                    b.Property<decimal>("TotalAmountBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("total_amount_base");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint?>("UpdatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("updated_by");
+
+                    b.Property<DateOnly?>("ValidUntil")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_until");
+
+                    b.HasKey("Id")
+                        .HasName("pk_proc_quotation");
+
+                    b.HasIndex("TenantId", "RfqId", "SupplierId")
+                        .HasDatabaseName("ix_quote");
+
+                    b.HasIndex("TenantId", "SupplierId", "QuoteDate")
+                        .HasDatabaseName("ix_quote_supplier");
+
+                    b.ToTable("proc_quotation", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.QuotationLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<ushort>("LineNo")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("line_no");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("line_total");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<uint>("ProductId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("product_id");
+
+                    b.Property<decimal>("Qty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("qty");
+
+                    b.Property<long>("QuotationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("quotation_id");
+
+                    b.Property<long?>("RfqLineId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("rfq_line_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("unit_price");
+
+                    b.Property<decimal>("UnitPriceBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("unit_price_base");
+
+                    b.Property<ushort>("UomId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("uom_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_proc_quotation_line");
+
+                    b.HasIndex("QuotationId")
+                        .HasDatabaseName("ix_proc_quotation_line_quotation_id");
+
+                    b.HasIndex("TenantId", "RfqLineId")
+                        .HasDatabaseName("ix_quotel_rfq_line");
+
+                    b.HasIndex("TenantId", "QuotationId", "LineNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_quotel");
+
+                    b.ToTable("proc_quotation_line", (string)null);
                 });
 
             modelBuilder.Entity("Wms.Procurement.Domain.Entities.Requisition", b =>
@@ -508,6 +908,11 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                         .HasColumnType("enum('FOOD','NON_FOOD')")
                         .HasColumnName("product_type");
 
+                    b.Property<string>("RejectComment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("reject_comment");
+
                     b.Property<uint>("RequesterLocationId")
                         .HasColumnType("int unsigned")
                         .HasColumnName("requester_location_id");
@@ -546,6 +951,12 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "DocNo")
                         .IsUnique()
                         .HasDatabaseName("uq_pr");
+
+                    b.HasIndex("TenantId", "RequesterLocationId", "DocDate")
+                        .HasDatabaseName("ix_pr_location");
+
+                    b.HasIndex("TenantId", "Status", "DocDate")
+                        .HasDatabaseName("ix_pr_status");
 
                     b.ToTable("proc_requisition", (string)null);
                 });
@@ -600,11 +1011,251 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                     b.HasIndex("RequisitionId")
                         .HasDatabaseName("ix_proc_requisition_line_requisition_id");
 
+                    b.HasIndex("TenantId", "ProductId")
+                        .HasDatabaseName("ix_prl_product");
+
                     b.HasIndex("TenantId", "RequisitionId", "LineNo")
                         .IsUnique()
                         .HasDatabaseName("uq_prl");
 
                     b.ToTable("proc_requisition_line", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.Rfq", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateOnly>("DocDate")
+                        .HasColumnType("date")
+                        .HasColumnName("doc_date");
+
+                    b.Property<string>("DocNo")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("doc_no");
+
+                    b.Property<DateOnly?>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("int unsigned")
+                        .HasDefaultValue(1u)
+                        .HasColumnName("row_version");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("enum('DRAFT','SENT','CLOSED','CANCELLED')")
+                        .HasColumnName("status");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint?>("UpdatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("updated_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_proc_rfq");
+
+                    b.HasIndex("TenantId", "DocNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_rfq");
+
+                    b.HasIndex("TenantId", "Status", "DocDate")
+                        .HasDatabaseName("ix_rfq_status");
+
+                    b.ToTable("proc_rfq", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.RfqLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<ushort>("LineNo")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("line_no");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<uint>("ProductId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("product_id");
+
+                    b.Property<decimal>("Qty")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("qty");
+
+                    b.Property<long?>("RequisitionLineId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("requisition_line_id");
+
+                    b.Property<long>("RfqId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("rfq_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<ushort>("UomId")
+                        .HasColumnType("smallint unsigned")
+                        .HasColumnName("uom_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_proc_rfq_line");
+
+                    b.HasIndex("RfqId")
+                        .HasDatabaseName("ix_proc_rfq_line_rfq_id");
+
+                    b.HasIndex("TenantId", "RequisitionLineId")
+                        .HasDatabaseName("ix_rfql_pr_line");
+
+                    b.HasIndex("TenantId", "RfqId", "LineNo")
+                        .IsUnique()
+                        .HasDatabaseName("uq_rfql");
+
+                    b.ToTable("proc_rfq_line", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.RfqSupplier", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("RfqId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("rfq_id");
+
+                    b.Property<uint>("SupplierId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_proc_rfq_supplier");
+
+                    b.HasIndex("RfqId")
+                        .HasDatabaseName("ix_proc_rfq_supplier_rfq_id");
+
+                    b.HasIndex("TenantId", "RfqId", "SupplierId")
+                        .IsUnique()
+                        .HasDatabaseName("uq_rfqs");
+
+                    b.ToTable("proc_rfq_supplier", (string)null);
+                });
+
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.SplitCheckLog", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasPrecision(3)
+                        .HasColumnType("datetime(3)")
+                        .HasColumnName("created_at");
+
+                    b.Property<uint>("CreatedBy")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("created_by");
+
+                    b.Property<decimal>("CumulativeAmountBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("cumulative_amount_base");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("note");
+
+                    b.Property<byte>("StepsForCumulative")
+                        .HasColumnType("tinyint unsigned")
+                        .HasColumnName("steps_for_cumulative");
+
+                    b.Property<byte>("StepsForSingle")
+                        .HasColumnType("tinyint unsigned")
+                        .HasColumnName("steps_for_single");
+
+                    b.Property<uint>("SupplierId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<uint>("TenantId")
+                        .HasColumnType("int unsigned")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal>("TriggeredAmountBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("triggered_amount_base");
+
+                    b.Property<long?>("TriggeredPoId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("triggered_po_id");
+
+                    b.Property<DateOnly>("WindowEnd")
+                        .HasColumnType("date")
+                        .HasColumnName("window_end");
+
+                    b.Property<DateOnly>("WindowStart")
+                        .HasColumnType("date")
+                        .HasColumnName("window_start");
+
+                    b.HasKey("Id")
+                        .HasName("pk_proc_split_check_log");
+
+                    b.HasIndex("TenantId", "SupplierId", "WindowStart")
+                        .HasDatabaseName("ix_split");
+
+                    b.ToTable("proc_split_check_log", (string)null);
                 });
 
             modelBuilder.Entity("Wms.Procurement.Domain.Entities.ApprovalStep", b =>
@@ -627,6 +1278,16 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_proc_purchase_order_line_proc_purchase_order_po_id");
                 });
 
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.QuotationLine", b =>
+                {
+                    b.HasOne("Wms.Procurement.Domain.Entities.Quotation", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("QuotationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_proc_quotation_line_proc_quotation_quotation_id");
+                });
+
             modelBuilder.Entity("Wms.Procurement.Domain.Entities.RequisitionLine", b =>
                 {
                     b.HasOne("Wms.Procurement.Domain.Entities.Requisition", null)
@@ -635,6 +1296,26 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_proc_requisition_line_proc_requisition_requisition_id");
+                });
+
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.RfqLine", b =>
+                {
+                    b.HasOne("Wms.Procurement.Domain.Entities.Rfq", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("RfqId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_proc_rfq_line_proc_rfq_rfq_id");
+                });
+
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.RfqSupplier", b =>
+                {
+                    b.HasOne("Wms.Procurement.Domain.Entities.Rfq", null)
+                        .WithMany("Suppliers")
+                        .HasForeignKey("RfqId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_proc_rfq_supplier_proc_rfq_rfq_id");
                 });
 
             modelBuilder.Entity("Wms.Procurement.Domain.Entities.ApprovalInstance", b =>
@@ -647,9 +1328,21 @@ namespace Wms.Procurement.Infrastructure.Persistence.Migrations
                     b.Navigation("Lines");
                 });
 
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.Quotation", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("Wms.Procurement.Domain.Entities.Requisition", b =>
                 {
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Wms.Procurement.Domain.Entities.Rfq", b =>
+                {
+                    b.Navigation("Lines");
+
+                    b.Navigation("Suppliers");
                 });
 #pragma warning restore 612, 618
         }

@@ -19,16 +19,32 @@ public sealed class LocationScopeTests
     /// The modules that own location-scoped transactional rows. MasterData's filters read the shared
     /// catalogue (products, locations, suppliers, rates) which every role needs in order to label a
     /// document — "issue from WH-01 to BR-NIZ" is unreadable without the WH-01 row — so the catalogue is
-    /// deliberately tenant-wide. Procurement is Faza 2 and has one read endpoint; its delivery-location
-    /// scoping belongs to that phase.
+    /// deliberately tenant-wide. Procurement joined the list when the module grew past its single read
+    /// endpoint: a requisition names the branch that raised it and a purchase order names the location it is
+    /// delivered to, so both lists are location-scoped.
     /// </summary>
     private static readonly string[] StockModules =
-        ["Wms.Inventory.Application", "Wms.Consumption.Application", "Wms.Reporting.Application"];
+    [
+        "Wms.Inventory.Application",
+        "Wms.Consumption.Application",
+        "Wms.Reporting.Application",
+        "Wms.Procurement.Application",
+    ];
 
     /// <summary>Filters inside those modules that genuinely touch nothing location-scoped.</summary>
     private static readonly HashSet<string> NotLocationScoped = new(StringComparer.Ordinal)
     {
         "MenuItemFilter", // cons_menu_item — a recipe catalogue, tenant-wide by definition
+
+        // proc_rfq and proc_quotation carry no location: a price enquiry is raised centrally and names
+        // suppliers, not branches. Both endpoints demand proc.rfq.view / proc.quotation.view, which no branch
+        // role holds, so there is neither a column to filter on nor a principal to filter for.
+        "RfqFilter",
+        "QuotationFilter",
+
+        // proc_price_history is product x supplier cost data with no location column, and listPriceHistory
+        // demands master.product.view_cost — spec §7.1 denies that to the keeper and the branch user outright.
+        "PriceHistoryFilter",
 
         // rpt_export_job rows belong to the user who asked for them ("Mənim export işlərim"), so the filter is
         // scoped by requestedBy. The location scope that applies to the report DATA is frozen onto the job row

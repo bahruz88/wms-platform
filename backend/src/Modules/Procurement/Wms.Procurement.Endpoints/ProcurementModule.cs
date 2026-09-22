@@ -1,10 +1,9 @@
 using Wms.Common.Application.Abstractions;
 using Wms.Common.Application.Messaging;
-using Wms.Common.Infrastructure.Auth;
 using Wms.Common.Infrastructure.Http;
 using Wms.Common.Infrastructure.Modules;
 using Wms.Procurement.Application;
-using Wms.Procurement.Application.Queries;
+using Wms.Procurement.Application.Commands.PriceHistory;
 using Wms.Procurement.Contracts;
 using Wms.Procurement.Infrastructure;
 
@@ -34,15 +33,17 @@ public sealed class ProcurementModule : IModule
                 TypedResults.Ok(new ModulePing(ModuleName, tenant.TenantId, user.Username, clock.UtcNow)))
             .WithName("ProcurementPing");
 
-        group.MapGet("/purchase-orders", async ([AsParameters] PurchaseOrdersRequest request, IDispatcher dispatcher, CancellationToken cancellationToken) =>
-            {
-                var query = new GetPurchaseOrdersQuery(request.SupplierId, request.Status, new PagingRequest(request.Page, request.Size).ToPageRequest());
-                var result = await dispatcher.QueryAsync(query, cancellationToken).ConfigureAwait(false);
-                return result.ToOk();
-            })
-            .RequirePermission(ProcurementPermissions.PurchaseOrderView)
-            .WithName("GetPurchaseOrders");
+        RequisitionEndpoints.Map(group);
+        RfqEndpoints.Map(group);
+        QuotationEndpoints.Map(group);
+        PurchaseOrderEndpoints.Map(group);
+        ApprovalEndpoints.Map(group);
+        MapInternal(group);
+    }
 
+    /// <summary>Module-to-module routes (spec §4.2); never part of the public contract.</summary>
+    private static void MapInternal(RouteGroupBuilder group)
+    {
         group.MapGet("/internal/purchase-orders/{purchaseOrderId:long}",
                 async (long purchaseOrderId, IPurchaseOrderReader reader, CancellationToken cancellationToken) =>
                 {
@@ -51,7 +52,21 @@ public sealed class ProcurementModule : IModule
                 })
             .WithName("InternalPurchaseOrder")
             .ExcludeFromDescription();
+
+        // Inventory books the ledger; Procurement owns received_qty, the PO status and the price history.
+        group.MapPost("/internal/purchase-orders/{purchaseOrderId:long}/receipts",
+                async (long purchaseOrderId, ReceiptRegistrationRequest request, IDispatcher dispatcher, CancellationToken cancellationToken) =>
+                {
+                    ArgumentNullException.ThrowIfNull(request);
+                    var command = new RecordReceiptPricesCommand(
+                        purchaseOrderId,
+                        request.GoodsReceiptId,
+                        request.ReceiptDate,
+                        (request.Lines ?? []).Select(l => new ReceiptLineInput(l.PurchaseOrderLineId, l.ReceivedQty)).ToList());
+                    var result = await dispatcher.SendAsync(command, cancellationToken).ConfigureAwait(false);
+                    return result.ToOk();
+                })
+            .WithName("InternalPurchaseOrderReceipt")
+            .ExcludeFromDescription();
     }
 }
-
-public sealed record PurchaseOrdersRequest(uint? SupplierId, string? Status, int? Page, int? Size);

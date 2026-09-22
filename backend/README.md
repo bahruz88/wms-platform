@@ -326,7 +326,23 @@ Bu buraxılış (Faza 1) iki miqrasiya əlavə etdi:
 | `20260922_MasterData_ContractAlignment` | `MasterDataDbContext` | `master_product_category`-yə `is_active`, `row_version`, `default_issue_strategy`, `ix_cat_path`; `master_location` və `master_reason_code`-a `row_version`; `ix_reason_group`. Hamısı additiv — kontrakt bu üç cədvəlin update əməliyyatında `rowVersion` + `409 STALE_VERSION` tələb edir, SPEC §8 DDL-ində isə sütun yox idi |
 | `20260922_Documents_AttachmentUpload` | `DocumentsDbContext` | `common_attachment`-ə `status ENUM('PENDING','SCANNING','READY','REJECTED') DEFAULT 'READY'`, `scan_result`, `ix_att_status`. Presign/complete axını üçün (§8.18) |
 
-Nəticə: **61 biznes cədvəli + 10 history cədvəli + 12 `hangfire_*` = 83**.
+Satınalma modulu (bu buraxılış) iki miqrasiya əlavə etdi:
+
+| Miqrasiya | Kontekst | Nə edir |
+|---|---|---|
+| `20260922_Procurement_RfqQuotationPriceHistory` | `ProcurementDbContext` | Yeddi yeni cədvəl: `proc_rfq`, `proc_rfq_line`, `proc_rfq_supplier`, `proc_quotation`, `proc_quotation_line`, `proc_price_history`, `proc_split_check_log`. Mövcud cədvəllərə kontraktın tələb etdiyi sütunlar: `proc_requisition.reject_comment`; `proc_purchase_order`-a `product_type`, `quotation_id`, `note`, `payment_terms`, `reject_comment`, `split_check_warning`; `proc_approval_rule`/`proc_approval_instance`-a audit sütunları və `row_version`; `proc_approval_instance`-a `doc_no`, `amount_base`, `requested_by`; `proc_approval_step`-ə `approver_role_id`, `approver_role_code`. Hamısı additivdir |
+| `20260922_Procurement_ApprovalTrailNames` | `ProcurementDbContext` | `proc_approval_instance.requested_by_username`, `proc_approval_step.approver_username` / `delegated_from_username` — təsdiq zəncirinin adları, `approver_role_code` ilə eyni səbəbdən denormallaşdırılıb (§8.20) |
+
+> ⚠️ EF-in generasiya etdiyi `AddColumn` çağırışlarından **üç `defaultValue` əl ilə silinib**: MySQL ENUM
+> sütunu üçün `''`-ni, `DATETIME` üçün `0001-01-01`-i default kimi qəbul etmir. Bu defaultlar yalnız mövcud
+> sətirləri doldurmaq üçündür, `proc_*` cədvəlləri isə boş idi; modelde `HasDefaultValue` yoxdur, ona görə
+> snapshot dəyişmir. Miqrasiya faylındakı şərh bunu izah edir.
+>
+> **DDL transaksiyalı deyil.** İlk cəhd `product_type` sütununda dayandı və ondan əvvəlki üç `ADD COLUMN`
+> bazada qaldı; təkrar qaçış `Duplicate column name` verdi. Belə halda həmin sütunları əl ilə `DROP COLUMN`
+> edib miqrasiyanı yenidən işlətmək lazımdır (history cədvəli yazılmadığı üçün EF onu tətbiq olunmamış sayır).
+
+Nəticə: **68 biznes cədvəli + 10 history cədvəli + 12 `hangfire_*` = 90**.
 Miqrasiyadan sonra `scripts/db-ledger-grants.sh` yenidən işlədilib: prosedur cədvəlləri
 `information_schema`-dan oxuduğu üçün yeddi `cons_*` cədvəli avtomatik `UPDATE/DELETE` aldı,
 `inv_movement` və `common_audit_log` isə yenə yalnız `SELECT+INSERT`-dədir.
@@ -418,6 +434,19 @@ Nə yaranır:
 | Tələblər | 3 ədəd (2 `SUBMITTED`, 1 `DRAFT`) |
 | `iam_user` | CONVENTIONS.md-dəki altı dev istifadəçisi, rolları və **lokasiya icazələri** ilə: `keeper` → WH-01 + WH-02, `branch1` → BR-NIZ, qalanları məhdudiyyətsiz (`iam.location.view_all`) |
 
+**Satınalma datası** (`ProcurementSeeder`, dev istifadəçilərindən **sonra** işləyir — §12.6-ya görə təsdiq
+gələni sənədi qaldıran şəxsə göstərmir, ona görə `requested_by` real `iam_user.id` olmalıdır):
+
+| Data | Say / detal |
+|---|---|
+| Approval qaydaları | 5 — PO üçün üç məbləğ zolağı (0–5 000 AZN bir imza, 5 000-dən yuxarı **iki** imza: `PROCUREMENT_MANAGER` → `ADMIN`), plus `WASTE` və `COUNT_ADJUST` üçün bir-bir |
+| Tələblər (PR) | 8, səkkiz **ayrı filialdan**, altı statusda: `DRAFT`, `SUBMITTED` (3), `IN_PROCUREMENT`, `CONVERTED_TO_PO`, `REJECTED`, `CANCELLED`; prioritetlər `LOW`…`URGENT` |
+| RFQ | 4 — ikisi `SENT` və **üç dəvət olunmuş təchizatçı** ilə, biri `DRAFT`, biri `CLOSED` |
+| Təkliflər | 8 — müqayisə matrisi üçün hər RFQ-da fərqli qiymətlər; `RFQ-…90202`-də **ən ucuz olmayan** təklif seçilib və `selection_note` doludur (§10) |
+| Sifarişlər (PO) | 10 — doqquz statusun hamısı: `DRAFT`, `PENDING_APPROVAL` (2), `APPROVED`, `REJECTED`, `SENT_TO_SUPPLIER`, `PARTIALLY_RECEIVED`, `FULLY_RECEIVED`, `CLOSED`, `CANCELLED`. İkisi EUR/USD-dir, `fx_rate` PO tarixindən dondurulub |
+| Approval instansları | 8 — **ikisi açıqdır**: `PO-…90302` 1-ci addımda (`PROCUREMENT_MANAGER`), `PO-…90303` isə **zəncirin ortasında** (1-ci addım `manager` tərəfindən təsdiqlənib, 2-ci `ADMIN`-i gözləyir). Təsdiqlər ekranı və panelin sağ kartı məhz bunları göstərir |
+| Qiymət tarixçəsi | 60 sətir — 10 məhsul × təchizatçı cütü, hərəsi 6 alış (təqribən dörd ay), `diff_pct` −20,5 %…+16,2 % arasında dəyişir ki, trend düz xətt olmasın |
+
 Dev istifadəçiləri `external_id = pending:<username>` ilə yazılır: Keycloak subject-ini seeder bilmir.
 Həmin istifadəçinin **ilk real token-i** sətri "sahiblənir" (`preferred_username` üzrə tapılır və
 `external_id` real `sub` ilə əvəzlənir), ona görə rollar və lokasiya icazələri o istifadəçinin ilk
@@ -436,17 +465,19 @@ verdiyi üçün query filter-lər `tenant_id = 0`-a baxar və idempotentlik yoxl
 
 | Layihə | Nə yoxlayır | Sayı |
 |---|---|---|
-| `Wms.Inventory.UnitTests` | SPEC §12 invariantları: yuvarlaqlaşdırma, ikili yazılış, mənfi qalıq, FEFO/FIFO, hərəkətli orta, tolerans, approval qaydası, AZ əlifba sırası; **sayım aqreqatı** (dondurma, fərq faizi, səbəb kodu məcburiliyi, approval həddi, statuslar), **məxaric/transfer** (IN_TRANSIT, fərqli qəbul, partiya override), **tullantı/nümunə/qaytarma/tələb** status axınları; **§12.6 öz-özünü təsdiq** (sayım və tullantı, həm handler səviyyəsində, həm fail-closed halı), **`LocationScope`** (§16 fail-closed semantikası), **`inv_setting` tip validasiyası** | 194 |
+| `Wms.Inventory.UnitTests` | SPEC §12 invariantları: yuvarlaqlaşdırma, ikili yazılış, mənfi qalıq, FEFO/FIFO, hərəkətli orta, tolerans, approval qaydası, AZ əlifba sırası; **sayım aqreqatı** (dondurma, fərq faizi, səbəb kodu məcburiliyi, approval həddi, statuslar), **məxaric/transfer** (IN_TRANSIT, fərqli qəbul, partiya override), **tullantı/nümunə/qaytarma/tələb** status axınları; **§12.6 öz-özünü təsdiq** (sayım və tullantı, həm handler səviyyəsində, həm fail-closed halı), **`LocationScope`** (§16 fail-closed semantikası), **`inv_setting` tip validasiyası** | 184 |
 | `Wms.Identity.UnitTests` | SPEC §7: icazə kataloqu və default rol qrantları, §7.1 SoD (rol icazəsi + rol kombinasiyası), `iam_user` rol/lokasiya dəstləri, pre-provisioning sahiblənməsi, delegasiya qaydaları | 27 |
 | `Wms.MasterData.UnitTests` | Dəyişməzlik qaydaları (`sku`, `base_uom_id`, `location_type`, `reason_group`), `factor_to_base` versiyalanması, unikallıq 409-ları, kateqoriya yolu və dövr, AZ sıralama, maya sahəsinin JSON-dan çıxarılması | 69 |
 | `Wms.Documents.UnitTests` | 25 MB limiti (presign + complete), beş icazəli tip, content-type uyğunsuzluğu, checksum, virus skanı (yoluxmuş + əlçatmaz), storage key forması, tenant izolyasiyası | 140 |
-| `Wms.ArchitectureTests` | SPEC §17.4: modul sərhədləri, tenant query filter, unique index `tenant_id`-dən başlayır, `double`/`float` yoxdur, `inv_balance` public setter-siz, cədvəl prefiksləri, decimal precision; **`RolePermissionMap`** — hər rol üzrə icazə matrisi və wildcard matcher (§8.12); **icazə kataloqunun uzlaşması** (hər `.RequirePermission(...)` kodu kataloqdadır, bootstrap xəritəsi `PermissionCatalog` ilə eynidir) **`/internal/*` yol/sirr uyğunlaşdırması** və **lokasiya scope-unun filtrlərdə mövcudluğu** | 391 |
+| `Wms.ArchitectureTests` | SPEC §17.4: modul sərhədləri, tenant query filter, unique index `tenant_id`-dən başlayır, `double`/`float` yoxdur, `inv_balance` public setter-siz, cədvəl prefiksləri, decimal precision; **`RolePermissionMap`** — hər rol üzrə icazə matrisi və wildcard matcher (§8.12); **icazə kataloqunun uzlaşması** (hər `.RequirePermission(...)` kodu kataloqdadır, bootstrap xəritəsi `PermissionCatalog` ilə eynidir) **`/internal/*` yol/sirr uyğunlaşdırması** və **lokasiya scope-unun filtrlərdə mövcudluğu** (Procurement daxil) | 419 |
 | `Wms.Api.ContractTests` | Host qalxır, `/health/live`, auth tələbi, qismən deployment davranışı; **`/internal/*` qorunması** (10 marşrut sirrsiz 403, yanlış sirr 403, düz sirr keçir, `ModuleTransport=Http` sirrsiz startup-da fail edir) | 22 |
 | `Wms.Inventory.IntegrationTests` | Testcontainers + real MySQL 8.4, sxem **real miqrasiyalardan** (`MigrateAsync`, §5.3): qəbul → balans → ledger sıfıra balanslaşır, idempotency key unikallığı, `inv_movement` partisiyalaşdırma DDL-i; **sayım**: `FOR UPDATE` snapshot → dondurma → `COUNT_ADJUST` qrupu sıfıra balanslaşır → lokasiya açılır | 4 (`Category=Integration`) |
+| `Wms.Procurement.UnitTests` | SPEC §10 / §17.1: approval qaydasının məbləğ zolağı və məhsul tipi üzrə seçimi, zəncirin addım sırası, delegasiya pəncərəsi; **ən ucuz təklif** sıralaması və `SELECTION_NOTE_REQUIRED`; PR bölünməsi pəncərəsi (`proc_split_check_log`); PO status axını və `APPROVAL_REQUIRED`; §12.6 öz-özünü təsdiq qadağası; qiymət fərqi arifmetikası | 64 |
+| `Wms.Procurement.IntegrationTests` | Testcontainers + real MySQL 8.4 və üç modulun real DI qrafı: PR → RFQ → təklif → müqayisə → PO → parametrik approval zənciri; ikinci qəbulun qiymət fərqini yazması və `PriceChanged`; bir təchizatçıya xırda sifarişlərin zolağı keçməsi (split-check); rədd → `DRAFT` qayıdışı və `STALE_VERSION`; təsdiqsiz qida təchizatçısı; məzənnəsiz valyuta (`FX_RATE_MISSING`); gözləyən təsdiqin rol sahibinə və delegata çatması, tələbçiyə **çatmaması** | 7 (`Category=Integration`) |
 | `Wms.Consumption.UnitTests` | ADR-012: BOM partlaması (`yield_pct`, `yield_portions`, alt-resept, attach rate, yuvarlaqlaşdırma), dövr aşkarlanması, dərinlik limiti, resept versiyasının tarixə görə seçimi, `posted = min(theoretical, available)`, CSV parse (UTF-8 + Windows-1254 + pozuq sətirlər) | 69 |
 | `Wms.Consumption.IntegrationTests` | Testcontainers + real MySQL 8.4 və üç modulun real DI qrafı: tam dövr (resept → satış → hesablama → post), qrupun sıfıra balanslaşması, filial qalığının düşməsi = `V_CONSUMPTION`-un artması, qəsdən yaradılmış çatışmazlıq mənfi qalıq yaratmır, `DUPLICATE_BUSINESS_DATE` | 3 (`Category=Integration`) |
 
-**Cəmi 919 test** (912 sürətli + 7 Testcontainers), 0 xəbərdarlıq.
+**Cəmi 1 140 test** (1 126 sürətli + 14 Testcontainers), 0 xəbərdarlıq.
 
 Integration testlər `[Trait("Category","Integration")]` ilə işarələnib və
 `--filter "Category!=Integration"` ilə kənarlaşdırılır.
@@ -770,6 +801,22 @@ build yaşıl görünürdü — nasazlıq lokalda **görünməz** idi.
 Düzəliş: `backend/.editorconfig` (root **deyil**, kökün üstünə qatlanır) `src/**/Persistence/Migrations/*.cs`
 üçün `generated_code = true` və IDE stil qaydalarını söndürür. Bunlar generasiya olunmuş kod-dur; əl ilə
 yazılmış koda heç nə dəyişmir. §1-dəki əmr indi repo kökünü mount edir, yəni lokal build CI ilə eynidir.
+
+### 8.20. Təsdiq zəncirindəki adlar `proc_*`-da denormallaşdırılıb
+
+`procurement.v1.yaml` təsdiq ekranlarında `UserRef {id, username, fullName}` tələb edir: təsdiq qutusu
+sənədi **kimin** qaldırdığını, PO detalı isə hər addımı **kimin** təsdiqlədiyini yazmalıdır. Amma SPEC §5
+Procurement-ə yalnız `MasterData` və `Inventory` kontraktlarını verir — `iam_user` oxunmur, arxitektura testi
+(`ModuleBoundaryTests`) bunu bağlayır.
+
+Həll `proc_approval_step.approver_role_code`-un artıq istifadə etdiyi üsuldur: ad **sənədin öz cədvəlinə**
+yazılır. Üç sütun əlavə olunub — `proc_approval_instance.requested_by_username`,
+`proc_approval_step.approver_username` və `delegated_from_username`. Hər üçü `ICurrentUser.Username`-dən,
+yəni token-dən, sənəd təsdiqə göndəriləndə və ya qərar veriləndə yazılır; modullararası çağırış yoxdur.
+
+**Nəticə:** ad qərar anındakı vəziyyəti saxlayır. İstifadəçi sonradan adını dəyişsə, köhnə təsdiq izi köhnə
+adı göstərməyə davam edir — audit izi üçün bu, doğru davranışdır. Bu sütunlardan əvvəl yazılmış sətirlər
+üçün `UserRefDto.Unknown(id)` `#<id>` qaytarır, ekranda boş xana qalmasın.
 
 ### 8.10. JSON-da enum-lar UPPER_SNAKE-dir (platforma səviyyəsində dəyişiklik)
 
