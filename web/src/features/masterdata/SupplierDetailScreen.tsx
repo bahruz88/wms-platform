@@ -32,7 +32,7 @@ export function SupplierDetailScreen() {
   if (supplier.isLoading) return <LoadingState />;
   if (supplier.isError)
     return (
-      <DocumentPage breadcrumb="Master data · Təchizatçılar" docNo={`#${supplierId}`}>
+      <DocumentPage breadcrumb="Sorğu kitabçaları · Təchizatçılar" docNo={`#${supplierId}`}>
         <ErrorState error={supplier.error} onRetry={() => void supplier.refetch()} />
       </DocumentPage>
     );
@@ -94,7 +94,7 @@ export function SupplierDetailScreen() {
 
   return (
     <DocumentPage
-      breadcrumb={<Link to="/master-data/suppliers">Master data · Təchizatçılar</Link>}
+      breadcrumb={<Link to="/master-data/suppliers">Sorğu kitabçaları · Təchizatçılar</Link>}
       docNo={doc.code}
       badges={
         <>

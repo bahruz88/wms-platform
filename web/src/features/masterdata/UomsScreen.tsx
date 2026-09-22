@@ -102,7 +102,7 @@ export function UomsScreen() {
             label="Ölçü vahidləri"
             empty={
               all.length === 0
-                ? 'Ölçü vahidi yoxdur. Master data quraşdırması ilə başlayın.'
+                ? 'Ölçü vahidi yoxdur. Sorğu kitabçalarının quraşdırılması ilə başlayın.'
                 : 'Bu filtrə uyğun vahid yoxdur. Axtarışı və ya sinfi dəyişin.'
             }
           />

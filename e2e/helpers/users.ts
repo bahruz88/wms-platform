@@ -67,7 +67,7 @@ export const NAV_TABLE: NavEntry[] = [
   { label: 'İstehlak jurnalı', to: '/consumption/runs', permissions: ['cons.run.calculate'] },
   { label: 'Fərq hesabatı', to: '/consumption/variance', permissions: ['cons.variance.view'] },
   {
-    label: 'Master data',
+    label: 'Sorğu kitabçaları',
     to: '/master-data/products',
     permissions: [
       'master.product.view',
@@ -126,7 +126,7 @@ export const USERS: Record<UserName, DevUser> = {
     username: 'admin',
     password: 'admin',
     role: 'ADMIN',
-    navMust: ['Panel', 'Qəbul', 'Sayım', 'Qalıqlar', 'Master data', 'İdarəetmə'],
+    navMust: ['Panel', 'Qəbul', 'Sayım', 'Qalıqlar', 'Sorğu kitabçaları', 'İdarəetmə'],
     navMustNot: [],
     forbiddenRoute: '',
     forbiddenNeeds: '',

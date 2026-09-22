@@ -180,7 +180,7 @@ export function LocationsScreen() {
             label="Lokasiya siyahısı"
             empty={
               all.length === 0
-                ? 'Lokasiya yoxdur. Master data quraşdırması ilə başlayın.'
+                ? 'Lokasiya yoxdur. Sorğu kitabçalarının quraşdırılması ilə başlayın.'
                 : 'Bu filtrə uyğun lokasiya yoxdur. Axtarışı və ya tipi dəyişin.'
             }
           />

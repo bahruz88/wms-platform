@@ -2,7 +2,7 @@ import { useAuth } from '@auth/index';
 import { Tabs } from '@/components/Page';
 
 /**
- * Master data is one navigation entry («Master data») that fans out into seven screens through
+ * Reference data is one navigation entry («Sorğu kitabçaları») that fans out into seven screens through
  * this tab strip — the artboards draw eleven entries for a product with far more screens, and
  * this is the corner they fold together (app/navigation.ts).
  *

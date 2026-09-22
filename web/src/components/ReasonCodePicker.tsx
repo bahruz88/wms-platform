@@ -137,7 +137,7 @@ export function ReasonCodePicker({
       options={options}
       hint={
         empty
-          ? `Bu qrupda səbəb kodu yoxdur (${groupNote}). Master data-da ən azı bir kod təyin edilməlidir.`
+          ? `Bu qrupda səbəb kodu yoxdur (${groupNote}). Sorğu kitabçalarında ən azı bir kod təyin edilməlidir.`
           : (hint ?? groupNote)
       }
       error={error}

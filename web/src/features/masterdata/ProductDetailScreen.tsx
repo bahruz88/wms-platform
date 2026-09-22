@@ -38,7 +38,7 @@ export function ProductDetailScreen() {
   if (product.isLoading) return <LoadingState />;
   if (product.isError)
     return (
-      <DocumentPage breadcrumb="Master data · Məhsullar" docNo={`#${productId}`}>
+      <DocumentPage breadcrumb="Sorğu kitabçaları · Məhsullar" docNo={`#${productId}`}>
         <ErrorState error={product.error} onRetry={() => void product.refetch()} />
       </DocumentPage>
     );
@@ -105,7 +105,7 @@ export function ProductDetailScreen() {
     <DocumentPage
       breadcrumb={
         <>
-          <Link to="/master-data/products">Master data · Məhsullar</Link>
+          <Link to="/master-data/products">Sorğu kitabçaları · Məhsullar</Link>
         </>
       }
       docNo={doc.sku}
