@@ -235,11 +235,18 @@ export const listMovements = async (query: Query<InventoryPaths, '/movements'> =
 export const getMovementGroup = async (id: number) =>
   unwrap(await inventoryApi.GET('/movement-groups/{id}', { params: { path: { id } } }));
 
-export const cancelGoodsReceipt = async (id: number, rowVersion: number, reasonCodeId: number) =>
+/**
+ * Cancels a DRAFT receipt. The body is `VersionedAction` — the row version and nothing else.
+ *
+ * No reason code: a draft has not touched the ledger, so there is nothing to explain. The two
+ * sibling cancellations (`/issues`, `/stock-requests`) take the same bare body; only a stock
+ * count, which cancels after counting has begun, must say why.
+ */
+export const cancelGoodsReceipt = async (id: number, rowVersion: number) =>
   unwrap(
     await inventoryApi.POST('/goods-receipts/{id}/cancel', {
       params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
-      body: { rowVersion, reasonCodeId },
+      body: { rowVersion },
     }),
   );
 

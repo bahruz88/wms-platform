@@ -25,11 +25,9 @@ import {
   LoadingState,
   Meta,
   MetaGrid,
-  NotOpenYet,
   ProductCell,
 } from '@/components/Page';
 import { AttachmentsCard } from '@/components/AttachmentsCard';
-import { ReasonCodePicker, isUnrouted } from '@/components/ReasonCodePicker';
 
 type Line = GoodsReceipt['lines'][number];
 
@@ -50,7 +48,6 @@ export function GoodsReceiptDetailScreen() {
   const queryClient = useQueryClient();
   const [postOpen, setPostOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [reasonCodeId, setReasonCodeId] = useState('');
 
   const products = useApiPage<ProductSummary>(
     ['products', 'receipt'],
@@ -81,7 +78,7 @@ export function GoodsReceiptDetailScreen() {
 
   const cancel = useMutation({
     mutationFn: () =>
-      cancelGoodsReceipt(receiptId, receipt.data?.rowVersion ?? 1, Number(reasonCodeId)),
+      cancelGoodsReceipt(receiptId, receipt.data?.rowVersion ?? 1),
     onSuccess: () => {
       setCancelOpen(false);
       void queryClient.invalidateQueries({ queryKey: ['goods-receipt', receiptId] });
@@ -105,7 +102,6 @@ export function GoodsReceiptDetailScreen() {
   // operation. The button is not hidden — the operation is real and the permission is real —
   // but the moment it comes back unrouted the dialog says so in place of a false success, and
   // the button afterwards carries the reason in its `title`.
-  const cancelUnrouted = isUnrouted(cancel.error);
 
   const total = canViewCost
     ? doc.lines.reduce((acc, line) => {
@@ -231,15 +227,7 @@ export function GoodsReceiptDetailScreen() {
             <Badge tone="neutral" title="SPEC §9.4">
               Post edilmiş sənəd redaktə olunmur
             </Badge>
-          ) : !can('inv.receipt.create') ? null : cancelUnrouted ? (
-            <Button
-              disabled
-              title="Ləğv etmə hazır deyil"
-              data-wms-operation="POST /inventory/goods-receipts/{id}/cancel → 404"
-            >
-              Ləğv et
-            </Button>
-          ) : (
+          ) : !can('inv.receipt.create') ? null : (
             <Button variant="secondary" onClick={() => setCancelOpen(true)}>
               Ləğv et
             </Button>
@@ -258,7 +246,7 @@ export function GoodsReceiptDetailScreen() {
     >
       {post.isError ? <ErrorState error={post.error} /> : null}
       {/* An unrouted cancel is reported inside the dialog the user is still looking at. */}
-      {cancel.isError && !cancelUnrouted ? <ErrorState error={cancel.error} /> : null}
+      {cancel.isError ? <ErrorState error={cancel.error} /> : null}
       {post.isSuccess ? (
         <Alert tone="success" title={`Post edildi — ${doc.docNo}`}>
           Balans yeniləndi; hərəkətlər `RECEIPT` qrupuna yazıldı.
@@ -390,7 +378,7 @@ export function GoodsReceiptDetailScreen() {
       <Dialog
         open={cancelOpen}
         title="Qəbulu ləğv edim?"
-        subtitle="Ləğv edilmiş qaralama balansa düşmür; səbəb kodu audit jurnalına yazılır."
+        subtitle="Qaralama heç bir hərəkət yaratmayıb, ona görə balans dəyişmir. Əməliyyat audit jurnalına yazılır."
         onClose={cancel.isPending ? undefined : () => setCancelOpen(false)}
         footer={
           <>
@@ -401,34 +389,16 @@ export function GoodsReceiptDetailScreen() {
             >
               İmtina
             </Button>
-            <Button
-              variant="danger"
-              loading={cancel.isPending}
-              disabled={!reasonCodeId}
-              title={!reasonCodeId ? 'Səbəb kodu məcburidir' : undefined}
-              onClick={() => cancel.mutate()}
-            >
+            <Button variant="danger" loading={cancel.isPending} onClick={() => cancel.mutate()}>
               Ləğv et
             </Button>
           </>
         }
       >
         <div className="wms-stack">
-          <ReasonCodePicker
-            reasonGroup="ADJUSTMENT"
-            cacheKey="receipt-cancel"
-            value={reasonCodeId}
-            onChange={setReasonCodeId}
-          />
-          {cancelUnrouted ? (
-            <NotOpenYet
-              operation="POST /inventory/goods-receipts/{id}/cancel"
-              status={isApiError(cancel.error) ? cancel.error.status : 404}
-            >
-              Sənəd dəyişmədi — sorğu gateway-də marşrutlanmır. Qaralamanı bağlamaq üçün əməliyyat
-              açılana qədər anbar müdirinə müraciət edin.
-            </NotOpenYet>
-          ) : null}
+          <p className="wms-text-muted">
+            Sənəd <strong>CANCELLED</strong> statusuna keçəcək və bir daha post edilə bilməyəcək.
+          </p>
         </div>
       </Dialog>
     </DocumentPage>

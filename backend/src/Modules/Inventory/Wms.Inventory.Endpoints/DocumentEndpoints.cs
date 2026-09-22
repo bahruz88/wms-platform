@@ -129,6 +129,24 @@ public static class DocumentEndpoints
             .RequirePermission(InventoryPermissions.IssueView)
             .WithName("getIssue");
 
+        group.MapPut("/issues/{id:long}", async (long id, IssueUpdateRequest request, IDispatcher dispatcher, CancellationToken ct) =>
+            {
+                ArgumentNullException.ThrowIfNull(request);
+                var command = new UpdateIssueCommand(
+                    id,
+                    request.RowVersion,
+                    request.DocDate,
+                    request.IssueType,
+                    request.FromLocationId,
+                    request.ToLocationId,
+                    request.RequestId,
+                    request.Note,
+                    (request.Lines ?? []).Select(l => l.ToInput()).ToList());
+                return await RunAsync(command, dispatcher, i => new GetIssueQuery(i), ct).ConfigureAwait(false);
+            })
+            .RequirePermission(InventoryPermissions.IssueCreate)
+            .WithName("updateIssue");
+
         group.MapPost("/issues/{id:long}/dispatch", async (
                 long id, VersionedActionRequest request, HttpContext http, IDispatcher dispatcher, CancellationToken ct) =>
             {

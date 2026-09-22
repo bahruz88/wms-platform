@@ -79,6 +79,17 @@ public sealed record IssueCreateRequest(
     string? Note,
     List<IssueLineRequest>? Lines);
 
+/// <summary><c>IssueUpdate</c> — the create body plus the row version being replaced.</summary>
+public sealed record IssueUpdateRequest(
+    uint RowVersion,
+    DateOnly DocDate,
+    IssueType IssueType,
+    uint FromLocationId,
+    uint ToLocationId,
+    long? RequestId,
+    string? Note,
+    List<IssueLineRequest>? Lines);
+
 public sealed record IssueConfirmLineRequest(long LineId, decimal ReceivedQty, ushort? ReasonCodeId, string? Note)
 {
     public IssueReceiptInput ToInput() => new(LineId, ReceivedQty, ReasonCodeId, Note);

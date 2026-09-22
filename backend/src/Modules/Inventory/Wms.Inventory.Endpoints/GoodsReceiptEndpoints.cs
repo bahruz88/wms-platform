@@ -27,6 +27,15 @@ public static class GoodsReceiptEndpoints
             .RequirePermission(InventoryPermissions.ReceiptView)
             .WithName("GetGoodsReceipt");
 
+        group.MapPut("/goods-receipts/{id:long}", UpdateAsync)
+            .RequirePermission(InventoryPermissions.ReceiptCreate)
+            .WithName("updateGoodsReceipt");
+
+        group.MapPost("/goods-receipts/{id:long}/cancel", CancelAsync)
+            .RequirePermission(InventoryPermissions.ReceiptCreate)
+            .RequireIdempotencyKey()
+            .WithName("cancelGoodsReceipt");
+
         group.MapPost("/goods-receipts/{id:long}/post", PostAsync)
             .RequirePermission(InventoryPermissions.ReceiptPost)
             .RequireIdempotencyKey()
@@ -60,5 +69,31 @@ public static class GoodsReceiptEndpoints
         var idempotencyKey = IdempotencyKey.Require(httpContext);
         var result = await dispatcher.SendAsync(new PostGoodsReceiptCommand(id, idempotencyKey), cancellationToken).ConfigureAwait(false);
         return result.ToOk();
+    }
+
+    private static async Task<IResult> UpdateAsync(long id, UpdateGoodsReceiptRequest request, IDispatcher dispatcher, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var result = await dispatcher.SendAsync(request.ToCommand(id), cancellationToken).ConfigureAwait(false);
+        if (result.IsFailure)
+        {
+            return result.Error.ToProblem();
+        }
+
+        var reloaded = await dispatcher.QueryAsync(new GetGoodsReceiptQuery(id), cancellationToken).ConfigureAwait(false);
+        return reloaded.ToOk();
+    }
+
+    private static async Task<IResult> CancelAsync(long id, VersionedActionRequest request, IDispatcher dispatcher, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var result = await dispatcher.SendAsync(new CancelGoodsReceiptCommand(id, request.RowVersion, null), cancellationToken).ConfigureAwait(false);
+        if (result.IsFailure)
+        {
+            return result.Error.ToProblem();
+        }
+
+        var reloaded = await dispatcher.QueryAsync(new GetGoodsReceiptQuery(id), cancellationToken).ConfigureAwait(false);
+        return reloaded.ToOk();
     }
 }

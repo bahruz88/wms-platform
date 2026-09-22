@@ -98,6 +98,42 @@ public sealed class Issue : AuditableAggregateRoot<long>, ITenantEntity
         };
     }
 
+    /// <summary>
+    /// Replaces the DRAFT header (<c>PUT /api/v1/inventory/issues/{id}</c>). <see cref="DocNo"/> stays
+    /// as drawn from the tenant's sequence; lines are replaced separately by <see cref="ReplaceLines"/>.
+    /// </summary>
+    public Result UpdateDraft(
+        DateOnly docDate,
+        IssueType issueType,
+        uint fromLocationId,
+        uint toLocationId,
+        long? requestId,
+        string? note)
+    {
+        if (Status != IssueStatus.Draft)
+        {
+            return InventoryErrors.DocumentNotDraft("issue", Id, Status.ToString());
+        }
+
+        if (fromLocationId == 0 || toLocationId == 0)
+        {
+            return InventoryErrors.InvalidDocument("from_location_id and to_location_id are required.");
+        }
+
+        if (fromLocationId == toLocationId)
+        {
+            return InventoryErrors.SameLocation();
+        }
+
+        DocDate = docDate;
+        IssueType = issueType;
+        FromLocationId = fromLocationId;
+        ToLocationId = toLocationId;
+        RequestId = requestId;
+        Note = Text.Truncate(note, NoteMaxLength);
+        return Result.Success();
+    }
+
     public Result ReplaceLines(IReadOnlyList<IssueLineInput> lines)
     {
         ArgumentNullException.ThrowIfNull(lines);

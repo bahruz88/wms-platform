@@ -108,6 +108,55 @@ public sealed class GoodsReceipt : AuditableAggregateRoot<long>, ITenantEntity
         return line.Value;
     }
 
+    /// <summary>
+    /// Replaces the DRAFT header (<c>PUT /api/v1/inventory/goods-receipts/{id}</c>).
+    /// <see cref="DocNo"/> is deliberately not editable: the number was drawn from the tenant's
+    /// sequence and other documents may already quote it.
+    /// </summary>
+    public Result UpdateDraft(
+        DateOnly docDate,
+        long? poId,
+        uint supplierId,
+        uint locationId,
+        decimal? temperatureC,
+        QualityStatus qualityStatus,
+        string? packagingNote)
+    {
+        if (Status != ReceiptStatus.Draft)
+        {
+            return InventoryErrors.ReceiptNotDraft(Id, Status);
+        }
+
+        if (supplierId == 0 || locationId == 0)
+        {
+            return InventoryErrors.InvalidReceiptLine("supplier_id and location_id are required.");
+        }
+
+        DocDate = docDate;
+        PoId = poId;
+        SupplierId = supplierId;
+        LocationId = locationId;
+        TemperatureC = temperatureC;
+        QualityStatus = qualityStatus;
+        PackagingNote = packagingNote is { Length: > PackagingNoteMaxLength } note ? note[..PackagingNoteMaxLength] : packagingNote;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Drops every line so the caller can add the replacement set. The contract's update replaces
+    /// lines wholesale, and line numbers are positional, so editing in place would leave gaps.
+    /// </summary>
+    public Result ClearLines()
+    {
+        if (Status != ReceiptStatus.Draft)
+        {
+            return InventoryErrors.ReceiptNotDraft(Id, Status);
+        }
+
+        _lines.Clear();
+        return Result.Success();
+    }
+
     public Result MarkPosted(long movementGroupId)
     {
         if (Status != ReceiptStatus.Draft)

@@ -42,6 +42,33 @@ public sealed record CreateGoodsReceiptRequest(
             l.BatchNo, l.ProductionDate, l.ExpiryDate, l.UnitPrice, l.Currency, l.VarianceNote)).ToList());
 }
 
+/// <summary><c>GoodsReceiptUpdate</c> — the create body plus the row version being replaced.</summary>
+public sealed record UpdateGoodsReceiptRequest(
+    uint RowVersion,
+    DateOnly DocDate,
+    long? PurchaseOrderId,
+    uint SupplierId,
+    uint LocationId,
+    decimal? TemperatureC,
+    QualityStatus QualityStatus,
+    string? PackagingNote,
+    List<GoodsReceiptLineRequest> Lines)
+{
+    public UpdateGoodsReceiptCommand ToCommand(long receiptId) => new(
+        receiptId,
+        RowVersion,
+        DocDate,
+        PurchaseOrderId,
+        SupplierId,
+        LocationId,
+        TemperatureC,
+        QualityStatus,
+        PackagingNote,
+        (Lines ?? []).Select(l => new CreateGoodsReceiptLine(
+            l.ProductId, l.ReceivedQty, l.UomId, l.PoLineId, l.OrderedQty, l.RejectedQty,
+            l.BatchNo, l.ProductionDate, l.ExpiryDate, l.UnitPrice, l.Currency, l.VarianceNote)).ToList());
+}
+
 public sealed record CreatedResponse(long Id);
 
 /// <summary>Query string of <c>GET /api/v1/inventory/balances</c>.</summary>
