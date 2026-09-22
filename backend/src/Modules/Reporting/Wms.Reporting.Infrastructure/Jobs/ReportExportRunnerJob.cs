@@ -160,10 +160,16 @@ public sealed class ReportingJobSchedule : IJobSchedule
     public void Register(IRecurringJobManager manager)
     {
         ArgumentNullException.ThrowIfNull(manager);
+        var options = new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc };
         manager.AddOrUpdate<ReportExportRunnerJob>(
             ReportExportRunnerJob.JobId,
             job => job.RunAsync(CancellationToken.None),
             ReportExportRunnerJob.Cron,
-            new RecurringJobOptions { TimeZone = TimeZoneInfo.Utc });
+            options);
+        manager.AddOrUpdate<StockSnapshotJob>(
+            StockSnapshotJob.JobId,
+            job => job.RunAsync(CancellationToken.None),
+            StockSnapshotJob.Cron,
+            options);
     }
 }

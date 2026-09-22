@@ -41,6 +41,34 @@ public sealed class ExportJobRepository(ReportingDbContext db) : IExportJobRepos
     public void Add(ExportJob job) => db.ExportJobs.Add(job);
 }
 
+/// <summary>
+/// Rebuilds one day of <c>rpt_stock_snapshot</c>. The delete and the insert share a transaction, so a
+/// failed rebuild never leaves the day half-written for a reader to mistake for a real balance.
+/// </summary>
+public sealed class StockSnapshotWriter(ReportingDbContext db) : IStockSnapshotWriter
+{
+    public async Task<int> ReplaceDayAsync(DateOnly snapshotDate, IReadOnlyList<StockSnapshot> rows, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(rows);
+
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+
+        await db.StockSnapshots
+            .Where(s => s.SnapshotDate == snapshotDate)
+            .ExecuteDeleteAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        if (rows.Count > 0)
+        {
+            db.StockSnapshots.AddRange(rows);
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+
+        await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        return rows.Count;
+    }
+}
+
 /// <summary>Tenants that have a report catalogue — the recurring export runner iterates exactly these.</summary>
 public sealed class ReportingTenantScanner(ReportingDbContext db) : IReportingTenantScanner
 {

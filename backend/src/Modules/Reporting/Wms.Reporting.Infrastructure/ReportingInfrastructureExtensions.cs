@@ -37,11 +37,13 @@ public static class ReportingInfrastructureExtensions
         services.AddScoped<IExportJobQueries, ExportJobQueries>();
         services.AddScoped<IReportingTenantScanner, ReportingTenantScanner>();
         services.AddScoped<IOutboxBacklogReader, OutboxBacklogReader>();
+        services.AddScoped<IStockSnapshotWriter, StockSnapshotWriter>();
         services.AddScoped<IExportFileStore, MinioExportFileStore>();
         services.AddSingleton<IExportRenderer, XlsxExportRenderer>();
         services.AddSingleton<IExportRenderer, CsvExportRenderer>();
 
         services.AddScoped<ReportExportRunnerJob>();
+        services.AddScoped<StockSnapshotJob>();
         services.AddSingleton<IJobSchedule, ReportingJobSchedule>();
         return services;
     }

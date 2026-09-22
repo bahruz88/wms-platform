@@ -126,6 +126,18 @@ public interface IOutboxBacklogReader
     Task<int> CountPendingAsync(CancellationToken cancellationToken);
 }
 
+/// <summary>
+/// Writes the end-of-day projection into <c>rpt_stock_snapshot</c> (spec §15).
+///
+/// A day is replaced rather than appended: <c>uq_rpt_snapshot</c> is unique over
+/// (tenant, date, product, location), so a re-run for the same date must clear it first. That also
+/// makes the job safe to trigger by hand when a night is missed.
+/// </summary>
+public interface IStockSnapshotWriter
+{
+    Task<int> ReplaceDayAsync(DateOnly snapshotDate, IReadOnlyList<StockSnapshot> rows, CancellationToken cancellationToken);
+}
+
 /// <summary>Tenants with at least one report definition — the recurring export runner iterates them.</summary>
 public interface IReportingTenantScanner
 {
