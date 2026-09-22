@@ -158,7 +158,7 @@ export function RolesScreen() {
   return (
     <Page
       title="Rollar və icazələr"
-      subtitle="Tenantın `iam_role` × `iam_permission` matrisi"
+      subtitle="Şirkətinizdəki rollar və hər rolun icazələri"
       actions={
         failed ? (
           <Badge tone="danger" dot>
@@ -210,7 +210,7 @@ export function RolesScreen() {
             rows={roleRows}
             rowKey={(row) => row.id}
             label="Rollar"
-            empty="Tenant üçün rol yazılmayıb. `iam_role` cədvəli doldurulmalıdır."
+            empty="Hələ rol təyin edilməyib. Sistem administratoru rolları qurmalıdır."
           />
         )}
       </Card>
@@ -257,7 +257,7 @@ export function RolesScreen() {
             } icazə · bootstrap xəritəsi ${Object.keys(ROLE_PERMISSIONS).length} rol tanıyır`}
             empty={
               rows.length === 0
-                ? 'İcazə kataloqu boşdur — `iam_permission` cədvəli doldurulmalıdır.'
+                ? 'İcazə siyahısı boşdur — sistem administratoru ilə əlaqə saxlayın.'
                 : 'Bu filtrə uyğun icazə yoxdur. Axtarışı və ya modulu dəyişin.'
             }
           />

@@ -77,7 +77,7 @@ export function useInventorySettings(scope: string): InventorySettings {
 export function settingsUnavailableNote(status: number | null): string {
   const cause =
     status === null
-      ? 'GET /inventory/settings boş cavab qaytardı — tenant üçün `inv_setting` sətri yazılmayıb'
+      ? 'Parametrlər hələ təyin edilməyib — standart dəyərlər işlənir.'
       : `GET /inventory/settings cavab vermədi (${status})`;
   return `${cause}. Ekran heç bir standart dəyər işlətmir: hədd tələb edən göstəricilər «—» ilə qalır. Parametrləri «Sistem · Parametrlər» ekranından yoxlayın.`;
 }

@@ -204,7 +204,14 @@ describe('RefPicker', () => {
     expect(screen.getByRole('combobox')).toBeInTheDocument();
   });
 
-  it('degrades to an id field and names the missing operation when the gateway 404s', () => {
+  /**
+   * Changed deliberately on 22.09.2026. This used to assert that the hint printed the route and
+   * the HTTP status. It is a warehouse keeper who reads that hint, and `GET /masterdata/suppliers
+   * hələ açılmayıb (404)` tells them nothing they can act on while making unfinished work look
+   * like their mistake. The hint now says what to do; the diagnostic moved to `title`, where the
+   * person building the endpoint will look. Assert both halves so neither is lost.
+   */
+  it('degrades to an id field, tells the user what to do, and keeps the route out of sight', () => {
     const listError = new ApiError({
       type: 'about:blank',
       title: 'Not Found',
@@ -223,9 +230,16 @@ describe('RefPicker', () => {
     );
     expect(container.querySelector('select')).toBeNull();
     const hint = container.querySelector('.wms-field__hint');
-    // The reason is named, with the status — never a silently empty picker.
-    expect(hint?.textContent).toContain('GET /masterdata/suppliers');
-    expect(hint?.textContent).toContain('404');
+    // The user is told what to do — never a silently empty picker.
+    expect(hint?.textContent).toMatch(/nömrə ilə yazın/);
+    // ...and never the plumbing.
+    expect(hint?.textContent).not.toContain('GET');
+    expect(hint?.textContent).not.toContain('404');
+    // The diagnostic is still reachable for whoever builds the endpoint — in a data attribute,
+    // not a `title`: a title renders as a tooltip, which is still the user's screen.
+    expect(
+      container.querySelector('[data-wms-operation]')?.getAttribute('data-wms-operation'),
+    ).toBe('GET /masterdata/suppliers → 404');
   });
 
   it('keeps the select when the failure is not a missing route', () => {

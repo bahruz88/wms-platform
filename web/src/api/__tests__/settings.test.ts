@@ -30,8 +30,14 @@ describe('inventory settings module', () => {
   it('separates «the call failed» from «the tenant has no rows»', () => {
     // A 200 with an empty list is not an outage; saying it is would send an administrator
     // chasing the gateway instead of the tenant`s own configuration.
-    expect(settings.settingsUnavailableNote(null)).toContain('boş cavab');
-    expect(settings.settingsUnavailableNote(null)).not.toContain('cavab vermədi');
+    //
+    // Changed 22.09.2026: the note used to read "GET /inventory/settings boş cavab qaytardı —
+    // tenant üçün `inv_setting` sətri yazılmayıb". A route and a table name are not something an
+    // administrator can act on; the distinction the test guards is kept, the plumbing is not.
+    const empty = settings.settingsUnavailableNote(null);
+    expect(empty).toContain('təyin edilməyib');
+    expect(empty).not.toContain('cavab vermədi');
+    expect(empty).not.toMatch(/\b(GET|POST)\s+\/|inv_setting/);
   });
 });
 

@@ -44,19 +44,24 @@ export function RefPicker({
   const notRouted = listError != null && (listError.status === 404 || listError.status === 405);
 
   if (notRouted) {
+    // The user is told what to do, not what broke. The operation and status go in a data
+    // attribute, which DevTools shows and a tooltip does not — a route and an HTTP status are not
+    // the warehouse keeper's problem.
     return (
-      <TextField
-        label={label}
-        ariaLabel={ariaLabel}
-        required={required}
-        mono
-        value={value}
-        disabled={disabled}
-        placeholder="id"
-        hint={`${operation} hələ açılmayıb (${listError.status}) — seçim siyahısı yoxdur, id yazın.`}
-        error={error}
-        onChange={(e) => onChange(e.target.value)}
-      />
+      <span data-wms-operation={`${operation} → ${listError.status}`}>
+        <TextField
+          label={label}
+          ariaLabel={ariaLabel}
+          required={required}
+          mono
+          value={value}
+          disabled={disabled}
+          placeholder="id"
+          hint="Seçim siyahısı hazır deyil — dəyəri nömrə ilə yazın."
+          error={error}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </span>
     );
   }
 

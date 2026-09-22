@@ -89,8 +89,8 @@
     "loading": "Məlumat yüklənir…",
     "errorTitle": "Sorğu yerinə yetirilmədi",
     "retry": "Yenidən cəhd et",
-    "notImplementedTitle": "Bu endpoint hələ backend-də açılmayıb",
-    "notImplementedBody": "Kontraktda təyin edilib, lakin gateway {{status}} qaytarır. Ekran hazırdır; endpoint işə düşdükdə məlumat özü gələcək."
+    "notImplementedTitle": "Bu bölmə hazırlanır",
+    "notImplementedBody": "Məlumat hazır olan kimi burada görünəcək."
   },
   "dashboard": {
     "title": "Anbar paneli",
@@ -109,7 +109,7 @@
     "kpiLocations": "Lokasiya sayı",
     "kpiRuns": "İstehlak sənədi",
     "expiringTitle": "Vaxtı yaxınlaşan partiyalar",
-    "expiringSub": "expiry_warning_days = {{warning}} · expiry_critical_days = {{critical}}",
+    "expiringSub": "Son istifadə tarixi {{warning}} gündən az qalan partiyalar; {{critical}} gündən azı kritikdir.",
     "expiringEmpty": "Yaxın 30 gündə bitən partiya yoxdur. Partiyalar qəbul sənədi ilə yaranır.",
     "colProduct": "Məhsul",
     "colBatch": "Partiya",
@@ -120,6 +120,11 @@
     "pendingApprovals": "Mənim təsdiqim gözlənilir",
     "pendingEmpty": "Sizdən gözlənilən təsdiq yoxdur. Sənəd təsdiqə göndəriləndə burada görünəcək.",
     "waitingSince": "{{days}} gün gözləyir",
-    "summaryFallback": "Aşağıdakı göstəricilər işləyən endpoint-lərdən birbaşa sayılıb."
+    "summaryFallback": "Göstəricilər cari qalıq və sənədlərə görə hesablanıb.",
+    "kpiBalanceRowsHint": "anbardakı mövqe sayı",
+    "kpiPendingHint": "təsdiq gözləyən sənədlər",
+    "kpiExpiringHint": "{{days}} gün ərzində bitənlər",
+    "kpiExpiringHintFallback": "ən yaxın son istifadə tarixləri",
+    "kpiReceiptsHint": "dövr ərzindəki qəbullar"
   }
 }

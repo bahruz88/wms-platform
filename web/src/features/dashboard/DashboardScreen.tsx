@@ -266,13 +266,13 @@ export function DashboardScreen() {
           <KpiCard
             label={t('dashboard.kpiBalanceRows')}
             value={balances.data?.total ?? 0}
-            hint="inv_balance"
+            hint={t('dashboard.kpiBalanceRowsHint')}
           />
         )}
         <KpiCard
           label={t('dashboard.kpiPendingDocs')}
           value={pendingCount}
-          hint="proc_approval_step"
+          hint={t('dashboard.kpiPendingHint')}
         />
         <KpiCard
           label={t('dashboard.kpiExpiring')}
@@ -280,8 +280,8 @@ export function DashboardScreen() {
           unit={t('dashboard.kpiExpiringUnit')}
           hint={
             warningDays === null
-              ? 'expiry_warning_days oxunmadı — ən yaxın son istifadə tarixləri'
-              : `expiry_warning_days = ${warningDays}`
+              ? t('dashboard.kpiExpiringHintFallback')
+              : t('dashboard.kpiExpiringHint', { days: warningDays })
           }
         />
         <KpiCard
@@ -291,7 +291,7 @@ export function DashboardScreen() {
               ? (balances.data?.total ?? 0)
               : (receipts.data?.total ?? counts.data?.total ?? 0)
           }
-          hint={canViewCost ? 'inv_balance' : 'inv_goods_receipt'}
+          hint={canViewCost ? t('dashboard.kpiBalanceRowsHint') : t('dashboard.kpiReceiptsHint')}
         />
       </div>
 
@@ -330,11 +330,14 @@ export function DashboardScreen() {
         >
           {approvals.isError ? (
             approvals.error.status === 404 || approvals.error.status === 405 ? (
-              // The screen already carries one "not routed yet" notice; a second identical Alert
-              // inside the card would be noise, so the card says it in one muted line instead.
-              <div className="wms-muted" style={{ padding: '8px 16px' }}>
-                <span className="wms-num">GET /procurement/approvals/pending</span> —{' '}
-                {t('state.notImplementedBody', { status: approvals.error.status })}
+              // One muted line rather than a second Alert. The route and status go in a data
+              // attribute for whoever builds the endpoint; the keeper gets a sentence.
+              <div
+                className="wms-muted"
+                style={{ padding: '8px 16px' }}
+                data-wms-operation={`GET /procurement/approvals/pending → ${approvals.error.status}`}
+              >
+                {t('state.notImplementedBody')}
               </div>
             ) : (
               <div style={{ padding: '8px 16px' }}>

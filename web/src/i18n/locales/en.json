@@ -89,8 +89,8 @@
     "loading": "Loading data…",
     "errorTitle": "Request failed",
     "retry": "Try again",
-    "notImplementedTitle": "This endpoint is not live on the backend yet",
-    "notImplementedBody": "It is defined in the contract, but the gateway answers {{status}}. The screen is ready; data will appear once the endpoint is enabled."
+    "notImplementedTitle": "This section is being prepared",
+    "notImplementedBody": "The data will appear here as soon as it is ready."
   },
   "dashboard": {
     "title": "Warehouse overview",
@@ -109,7 +109,7 @@
     "kpiLocations": "Locations",
     "kpiRuns": "Consumption documents",
     "expiringTitle": "Batches nearing expiry",
-    "expiringSub": "expiry_warning_days = {{warning}} · expiry_critical_days = {{critical}}",
+    "expiringSub": "Batches with fewer than {{warning}} days left; under {{critical}} days is critical.",
     "expiringEmpty": "No batch expires within 30 days. Batches are created by a goods receipt.",
     "colProduct": "Product",
     "colBatch": "Batch",
@@ -120,6 +120,11 @@
     "pendingApprovals": "Waiting for my approval",
     "pendingEmpty": "Nothing is waiting for you. Documents sent for approval appear here.",
     "waitingSince": "waiting {{days}} days",
-    "summaryFallback": "The figures below are counted directly from the endpoints that are live."
+    "summaryFallback": "The figures are calculated from current stock and documents.",
+    "kpiBalanceRowsHint": "stock positions",
+    "kpiPendingHint": "documents awaiting approval",
+    "kpiExpiringHint": "expiring within {{days}} days",
+    "kpiExpiringHintFallback": "nearest expiry dates",
+    "kpiReceiptsHint": "receipts in the period"
   }
 }

@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setPermissionFallbackReason(
             merged.permissionSource === 'server'
               ? null
-              : 'GET /identity/me cavabında `permissions` sahəsi yoxdur — icazələr token rollarından hesablanır.',
+              : 'İcazələr serverdən alınmadı — müvəqqəti olaraq rolunuza görə hesablanır.',
           );
         })
         .catch((meError: unknown) => {
@@ -98,8 +98,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             typeof meError === 'object' && meError !== null && 'status' in meError
               ? ` (${String((meError as { code?: string }).code ?? 'XƏTA')} ${String((meError as { status?: number }).status ?? 0)})`
               : '';
+          // The code and status stay out of the sentence: an administrator can act on "permissions
+          // could not be read", not on an HTTP status. The detail goes to the console in a dev build.
+          if (import.meta.env.DEV) {
+            console.debug('[wms] GET /identity/me failed', detail.trim());
+          }
           setPermissionFallbackReason(
-            `GET /identity/me cavab vermədi${detail} — icazələr token rollarından hesablanır, serverin siyahısından yox.`,
+            'İcazələr serverdən alınmadı — müvəqqəti olaraq rolunuza görə hesablanır.',
           );
         });
     } catch (e) {

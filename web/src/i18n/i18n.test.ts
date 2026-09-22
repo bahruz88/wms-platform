@@ -59,8 +59,19 @@ describe('i18n', () => {
     expect(i18n.t('nav.balances')).toBe('Qalıqlar');
   });
 
-  it('interpolates the gateway status into the not-implemented message', async () => {
+  /**
+   * Changed deliberately on 22.09.2026. The message used to read "Kontraktda təyin edilib, lakin
+   * gateway {{status}} qaytarır" and this test pinned the interpolated status code. A warehouse
+   * keeper should never be shown an HTTP verb, a route or a status code — that is unfinished work
+   * presented as the user's problem. The diagnostic now lives in the element's `title` and, in a
+   * dev build, the console; the sentence on screen is plain. Assert the absence, so nobody puts
+   * the plumbing back.
+   */
+  it('keeps plumbing out of the not-implemented message the user reads', async () => {
     await i18n.changeLanguage('az');
-    expect(i18n.t('state.notImplementedBody', { status: 404 })).toContain('404');
+    const body = i18n.t('state.notImplementedBody');
+    expect(body).not.toMatch(/\b(GET|POST|PUT|PATCH|DELETE)\b/);
+    expect(body).not.toMatch(/\/api\/|gateway|404|endpoint/i);
+    expect(body.length).toBeGreaterThan(10);
   });
 });

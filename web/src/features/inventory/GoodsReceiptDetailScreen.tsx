@@ -234,7 +234,8 @@ export function GoodsReceiptDetailScreen() {
           ) : !can('inv.receipt.create') ? null : cancelUnrouted ? (
             <Button
               disabled
-              title="POST /inventory/goods-receipts/{id}/cancel gateway-də marşrutlanmır (404)"
+              title="Ləğv etmə hazır deyil"
+              data-wms-operation="POST /inventory/goods-receipts/{id}/cancel → 404"
             >
               Ləğv et
             </Button>

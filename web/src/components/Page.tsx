@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Alert, Button, DocStatusBadge } from '@ds/index';
@@ -305,6 +305,17 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
  * Says out loud that an operation the screen offers is not routed yet. Used instead of a button
  * that would appear to work: the user never sees a success that did not happen.
  */
+/**
+ * A section whose data source does not exist yet.
+ *
+ * What the user sees is a plain sentence — no HTTP verb, no route, no status code, no mention of
+ * a gateway. Those belong to whoever builds the thing, not to the warehouse keeper reading the
+ * screen, and putting them on the page turns unfinished work into the user's problem.
+ *
+ * The operation and status are still carried, but only where a developer looks and a user does
+ * not: a `data-wms-operation` attribute and, in a development build, the console. A `title` is a
+ * tooltip — the user sees it, so it is not a place for a route.
+ */
 export function NotOpenYet({
   operation,
   status,
@@ -315,16 +326,23 @@ export function NotOpenYet({
   children?: ReactNode;
 }) {
   const { t } = useTranslation();
+  const diagnostic = `${operation} → ${status ?? 404}`;
+
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.debug('[wms] not implemented yet:', diagnostic);
+    }
+  }, [diagnostic]);
+
   return (
-    <Alert tone="info" title={t('state.notImplementedTitle')}>
-      <div className="wms-stack">
-        <span>
-          <span className="wms-num">{operation}</span> —{' '}
-          {t('state.notImplementedBody', { status: status ?? 404 })}
-        </span>
-        {children}
-      </div>
-    </Alert>
+    <div data-wms-operation={diagnostic}>
+      <Alert tone="info" title={t('state.notImplementedTitle')}>
+        <div className="wms-stack">
+          <span>{t('state.notImplementedBody')}</span>
+          {children}
+        </div>
+      </Alert>
+    </div>
   );
 }
 

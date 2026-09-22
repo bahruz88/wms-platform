@@ -89,8 +89,8 @@
     "loading": "Загрузка данных…",
     "errorTitle": "Запрос не выполнен",
     "retry": "Повторить",
-    "notImplementedTitle": "Этот эндпоинт ещё не включён на бэкенде",
-    "notImplementedBody": "Он описан в контракте, но шлюз отвечает {{status}}. Экран готов; данные появятся, как только эндпоинт включат."
+    "notImplementedTitle": "Этот раздел готовится",
+    "notImplementedBody": "Данные появятся здесь, как только будут готовы."
   },
   "dashboard": {
     "title": "Складская панель",
@@ -109,7 +109,7 @@
     "kpiLocations": "Локаций",
     "kpiRuns": "Документы потребления",
     "expiringTitle": "Партии с истекающим сроком",
-    "expiringSub": "expiry_warning_days = {{warning}} · expiry_critical_days = {{critical}}",
+    "expiringSub": "Партии, до истечения которых менее {{warning}} дн.; менее {{critical}} дн. — критично.",
     "expiringEmpty": "Ни одна партия не истекает в ближайшие 30 дней. Партии создаются приёмкой.",
     "colProduct": "Товар",
     "colBatch": "Партия",
@@ -120,6 +120,11 @@
     "pendingApprovals": "Ожидает моего согласования",
     "pendingEmpty": "Вас ничего не ожидает. Документы, отправленные на согласование, появятся здесь.",
     "waitingSince": "ждёт {{days}} дн.",
-    "summaryFallback": "Показатели ниже посчитаны напрямую по работающим эндпоинтам."
+    "summaryFallback": "Показатели рассчитаны по текущим остаткам и документам.",
+    "kpiBalanceRowsHint": "позиции на складе",
+    "kpiPendingHint": "документы на согласовании",
+    "kpiExpiringHint": "истекают в течение {{days}} дн.",
+    "kpiExpiringHintFallback": "ближайшие сроки годности",
+    "kpiReceiptsHint": "приёмки за период"
   }
 }

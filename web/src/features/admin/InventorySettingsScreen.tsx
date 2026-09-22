@@ -116,7 +116,7 @@ export function InventorySettingsScreen() {
   return (
     <Page
       title="Parametrlər"
-      subtitle="`inv_setting` açarları — expiry günləri, tolerans faizləri, costing metodu, sayım həddi"
+      subtitle="Sistem parametrləri — expiry günləri, tolerans faizləri, maya metodu, sayım həddi"
       actions={
         settings.isError ? (
           <Badge tone="danger" dot>
@@ -130,11 +130,10 @@ export function InventorySettingsScreen() {
       <AdminTabs />
 
       <Alert tone="info" title="Heç bir dəyər kodda sabit yazılmır">
-        Bu cədvəl tenantın <span className="wms-num">inv_setting</span> sətirləridir.{' '}
-        <span className="wms-num">{usedByUi}</span> açarı interfeys özü oxuyur: partiya xəbərdarlıq
-        hədləri, <span className="wms-num">VarianceIndicator</span> təsdiq həddi və qəbul tolerans
-        faizi (TOR §36). Açar cavabda yoxdursa ekran standart dəyər işlətmir — həmin göstərici «—»
-        ilə qalır.
+        Bu cədvəl şirkətinizin cari parametrləridir. <span className="wms-num">{usedByUi}</span>{' '}
+        açarı interfeys özü oxuyur: partiya xəbərdarlıq hədləri,{' '}
+        <span className="wms-num">VarianceIndicator</span> təsdiq həddi və qəbul tolerans faizi (TOR
+        §36). Açar cavabda yoxdursa ekran standart dəyər işlətmir — həmin göstərici «—» ilə qalır.
       </Alert>
 
       <Card>

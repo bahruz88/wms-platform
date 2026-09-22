@@ -111,7 +111,7 @@ public static class ReportCatalog
         new(
             Expiry,
             "Son istifadə tarixi",
-            "Verilmiş gün sayı ərzində vaxtı bitən partiyalar (inv_setting.expiry_warning_days defoltdur).",
+            "Verilmiş gün sayı ərzində vaxtı bitən partiyalar. Gün sayı verilmədikdə sistem parametri işlənir.",
             ReportCategory.Quality,
             null,
             RequiresCostPermission: false,

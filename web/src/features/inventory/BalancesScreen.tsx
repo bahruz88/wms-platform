@@ -145,7 +145,7 @@ export function BalancesScreen() {
             label="Lokasiya"
             value={locationId}
             placeholder="Bütün lokasiyalar"
-            hint="Siyahı `iam_user_location` ilə filtrlənir."
+            hint="Yalnız sizə açıq olan lokasiyalar göstərilir."
             options={(locations.data?.items ?? []).map((l) => ({
               value: String(l.id),
               label: `${l.name} (${l.code})`,
