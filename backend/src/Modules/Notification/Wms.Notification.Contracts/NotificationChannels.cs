@@ -1,10 +1,11 @@
 namespace Wms.Notification.Contracts;
 
-/// <summary>Notification consumes integration events only (spec §5); it exposes no synchronous contract yet.</summary>
+/// <summary>Delivery channels of notifications.v1.yaml <c>Channel</c>.</summary>
 public static class NotificationChannels
 {
     public const string InApp = "IN_APP";
     public const string Email = "EMAIL";
+    public const string Push = "PUSH";
 }
 
 public static class NotificationRoutes

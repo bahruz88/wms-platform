@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <Description>Unit tests of the notification module (spec §14.1, TOR §36): rule validation and the system-rule lock, device token refresh, and the Azerbaijani copy the event composer produces.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/BuildingBlocks/Wms.Common.Domain/Wms.Common.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Notification/Wms.Notification.Domain/Wms.Notification.Domain.csproj" />
+    <ProjectReference Include="../../src/Modules/Notification/Wms.Notification.Application/Wms.Notification.Application.csproj" />
+    <ProjectReference Include="../../src/Modules/Notification/Wms.Notification.Infrastructure/Wms.Notification.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

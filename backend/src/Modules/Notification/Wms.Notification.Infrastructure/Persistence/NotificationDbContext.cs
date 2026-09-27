@@ -21,6 +21,8 @@ public sealed class NotificationDbContext(
 
     public DbSet<NotificationRule> Rules => Set<NotificationRule>();
 
+    public DbSet<NotificationDevice> Devices => Set<NotificationDevice>();
+
     protected override void ConfigureModule(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NotificationDbContext).Assembly);
 }

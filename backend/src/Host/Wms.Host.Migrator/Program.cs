@@ -56,6 +56,18 @@ using (var reportScope = provider.CreateScope())
     }
 }
 
+// The notification delivery matrix (TOR §36) is reference data as well: with notif_rule empty the
+// consumer has nothing to match and the inbox stays empty however busy the warehouse is. Idempotent.
+using (var notificationScope = provider.CreateScope())
+{
+    var ruleSeeder = ActivatorUtilities.CreateInstance<NotificationRuleSeeder>(notificationScope.ServiceProvider);
+    var ruleExit = await ruleSeeder.SeedAsync(cancellation.Token).ConfigureAwait(false);
+    if (ruleExit != 0)
+    {
+        return ruleExit;
+    }
+}
+
 // --seed fills the demo/warehouse data set. It is idempotent: re-running changes nothing.
 // AddCommandLine drops a valueless switch, so the bare "--seed" form is matched against args directly.
 var seedRequested = args.Any(a => string.Equals(a, "--seed", StringComparison.OrdinalIgnoreCase))
