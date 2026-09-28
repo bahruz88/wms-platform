@@ -78,6 +78,11 @@ export const NAV_TABLE: NavEntry[] = [
     ],
   },
   {
+    label: 'Bildirişlər',
+    to: '/notifications',
+    permissions: ['notif.inbox.view'],
+  },
+  {
     label: 'Hesabatlar',
     to: '/reporting/reports',
     permissions: ['rpt.report.view', 'rpt.export.create'],

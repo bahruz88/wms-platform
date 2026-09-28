@@ -34,13 +34,13 @@ public static class RolePermissionMap
             "proc.po.view_for_receipt", "proc.po.submit", "proc.po.send", "proc.approval.view",
             "master.product.view", "master.product.view_cost", "master.supplier.*", "master.location.view",
             "master.category.view", "master.uom.view", "master.currency.view", "master.reason.view",
-            "inv.balance.view", "inv.batch.view", "inv.receipt.view", "rpt.*", "doc.*", "notif.*",
+            "inv.balance.view", "inv.batch.view", "inv.receipt.view", "rpt.*", "doc.*", "notif.inbox.view", "notif.rule.view",
             "iam.me.view", "iam.delegation.view", "iam.delegation.create", ViewAllLocations,
         ],
         ["PROCUREMENT_MANAGER"] =
         [
             "proc.*", "master.*", "inv.*.view", "inv.balance.view", "inv.adjustment.approve",
-            "inv.waste.approve", "inv.settings.view", "inv.movement.reverse", "rpt.*", "doc.*", "notif.*",
+            "inv.waste.approve", "inv.settings.view", "inv.movement.reverse", "rpt.*", "doc.*", "notif.inbox.view", "notif.rule.view",
             "iam.me.view", "iam.user.view", "iam.role.view", "iam.delegation.view", "iam.delegation.create",
             "audit.view", "iam.audit.view", ViewAllLocations,
         ],
@@ -56,7 +56,7 @@ public static class RolePermissionMap
             "inv.batch.manage", "inv.batch.view", "inv.balance.view", "inv.request.view",
             "inv.settings.view", "master.product.view", "master.location.view", "master.supplier.view",
             "master.category.view", "master.uom.view", "master.reason.view", "master.sequence.view",
-            "proc.po.view_for_receipt", "rpt.dashboard.view", "rpt.report.view", "rpt.export.create", "notif.*", "iam.me.view", ViewAllLocations,
+            "proc.po.view_for_receipt", "rpt.dashboard.view", "rpt.report.view", "rpt.export.create", "notif.inbox.view", "notif.rule.view", "iam.me.view", ViewAllLocations,
             // Not doc.attachment.* : that also grants doc.attachment.manage, i.e. deleting somebody
             // else's upload. A keeper may delete only their own.
             "doc.attachment.view", "doc.attachment.upload", "doc.attachment.delete",
@@ -68,12 +68,12 @@ public static class RolePermissionMap
             "inv.waste.create", "inv.waste.view", "inv.count.enter", "inv.count.view",
             "inv.issue.view", "inv.movement.view", "inv.balance.view", "inv.batch.view",
             "master.product.view", "master.location.view", "master.reason.view", "cons.recipe.view",
-            "cons.sales.import", "cons.variance.view", "rpt.dashboard.view", "rpt.report.view", "notif.*", "iam.me.view",
+            "cons.sales.import", "cons.variance.view", "rpt.dashboard.view", "rpt.report.view", "notif.inbox.view", "notif.rule.view", "iam.me.view",
             "doc.attachment.view", "doc.attachment.upload", "doc.attachment.delete",
         ],
         ["AUDITOR"] =
         [
-            "*.view", "*.view_cost", "rpt.*", "audit.view", "iam.audit.view", "notif.*", "iam.me.view", ViewAllLocations,
+            "*.view", "*.view_cost", "rpt.*", "audit.view", "iam.audit.view", "notif.inbox.view", "notif.rule.view", "iam.me.view", ViewAllLocations,
         ],
     };
 

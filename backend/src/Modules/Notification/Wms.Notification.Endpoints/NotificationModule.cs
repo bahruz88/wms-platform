@@ -75,9 +75,11 @@ public sealed class NotificationModule : IModule
             .RequirePermission(NotificationPermissions.InboxView)
             .WithName("markNotificationRead");
 
-        group.MapPost("/inbox/read-all", async Task<IResult> (IDispatcher dispatcher, CancellationToken ct) =>
+        group.MapPost("/inbox/read-all", async Task<IResult> (ReadAllRequest? request, IDispatcher dispatcher, CancellationToken ct) =>
             {
-                var result = await dispatcher.SendAsync(new MarkAllNotificationsReadCommand(), ct).ConfigureAwait(false);
+                var result = await dispatcher
+                    .SendAsync(new MarkAllNotificationsReadCommand(request?.Before), ct)
+                    .ConfigureAwait(false);
                 return result.IsFailure
                     ? result.Error.ToProblem()
                     : TypedResults.Ok(new MarkedReadResponse(result.Value));
@@ -166,7 +168,10 @@ public sealed record InboxRequest(bool? UnreadOnly, int? Page, int? Size);
 
 public sealed record RulesRequest(bool? IsActive);
 
-public sealed record MarkedReadResponse(int Marked);
+/// <summary>Body of <c>markAllNotificationsRead</c>; absent means "everything unread".</summary>
+public sealed record ReadAllRequest(DateTimeOffset? Before);
+
+public sealed record MarkedReadResponse(int MarkedCount);
 
 public sealed record CreatedRuleResponse(uint Id);
 

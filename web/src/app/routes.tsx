@@ -59,6 +59,7 @@ import { RolesScreen } from '@features/admin/RolesScreen';
 import { InventorySettingsScreen } from '@features/admin/InventorySettingsScreen';
 import { ReportsScreen } from '@features/reporting/ReportsScreen';
 import { ExportsScreen } from '@features/reporting/ExportsScreen';
+import { InboxScreen } from '@features/notifications/InboxScreen';
 
 /**
  * Route table. Each guarded route names the same `x-permission` the contract puts on its
@@ -515,6 +516,15 @@ export function AppRoutes() {
             }
           />
         </Route>
+
+        <Route
+          path="notifications"
+          element={
+            <Guarded permission="notif.inbox.view">
+              <InboxScreen />
+            </Guarded>
+          }
+        />
 
         <Route path="reporting">
           <Route

@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button, Icons } from '@ds/index';
 import { useApiQuery } from '@api/hooks';
-import { getTenant } from '@api/endpoints';
+import { getTenant, getUnreadNotificationCount } from '@api/endpoints';
 import { useAuth } from '@auth/index';
 import { identityCached } from '@auth/identityCache';
 import {
@@ -90,6 +90,23 @@ export function AppShell() {
   );
 
   const groups = visibleNavGroups(session?.permissions ?? []);
+
+  /*
+   * The unread count beside the inbox entry.
+   *
+   * It is polled rather than pushed: the platform has no socket to the browser, and a number that
+   * is at most a minute stale is worth more than a websocket nobody asked for. The request is only
+   * made when the inbox entry is actually visible, so a user without `notif.inbox.view` never
+   * spends a request on it.
+   */
+  const canSeeInbox = (session?.permissions ?? []).includes('notif.inbox.view');
+  const unread = useApiQuery(['notifications', 'unread-count'], getUnreadNotificationCount, {
+    enabled: canSeeInbox,
+    retry: false,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+  const unreadTotal = (unread.data as { total?: number } | undefined)?.total ?? 0;
   const username = session?.username ?? '—';
   const roleCode = session?.roles[0] ?? '—';
   const tenantName =
@@ -126,6 +143,11 @@ export function AppShell() {
                     className={active ? 'wms-side__link wms-side__link--active' : 'wms-side__link'}
                   >
                     {t(item.labelKey)}
+                    {item.badge === 'unreadNotifications' && unreadTotal > 0 ? (
+                      <span className="wms-side__badge" aria-label={t('app.unreadCount', { count: unreadTotal })}>
+                        {unreadTotal > 99 ? '99+' : unreadTotal}
+                      </span>
+                    ) : null}
                   </Link>
                 );
               })}

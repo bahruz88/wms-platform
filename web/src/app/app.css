@@ -159,6 +159,25 @@ a:hover {
   font-weight: 600;
 }
 
+/*
+ * Unread count beside the inbox entry. It sits at the far end of the row (`margin-left: auto`) so
+ * the labels above and below it stay left-aligned, and it uses the danger token rather than accent:
+ * the number exists to be noticed, and accent already marks the active route.
+ */
+.wms-side__badge {
+  margin-left: auto;
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--danger);
+  color: var(--on-danger);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
 .wms-side__note {
   padding: 8px 10px;
   font-size: 12px;

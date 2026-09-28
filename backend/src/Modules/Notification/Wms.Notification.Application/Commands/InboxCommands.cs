@@ -35,15 +35,18 @@ public sealed class MarkNotificationReadCommandHandler(
 }
 
 /// <summary><c>POST /inbox/read-all</c> — returns how many messages changed.</summary>
-public sealed record MarkAllNotificationsReadCommand : ICommand<int>;
+public sealed record MarkAllNotificationsReadCommand(DateTimeOffset? Before = null) : ICommand<int>;
 
 public sealed class MarkAllNotificationsReadCommandHandler(
     INotificationRepository repository,
     ICurrentUser currentUser,
     IClock clock) : ICommandHandler<MarkAllNotificationsReadCommand, int>
 {
-    public async Task<Result<int>> HandleAsync(MarkAllNotificationsReadCommand command, CancellationToken cancellationToken) =>
-        await repository
-            .MarkAllReadAsync(currentUser.UserId, currentUser.Roles, clock.UtcNow, cancellationToken)
+    public async Task<Result<int>> HandleAsync(MarkAllNotificationsReadCommand command, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        return await repository
+            .MarkAllReadAsync(currentUser.UserId, currentUser.Roles, clock.UtcNow, command.Before, cancellationToken)
             .ConfigureAwait(false);
+    }
 }

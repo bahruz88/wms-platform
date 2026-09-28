@@ -54,8 +54,12 @@ public interface INotificationRepository
 {
     Task<NotificationMessage?> GetMessageAsync(long id, uint userId, IReadOnlyCollection<string> roles, CancellationToken cancellationToken);
 
-    /// <summary>Marks every unread message of this caller read; returns how many changed.</summary>
-    Task<int> MarkAllReadAsync(uint userId, IReadOnlyCollection<string> roles, DateTimeOffset at, CancellationToken cancellationToken);
+    /// <summary>
+    /// Marks this caller's unread messages read and returns how many changed. <paramref name="before"/>
+    /// spares anything that arrived after it, so a person who taps «mark all» does not silence the
+    /// notification that landed while they were reaching for the button.
+    /// </summary>
+    Task<int> MarkAllReadAsync(uint userId, IReadOnlyCollection<string> roles, DateTimeOffset at, DateTimeOffset? before, CancellationToken cancellationToken);
 
     Task<NotificationRule?> GetRuleAsync(uint id, CancellationToken cancellationToken);
 

@@ -19,7 +19,14 @@ namespace Wms.Host.Migrator;
 /// </remarks>
 public sealed class NotificationRuleSeeder(NotificationDbContext notifications, SeedContext context, ILogger<NotificationRuleSeeder> logger)
 {
-    /// <summary>Event → who hears about it, and how loudly.</summary>
+    /// <summary>
+    /// Event → who hears about it, and how loudly.
+    ///
+    /// Targets are <see cref="Wms.Identity.Domain.SystemRoles"/> only. A tenant role such as
+    /// STOCKTAKER exists in one tenant and not the next, so a platform default aimed at one would
+    /// deliver to nobody on a fresh tenant; those belong in rules the tenant adds itself through
+    /// <c>createNotificationRule</c>.
+    /// </summary>
     private static readonly (string EventType, string Role, NotificationSeverity Severity, string Channels)[] Defaults =
     [
         ("GoodsReceiptPosted", "WAREHOUSE_KEEPER", NotificationSeverity.Info, "IN_APP"),
@@ -30,9 +37,9 @@ public sealed class NotificationRuleSeeder(NotificationDbContext notifications, 
         ("BatchExpired", "WAREHOUSE_KEEPER", NotificationSeverity.Critical, "IN_APP,EMAIL"),
         ("PurchaseOrderApproved", "PROCUREMENT_OFFICER", NotificationSeverity.Info, "IN_APP"),
         ("PriceChanged", "PROCUREMENT_MANAGER", NotificationSeverity.Info, "IN_APP"),
-        ("WastePosted", "WASTE_TESTER", NotificationSeverity.Info, "IN_APP"),
+        ("WastePosted", "PROCUREMENT_MANAGER", NotificationSeverity.Info, "IN_APP"),
         ("TransferCompleted", "WAREHOUSE_KEEPER", NotificationSeverity.Info, "IN_APP"),
-        ("CountVarianceApproved", "STOCKTAKER", NotificationSeverity.Info, "IN_APP"),
+        ("CountVarianceApproved", "WAREHOUSE_KEEPER", NotificationSeverity.Info, "IN_APP"),
         ("ConsumptionShortfallDetected", "BRANCH_USER", NotificationSeverity.Warning, "IN_APP"),
         ("SalesItemUnmapped", "BRANCH_USER", NotificationSeverity.Warning, "IN_APP"),
     ];
@@ -71,12 +78,30 @@ public sealed class NotificationRuleSeeder(NotificationDbContext notifications, 
             inserted++;
         }
 
-        if (inserted > 0)
+        // A system rule the defaults no longer list is switched off, not deleted — the same rule the
+        // report catalogue follows. Deleting it would lose the tenant's edits to it, and a rule that
+        // returns to the defaults should come back on rather than be created afresh.
+        var wanted = Defaults.Select(d => (d.EventType, d.Role)).ToHashSet();
+        var retired = 0;
+        foreach (var rule in existing.Values)
+        {
+            if (!rule.IsSystem || !rule.IsActive || wanted.Contains((rule.EventType, rule.TargetRoleCode ?? string.Empty)))
+            {
+                continue;
+            }
+
+            rule.Deactivate();
+            retired++;
+        }
+
+        if (inserted > 0 || retired > 0)
         {
             await notifications.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        logger.LogInformation("Notification rules: {Inserted} added, {Existing} already present.", inserted, existing.Count);
+        logger.LogInformation(
+            "Notification rules: {Inserted} added, {Retired} deactivated, {Existing} already present.",
+            inserted, retired, existing.Count);
         return 0;
     }
 }

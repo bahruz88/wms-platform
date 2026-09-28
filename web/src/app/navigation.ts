@@ -20,6 +20,11 @@ export interface NavItem {
   permission: string | string[];
   /** Routes that should also light this item up (tab siblings, detail screens). */
   match?: string[];
+  /**
+   * Shows the unread notification count beside the label. Only the inbox carries it: a badge on
+   * every entry would be noise, and this is the one number a warehouse keeper checks between tasks.
+   */
+  badge?: 'unreadNotifications';
 }
 
 export interface NavGroup {
@@ -133,6 +138,12 @@ export const NAV_GROUPS: NavGroup[] = [
           '/master-data/reason-codes',
           '/master-data/currency-rates',
         ],
+      },
+      {
+        to: '/notifications',
+        labelKey: 'nav.notifications',
+        permission: 'notif.inbox.view',
+        badge: 'unreadNotifications',
       },
       {
         to: '/reporting/reports',

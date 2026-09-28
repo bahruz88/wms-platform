@@ -15,16 +15,27 @@ public sealed class NotificationRepository(NotificationDbContext db) : INotifica
                 cancellationToken);
     }
 
-    public async Task<int> MarkAllReadAsync(uint userId, IReadOnlyCollection<string> roles, DateTimeOffset at, CancellationToken cancellationToken)
+    public async Task<int> MarkAllReadAsync(
+        uint userId,
+        IReadOnlyCollection<string> roles,
+        DateTimeOffset at,
+        DateTimeOffset? before,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(roles);
         var roleCodes = roles.ToArray();
 
+        var unread = db.Messages
+            .Where(m => m.ReadAt == null
+                && (m.RecipientUserId == userId || (m.RecipientRole != null && roleCodes.Contains(m.RecipientRole))));
+        if (before is { } cutoff)
+        {
+            unread = unread.Where(m => m.CreatedAt <= cutoff);
+        }
+
         // A set-based update: an inbox left unread for a month can hold thousands of rows, and
         // loading them only to stamp one column would be pure waste.
-        return await db.Messages
-            .Where(m => m.ReadAt == null
-                && (m.RecipientUserId == userId || (m.RecipientRole != null && roleCodes.Contains(m.RecipientRole))))
+        return await unread
             .ExecuteUpdateAsync(s => s.SetProperty(m => m.ReadAt, at), cancellationToken)
             .ConfigureAwait(false);
     }

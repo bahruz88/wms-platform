@@ -16,7 +16,8 @@
     "sectionNav": "Bölmə naviqasiyası",
     "noScreens": "Rolunuza uyğun veb ekranı yoxdur. Sistem administratoruna müraciət edin.",
     "loading": "Yüklənir…",
-    "sessionChecking": "Sessiya yoxlanılır…"
+    "sessionChecking": "Sessiya yoxlanılır…",
+    "unreadCount": "{{count}} oxunmamış bildiriş"
   },
   "nav": {
     "dashboard": "Panel",
@@ -41,6 +42,7 @@
     "returns": "Qaytarma",
     "system": "Sistem",
     "masterData": "Sorğu kitabçaları",
+    "notifications": "Bildirişlər",
     "products": "Məhsullar",
     "suppliers": "Təchizatçılar",
     "locations": "Lokasiyalar",

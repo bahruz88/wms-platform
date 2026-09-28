@@ -16,7 +16,8 @@
     "sectionNav": "Section navigation",
     "noScreens": "No web screen matches your role. Contact the system administrator.",
     "loading": "Loading…",
-    "sessionChecking": "Checking session…"
+    "sessionChecking": "Checking session…",
+    "unreadCount": "{{count}} unread notifications"
   },
   "nav": {
     "dashboard": "Overview",
@@ -41,6 +42,7 @@
     "returns": "Return to vendor",
     "system": "System",
     "masterData": "Reference data",
+    "notifications": "Notifications",
     "products": "Products",
     "suppliers": "Suppliers",
     "locations": "Locations",

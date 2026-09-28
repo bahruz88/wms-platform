@@ -4,6 +4,7 @@ import {
   identityApi,
   inventoryApi,
   masterDataApi,
+  notificationsApi,
   procurementApi,
   reportingApi,
   unwrap,
@@ -28,6 +29,10 @@ import type {
   components as MasterDataComponents,
   paths as MasterDataPaths,
 } from './generated/masterdata';
+import type {
+  components as NotificationsComponents,
+  paths as NotificationsPaths,
+} from './generated/notifications';
 import type {
   components as ProcurementComponents,
   paths as ProcurementPaths,
@@ -720,5 +725,36 @@ export const createExport = async (body: ReportingComponents['schemas']['ExportC
     await reportingApi.POST('/exports', {
       params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
       body,
+    }),
+  );
+
+// --- notifications --------------------------------------------------------------------------------------
+export type Notification = NotificationsComponents['schemas']['Notification'];
+
+export const listNotifications = async (query: Query<NotificationsPaths, '/inbox'> = {}) =>
+  unwrap(await notificationsApi.GET('/inbox', { params: { query } }));
+
+export const getUnreadNotificationCount = async () =>
+  unwrap(await notificationsApi.GET('/inbox/unread-count'));
+
+export const getNotification = async (id: number) =>
+  unwrap(await notificationsApi.GET('/inbox/{id}', { params: { path: { id } } }));
+
+export const markNotificationRead = async (id: number) =>
+  unwrap(
+    await notificationsApi.POST('/inbox/{id}/read', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+    }),
+  );
+
+/**
+ * `before` spares anything that arrived after the caller decided to clear the inbox — otherwise a
+ * notification that lands between the render and the tap is silenced without ever being seen.
+ */
+export const markAllNotificationsRead = async (before?: string) =>
+  unwrap(
+    await notificationsApi.POST('/inbox/read-all', {
+      params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: before ? { before } : {},
     }),
   );
