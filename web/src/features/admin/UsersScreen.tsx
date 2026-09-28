@@ -1,25 +1,77 @@
 import { useState } from 'react';
-import { Badge, DataTable, TextField, type Column } from '@ds/index';
+import { Link } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Badge, Button, DataTable, TextField, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
-import { listUsers, type UserSummary } from '@api/endpoints';
+import { createUser, listUsers, type UserSummary } from '@api/endpoints';
+import { useAuth } from '@auth/index';
 import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
+import {
+  ReferenceFormDialog,
+  text,
+  type FieldSpec,
+  type FormValues,
+} from '@/components/ReferenceFormDialog';
 import { AdminTabs } from './AdminTabs';
 import { Pager } from '@/components/Pager';
 
 /**
  * Users — docs/ux/screen-map.md §5.4. `GET /identity/users` is routed and answering.
  *
- * Read-only: `createUser`, `setUserRoles` and `setUserLocations` are POST/PUT operations the
- * gateway does not route yet, and a user's Keycloak subject binding must not be guessable from a
- * half-wired form.
+ * Creating a user here does not create a Keycloak account — it binds one that already exists. The
+ * form asks for the subject (`sub`) rather than a password, because the platform never holds
+ * credentials: authentication is Keycloak's and authorisation is this row's.
+ *
+ * Roles and location scope are set on the user's own screen, where the empty-list rule can be
+ * spelled out next to the control it applies to.
  *
  * Laid out like the other list screens the artboards define — a filter card, then one framed
  * table with the pager in the card's footer — rather than the untitled `Section` wrapper it
  * carried before.
  */
+const USER_FIELDS: FieldSpec[] = [
+  {
+    name: 'externalId',
+    label: 'Keycloak subject (sub)',
+    kind: 'text',
+    required: true,
+    hint: 'Keycloak-daki mövcud hesabın `sub` dəyəri — burada yeni hesab yaradılmır.',
+  },
+  { name: 'username', label: 'İstifadəçi adı', kind: 'text', required: true },
+  { name: 'fullName', label: 'Ad, soyad', kind: 'text', required: true },
+  {
+    name: 'email',
+    label: 'E-poçt',
+    kind: 'text',
+    validate: (value) =>
+      value.trim().length === 0 || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+        ? undefined
+        : 'E-poçt ünvanı düzgün deyil.',
+  },
+  { name: 'phone', label: 'Telefon', kind: 'text' },
+];
+
 export function UsersScreen() {
+  const { can } = useAuth();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  const create = useMutation({
+    mutationFn: (values: FormValues) =>
+      createUser({
+        externalId: text(values, 'externalId'),
+        username: text(values, 'username'),
+        fullName: text(values, 'fullName'),
+        ...(text(values, 'email') ? { email: text(values, 'email') } : {}),
+        ...(text(values, 'phone') ? { phone: text(values, 'phone') } : {}),
+      }),
+    onSuccess: () => {
+      setCreating(false);
+      void queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+  });
 
   const query = { page, size: 50, ...(search.trim() ? { q: search.trim() } : {}) };
   const users = useApiPage<UserSummary>(['users', query], () => listUsers(query), 50);
@@ -28,7 +80,11 @@ export function UsersScreen() {
     {
       key: 'username',
       header: 'İstifadəçi',
-      render: (row) => <span className="wms-doc-no">{row.username}</span>,
+      render: (row) => (
+        <Link className="wms-doc-no" to={`/admin/users/${row.id}`}>
+          {row.username}
+        </Link>
+      ),
     },
     { key: 'fullName', header: 'Ad, soyad' },
     { key: 'email', header: 'E-poçt', render: (row) => row.email ?? '—' },
@@ -44,6 +100,13 @@ export function UsersScreen() {
     <Page
       title="İstifadəçilər"
       subtitle="Keycloak subject bağlanması, rollar və lokasiya girişi (boş = hamısı)"
+      actions={
+        can('iam.user.manage') ? (
+          <Button variant="primary" onClick={() => setCreating(true)}>
+            İstifadəçi bağla
+          </Button>
+        ) : null
+      }
     >
       <AdminTabs />
 
@@ -85,6 +148,18 @@ export function UsersScreen() {
           />
         </Card>
       )}
+      <ReferenceFormDialog
+        open={creating}
+        mode="create"
+        title="Keycloak istifadəçisini bağla"
+        subtitle="Burada yeni hesab yaradılmır — mövcud Keycloak hesabı tenant-a bağlanır. Rol və lokasiya sonra istifadəçi ekranında təyin olunur."
+        fields={USER_FIELDS}
+        pending={create.isPending}
+        error={create.isError ? create.error : undefined}
+        onClose={() => setCreating(false)}
+        onSubmit={(values) => create.mutate(values)}
+      />
+
     </Page>
   );
 }

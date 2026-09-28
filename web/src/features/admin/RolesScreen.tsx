@@ -1,10 +1,25 @@
-import { useMemo, useState } from 'react';
-import { Alert, Badge, DataTable, Select, TextField, type Column } from '@ds/index';
+import { useEffect, useMemo, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Alert, Badge, Button, DataTable, Dialog, Select, TextField, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
-import { listPermissions, listRoles, type Permission, type RoleSummary } from '@api/endpoints';
+import {
+  createRole,
+  listPermissions,
+  listRoles,
+  setRolePermissions,
+  type Permission,
+  type RoleSummary,
+} from '@api/endpoints';
 import { useAuth } from '@auth/index';
 import { ROLE_PERMISSIONS, roleAllows } from '@auth/permissions';
 import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
+import {
+  ReferenceFormDialog,
+  codeField,
+  text,
+  type FieldSpec,
+  type FormValues,
+} from '@/components/ReferenceFormDialog';
 import { AdminTabs } from './AdminTabs';
 
 /**
@@ -40,8 +55,24 @@ type RoleRow = RoleSummary & { permissions?: string[] };
 const grantedBy = (role: RoleRow): string[] | null =>
   Array.isArray(role.permissions) ? role.permissions : null;
 
+const ROLE_FIELDS: FieldSpec[] = [
+  {
+    name: 'code',
+    label: 'Kod',
+    kind: 'text',
+    required: true,
+    hint: 'Məsələn SHIFT_LEAD. Sonradan dəyişmir.',
+    validate: codeField,
+  },
+  { name: 'name', label: 'Ad', kind: 'text', required: true },
+];
+
 export function RolesScreen() {
-  const { session, permissionFallbackReason } = useAuth();
+  const { session, can, permissionFallbackReason } = useAuth();
+  const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<RoleRow | null>(null);
+  const [granted, setGranted] = useState<string[]>([]);
   const [search, setSearch] = useState('');
   const [module, setModule] = useState('');
 
@@ -140,9 +171,9 @@ export function RolesScreen() {
       numeric: true,
       decimals: 0,
       render: (row) => {
-        const granted = grantedBy(row);
-        return granted ? (
-          granted.length
+        const codes = grantedBy(row);
+        return codes ? (
+          codes.length
         ) : (
           <Badge tone="warning" dot title="Server bu rol üçün icazə siyahısı göndərmədi">
             hesablanıb
@@ -150,7 +181,47 @@ export function RolesScreen() {
         );
       },
     },
+    ...(can('iam.role.manage')
+      ? [
+          {
+            key: 'edit',
+            header: '',
+            width: '120px',
+            render: (row: RoleRow) => (
+              <Button size="sm" variant="secondary" onClick={() => setEditing(row)}>
+                İcazələr
+              </Button>
+            ),
+          } as Column<RoleRow>,
+        ]
+      : []),
   ];
+
+  /*
+   * The permission editor works one role at a time rather than making the matrix itself editable.
+   * A matrix of toggles puts hundreds of revoke buttons a mis-click apart, and revoking the wrong
+   * one is invisible until somebody cannot do their job.
+   */
+  useEffect(() => {
+    setGranted(editing ? (grantedBy(editing) ?? []) : []);
+  }, [editing]);
+
+  const refresh = () => {
+    setCreating(false);
+    setEditing(null);
+    void queryClient.invalidateQueries({ queryKey: ['roles'] });
+  };
+
+  const create = useMutation({
+    mutationFn: (values: FormValues) =>
+      createRole({ code: text(values, 'code'), name: text(values, 'name') }),
+    onSuccess: refresh,
+  });
+
+  const savePermissions = useMutation({
+    mutationFn: () => setRolePermissions(editing!.id, granted),
+    onSuccess: refresh,
+  });
 
   const loading = roles.isLoading || permissions.isLoading;
   const failed = roles.isError || permissions.isError;
@@ -160,13 +231,20 @@ export function RolesScreen() {
       title="Rollar və icazələr"
       subtitle="Şirkətinizdəki rollar və hər rolun icazələri"
       actions={
-        failed ? (
-          <Badge tone="danger" dot>
-            Matris oxunmadı
-          </Badge>
-        ) : (
-          <Badge tone="success">Mənbə: tenant</Badge>
-        )
+        <>
+          {failed ? (
+            <Badge tone="danger" dot>
+              Matris oxunmadı
+            </Badge>
+          ) : (
+            <Badge tone="success">Mənbə: tenant</Badge>
+          )}
+          {can('iam.role.manage') ? (
+            <Button variant="primary" onClick={() => setCreating(true)}>
+              Yeni rol
+            </Button>
+          ) : null}
+        </>
       }
     >
       <AdminTabs />
@@ -263,6 +341,93 @@ export function RolesScreen() {
           />
         )}
       </Card>
+      <ReferenceFormDialog
+        open={creating}
+        mode="create"
+        title="Yeni rol"
+        subtitle="Rol yaradıldıqdan sonra icazələri «İcazələr» düyməsindən təyin olunur."
+        fields={ROLE_FIELDS}
+        pending={create.isPending}
+        error={create.isError ? create.error : undefined}
+        onClose={() => setCreating(false)}
+        onSubmit={(values) => create.mutate(values)}
+      />
+
+      <Dialog
+        open={editing !== null}
+        title={editing ? `İcazələr: ${editing.code}` : ''}
+        subtitle={
+          editing
+            ? `${granted.length} icazə seçilib · ${permissionRows.length} mövcuddur`
+            : undefined
+        }
+        onClose={savePermissions.isPending ? undefined : () => setEditing(null)}
+        footer={
+          <>
+            <Button disabled={savePermissions.isPending} onClick={() => setEditing(null)}>
+              İmtina
+            </Button>
+            <Button
+              variant="primary"
+              loading={savePermissions.isPending}
+              onClick={() => savePermissions.mutate()}
+            >
+              Yadda saxla
+            </Button>
+          </>
+        }
+      >
+        <div className="wms-stack">
+          {savePermissions.isError ? <ErrorState error={savePermissions.error} /> : null}
+
+          {editing?.isSystem ? (
+            <Alert tone="warning" title="Sistem rolu">
+              Bu rolun icazələri platforma kataloqundan gəlir. Burada edilən dəyişiklik növbəti
+              miqrator icrasında kataloqa uyğun geri alınır — davamlı dəyişiklik üçün tenant rolu
+              yaradın.
+            </Alert>
+          ) : null}
+
+          {granted.length === 0 ? (
+            <Alert tone="warning" title="İcazə seçilməyib">
+              Bu rolla istifadəçi heç bir ekran görmür.
+            </Alert>
+          ) : null}
+
+          {modules.map((moduleName) => {
+            const inModule = permissionRows.filter((p) => p.module === moduleName);
+            if (inModule.length === 0) return null;
+            return (
+              <Card key={moduleName} title={moduleName}>
+                <div className="wms-row">
+                  {inModule.map((permission) => {
+                    const on = granted.includes(permission.code);
+                    return (
+                      <Button
+                        key={permission.code}
+                        size="sm"
+                        variant={on ? 'primary' : 'secondary'}
+                        aria-pressed={on}
+                        title={permission.description ?? undefined}
+                        onClick={() =>
+                          setGranted((prev) =>
+                            prev.includes(permission.code)
+                              ? prev.filter((c) => c !== permission.code)
+                              : [...prev, permission.code],
+                          )
+                        }
+                      >
+                        {permission.code}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </Dialog>
+
     </Page>
   );
 }

@@ -55,6 +55,7 @@ import { ConsumptionRunsScreen } from '@features/consumption/ConsumptionRunsScre
 import { ConsumptionRunDetailScreen } from '@features/consumption/ConsumptionRunDetailScreen';
 import { ConsumptionVarianceScreen } from '@features/consumption/ConsumptionVarianceScreen';
 import { UsersScreen } from '@features/admin/UsersScreen';
+import { UserDetailScreen } from '@features/admin/UserDetailScreen';
 import { RolesScreen } from '@features/admin/RolesScreen';
 import { InventorySettingsScreen } from '@features/admin/InventorySettingsScreen';
 import { ReportsScreen } from '@features/reporting/ReportsScreen';
@@ -627,6 +628,14 @@ export function AppRoutes() {
             element={
               <Guarded permission="iam.user.view">
                 <UsersScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="users/:id"
+            element={
+              <Guarded permission="iam.user.view">
+                <UserDetailScreen />
               </Guarded>
             }
           />

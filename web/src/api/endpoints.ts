@@ -162,6 +162,59 @@ export const listRoles = async () => unwrap(await identityApi.GET('/roles'));
 
 export const listPermissions = async () => unwrap(await identityApi.GET('/permissions'));
 
+// --- identity writes ------------------------------------------------------------------------------------
+type IdSchema<K extends keyof IdentityComponents['schemas']> = IdentityComponents['schemas'][K];
+
+export const getUser = async (id: number) =>
+  unwrap(await identityApi.GET('/users/{id}', { params: { path: { id } } }));
+
+export const createUser = async (body: IdSchema<'UserCreate'>) =>
+  unwrap(
+    await identityApi.POST('/users', {
+      params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body,
+    }),
+  );
+
+export const updateUser = async (id: number, body: IdSchema<'UserUpdate'>) =>
+  unwrap(await identityApi.PUT('/users/{id}', { params: { path: { id } }, body }));
+
+export const setUserRoles = async (id: number, roleIds: number[], rowVersion: number) =>
+  unwrap(
+    await identityApi.PUT('/users/{id}/roles', {
+      params: { path: { id } },
+      body: { roleIds, rowVersion },
+    }),
+  );
+
+/**
+ * The user's location scope. **An empty list means every location**, which is the one place in the
+ * platform where sending less grants more — the screen states it before letting the list be cleared.
+ */
+export const setUserLocations = async (id: number, locationIds: number[], rowVersion: number) =>
+  unwrap(
+    await identityApi.PUT('/users/{id}/locations', {
+      params: { path: { id } },
+      body: { locationIds, rowVersion },
+    }),
+  );
+
+export const createRole = async (body: IdSchema<'RoleCreate'>) =>
+  unwrap(
+    await identityApi.POST('/roles', {
+      params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body,
+    }),
+  );
+
+export const setRolePermissions = async (id: number, permissions: string[]) =>
+  unwrap(
+    await identityApi.PUT('/roles/{id}/permissions', {
+      params: { path: { id } },
+      body: { permissions },
+    }),
+  );
+
 // --- master data --------------------------------------------------------------------------------
 export const listProducts = async (query: Query<MasterDataPaths, '/products'> = {}) =>
   unwrap(await masterDataApi.GET('/products', { params: { query } }));
