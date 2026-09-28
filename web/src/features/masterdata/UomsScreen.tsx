@@ -1,8 +1,17 @@
 import { useState } from 'react';
-import { Alert, Badge, DataTable, Select, TextField, type Column } from '@ds/index';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Alert, Badge, Button, DataTable, Select, TextField, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
-import { listUoms, type Uom } from '@api/endpoints';
+import { createUom, listUoms, type Uom } from '@api/endpoints';
+import { useAuth } from '@auth/index';
 import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
+import {
+  ReferenceFormDialog,
+  codeField,
+  text,
+  type FieldSpec,
+  type FormValues,
+} from '@/components/ReferenceFormDialog';
 import { MasterDataTabs } from './MasterDataTabs';
 
 const UOM_CLASSES: Array<{ value: Uom['uomClass']; label: string }> = [
@@ -19,9 +28,61 @@ const UOM_CLASSES: Array<{ value: Uom['uomClass']; label: string }> = [
  * conversion is only ever defined between units of the same class, so a product's `KG` row can
  * never be given a factor against `L`.
  */
+/**
+ * A unit is created but never edited: the contract has no `PUT /uoms`, and for good reason — a unit
+ * already used in a conversion factor or on a posted line cannot have its meaning changed
+ * afterwards. Getting it wrong means adding the right one, not rewriting the wrong one.
+ */
+const UOM_FIELDS: FieldSpec[] = [
+  {
+    name: 'code',
+    label: 'Kod',
+    kind: 'text',
+    required: true,
+    hint: 'Məsələn KG, L, ƏDƏD. Sonradan dəyişmir.',
+    validate: codeField,
+  },
+  { name: 'name', label: 'Ad', kind: 'text', required: true },
+  {
+    name: 'uomClass',
+    label: 'Sinif',
+    kind: 'select',
+    required: true,
+    hint: 'Çevrilmə yalnız eyni sinif daxilində mümkündür.',
+    options: [
+      { value: 'COUNT', label: 'Say' },
+      { value: 'MASS', label: 'Kütlə' },
+      { value: 'VOLUME', label: 'Həcm' },
+    ],
+  },
+  {
+    name: 'decimals',
+    label: 'Onluq rəqəm sayı',
+    kind: 'number',
+    hint: 'Ədədlə sayılan vahid üçün 0, çəki üçün adətən 3.',
+  },
+];
+
 export function UomsScreen() {
+  const { can } = useAuth();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [uomClass, setUomClass] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  const create = useMutation({
+    mutationFn: (values: FormValues) =>
+      createUom({
+        code: text(values, 'code'),
+        name: text(values, 'name'),
+        uomClass: text(values, 'uomClass') as Uom['uomClass'],
+        ...(text(values, 'decimals') ? { decimals: Number(text(values, 'decimals')) } : {}),
+      }),
+    onSuccess: () => {
+      setCreating(false);
+      void queryClient.invalidateQueries({ queryKey: ['uoms'] });
+    },
+  });
 
   const query = uomClass ? { uomClass: uomClass as Uom['uomClass'] } : {};
   const uoms = useApiPage<Uom>(['uoms', query], () => listUoms(query), 200);
@@ -60,6 +121,13 @@ export function UomsScreen() {
     <Page
       title="Ölçü vahidləri"
       subtitle="`decimals` miqdarın göstərilmə dəqiqliyini təyin edir — ekranlarda sabit yazılmır"
+      actions={
+        can('master.uom.manage') ? (
+          <Button variant="primary" onClick={() => setCreating(true)}>
+            Yeni vahid
+          </Button>
+        ) : null
+      }
     >
       <MasterDataTabs />
 
@@ -108,6 +176,19 @@ export function UomsScreen() {
           />
         )}
       </Card>
+      <ReferenceFormDialog
+        open={creating}
+        mode="create"
+        title="Yeni ölçü vahidi"
+        subtitle="Vahid yaradıldıqdan sonra redaktə olunmur — səhv olarsa düzgününü əlavə edin."
+        fields={UOM_FIELDS}
+        initial={{ uomClass: 'COUNT', decimals: '0' }}
+        pending={create.isPending}
+        error={create.isError ? create.error : undefined}
+        onClose={() => setCreating(false)}
+        onSubmit={(values) => create.mutate(values)}
+      />
+
     </Page>
   );
 }

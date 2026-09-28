@@ -1,8 +1,23 @@
 import { useState } from 'react';
-import { Alert, Badge, DataTable, Select, TextField, type Column } from '@ds/index';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Alert, Badge, Button, DataTable, Select, TextField, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
-import { listReasonCodes, type ReasonCode, type ReasonGroup } from '@api/endpoints';
+import {
+  createReasonCode,
+  listReasonCodes,
+  updateReasonCode,
+  type ReasonCode,
+  type ReasonGroup,
+} from '@api/endpoints';
+import { useAuth } from '@auth/index';
 import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
+import {
+  ReferenceFormDialog,
+  codeField,
+  text,
+  type FieldSpec,
+  type FormValues,
+} from '@/components/ReferenceFormDialog';
 import { MasterDataTabs } from './MasterDataTabs';
 
 const GROUPS: Array<{ value: ReasonGroup; label: string }> = [
@@ -23,10 +38,90 @@ const GROUPS: Array<{ value: ReasonGroup; label: string }> = [
  * `requiresPhoto` and `requiresApproval` change the behaviour of every document that uses the
  * code, which is why they are badges rather than plain booleans.
  */
+/**
+ * `code` and `reasonGroup` are fixed after creation. The group decides which screens offer the code
+ * at all, and posted documents already carry it — moving a code between groups would change what
+ * past waste and adjustments claim to have been about.
+ */
+const REASON_FIELDS: FieldSpec[] = [
+  {
+    name: 'code',
+    label: 'Kod',
+    kind: 'text',
+    required: true,
+    createOnly: true,
+    hint: 'Sonradan dəyişmir — post edilmiş sənədlər bu koda işarə edir.',
+    validate: codeField,
+  },
+  { name: 'name', label: 'Ad', kind: 'text', required: true },
+  {
+    name: 'reasonGroup',
+    label: 'Qrup',
+    kind: 'select',
+    required: true,
+    createOnly: true,
+    hint: 'Kodun hansı ekranlarda təklif olunduğunu təyin edir.',
+    options: [
+      { value: 'WASTE', label: 'Tullantı' },
+      { value: 'SAMPLE', label: 'Nümunə' },
+      { value: 'TRANSFER', label: 'Transfer' },
+      { value: 'RETURN', label: 'Qaytarma' },
+      { value: 'ADJUSTMENT', label: 'Düzəliş' },
+    ],
+  },
+  {
+    name: 'requiresApproval',
+    label: 'Təsdiq tələb edir',
+    kind: 'switch',
+    hint: 'Bəli olduqda sənəd post edilməzdən əvvəl təsdiq zəncirinə düşür.',
+  },
+  {
+    name: 'requiresPhoto',
+    label: 'Foto tələb edir',
+    kind: 'switch',
+    hint: 'Bəli olduqda sənədə şəkil əlavə edilməlidir.',
+  },
+  { name: 'isActive', label: 'Aktiv', kind: 'switch' },
+];
+
 export function ReasonCodesScreen() {
+  const { can } = useAuth();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [reasonGroup, setReasonGroup] = useState('');
   const [isActive, setIsActive] = useState('true');
+  const [creating, setCreating] = useState(false);
+  const [editing, setEditing] = useState<ReasonCode | null>(null);
+
+  const refresh = () => {
+    setCreating(false);
+    setEditing(null);
+    void queryClient.invalidateQueries({ queryKey: ['reason-codes'] });
+  };
+
+  const create = useMutation({
+    mutationFn: (values: FormValues) =>
+      createReasonCode({
+        code: text(values, 'code'),
+        name: text(values, 'name'),
+        reasonGroup: text(values, 'reasonGroup') as ReasonGroup,
+        requiresApproval: text(values, 'requiresApproval') === 'true',
+        requiresPhoto: text(values, 'requiresPhoto') === 'true',
+      }),
+    onSuccess: refresh,
+  });
+
+  const update = useMutation({
+    mutationFn: (values: FormValues) =>
+      updateReasonCode(editing!.id, {
+        name: text(values, 'name'),
+        requiresApproval: text(values, 'requiresApproval') === 'true',
+        requiresPhoto: text(values, 'requiresPhoto') === 'true',
+        isActive: text(values, 'isActive') === 'true',
+        rowVersion: editing!.rowVersion,
+      }),
+    onSuccess: refresh,
+  });
 
   const query = {
     ...(reasonGroup ? { reasonGroup: reasonGroup as ReasonGroup } : {}),
@@ -94,10 +189,34 @@ export function ReasonCodesScreen() {
       render: (row) =>
         row.isActive ? <Badge tone="success">Aktiv</Badge> : <Badge tone="neutral">Bağlı</Badge>,
     },
+    ...(can('master.reason.manage')
+      ? [
+          {
+            key: 'edit',
+            header: '',
+            width: '110px',
+            render: (row: ReasonCode) => (
+              <Button size="sm" variant="secondary" onClick={() => setEditing(row)}>
+                Redaktə
+              </Button>
+            ),
+          } as Column<ReasonCode>,
+        ]
+      : []),
   ];
 
   return (
-    <Page title="Səbəb kodları" subtitle="Tullantı, sayım fərqi, storno və transfer səbəbləri">
+    <Page
+      title="Səbəb kodları"
+      subtitle="Tullantı, sayım fərqi, storno və transfer səbəbləri"
+      actions={
+        can('master.reason.manage') ? (
+          <Button variant="primary" onClick={() => setCreating(true)}>
+            Yeni səbəb kodu
+          </Button>
+        ) : null
+      }
+    >
       <MasterDataTabs />
 
       <Alert tone="info" title="Səbəb kodu qrupla filtrlənir">
@@ -156,6 +275,45 @@ export function ReasonCodesScreen() {
           />
         )}
       </Card>
+      <ReferenceFormDialog
+        open={creating}
+        mode="create"
+        title="Yeni səbəb kodu"
+        subtitle="Kod və qrup sonradan dəyişmir."
+        fields={REASON_FIELDS}
+        initial={{
+          reasonGroup: 'WASTE',
+          requiresApproval: 'false',
+          requiresPhoto: 'false',
+          isActive: 'true',
+        }}
+        pending={create.isPending}
+        error={create.isError ? create.error : undefined}
+        onClose={() => setCreating(false)}
+        onSubmit={(values) => create.mutate(values)}
+      />
+
+      <ReferenceFormDialog
+        open={editing !== null}
+        mode="edit"
+        title={editing ? `Səbəb kodu: ${editing.code}` : ''}
+        fields={REASON_FIELDS}
+        initial={
+          editing
+            ? {
+                name: editing.name,
+                requiresApproval: String(editing.requiresApproval),
+                requiresPhoto: String(editing.requiresPhoto),
+                isActive: String(editing.isActive),
+              }
+            : undefined
+        }
+        pending={update.isPending}
+        error={update.isError ? update.error : undefined}
+        onClose={() => setEditing(null)}
+        onSubmit={(values) => update.mutate(values)}
+      />
+
     </Page>
   );
 }

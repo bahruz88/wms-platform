@@ -1,8 +1,17 @@
-import { useState } from 'react';
-import { Alert, Badge, DataTable, Select, TextField, type Column } from '@ds/index';
+import { useMemo, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Alert, Badge, Button, DataTable, Select, TextField, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
-import { listCategories, type Category } from '@api/endpoints';
+import { createCategory, listCategories, updateCategory, type Category } from '@api/endpoints';
+import { useAuth } from '@auth/index';
 import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
+import {
+  ReferenceFormDialog,
+  codeField,
+  text,
+  type FieldSpec,
+  type FormValues,
+} from '@/components/ReferenceFormDialog';
 import { MasterDataTabs } from './MasterDataTabs';
 
 /**
@@ -13,8 +22,9 @@ import { MasterDataTabs } from './MasterDataTabs';
  * unapproved supplier a `422`, and `defaultIssueStrategy` is the FEFO/FIFO order the issue
  * screen suggests batches in when the product does not override it (SPEC §12.4).
  *
- * Read-only: `POST`/`PUT /masterdata/categories` are in the contract but not routed, and a
- * category's `productType` can never be changed once products hang off it.
+ * A category's `code` and `productType` are fixed after creation: the code is what other rows point
+ * at, and the type is inherited by every product underneath, so changing it would silently rewrite
+ * the receiving rules of stock already on the shelf. The edit form therefore offers neither.
  */
 
 /** Depth from `path`: `/FOOD/DAIRY` is one level in. Indentation is the tree, there is no grid. */
@@ -23,15 +33,21 @@ function depthOf(path: string): number {
 }
 
 export function CategoriesScreen() {
+  const { can } = useAuth();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [productType, setProductType] = useState('');
+  const [editing, setEditing] = useState<Category | null>(null);
+  const [creating, setCreating] = useState(false);
 
   // `productType` is a contract filter, so the server narrows it; free-text search is not, and
   // is applied to the answer.
   const query = productType ? { productType: productType as Category['productType'] } : {};
   const categories = useApiPage<Category>(['categories', query], () => listCategories(query), 200);
 
-  const all = categories.data?.items ?? [];
+  // Memoised because the field list below depends on it: `?? []` would hand `useMemo` a new
+  // array on every render and the memo would never hold.
+  const all = useMemo(() => categories.data?.items ?? [], [categories.data]);
   const needle = search.trim().toLowerCase();
   // Sorted by `path` so a child always follows its parent; the indent then reads as the tree.
   const rows = [...all]
@@ -43,6 +59,90 @@ export function CategoriesScreen() {
         row.path.toLowerCase().includes(needle),
     )
     .sort((a, b) => a.path.localeCompare(b.path, 'az'));
+
+  const refresh = () => {
+    setCreating(false);
+    setEditing(null);
+    void queryClient.invalidateQueries({ queryKey: ['categories'] });
+  };
+
+  const create = useMutation({
+    mutationFn: (values: FormValues) =>
+      createCategory({
+        code: text(values, 'code'),
+        name: text(values, 'name'),
+        productType: values.productType as Category['productType'],
+        ...(values.parentId ? { parentId: Number(values.parentId) } : {}),
+        ...(values.defaultIssueStrategy
+          ? { defaultIssueStrategy: values.defaultIssueStrategy as 'FEFO' | 'FIFO' }
+          : {}),
+      }),
+    onSuccess: refresh,
+  });
+
+  const update = useMutation({
+    mutationFn: (values: FormValues) =>
+      updateCategory(editing!.id, {
+        name: text(values, 'name'),
+        isActive: values.isActive === 'true',
+        rowVersion: editing!.rowVersion,
+        ...(values.parentId ? { parentId: Number(values.parentId) } : {}),
+        ...(values.defaultIssueStrategy
+          ? { defaultIssueStrategy: values.defaultIssueStrategy as 'FEFO' | 'FIFO' }
+          : {}),
+      }),
+    onSuccess: refresh,
+  });
+
+  const fields: FieldSpec[] = useMemo(
+    () => [
+      {
+        name: 'code',
+        label: 'Kod',
+        kind: 'text',
+        required: true,
+        createOnly: true,
+        hint: 'Sonradan dəyişmir — digər sətirlər buna işarə edir.',
+        validate: codeField,
+      },
+      { name: 'name', label: 'Ad', kind: 'text', required: true },
+      {
+        name: 'productType',
+        label: 'Məhsul tipi',
+        kind: 'select',
+        required: true,
+        createOnly: true,
+        hint: 'Altındaki bütün məhsullara miras qalır; sonradan dəyişmir.',
+        options: [
+          { value: 'FOOD', label: 'Qida' },
+          { value: 'NON_FOOD', label: 'Qeyri-qida' },
+        ],
+      },
+      {
+        name: 'parentId',
+        label: 'Üst kateqoriya',
+        kind: 'select',
+        hint: 'Boş buraxılsa kök kateqoriya olur.',
+        options: [
+          { value: '', label: 'Kök kateqoriya' },
+          ...all.map((c) => ({ value: String(c.id), label: `${c.code} · ${c.name}` })),
+        ],
+      },
+      {
+        name: 'defaultIssueStrategy',
+        label: 'Məxaric sırası',
+        kind: 'select',
+        hint: 'Boş buraxılsa məhsulun özündən götürülür.',
+        options: [
+          { value: '', label: 'Məhsuldan' },
+          { value: 'FEFO', label: 'FEFO' },
+          { value: 'FIFO', label: 'FIFO' },
+        ],
+      },
+      { name: 'isActive', label: 'Aktiv', kind: 'switch' },
+    ],
+    [all],
+  );
 
   const columns: Column<Category>[] = [
     {
@@ -106,12 +206,33 @@ export function CategoriesScreen() {
       render: (row) =>
         row.isActive ? <Badge tone="success">Aktiv</Badge> : <Badge tone="neutral">Bağlı</Badge>,
     },
+    ...(can('master.category.manage')
+      ? [
+          {
+            key: 'edit',
+            header: '',
+            width: '110px',
+            render: (row: Category) => (
+              <Button size="sm" variant="secondary" onClick={() => setEditing(row)}>
+                Redaktə
+              </Button>
+            ),
+          } as Column<Category>,
+        ]
+      : []),
   ];
 
   return (
     <Page
       title="Kateqoriyalar"
       subtitle="`master_category` ağacı — məhsul tipi və default məxaric sırası buradan miras qalır"
+      actions={
+        can('master.category.manage') ? (
+          <Button variant="primary" onClick={() => setCreating(true)}>
+            Yeni kateqoriya
+          </Button>
+        ) : null
+      }
     >
       <MasterDataTabs />
 
@@ -165,6 +286,40 @@ export function CategoriesScreen() {
           />
         )}
       </Card>
+      <ReferenceFormDialog
+        open={creating}
+        mode="create"
+        title="Yeni kateqoriya"
+        subtitle="Kod və məhsul tipi sonradan dəyişmir."
+        fields={fields}
+        initial={{ productType: 'FOOD', isActive: 'true' }}
+        pending={create.isPending}
+        error={create.isError ? create.error : undefined}
+        onClose={() => setCreating(false)}
+        onSubmit={(values) => create.mutate(values)}
+      />
+
+      <ReferenceFormDialog
+        open={editing !== null}
+        mode="edit"
+        title={editing ? `Kateqoriya: ${editing.code}` : ''}
+        fields={fields}
+        initial={
+          editing
+            ? {
+                name: editing.name,
+                parentId: editing.parentId ? String(editing.parentId) : '',
+                defaultIssueStrategy: editing.defaultIssueStrategy ?? '',
+                isActive: String(editing.isActive),
+              }
+            : undefined
+        }
+        pending={update.isPending}
+        error={update.isError ? update.error : undefined}
+        onClose={() => setEditing(null)}
+        onSubmit={(values) => update.mutate(values)}
+      />
+
     </Page>
   );
 }

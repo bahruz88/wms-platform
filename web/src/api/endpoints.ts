@@ -201,6 +201,64 @@ export const listCurrencyRates = async (query: Query<MasterDataPaths, '/currency
 
 export const listNumberSequences = async () => unwrap(await masterDataApi.GET('/number-sequences'));
 
+// --- reference-data writes ------------------------------------------------------------------------------
+type MdSchema<K extends keyof MasterDataComponents['schemas']> = MasterDataComponents['schemas'][K];
+
+/**
+ * The idempotency key the contract requires on every POST, so a retried create does not leave a
+ * second row behind. PUT does not take one — replacing a row by its id is already idempotent.
+ */
+const idem = () => ({ 'Idempotency-Key': crypto.randomUUID() });
+
+export const createProduct = async (body: MdSchema<'ProductCreate'>) =>
+  unwrap(
+    await masterDataApi.POST('/products', { params: { header: idem() }, body }),
+  );
+
+export const updateProduct = async (id: number, body: MdSchema<'ProductUpdate'>) =>
+  unwrap(await masterDataApi.PUT('/products/{id}', { params: { path: { id } }, body }));
+
+export const addProductUom = async (id: number, body: MdSchema<'ProductUomCreate'>) =>
+  unwrap(await masterDataApi.POST('/products/{id}/uoms', { params: { path: { id }, header: idem() }, body }));
+
+export const createCategory = async (body: MdSchema<'CategoryCreate'>) =>
+  unwrap(await masterDataApi.POST('/categories', { params: { header: idem() }, body }));
+
+export const updateCategory = async (id: number, body: MdSchema<'CategoryUpdate'>) =>
+  unwrap(await masterDataApi.PUT('/categories/{id}', { params: { path: { id } }, body }));
+
+export const createUom = async (body: MdSchema<'UomCreate'>) =>
+  unwrap(await masterDataApi.POST('/uoms', { params: { header: idem() }, body }));
+
+export const createSupplier = async (body: MdSchema<'SupplierCreate'>) =>
+  unwrap(
+    await masterDataApi.POST('/suppliers', { params: { header: idem() }, body }),
+  );
+
+export const updateSupplier = async (id: number, body: MdSchema<'SupplierUpdate'>) =>
+  unwrap(await masterDataApi.PUT('/suppliers/{id}', { params: { path: { id } }, body }));
+
+export const addSupplierCertificate = async (
+  id: number,
+  body: MdSchema<'SupplierCertificateCreate'>,
+) => unwrap(await masterDataApi.POST('/suppliers/{id}/certificates', { params: { path: { id }, header: idem() }, body }));
+
+export const createLocation = async (body: MdSchema<'LocationCreate'>) =>
+  unwrap(await masterDataApi.POST('/locations', { params: { header: idem() }, body }));
+
+export const updateLocation = async (id: number, body: MdSchema<'LocationUpdate'>) =>
+  unwrap(await masterDataApi.PUT('/locations/{id}', { params: { path: { id } }, body }));
+
+export const createReasonCode = async (body: MdSchema<'ReasonCodeCreate'>) =>
+  unwrap(await masterDataApi.POST('/reason-codes', { params: { header: idem() }, body }));
+
+export const updateReasonCode = async (id: number, body: MdSchema<'ReasonCodeUpdate'>) =>
+  unwrap(await masterDataApi.PUT('/reason-codes/{id}', { params: { path: { id } }, body }));
+
+/** Upsert: one rate per (currency, date), so re-posting the same day corrects it. */
+export const upsertCurrencyRate = async (body: MdSchema<'CurrencyRateUpsert'>) =>
+  unwrap(await masterDataApi.POST('/currency-rates', { params: { header: idem() }, body }));
+
 // --- inventory ------------------------------------------------------------------------------------
 export const listBalances = async (query: Query<InventoryPaths, '/balances'> = {}) =>
   unwrap(await inventoryApi.GET('/balances', { params: { query } }));
@@ -640,8 +698,6 @@ export const listPriceHistory = async (query: Query<ProcurementPaths, '/price-hi
 
 // --- procurement writes ---------------------------------------------------------------------------------
 type ProcSchema<K extends keyof ProcurementComponents['schemas']> = ProcurementComponents['schemas'][K];
-
-const idem = () => ({ 'Idempotency-Key': crypto.randomUUID() });
 
 export const getRequisition = async (id: number) =>
   unwrap(await procurementApi.GET('/requisitions/{id}', { params: { path: { id } } }));
