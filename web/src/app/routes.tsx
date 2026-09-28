@@ -66,6 +66,8 @@ import { RfqCreateScreen } from '@features/procurement/RfqCreateScreen';
 import { RfqDetailScreen } from '@features/procurement/RfqDetailScreen';
 import { QuotationCreateScreen } from '@features/procurement/QuotationCreateScreen';
 import { PurchaseOrderCreateScreen } from '@features/procurement/PurchaseOrderCreateScreen';
+import { ProductCreateScreen } from '@features/masterdata/ProductCreateScreen';
+import { SupplierCreateScreen } from '@features/masterdata/SupplierCreateScreen';
 
 /**
  * Route table. Each guarded route names the same `x-permission` the contract puts on its
@@ -432,6 +434,15 @@ export function AppRoutes() {
         </Route>
 
         <Route path="master-data">
+          {/* `new` before `:id`, or the router reads the word as an id. */}
+          <Route
+            path="products/new"
+            element={
+              <Guarded permission="master.product.manage">
+                <ProductCreateScreen />
+              </Guarded>
+            }
+          />
           <Route
             path="products"
             element={
@@ -453,6 +464,15 @@ export function AppRoutes() {
             element={
               <Guarded permission="master.product.view">
                 <CategoriesScreen />
+              </Guarded>
+            }
+          />
+          {/* `new` before `:id`, or the router reads the word as an id. */}
+          <Route
+            path="suppliers/new"
+            element={
+              <Guarded permission="master.supplier.manage">
+                <SupplierCreateScreen />
               </Guarded>
             }
           />

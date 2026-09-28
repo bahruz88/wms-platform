@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Badge, DataTable, Select, TextField, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listSuppliers, type SupplierSummary } from '@api/endpoints';
+import { useAuth } from '@auth/index';
 import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 import { Pager } from '@/components/Pager';
 import { MasterDataTabs } from './MasterDataTabs';
@@ -14,6 +15,7 @@ import { MasterDataTabs } from './MasterDataTabs';
  * before every order.
  */
 export function SuppliersScreen() {
+  const { can } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [approvedFoodOnly, setApprovedFoodOnly] = useState('');
@@ -88,7 +90,17 @@ export function SuppliersScreen() {
   ];
 
   return (
-    <Page title="Təchizatçılar" subtitle="Təchizatçı kataloqu və qida təsdiqi vəziyyəti">
+    <Page
+      title="Təchizatçılar"
+      subtitle="Təchizatçı kataloqu və qida təsdiqi vəziyyəti"
+      actions={
+        can('master.supplier.manage') ? (
+          <Link to="/master-data/suppliers/new" className="wms-btn wms-btn--primary">
+            Yeni təchizatçı
+          </Link>
+        ) : null
+      }
+    >
       <MasterDataTabs />
 
       <Card>

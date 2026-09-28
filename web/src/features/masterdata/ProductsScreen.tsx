@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Badge, DataTable, Select, TextField, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listCategories, listProducts, type Category, type ProductSummary } from '@api/endpoints';
+import { useAuth } from '@auth/index';
 import { Card, ErrorState, LoadingState, Page } from '@/components/Page';
 import { Pager } from '@/components/Pager';
 import { MasterDataTabs } from './MasterDataTabs';
@@ -19,6 +20,7 @@ import { MasterDataTabs } from './MasterDataTabs';
  * narrowing: a category filter that ran in the browser would only ever filter the page in hand.
  */
 export function ProductsScreen() {
+  const { can } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -124,6 +126,13 @@ export function ProductsScreen() {
     <Page
       title="Məhsullar"
       subtitle="Məhsul kataloqu — sıralama `nameSortKey` üzrə (Azərbaycan əlifbası)"
+      actions={
+        can('master.product.manage') ? (
+          <Link to="/master-data/products/new" className="wms-btn wms-btn--primary">
+            Yeni məhsul
+          </Link>
+        ) : null
+      }
     >
       <MasterDataTabs />
 

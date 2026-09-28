@@ -271,7 +271,12 @@ public sealed class UpdateProductCommandHandler(
         product.SetBrand(command.Brand);
         product.SetDefaultSupplier(command.DefaultSupplierId);
         product.SetStockLevels(command.MinStock, command.MaxStock, command.ReorderPoint);
-        product.SetTraceability(command.RequiresBatch, command.RequiresExpiry);
+        var traceability = product.SetTraceability(command.RequiresBatch, command.RequiresExpiry);
+        if (traceability.IsFailure)
+        {
+            return traceability.Error;
+        }
+
         product.SetIssueStrategy(command.IssueStrategy);
         product.SetShelfLife(command.ShelfLifeDays);
         product.SetImageAttachment(command.ImageAttachmentId);

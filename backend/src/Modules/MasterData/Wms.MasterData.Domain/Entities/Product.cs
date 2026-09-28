@@ -101,6 +101,11 @@ public sealed class Product : AuditableAggregateRoot<uint>, ITenantEntity, ISoft
             return MasterDataErrors.InvalidProduct("vat_rate must be between 0 and 100.");
         }
 
+        if (requiresExpiry && !requiresBatch)
+        {
+            return MasterDataErrors.ExpiryNeedsBatch();
+        }
+
         var product = new Product
         {
             TenantId = tenantId,
@@ -201,10 +206,23 @@ public sealed class Product : AuditableAggregateRoot<uint>, ITenantEntity, ISoft
     /// <summary>A non-positive or legacy non-numeric value means "no image" (the column also holds old MinIO keys).</summary>
     public void SetImageAttachment(long? attachmentId) => ImageAttachmentId = attachmentId is > 0 ? attachmentId : null;
 
-    public void SetTraceability(bool requiresBatch, bool requiresExpiry)
+    /// <summary>
+    /// Batch and expiry tracking, which cannot be set independently.
+    ///
+    /// An expiry date is stored on the batch row, and a receipt only creates one when a batch number
+    /// is given. So `requires_expiry` without `requires_batch` made posting demand a date it then
+    /// dropped on the floor: the expiry scanner never saw it and «days to expiry» stayed empty.
+    /// </summary>
+    public Result SetTraceability(bool requiresBatch, bool requiresExpiry)
     {
+        if (requiresExpiry && !requiresBatch)
+        {
+            return MasterDataErrors.ExpiryNeedsBatch();
+        }
+
         RequiresBatch = requiresBatch;
         RequiresExpiry = requiresExpiry;
+        return Result.Success();
     }
 
     public void SetIssueStrategy(IssueStrategy issueStrategy) => IssueStrategy = issueStrategy;

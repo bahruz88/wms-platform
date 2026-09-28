@@ -25,6 +25,16 @@ public static class MasterDataErrors
 
     public static Error InvalidCertificate(string reason) => new("INVALID_CERTIFICATE", reason, 422);
 
+    /// <summary>
+    /// Expiry tracking without batch tracking. The expiry date lives on the batch row and a receipt
+    /// only creates one when a batch number is supplied, so the combination made posting demand a
+    /// date that was then discarded — the expiry scanner never saw it.
+    /// </summary>
+    public static Error ExpiryNeedsBatch() => new(
+        "EXPIRY_NEEDS_BATCH",
+        "requires_expiry cannot be set without requires_batch: the expiry date is stored on the batch row, and a receipt creates one only when a batch number is given.",
+        422);
+
     // ------------------------------------------------------------------ immutability after creation (422)
     // Spec §12.1, §12.3, §12.6: these four columns are frozen once a row exists because posted movements,
     // ledger counter-accounts and audit history were written against them.
