@@ -396,7 +396,7 @@ export function GoodsReceiptDetailScreen() {
         }
       >
         <div className="wms-stack">
-          <p className="wms-text-muted">
+          <p className="wms-muted wms-small">
             Sənəd <strong>CANCELLED</strong> statusuna keçəcək və bir daha post edilə bilməyəcək.
           </p>
         </div>

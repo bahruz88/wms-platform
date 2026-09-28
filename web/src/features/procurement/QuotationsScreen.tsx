@@ -10,7 +10,7 @@ import { Pager } from '@/components/Pager';
 
 /** Quotations — the flat list behind the comparison matrix (screen-map §4.3). */
 export function QuotationsScreen() {
-  const { session } = useAuth();
+  const { session, can } = useAuth();
   const [page, setPage] = useState(1);
   const quotations = useApiPage<QuotationSummary>(
     ['quotations', page],
@@ -73,7 +73,17 @@ export function QuotationsScreen() {
   ];
 
   return (
-    <Page title="Təkliflər" subtitle="Təchizatçı təklifləri və seçim vəziyyəti">
+    <Page
+      title="Təkliflər"
+      subtitle="Təchizatçı təklifləri və seçim vəziyyəti"
+      actions={
+        can('proc.quotation.create') ? (
+          <Link to="/procurement/quotations/new" className="wms-btn wms-btn--primary">
+            Təklif daxil et
+          </Link>
+        ) : null
+      }
+    >
       <Section>
         {quotations.isLoading ? (
           <LoadingState />

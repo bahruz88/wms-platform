@@ -4,6 +4,7 @@ import { Alert, Badge, DataTable, DocStatusBadge, Select, type Column } from '@d
 import { useApiPage } from '@api/hooks';
 import { listRfqs, type RfqSummary } from '@api/endpoints';
 import { formatDate } from '@core/format';
+import { useAuth } from '@auth/index';
 import { ErrorState, LoadingState, Page, Section } from '@/components/Page';
 import { Pager } from '@/components/Pager';
 
@@ -12,6 +13,7 @@ import { Pager } from '@/components/Pager';
  * whole point is that quotations get compared.
  */
 export function RfqsScreen() {
+  const { can } = useAuth();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
 
@@ -23,7 +25,7 @@ export function RfqsScreen() {
       key: 'docNo',
       header: 'Sənəd',
       render: (row) => (
-        <Link to={`/procurement/rfqs/${row.id}/comparison`}>
+        <Link to={`/procurement/rfqs/${row.id}`}>
           <span className="wms-doc-no">{row.docNo}</span>
         </Link>
       ),
@@ -46,7 +48,17 @@ export function RfqsScreen() {
   ];
 
   return (
-    <Page title="RFQ" subtitle="Təklif sorğuları — ən azı iki təchizatçı">
+    <Page
+      title="RFQ"
+      subtitle="Təklif sorğuları — ən azı iki təchizatçı"
+      actions={
+        can('proc.rfq.create') ? (
+          <Link to="/procurement/rfqs/new" className="wms-btn wms-btn--primary">
+            Yeni RFQ
+          </Link>
+        ) : null
+      }
+    >
       <Alert tone="info" title="Müqayisə tələbi">
         Bir RFQ ən azı iki təchizatçıya göndərilməlidir; birdən az olduqda server{' '}
         <span className="wms-num">422</span> qaytarır (SPEC §10).

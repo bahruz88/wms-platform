@@ -75,7 +75,7 @@ export function InboxScreen() {
         render: (row) => (
           <span className={row.isRead ? 'wms-muted' : undefined}>
             <strong>{row.title}</strong>
-            {row.body ? <div className="wms-text-muted">{row.body}</div> : null}
+            {row.body ? <div className="wms-muted wms-small">{row.body}</div> : null}
           </span>
         ),
       },
@@ -131,7 +131,7 @@ export function InboxScreen() {
           />
           <div className="wms-toolbar__spacer" />
           {counts ? (
-            <div className="wms-toolbar__meta">
+            <div className="wms-row">
               <Badge tone="danger">{`Kritik ${counts.bySeverity.CRITICAL ?? 0}`}</Badge>
               <Badge tone="warning">{`Xəbərdarlıq ${counts.bySeverity.WARNING ?? 0}`}</Badge>
               <Badge tone="neutral">{`Məlumat ${counts.bySeverity.INFO ?? 0}`}</Badge>

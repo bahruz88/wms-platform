@@ -62,6 +62,9 @@ import { ExportsScreen } from '@features/reporting/ExportsScreen';
 import { InboxScreen } from '@features/notifications/InboxScreen';
 import { RequisitionCreateScreen } from '@features/procurement/RequisitionCreateScreen';
 import { RequisitionDetailScreen } from '@features/procurement/RequisitionDetailScreen';
+import { RfqCreateScreen } from '@features/procurement/RfqCreateScreen';
+import { RfqDetailScreen } from '@features/procurement/RfqDetailScreen';
+import { QuotationCreateScreen } from '@features/procurement/QuotationCreateScreen';
 
 /**
  * Route table. Each guarded route names the same `x-permission` the contract puts on its
@@ -160,6 +163,23 @@ export function AppRoutes() {
               </Guarded>
             }
           />
+          {/* `new` before `:id`, or the router reads the word as an id. */}
+          <Route
+            path="rfqs/new"
+            element={
+              <Guarded permission="proc.rfq.create">
+                <RfqCreateScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="rfqs/:id"
+            element={
+              <Guarded permission="proc.rfq.view">
+                <RfqDetailScreen />
+              </Guarded>
+            }
+          />
           <Route
             path="rfqs/:id/comparison"
             element={
@@ -173,6 +193,14 @@ export function AppRoutes() {
             element={
               <Guarded permission="proc.quotation.view">
                 <QuotationsScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="quotations/new"
+            element={
+              <Guarded permission="proc.quotation.create">
+                <QuotationCreateScreen />
               </Guarded>
             }
           />
