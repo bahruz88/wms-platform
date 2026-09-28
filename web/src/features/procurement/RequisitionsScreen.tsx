@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Badge, DataTable, DocStatusBadge, Select, type Column } from '@ds/index';
 import { useApiPage } from '@api/hooks';
 import { listRequisitions, type RequisitionSummary } from '@api/endpoints';
 import { formatDate } from '@core/format';
+import { useAuth } from '@auth/index';
 import { ErrorState, LoadingState, Page, Section } from '@/components/Page';
 import { Pager } from '@/components/Pager';
 
@@ -11,6 +13,7 @@ import { Pager } from '@/components/Pager';
  * document is refused with 422. Rejection requires a comment.
  */
 export function RequisitionsScreen() {
+  const { can } = useAuth();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
 
@@ -25,7 +28,11 @@ export function RequisitionsScreen() {
     {
       key: 'docNo',
       header: 'Sənəd',
-      render: (row) => <span className="wms-doc-no">{row.docNo}</span>,
+      render: (row) => (
+        <Link className="wms-doc-no" to={`/procurement/requisitions/${row.id}`}>
+          {row.docNo}
+        </Link>
+      ),
     },
     { key: 'docDate', header: 'Tarix', render: (row) => formatDate(row.docDate) },
     { key: 'location', header: 'Tələbçi lokasiyası', render: (row) => row.requesterLocation.name },
@@ -53,7 +60,17 @@ export function RequisitionsScreen() {
   ];
 
   return (
-    <Page title="Tələblər" subtitle="PR — satınalma tələbləri">
+    <Page
+      title="Tələblər"
+      subtitle="PR — satınalma tələbləri"
+      actions={
+        can('proc.pr.create') ? (
+          <Link to="/procurement/requisitions/new" className="wms-btn wms-btn--primary">
+            Yeni tələbnamə
+          </Link>
+        ) : null
+      }
+    >
       <div className="wms-toolbar">
         <Select
           label="Status"

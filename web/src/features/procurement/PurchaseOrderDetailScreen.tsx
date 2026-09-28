@@ -15,6 +15,10 @@ import {
 import { useApiQuery } from '@api/hooks';
 import {
   approvePurchaseOrder,
+  cancelPurchaseOrder,
+  closePurchaseOrder,
+  sendPurchaseOrder,
+  submitPurchaseOrder,
   getPurchaseOrder,
   rejectPurchaseOrder,
   type PurchaseOrder,
@@ -38,9 +42,10 @@ type Line = PurchaseOrder['lines'][number];
  *     chain, the decision box and the quotation comparison stacked on the right;
  *   · the totals block in the card's sunken footer (`wms-sum`, also previously dead).
  *
- * Procurement's endpoints are not served yet — `GET /procurement/purchase-orders/{id}` answers
- * 404 — so what this screen shows today is the honest "not routed" state. The layout is right
- * for the day they land, which is the point of applying the artboard now.
+ * The order's whole lifecycle is driven from here: DRAFT is submitted for approval, an approved
+ * order is sent to the supplier, and a sent one is closed when receiving is done or cancelled if it
+ * never will be. Each transition is one endpoint, and each is offered only in the state that
+ * accepts it — an order that cannot be sent does not show a send button that would answer 409.
  */
 export function PurchaseOrderDetailScreen() {
   const { id } = useParams();
@@ -61,6 +66,27 @@ export function PurchaseOrderDetailScreen() {
       setDecision(null);
       setComment('');
       void queryClient.invalidateQueries({ queryKey: ['purchase-order', poId] });
+    },
+  });
+
+  /**
+   * The transitions that are not approval decisions. They share one mutation because they share one
+   * shape — row version in, refreshed document out — and one confirmation dialog.
+   */
+  const [transition, setTransition] = useState<'submit' | 'send' | 'close' | 'cancel' | null>(null);
+
+  const run = useMutation({
+    mutationFn: () => {
+      const rowVersion = po.data?.rowVersion ?? 1;
+      if (transition === 'submit') return submitPurchaseOrder(poId, rowVersion);
+      if (transition === 'send') return sendPurchaseOrder(poId, rowVersion);
+      if (transition === 'close') return closePurchaseOrder(poId, rowVersion);
+      return cancelPurchaseOrder(poId, rowVersion);
+    },
+    onSuccess: () => {
+      setTransition(null);
+      void queryClient.invalidateQueries({ queryKey: ['purchase-order', poId] });
+      void queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
     },
   });
 
@@ -153,6 +179,21 @@ export function PurchaseOrderDetailScreen() {
 
   const canDecide = can('proc.po.approve') && doc.status === 'PENDING_APPROVAL';
   const finished = doc.status === 'CLOSED' || doc.status === 'CANCELLED';
+
+  // Each transition is offered only in the state that accepts it, so the screen never shows a
+  // button whose only possible answer is 409 INVALID_STATE_TRANSITION.
+  const canSubmit = can('proc.po.submit') && doc.status === 'DRAFT';
+  const canSend = can('proc.po.send') && doc.status === 'APPROVED';
+  const canClose =
+    can('proc.po.close') &&
+    (doc.status === 'PARTIALLY_RECEIVED' || doc.status === 'FULLY_RECEIVED');
+  const canCancel =
+    can('proc.po.cancel') &&
+    (doc.status === 'DRAFT' || doc.status === 'PENDING_APPROVAL' || doc.status === 'APPROVED');
+
+  const blockedReason = !can('proc.po.approve')
+    ? '`proc.po.approve` icazəniz yoxdur'
+    : `«${doc.status}» statusunda əməliyyat yoxdur`;
   const openDecision = (which: 'approve' | 'reject') => {
     setDecision(which);
     setComment('');
@@ -183,26 +224,41 @@ export function PurchaseOrderDetailScreen() {
           </Button>
           {finished ? (
             <Badge tone="neutral">Sifariş bağlanıb</Badge>
-          ) : canDecide ? (
-            <>
-              <Button variant="danger" onClick={() => openDecision('reject')}>
-                Rədd et
-              </Button>
-              <Button variant="primary" onClick={() => openDecision('approve')}>
-                Təsdiqlə
-              </Button>
-            </>
           ) : (
-            <Button
-              disabled
-              title={
-                !can('proc.po.approve')
-                  ? '`proc.po.approve` icazəniz yoxdur'
-                  : 'Sənəd təsdiq gözləmir'
-              }
-            >
-              Təsdiqlə
-            </Button>
+            <>
+              {canCancel ? (
+                <Button variant="secondary" onClick={() => setTransition('cancel')}>
+                  Ləğv et
+                </Button>
+              ) : null}
+              {canClose ? (
+                <Button variant="secondary" onClick={() => setTransition('close')}>
+                  Bağla
+                </Button>
+              ) : null}
+              {canDecide ? (
+                <>
+                  <Button variant="danger" onClick={() => openDecision('reject')}>
+                    Rədd et
+                  </Button>
+                  <Button variant="primary" onClick={() => openDecision('approve')}>
+                    Təsdiqlə
+                  </Button>
+                </>
+              ) : canSubmit ? (
+                <Button variant="primary" onClick={() => setTransition('submit')}>
+                  Təsdiqə göndər
+                </Button>
+              ) : canSend ? (
+                <Button variant="primary" onClick={() => setTransition('send')}>
+                  Təchizatçıya göndər
+                </Button>
+              ) : (
+                <Button disabled title={blockedReason}>
+                  {doc.status === 'PENDING_APPROVAL' ? 'Təsdiqlə' : 'Növbəti addım yoxdur'}
+                </Button>
+              )}
+            </>
           )}
         </>
       }
@@ -435,6 +491,55 @@ export function PurchaseOrderDetailScreen() {
           />
         </div>
       </Dialog>
+
+      {run.isError ? <ErrorState error={run.error} /> : null}
+
+      <Dialog
+        open={transition !== null}
+        title={transition ? TRANSITION_TITLES[transition] : ''}
+        subtitle={transition ? TRANSITION_NOTES[transition] : undefined}
+        onClose={run.isPending ? undefined : () => setTransition(null)}
+        footer={
+          <>
+            <Button disabled={run.isPending} onClick={() => setTransition(null)}>
+              İmtina
+            </Button>
+            <Button
+              variant={transition === 'cancel' ? 'danger' : 'primary'}
+              loading={run.isPending}
+              onClick={() => run.mutate()}
+            >
+              {transition ? TRANSITION_ACTIONS[transition] : ''}
+            </Button>
+          </>
+        }
+      >
+        <span>
+          <span className="wms-doc-no">{doc.docNo}</span> — {doc.supplier.name}
+          {canViewCost ? `, ${formatNumber(doc.totalAmountBase, 2)} AZN` : ''}.
+        </span>
+      </Dialog>
     </DocumentPage>
   );
 }
+
+const TRANSITION_TITLES: Record<string, string> = {
+  submit: 'Sifarişi təsdiqə göndərim?',
+  send: 'Sifarişi təchizatçıya göndərim?',
+  close: 'Sifarişi bağlayım?',
+  cancel: 'Sifarişi ləğv edim?',
+};
+
+const TRANSITION_NOTES: Record<string, string> = {
+  submit: 'Sənəd təsdiq zəncirinə düşür və təsdiqləyənin növbəsində görünür.',
+  send: 'Təchizatçıya göndərildikdən sonra sifariş qəbul üçün açıq olur.',
+  close: 'Bağlanmış sifariş üzrə yeni qəbul edilə bilməz.',
+  cancel: 'Ləğv edilmiş sifariş üzrə qəbul edilmir. Qəbul başlayıbsa ləğv yerinə bağlayın.',
+};
+
+const TRANSITION_ACTIONS: Record<string, string> = {
+  submit: 'Göndər',
+  send: 'Göndər',
+  close: 'Bağla',
+  cancel: 'Ləğv et',
+};

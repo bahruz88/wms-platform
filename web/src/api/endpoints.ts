@@ -638,6 +638,135 @@ export const listPendingApprovals = async (
 export const listPriceHistory = async (query: Query<ProcurementPaths, '/price-history'> = {}) =>
   unwrap(await procurementApi.GET('/price-history', { params: { query } }));
 
+// --- procurement writes ---------------------------------------------------------------------------------
+type ProcSchema<K extends keyof ProcurementComponents['schemas']> = ProcurementComponents['schemas'][K];
+
+const idem = () => ({ 'Idempotency-Key': crypto.randomUUID() });
+
+export const getRequisition = async (id: number) =>
+  unwrap(await procurementApi.GET('/requisitions/{id}', { params: { path: { id } } }));
+
+export const createRequisition = async (body: ProcSchema<'RequisitionCreate'>) =>
+  unwrap(await procurementApi.POST('/requisitions', { params: { header: idem() }, body }));
+
+export const updateRequisition = async (id: number, body: ProcSchema<'RequisitionUpdate'>) =>
+  unwrap(await procurementApi.PUT('/requisitions/{id}', { params: { path: { id } }, body }));
+
+export const submitRequisition = async (id: number, rowVersion: number) =>
+  unwrap(
+    await procurementApi.POST('/requisitions/{id}/submit', {
+      params: { path: { id }, header: idem() },
+      body: { rowVersion },
+    }),
+  );
+
+export const rejectRequisition = async (id: number, rowVersion: number, comment: string) =>
+  unwrap(
+    await procurementApi.POST('/requisitions/{id}/reject', {
+      params: { path: { id }, header: idem() },
+      body: { rowVersion, comment },
+    }),
+  );
+
+export const cancelRequisition = async (id: number, rowVersion: number) =>
+  unwrap(
+    await procurementApi.POST('/requisitions/{id}/cancel', {
+      params: { path: { id }, header: idem() },
+      body: { rowVersion },
+    }),
+  );
+
+export const getRfq = async (id: number) =>
+  unwrap(await procurementApi.GET('/rfqs/{id}', { params: { path: { id } } }));
+
+export const createRfq = async (body: ProcSchema<'RfqCreate'>) =>
+  unwrap(await procurementApi.POST('/rfqs', { params: { header: idem() }, body }));
+
+export const sendRfq = async (id: number, rowVersion: number) =>
+  unwrap(
+    await procurementApi.POST('/rfqs/{id}/send', {
+      params: { path: { id }, header: idem() },
+      body: { rowVersion },
+    }),
+  );
+
+export const closeRfq = async (id: number, rowVersion: number) =>
+  unwrap(
+    await procurementApi.POST('/rfqs/{id}/close', {
+      params: { path: { id }, header: idem() },
+      body: { rowVersion },
+    }),
+  );
+
+export const getQuotation = async (id: number) =>
+  unwrap(await procurementApi.GET('/quotations/{id}', { params: { path: { id } } }));
+
+export const createQuotation = async (body: ProcSchema<'QuotationCreate'>) =>
+  unwrap(await procurementApi.POST('/quotations', { params: { header: idem() }, body }));
+
+export const updateQuotation = async (id: number, body: ProcSchema<'QuotationUpdate'>) =>
+  unwrap(await procurementApi.PUT('/quotations/{id}', { params: { path: { id } }, body }));
+
+export const createPurchaseOrder = async (body: ProcSchema<'PurchaseOrderCreate'>) =>
+  unwrap(await procurementApi.POST('/purchase-orders', { params: { header: idem() }, body }));
+
+export const updatePurchaseOrder = async (id: number, body: ProcSchema<'PurchaseOrderUpdate'>) =>
+  unwrap(await procurementApi.PUT('/purchase-orders/{id}', { params: { path: { id } }, body }));
+
+export const submitPurchaseOrder = async (id: number, rowVersion: number) =>
+  unwrap(
+    await procurementApi.POST('/purchase-orders/{id}/submit', {
+      params: { path: { id }, header: idem() },
+      body: { rowVersion },
+    }),
+  );
+
+export const sendPurchaseOrder = async (id: number, rowVersion: number) =>
+  unwrap(
+    await procurementApi.POST('/purchase-orders/{id}/send', {
+      params: { path: { id }, header: idem() },
+      body: { rowVersion },
+    }),
+  );
+
+export const closePurchaseOrder = async (id: number, rowVersion: number) =>
+  unwrap(
+    await procurementApi.POST('/purchase-orders/{id}/close', {
+      params: { path: { id }, header: idem() },
+      body: { rowVersion },
+    }),
+  );
+
+export const cancelPurchaseOrder = async (id: number, rowVersion: number) =>
+  unwrap(
+    await procurementApi.POST('/purchase-orders/{id}/cancel', {
+      params: { path: { id }, header: idem() },
+      body: { rowVersion },
+    }),
+  );
+
+export const getApproval = async (id: number) =>
+  unwrap(await procurementApi.GET('/approvals/{id}', { params: { path: { id } } }));
+
+/**
+ * The one decision endpoint behind every approval chain (PO, waste, count adjustment).
+ *
+ * `expectedStepNo` is sent so a decision taken against a stale screen is refused rather than
+ * applied to whatever step the chain has moved on to (`409 INVALID_STATE_TRANSITION`).
+ */
+export const decideApproval = async (
+  id: number,
+  decision: 'APPROVED' | 'REJECTED',
+  comment?: string,
+  expectedStepNo?: number,
+) =>
+  unwrap(
+    await procurementApi.POST('/approvals/{id}/decide', {
+      params: { path: { id }, header: idem() },
+      body: { decision, comment, expectedStepNo },
+    }),
+  );
+
 // --- consumption ---------------------------------------------------------------------------------------
 export const listMenuItems = async (query: Query<ConsumptionPaths, '/menu-items'> = {}) =>
   unwrap(await consumptionApi.GET('/menu-items', { params: { query } }));

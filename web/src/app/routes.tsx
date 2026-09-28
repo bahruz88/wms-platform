@@ -60,6 +60,8 @@ import { InventorySettingsScreen } from '@features/admin/InventorySettingsScreen
 import { ReportsScreen } from '@features/reporting/ReportsScreen';
 import { ExportsScreen } from '@features/reporting/ExportsScreen';
 import { InboxScreen } from '@features/notifications/InboxScreen';
+import { RequisitionCreateScreen } from '@features/procurement/RequisitionCreateScreen';
+import { RequisitionDetailScreen } from '@features/procurement/RequisitionDetailScreen';
 
 /**
  * Route table. Each guarded route names the same `x-permission` the contract puts on its
@@ -130,6 +132,23 @@ export function AppRoutes() {
             element={
               <Guarded permission="proc.pr.view">
                 <RequisitionsScreen />
+              </Guarded>
+            }
+          />
+          {/* `new` before `:id`, or the router reads the word as an id. */}
+          <Route
+            path="requisitions/new"
+            element={
+              <Guarded permission="proc.pr.create">
+                <RequisitionCreateScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="requisitions/:id"
+            element={
+              <Guarded permission="proc.pr.view">
+                <RequisitionDetailScreen />
               </Guarded>
             }
           />
