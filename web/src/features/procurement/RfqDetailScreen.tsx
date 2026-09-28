@@ -77,6 +77,9 @@ export function RfqDetailScreen() {
   const isDraft = doc.status === 'DRAFT';
   const isSent = doc.status === 'SENT';
   const hasQuotations = doc.quotationCount > 0;
+  // Selection is only legal while the RFQ is SENT — closing first makes it impossible, and the
+  // server then answers 409. So closing is offered only once a winner has been chosen.
+  const hasSelection = Boolean(doc.selectedQuotationId);
 
   const columns: Column<Line>[] = [
     { key: 'lineNo', header: '#', width: '50px', numeric: true, decimals: 0 },
@@ -139,8 +142,14 @@ export function RfqDetailScreen() {
             can('proc.rfq.close') ? (
               <Button
                 variant="secondary"
-                disabled={!hasQuotations}
-                title={!hasQuotations ? 'Bağlamaq üçün ən azı bir təklif lazımdır' : undefined}
+                disabled={!hasQuotations || !hasSelection}
+                title={
+                  !hasQuotations
+                    ? 'Bağlamaq üçün ən azı bir təklif lazımdır'
+                    : !hasSelection
+                      ? 'Əvvəlcə müqayisədən qalib təklifi seçin — bağlandıqdan sonra seçim mümkün deyil'
+                      : undefined
+                }
                 onClick={() => setAction('close')}
               >
                 Bağla
@@ -162,6 +171,12 @@ export function RfqDetailScreen() {
         <Alert tone="warning" title="Hələ təklif gəlməyib">
           Təchizatçıların təklifi «Təkliflər» ekranından daxil edilir. Müqayisə ən azı bir təklifdən
           sonra mümkündür.
+        </Alert>
+      ) : null}
+      {isSent && hasQuotations && !hasSelection ? (
+        <Alert tone="warning" title="Qalib təklif hələ seçilməyib">
+          Seçim RFQ bağlanmazdan əvvəl edilməlidir — bağlanmış RFQ-da təklif seçilə bilmir. Müqayisə
+          ekranından qalibi seçin, sonra bağlayın.
         </Alert>
       ) : null}
 
@@ -225,7 +240,7 @@ export function RfqDetailScreen() {
         subtitle={
           action === 'send'
             ? `${doc.supplierCount} təchizatçı təklif verə biləcək.`
-            : 'Bağlandıqdan sonra yeni təklif qəbul edilmir; müqayisə mövcud təkliflər üzrə aparılır.'
+            : 'Bağlandıqdan sonra nə yeni təklif qəbul edilir, nə də seçim dəyişdirilir.'
         }
         onClose={run.isPending ? undefined : () => setAction(null)}
         footer={

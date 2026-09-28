@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -13,6 +13,7 @@ import {
 } from '@ds/index';
 import { useApiQuery } from '@api/hooks';
 import {
+  getRfq,
   getRfqComparison,
   selectQuotation,
   type RfqComparison,
@@ -45,7 +46,21 @@ export function RfqComparisonScreen() {
   );
 
   const data = comparison.data;
+  /*
+   * The comparison payload carries no RFQ status, and selection is only legal while the RFQ is
+   * `SENT`: once it is closed the server answers `409 INVALID_STATE_TRANSITION`. So the status is
+   * fetched alongside, and the select buttons say why they are off rather than letting the click
+   * come back as a conflict.
+   */
+  const rfq = useApiQuery<{ status: string }>(['rfq', rfqId], () => getRfq(rfqId) as never, {
+    retry: false,
+  });
+  const selectable = rfq.data?.status === 'SENT';
+
   const chosen = data?.quotations.find((q) => q.id === choice);
+  // The quotation the server reports as selected — not `chosen`, which is only what the dialog asked
+  // about and would still point at the old pick if the request failed.
+  const selected = data?.quotations.find((q) => q.isSelected);
   const isCheapest = chosen ? chosen.id === data?.cheapestQuotationId : true;
   const noteRequired = Boolean(chosen) && !isCheapest;
   const canConfirm = Boolean(chosen) && (!noteRequired || note.trim().length > 0);
@@ -148,7 +163,17 @@ export function RfqComparisonScreen() {
       {select.isError ? <ErrorState error={select.error} /> : null}
       {select.isSuccess ? (
         <Alert tone="success" title="Təklif seçildi">
-          Seçim audit jurnalına düşdü; PO bu təklifdən yaradıla bilər.
+          <div className="wms-stack">
+            <span>Seçim audit jurnalına düşdü. Sifariş bu təklifin qiymətləri ilə yaradılır.</span>
+            {can('proc.po.create') && selected ? (
+              <Link
+                to={`/procurement/purchase-orders/new?quotationId=${selected.id}`}
+                className="wms-btn wms-btn--primary"
+              >
+                Sifariş yarat
+              </Link>
+            ) : null}
+          </div>
         </Alert>
       ) : null}
 
@@ -158,13 +183,15 @@ export function RfqComparisonScreen() {
             <Button
               key={quotation.id}
               variant={quotation.isSelected ? 'primary' : 'secondary'}
-              disabled={!can('proc.quotation.select') || quotation.isSelected}
+              disabled={!can('proc.quotation.select') || quotation.isSelected || !selectable}
               title={
                 !can('proc.quotation.select')
                   ? '`proc.quotation.select` icazəniz yoxdur'
                   : quotation.isSelected
                     ? 'Bu təklif artıq seçilib'
-                    : undefined
+                    : !selectable
+                      ? 'RFQ bağlanıb — seçim bağlanmadan əvvəl edilməlidir'
+                      : undefined
               }
               onClick={() => {
                 setChoice(quotation.id);

@@ -13,7 +13,7 @@ import { Pager } from '@/components/Pager';
  * limit is checked against; both money columns are permission-bound.
  */
 export function PurchaseOrdersScreen() {
-  const { session } = useAuth();
+  const { session, can } = useAuth();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
 
@@ -69,7 +69,17 @@ export function PurchaseOrdersScreen() {
   ];
 
   return (
-    <Page title="Satınalma sifarişləri" subtitle="PO — təsdiq, göndərmə və qəbul vəziyyəti">
+    <Page
+      title="Satınalma sifarişləri"
+      subtitle="PO — təsdiq, göndərmə və qəbul vəziyyəti"
+      actions={
+        can('proc.po.create') ? (
+          <Link to="/procurement/purchase-orders/new" className="wms-btn wms-btn--primary">
+            Yeni sifariş
+          </Link>
+        ) : null
+      }
+    >
       <div className="wms-toolbar">
         <Select
           label="Status"

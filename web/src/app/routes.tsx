@@ -65,6 +65,7 @@ import { RequisitionDetailScreen } from '@features/procurement/RequisitionDetail
 import { RfqCreateScreen } from '@features/procurement/RfqCreateScreen';
 import { RfqDetailScreen } from '@features/procurement/RfqDetailScreen';
 import { QuotationCreateScreen } from '@features/procurement/QuotationCreateScreen';
+import { PurchaseOrderCreateScreen } from '@features/procurement/PurchaseOrderCreateScreen';
 
 /**
  * Route table. Each guarded route names the same `x-permission` the contract puts on its
@@ -201,6 +202,14 @@ export function AppRoutes() {
             element={
               <Guarded permission="proc.quotation.create">
                 <QuotationCreateScreen />
+              </Guarded>
+            }
+          />
+          <Route
+            path="purchase-orders/new"
+            element={
+              <Guarded permission="proc.po.create">
+                <PurchaseOrderCreateScreen />
               </Guarded>
             }
           />
