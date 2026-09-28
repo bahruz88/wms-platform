@@ -14,8 +14,7 @@ QuotationDto _quote({
   required String total,
 }) => QuotationDto(
   id: id,
-  supplierId: id,
-  supplierName: supplier,
+  supplier: SupplierRefDto(id: id, code: 'SUP-$id', name: supplier),
   quoteDate: DateTime(2026, 9, 10),
   currency: 'AZN',
   totalAmount: Money.parse(total, currency: 'AZN'),

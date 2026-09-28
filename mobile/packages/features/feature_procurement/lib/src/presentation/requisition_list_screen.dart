@@ -72,7 +72,7 @@ class RequisitionListScreen extends ConsumerWidget {
                 header: l10n.labelLocation,
                 flex: 2,
                 cell: (row) =>
-                    row.requesterLocationName ?? '#${row.requesterLocationId}',
+                    row.requesterLocation.name,
               ),
               WmsColumn(
                 key: 'type',

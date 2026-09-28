@@ -142,14 +142,14 @@ void main() {
         'id': 1,
         'docNo': 'PO-2026-00087',
         'docDate': '2026-09-01',
-        'supplierId': 1,
+        'supplier': {'id': 1, 'code': 'SUP-001', 'name': 'Alfa MMC'},
         'currency': 'USD',
         'fxRate': '1.70000000',
         'subtotal': '100.0000',
         'vatAmount': '18.0000',
         'totalAmount': '118.0000',
         'totalAmountBase': '200.6000',
-        'deliveryLocationId': 1,
+        'deliveryLocation': {'id': 1, 'code': 'WH-01', 'name': 'Mərkəzi anbar'},
         'status': 'PENDING_APPROVAL',
         'lines': [
           {
@@ -219,14 +219,14 @@ void main() {
         'id': 9,
         'docNo': 'PO-2026-00001',
         'docDate': '2026-09-01',
-        'supplierId': 1,
+        'supplier': {'id': 1, 'code': 'SUP-001', 'name': 'Alfa MMC'},
         'currency': 'AZN',
         'fxRate': '1',
         'subtotal': '1',
         'vatAmount': '0',
         'totalAmount': '1',
         'totalAmountBase': '1',
-        'deliveryLocationId': 1,
+        'deliveryLocation': {'id': 1, 'code': 'WH-01', 'name': 'Mərkəzi anbar'},
         'status': 'APPROVED',
       });
       final po = await client.procurement.approvePurchaseOrder(

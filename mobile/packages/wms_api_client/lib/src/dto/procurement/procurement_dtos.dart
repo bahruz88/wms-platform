@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:wms_core/wms_core.dart';
 
 import '../../json/date_only_converter.dart';
+import '../common/ref_dtos.dart';
 
 part 'procurement_dtos.freezed.dart';
 part 'procurement_dtos.g.dart';
@@ -15,11 +16,10 @@ part 'procurement_dtos.g.dart';
 abstract class RequisitionLineDto with _$RequisitionLineDto {
   const factory RequisitionLineDto({
     required int lineNo,
-    required int productId,
+    required ProductRefDto product,
     required Quantity qty,
     required int uomId,
     required Quantity convertedQty,
-    String? productName,
     String? uomCode,
     String? note,
   }) = _RequisitionLineDto;
@@ -39,11 +39,10 @@ abstract class RequisitionDto with _$RequisitionDto {
     required int id,
     required String docNo,
     @DateOnlyConverter() required DateTime docDate,
-    required int requesterLocationId,
+    required LocationRefDto requesterLocation,
     required ProductType productType,
     required RequisitionStatus status,
     @Default(Priority.normal) Priority priority,
-    String? requesterLocationName,
     @NullableDateOnlyConverter() DateTime? requiredDate,
     String? note,
     DateTime? createdAt,
@@ -109,12 +108,11 @@ abstract class RfqDto with _$RfqDto {
 @freezed
 abstract class QuotationLineDto with _$QuotationLineDto {
   const factory QuotationLineDto({
-    required int productId,
+    required ProductRefDto product,
     required Quantity qty,
     required int uomId,
     required Money unitPrice,
     required Money lineTotal,
-    String? productName,
     String? uomCode,
   }) = _QuotationLineDto;
 
@@ -128,11 +126,10 @@ abstract class QuotationLineDto with _$QuotationLineDto {
 abstract class QuotationDto with _$QuotationDto {
   const factory QuotationDto({
     required int id,
-    required int supplierId,
+    required SupplierRefDto supplier,
     @DateOnlyConverter() required DateTime quoteDate,
     required String currency,
     int? rfqId,
-    String? supplierName,
     String? quoteNo,
     @NullableDateOnlyConverter() DateTime? validUntil,
     int? deliveryDays,
@@ -212,17 +209,15 @@ abstract class PurchaseOrderDto with _$PurchaseOrderDto {
     required int id,
     required String docNo,
     @DateOnlyConverter() required DateTime docDate,
-    required int supplierId,
+    required SupplierRefDto supplier,
     required String currency,
     required Decimal fxRate,
     required Money subtotal,
     required Money vatAmount,
     required Money totalAmount,
     required Money totalAmountBase,
-    required int deliveryLocationId,
+    required LocationRefDto deliveryLocation,
     required PoStatus status,
-    String? supplierName,
-    String? deliveryLocationName,
     @NullableDateOnlyConverter() DateTime? expectedDate,
     String? incoterms,
     DateTime? sentAt,

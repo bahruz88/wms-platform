@@ -9,11 +9,10 @@ part of 'procurement_dtos.dart';
 _RequisitionLineDto _$RequisitionLineDtoFromJson(Map<String, dynamic> json) =>
     _RequisitionLineDto(
       lineNo: (json['lineNo'] as num).toInt(),
-      productId: (json['productId'] as num).toInt(),
+      product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
       qty: Quantity.fromJson(json['qty'] as String),
       uomId: (json['uomId'] as num).toInt(),
       convertedQty: Quantity.fromJson(json['convertedQty'] as String),
-      productName: json['productName'] as String?,
       uomCode: json['uomCode'] as String?,
       note: json['note'] as String?,
     );
@@ -21,11 +20,10 @@ _RequisitionLineDto _$RequisitionLineDtoFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$RequisitionLineDtoToJson(_RequisitionLineDto instance) =>
     <String, dynamic>{
       'lineNo': instance.lineNo,
-      'productId': instance.productId,
+      'product': instance.product.toJson(),
       'qty': instance.qty.toJson(),
       'uomId': instance.uomId,
       'convertedQty': instance.convertedQty.toJson(),
-      'productName': instance.productName,
       'uomCode': instance.uomCode,
       'note': instance.note,
     };
@@ -35,13 +33,14 @@ _RequisitionDto _$RequisitionDtoFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       docNo: json['docNo'] as String,
       docDate: const DateOnlyConverter().fromJson(json['docDate'] as String),
-      requesterLocationId: (json['requesterLocationId'] as num).toInt(),
+      requesterLocation: LocationRefDto.fromJson(
+        json['requesterLocation'] as Map<String, dynamic>,
+      ),
       productType: $enumDecode(_$ProductTypeEnumMap, json['productType']),
       status: $enumDecode(_$RequisitionStatusEnumMap, json['status']),
       priority:
           $enumDecodeNullable(_$PriorityEnumMap, json['priority']) ??
           Priority.normal,
-      requesterLocationName: json['requesterLocationName'] as String?,
       requiredDate: const NullableDateOnlyConverter().fromJson(
         json['requiredDate'] as String?,
       ),
@@ -64,11 +63,10 @@ Map<String, dynamic> _$RequisitionDtoToJson(_RequisitionDto instance) =>
       'id': instance.id,
       'docNo': instance.docNo,
       'docDate': const DateOnlyConverter().toJson(instance.docDate),
-      'requesterLocationId': instance.requesterLocationId,
+      'requesterLocation': instance.requesterLocation.toJson(),
       'productType': _$ProductTypeEnumMap[instance.productType]!,
       'status': _$RequisitionStatusEnumMap[instance.status]!,
       'priority': _$PriorityEnumMap[instance.priority]!,
-      'requesterLocationName': instance.requesterLocationName,
       'requiredDate': const NullableDateOnlyConverter().toJson(
         instance.requiredDate,
       ),
@@ -191,66 +189,61 @@ const _$RfqStatusEnumMap = {
 
 _QuotationLineDto _$QuotationLineDtoFromJson(Map<String, dynamic> json) =>
     _QuotationLineDto(
-      productId: (json['productId'] as num).toInt(),
+      product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
       qty: Quantity.fromJson(json['qty'] as String),
       uomId: (json['uomId'] as num).toInt(),
       unitPrice: Money.fromJson(json['unitPrice'] as String),
       lineTotal: Money.fromJson(json['lineTotal'] as String),
-      productName: json['productName'] as String?,
       uomCode: json['uomCode'] as String?,
     );
 
 Map<String, dynamic> _$QuotationLineDtoToJson(_QuotationLineDto instance) =>
     <String, dynamic>{
-      'productId': instance.productId,
+      'product': instance.product.toJson(),
       'qty': instance.qty.toJson(),
       'uomId': instance.uomId,
       'unitPrice': instance.unitPrice.toJson(),
       'lineTotal': instance.lineTotal.toJson(),
-      'productName': instance.productName,
       'uomCode': instance.uomCode,
     };
 
-_QuotationDto _$QuotationDtoFromJson(Map<String, dynamic> json) =>
-    _QuotationDto(
-      id: (json['id'] as num).toInt(),
-      supplierId: (json['supplierId'] as num).toInt(),
-      quoteDate: const DateOnlyConverter().fromJson(
-        json['quoteDate'] as String,
-      ),
-      currency: json['currency'] as String,
-      rfqId: (json['rfqId'] as num?)?.toInt(),
-      supplierName: json['supplierName'] as String?,
-      quoteNo: json['quoteNo'] as String?,
-      validUntil: const NullableDateOnlyConverter().fromJson(
-        json['validUntil'] as String?,
-      ),
-      deliveryDays: (json['deliveryDays'] as num?)?.toInt(),
-      paymentTerms: json['paymentTerms'] as String?,
-      totalAmount: json['totalAmount'] == null
-          ? null
-          : Money.fromJson(json['totalAmount'] as String),
-      totalAmountBase: json['totalAmountBase'] == null
-          ? null
-          : Money.fromJson(json['totalAmountBase'] as String),
-      isSelected: json['isSelected'] as bool? ?? false,
-      selectionNote: json['selectionNote'] as String?,
-      lines:
-          (json['lines'] as List<dynamic>?)
-              ?.map((e) => QuotationLineDto.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <QuotationLineDto>[],
-    );
+_QuotationDto _$QuotationDtoFromJson(
+  Map<String, dynamic> json,
+) => _QuotationDto(
+  id: (json['id'] as num).toInt(),
+  supplier: SupplierRefDto.fromJson(json['supplier'] as Map<String, dynamic>),
+  quoteDate: const DateOnlyConverter().fromJson(json['quoteDate'] as String),
+  currency: json['currency'] as String,
+  rfqId: (json['rfqId'] as num?)?.toInt(),
+  quoteNo: json['quoteNo'] as String?,
+  validUntil: const NullableDateOnlyConverter().fromJson(
+    json['validUntil'] as String?,
+  ),
+  deliveryDays: (json['deliveryDays'] as num?)?.toInt(),
+  paymentTerms: json['paymentTerms'] as String?,
+  totalAmount: json['totalAmount'] == null
+      ? null
+      : Money.fromJson(json['totalAmount'] as String),
+  totalAmountBase: json['totalAmountBase'] == null
+      ? null
+      : Money.fromJson(json['totalAmountBase'] as String),
+  isSelected: json['isSelected'] as bool? ?? false,
+  selectionNote: json['selectionNote'] as String?,
+  lines:
+      (json['lines'] as List<dynamic>?)
+          ?.map((e) => QuotationLineDto.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <QuotationLineDto>[],
+);
 
 Map<String, dynamic> _$QuotationDtoToJson(
   _QuotationDto instance,
 ) => <String, dynamic>{
   'id': instance.id,
-  'supplierId': instance.supplierId,
+  'supplier': instance.supplier.toJson(),
   'quoteDate': const DateOnlyConverter().toJson(instance.quoteDate),
   'currency': instance.currency,
   'rfqId': instance.rfqId,
-  'supplierName': instance.supplierName,
   'quoteNo': instance.quoteNo,
   'validUntil': const NullableDateOnlyConverter().toJson(instance.validUntil),
   'deliveryDays': instance.deliveryDays,
@@ -339,64 +332,61 @@ const _$ApprovalStatusEnumMap = {
   ApprovalStatus.cancelled: 'CANCELLED',
 };
 
-_PurchaseOrderDto _$PurchaseOrderDtoFromJson(Map<String, dynamic> json) =>
-    _PurchaseOrderDto(
-      id: (json['id'] as num).toInt(),
-      docNo: json['docNo'] as String,
-      docDate: const DateOnlyConverter().fromJson(json['docDate'] as String),
-      supplierId: (json['supplierId'] as num).toInt(),
-      currency: json['currency'] as String,
-      fxRate: Decimal.fromJson(json['fxRate'] as String),
-      subtotal: Money.fromJson(json['subtotal'] as String),
-      vatAmount: Money.fromJson(json['vatAmount'] as String),
-      totalAmount: Money.fromJson(json['totalAmount'] as String),
-      totalAmountBase: Money.fromJson(json['totalAmountBase'] as String),
-      deliveryLocationId: (json['deliveryLocationId'] as num).toInt(),
-      status: $enumDecode(_$PoStatusEnumMap, json['status']),
-      supplierName: json['supplierName'] as String?,
-      deliveryLocationName: json['deliveryLocationName'] as String?,
-      expectedDate: const NullableDateOnlyConverter().fromJson(
-        json['expectedDate'] as String?,
-      ),
-      incoterms: json['incoterms'] as String?,
-      sentAt: json['sentAt'] == null
-          ? null
-          : DateTime.parse(json['sentAt'] as String),
-      createdAt: json['createdAt'] == null
-          ? null
-          : DateTime.parse(json['createdAt'] as String),
-      createdBy: (json['createdBy'] as num?)?.toInt(),
-      rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
-      lines:
-          (json['lines'] as List<dynamic>?)
-              ?.map(
-                (e) => PurchaseOrderLineDto.fromJson(e as Map<String, dynamic>),
-              )
-              .toList() ??
-          const <PurchaseOrderLineDto>[],
-      approvalSteps:
-          (json['approvalSteps'] as List<dynamic>?)
-              ?.map((e) => ApprovalStepDto.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const <ApprovalStepDto>[],
-    );
+_PurchaseOrderDto _$PurchaseOrderDtoFromJson(
+  Map<String, dynamic> json,
+) => _PurchaseOrderDto(
+  id: (json['id'] as num).toInt(),
+  docNo: json['docNo'] as String,
+  docDate: const DateOnlyConverter().fromJson(json['docDate'] as String),
+  supplier: SupplierRefDto.fromJson(json['supplier'] as Map<String, dynamic>),
+  currency: json['currency'] as String,
+  fxRate: Decimal.fromJson(json['fxRate'] as String),
+  subtotal: Money.fromJson(json['subtotal'] as String),
+  vatAmount: Money.fromJson(json['vatAmount'] as String),
+  totalAmount: Money.fromJson(json['totalAmount'] as String),
+  totalAmountBase: Money.fromJson(json['totalAmountBase'] as String),
+  deliveryLocation: LocationRefDto.fromJson(
+    json['deliveryLocation'] as Map<String, dynamic>,
+  ),
+  status: $enumDecode(_$PoStatusEnumMap, json['status']),
+  expectedDate: const NullableDateOnlyConverter().fromJson(
+    json['expectedDate'] as String?,
+  ),
+  incoterms: json['incoterms'] as String?,
+  sentAt: json['sentAt'] == null
+      ? null
+      : DateTime.parse(json['sentAt'] as String),
+  createdAt: json['createdAt'] == null
+      ? null
+      : DateTime.parse(json['createdAt'] as String),
+  createdBy: (json['createdBy'] as num?)?.toInt(),
+  rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
+  lines:
+      (json['lines'] as List<dynamic>?)
+          ?.map((e) => PurchaseOrderLineDto.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <PurchaseOrderLineDto>[],
+  approvalSteps:
+      (json['approvalSteps'] as List<dynamic>?)
+          ?.map((e) => ApprovalStepDto.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <ApprovalStepDto>[],
+);
 
 Map<String, dynamic> _$PurchaseOrderDtoToJson(_PurchaseOrderDto instance) =>
     <String, dynamic>{
       'id': instance.id,
       'docNo': instance.docNo,
       'docDate': const DateOnlyConverter().toJson(instance.docDate),
-      'supplierId': instance.supplierId,
+      'supplier': instance.supplier.toJson(),
       'currency': instance.currency,
       'fxRate': instance.fxRate.toJson(),
       'subtotal': instance.subtotal.toJson(),
       'vatAmount': instance.vatAmount.toJson(),
       'totalAmount': instance.totalAmount.toJson(),
       'totalAmountBase': instance.totalAmountBase.toJson(),
-      'deliveryLocationId': instance.deliveryLocationId,
+      'deliveryLocation': instance.deliveryLocation.toJson(),
       'status': _$PoStatusEnumMap[instance.status]!,
-      'supplierName': instance.supplierName,
-      'deliveryLocationName': instance.deliveryLocationName,
       'expectedDate': const NullableDateOnlyConverter().toJson(
         instance.expectedDate,
       ),

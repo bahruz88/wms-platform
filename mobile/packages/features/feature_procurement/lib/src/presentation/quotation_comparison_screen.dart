@@ -124,7 +124,7 @@ class _QuotationComparisonScreenState
                         children: [
                           Flexible(
                             child: Text(
-                              row.supplierName ?? '#${row.supplierId}',
+                              row.supplier.name,
                               style: WmsTypography.bodyStrong.copyWith(
                                 color: c.ink,
                               ),

@@ -108,19 +108,25 @@ def dart_dtos(path: Path) -> dict[str, tuple[set[str], set[str]]]:
     """
     Class name -> (every JSON key its `fromJson` reads, the subset it reads *unguarded*).
 
-    json_serializable wraps a nullable field in `json['x'] == null ? null : …` and reads a required
-    one directly. That distinction is the whole difference between a DTO that cannot parse a real
-    response and one that merely carries a field nobody sends: a missing nullable key yields null,
-    a missing required key throws.
+    The cast tells us whether a field is required. json_serializable emits `json['x'] as int` for a
+    field that must be there and `json['x'] as int?` — often followed by `?? default` — for one that
+    may be absent. A nested object reads as `Foo.fromJson(json['x'] as Map<String, dynamic>)` when
+    required and `json['x'] == null ? null : …` when not.
+
+    That distinction is the whole difference between a DTO that cannot parse a real response and one
+    that merely carries a field nobody sends: a missing nullable key yields null, a missing required
+    key throws.
     """
     text = path.read_text(encoding="utf-8")
     out: dict[str, tuple[set[str], set[str]]] = {}
     for m in re.finditer(r"_\$(\w+)FromJson\(Map<String, dynamic> json\) =>(.*?)\n\n", text, re.S):
         body = m.group(2)
         keys = set(re.findall(r"json\['(\w+)'\]", body))
-        guarded = set(re.findall(r"json\['(\w+)'\] == null", body))
+        nullable: set[str] = set(re.findall(r"json\['(\w+)'\] == null", body))
+        # `as <Type>?` — the trailing `?` is what makes the read safe.
+        nullable |= set(re.findall(r"json\['(\w+)'\]\s*\)?\s*as [\w<>, ]*\?", body))
         if keys:
-            out[m.group(1)] = (keys, keys - guarded)
+            out[m.group(1)] = (keys, keys - nullable)
     return out
 
 

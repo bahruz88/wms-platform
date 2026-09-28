@@ -113,8 +113,8 @@ class NotificationListScreen extends ConsumerWidget {
                                     ),
                                   ),
                                 ),
-                                if (item.docType != null)
-                                  WmsBadge(text: item.docType!),
+                                if (item.entityType != null)
+                                  WmsBadge(text: item.entityType!),
                               ],
                             ),
                             if (item.body != null) ...[

@@ -112,9 +112,10 @@ void main() {
           status: 401,
           contentType: 'application/problem+json',
         )
-        ..enqueueJson({'count': 7});
+        ..enqueueJson({'total': 7, 'bySeverity': {'INFO': 7, 'WARNING': 0, 'CRITICAL': 0}});
       final result = await client.notifications.unreadCount();
-      expect(result.count, 7);
+      expect(result.total, 7);
+      expect(result.severity('INFO'), 7);
       expect(tokens.refreshCalls, 1);
       expect(adapter.requests, hasLength(2));
       expect(adapter.headerSnapshots[0]['Authorization'], 'Bearer old-token');

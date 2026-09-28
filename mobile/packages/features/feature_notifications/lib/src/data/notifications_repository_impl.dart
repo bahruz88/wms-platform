@@ -16,7 +16,7 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
 
   @override
   Future<Result<int>> unreadCount() =>
-      Result.guard(() async => (await _api.unreadCount()).count);
+      Result.guard(() async => (await _api.unreadCount()).total);
 
   @override
   Future<Result<void>> markRead(int id) =>

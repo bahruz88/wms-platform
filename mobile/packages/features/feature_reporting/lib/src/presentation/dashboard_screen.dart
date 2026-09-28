@@ -32,54 +32,80 @@ class DashboardScreen extends ConsumerWidget {
           value: dashboard,
           onRetry: () => ref.invalidate(dashboardProvider),
           builder: (data) {
-            final stockValueCard = WmsKpiCard.permitted(
-              hasPermission: canViewCost && data.stockValue != null,
-              build: () => WmsKpiCard(
-                label: 'Anbar dəyəri',
-                value: WmsFormat.number(data.stockValue?.amount, decimals: 2),
-                unit: data.stockValue?.currency ?? 'AZN',
-                hint: WmsFormat.dateTime(data.asOf),
-              ),
-            );
+            /*
+             * The server answers with a list of KPIs, not a fixed set of counters: which figures a
+             * caller gets depends on their permissions, and a cost figure is left out entirely
+             * rather than nulled (spec §16). So the cards are built from whatever arrived, and a
+             * KPI the caller was not given simply has no card — nothing here invents a zero.
+             */
+            // The server already leaves cost KPIs out without `master.product.view_cost`. The
+            // client filters them too: defence in depth, and the only thing standing between a
+            // stale cache and a cost figure on a keeper's screen (design system «Qiymət icazəyə
+            // bağlıdır», SPEC §16).
             final cards = <Widget>[
-              ?stockValueCard,
-              WmsKpiCard(
-                label: 'Vaxtı yaxınlaşan partiyalar',
-                value: Decimal.fromInt(data.expiringBatches),
-                badge: data.expiredBatches > 0
-                    ? WmsBadge(
-                        text: '${data.expiredBatches} vaxtı keçib',
-                        tone: WmsTone.danger,
-                      )
-                    : null,
-                hint: 'expiry_warning_days ərzində',
-              ),
-              WmsKpiCard(
-                label: 'Aşağı qalıq',
-                value: Decimal.fromInt(data.lowStockProducts),
-                hint: 'reorder_point-dən aşağı məhsullar',
-              ),
-              WmsKpiCard(
-                label: 'Təsdiq gözləyənlər',
-                value: Decimal.fromInt(data.pendingApprovals),
-                hint: 'PO, tullantı və sayım düzəlişləri',
-              ),
-              WmsKpiCard(
-                label: 'Açıq sifarişlər',
-                value: Decimal.fromInt(data.openPurchaseOrders),
-                hint: 'Tam qəbul edilməmiş PO-lar',
-              ),
-              WmsKpiCard(
-                label: 'Yolda olan sənədlər',
-                value: Decimal.fromInt(data.inTransitIssues),
-                hint: 'IN_TRANSIT — filial təsdiqi gözlənilir',
-              ),
+              for (final kpi in data.kpis.where((k) => canViewCost || !k.isCost))
+                WmsKpiCard(
+                  label: kpi.label,
+                  value: kpi.amount?.amount ?? Decimal.zero,
+                  decimals: kpi.decimals,
+                  unit: kpi.unit,
+                  hint: kpi.previousValue == null
+                      ? null
+                      : 'əvvəlki dövr: ${kpi.previousValue}',
+                ),
             ];
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // The server withholds cost KPIs rather than nulling them, so without the permission
+                // the panel is simply shorter. Saying so beats letting a shorter panel look broken.
+                // The alerts come composed by the server, which is the only side that knows the
+                // tenant's thresholds — `expiry_warning_days`, `reorder_point`. The screen used to
+                // build this text itself out of two KPI counters and so could not say «103 partiya
+                // 30 gün içində» without guessing the window.
+                if (data.alerts.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: WmsSpacing.space3),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final alert in data.alerts)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: WmsSpacing.space2),
+                            child: Row(
+                              children: [
+                                WmsBadge(
+                                  text: alert.count > 0
+                                      ? alert.count.toString()
+                                      : alert.severity,
+                                  tone: alert.severity == 'CRITICAL'
+                                      ? WmsTone.danger
+                                      : WmsTone.warning,
+                                ),
+                                const SizedBox(width: WmsSpacing.space2),
+                                Expanded(
+                                  child: Text(
+                                    alert.title,
+                                    style: WmsTypography.body.copyWith(color: c.ink),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                if (!canViewCost)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: WmsSpacing.space3),
+                    child: Text(
+                      'Maya və dəyər göstəriciləri sizin icazənizə bağlıdır və göstərilmir.',
+                      style: WmsTypography.caption.copyWith(color: c.inkMuted),
+                    ),
+                  ),
                 Text(
-                  'Göstəricilər ${WmsFormat.dateTime(data.asOf)} tarixinə',
+                  'Göstəricilər ${WmsFormat.dateTime(data.generatedAt)} tarixinə',
                   style: WmsTypography.caption.copyWith(color: c.inkMuted),
                 ),
                 const SizedBox(height: WmsSpacing.space4),

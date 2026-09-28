@@ -55,15 +55,19 @@ class _FakeNotificationsRepository implements NotificationsRepository {
 final _items = [
   NotificationDto(
     id: 1,
-    type: 'PO_APPROVED',
+    eventType: 'PurchaseOrderApproved',
+    severity: 'INFO',
     title: 'PO-2026-00087 təsdiqləndi',
     body: 'Alfa MMC sifarişi təsdiqləndi.',
     createdAt: DateTime(2026, 9, 20, 10, 15),
-    docType: 'PO',
+    entityType: 'purchase_order',
+    entityId: 87,
+    link: '/procurement/purchase-orders/87',
   ),
   NotificationDto(
     id: 2,
-    type: 'EXPIRY',
+    eventType: 'BatchNearExpiry',
+    severity: 'WARNING',
     title: 'Partiya vaxtı yaxınlaşır',
     createdAt: DateTime(2026, 9, 19, 8),
     isRead: true,

@@ -9,31 +9,53 @@ part of 'notifications_dtos.dart';
 _NotificationDto _$NotificationDtoFromJson(Map<String, dynamic> json) =>
     _NotificationDto(
       id: (json['id'] as num).toInt(),
-      type: json['type'] as String,
+      eventType: json['eventType'] as String,
+      severity: json['severity'] as String,
       title: json['title'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      body: json['body'] as String?,
       isRead: json['isRead'] as bool? ?? false,
-      docType: json['docType'] as String?,
-      docId: (json['docId'] as num?)?.toInt(),
-      deepLink: json['deepLink'] as String?,
+      body: json['body'] as String?,
+      link: json['link'] as String?,
+      entityType: json['entityType'] as String?,
+      entityId: (json['entityId'] as num?)?.toInt(),
+      locationId: (json['locationId'] as num?)?.toInt(),
+      readAt: json['readAt'] == null
+          ? null
+          : DateTime.parse(json['readAt'] as String),
+      eventId: json['eventId'] as String?,
     );
 
 Map<String, dynamic> _$NotificationDtoToJson(_NotificationDto instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'type': instance.type,
+      'eventType': instance.eventType,
+      'severity': instance.severity,
       'title': instance.title,
       'createdAt': instance.createdAt.toIso8601String(),
-      'body': instance.body,
       'isRead': instance.isRead,
-      'docType': instance.docType,
-      'docId': instance.docId,
-      'deepLink': instance.deepLink,
+      'body': instance.body,
+      'link': instance.link,
+      'entityType': instance.entityType,
+      'entityId': instance.entityId,
+      'locationId': instance.locationId,
+      'readAt': instance.readAt?.toIso8601String(),
+      'eventId': instance.eventId,
     };
 
 _UnreadCountDto _$UnreadCountDtoFromJson(Map<String, dynamic> json) =>
-    _UnreadCountDto(count: (json['count'] as num?)?.toInt() ?? 0);
+    _UnreadCountDto(
+      total: (json['total'] as num?)?.toInt() ?? 0,
+      bySeverity:
+          (json['bySeverity'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, (e as num).toInt()),
+          ) ??
+          const <String, int>{},
+      pendingApprovals: (json['pendingApprovals'] as num?)?.toInt() ?? 0,
+    );
 
 Map<String, dynamic> _$UnreadCountDtoToJson(_UnreadCountDto instance) =>
-    <String, dynamic>{'count': instance.count};
+    <String, dynamic>{
+      'total': instance.total,
+      'bySeverity': instance.bySeverity,
+      'pendingApprovals': instance.pendingApprovals,
+    };

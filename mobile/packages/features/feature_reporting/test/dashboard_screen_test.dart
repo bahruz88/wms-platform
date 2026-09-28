@@ -8,15 +8,28 @@ import 'package:wms_core/wms_core.dart';
 import 'package:wms_design_system/wms_design_system.dart';
 import 'package:wms_l10n/wms_l10n.dart';
 
+// KPIs, not named counters: the server sends whatever this caller is entitled to, and a cost
+// figure is left out entirely rather than nulled (spec §16).
 final _summary = DashboardSummaryDto(
-  asOf: DateTime(2026, 9, 20, 9),
-  stockValue: Money.parse('128450.75', currency: 'AZN'),
-  expiringBatches: 12,
-  expiredBatches: 3,
-  lowStockProducts: 7,
-  pendingApprovals: 4,
-  openPurchaseOrders: 9,
-  inTransitIssues: 2,
+  generatedAt: DateTime(2026, 9, 20, 9),
+  kpis: const [
+    KpiDto(key: 'stockValueTotal', label: 'Anbar dəyəri', value: '128450.75', unit: 'AZN', isCost: true),
+    KpiDto(key: 'expiringBatches', label: 'Vaxtı yaxınlaşan partiyalar', value: '12'),
+    KpiDto(key: 'expiredBatches', label: 'Vaxtı keçmiş partiyalar', value: '3'),
+    KpiDto(key: 'lowStockProducts', label: 'Aşağı qalıq', value: '7'),
+    KpiDto(key: 'pendingApprovals', label: 'Təsdiq gözləyənlər', value: '4'),
+    KpiDto(key: 'openPurchaseOrders', label: 'Açıq sifarişlər', value: '9'),
+    KpiDto(key: 'inTransitIssues', label: 'Yolda olan sənədlər', value: '2'),
+  ],
+  // The server composes the alert text, because only it knows the tenant's thresholds.
+  alerts: const [
+    DashboardAlertDto(
+      type: 'BATCH_EXPIRED',
+      severity: 'CRITICAL',
+      title: '3 partiyanın vaxtı keçib',
+      count: 3,
+    ),
+  ],
 );
 
 Widget host({
@@ -56,7 +69,7 @@ void main() {
     expect(find.text('Vaxtı yaxınlaşan partiyalar'), findsOneWidget);
     expect(find.text('Aşağı qalıq'), findsOneWidget);
     expect(find.text('Təsdiq gözləyənlər'), findsOneWidget);
-    expect(find.text('3 vaxtı keçib'), findsOneWidget);
+    expect(find.text('3 partiyanın vaxtı keçib'), findsOneWidget);
   });
 
   testWidgets('stock value card is not rendered without view_cost', (
