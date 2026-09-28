@@ -7,23 +7,50 @@ import 'fake_adapter.dart';
 
 void main() {
   group('DTO JSON contract', () {
-    test('BalanceDto parses string quantities and tolerates missing cost', () {
+    // The payload below is the shape the live API actually returns, copied from a real
+    // `GET /inventory/balances` response. The previous version of this test invented a flat
+    // `productId`/`locationId` shape, agreed with the DTO that expected it, and stayed green while
+    // the client could not parse a single balance row.
+    test('BalanceDto parses the nested refs the API sends, and tolerates missing cost', () {
       final dto = BalanceDto.fromJson(const {
-        'productId': 10,
-        'locationId': 3,
-        'batchId': 77,
+        'product': {
+          'id': 10,
+          'sku': 'CHK-001',
+          'name': 'Toyuq döşü',
+          'baseUomId': 3,
+          'baseUomCode': 'KG',
+        },
+        'location': {'id': 3, 'code': 'WH-01', 'name': 'Mərkəzi anbar', 'isVirtual': false},
+        'batch': {'id': 77, 'batchNo': 'CHK-2026A', 'expiryDate': '2026-10-01', 'status': 'ACTIVE'},
         'qtyOnHand': '45.0000',
         'qtyReserved': '5.5000',
+        'qtyAvailable': '39.5000',
+        'baseUomId': 3,
         'baseUomCode': 'KG',
-        'expiryDate': '2026-10-01',
+        'isBelowMin': false,
       });
+
+      expect(dto.product.sku, 'CHK-001');
+      expect(dto.location.code, 'WH-01');
+      expect(dto.batch?.batchNo, 'CHK-2026A');
+      expect(dto.batch?.expiryDate, DateTime(2026, 10));
       expect(dto.qtyOnHand, Quantity.parse('45'));
       expect(dto.qtyAvailable, Quantity.parse('39.5'));
       expect(dto.avgUnitCost, isNull);
       expect(dto.hasCostInfo, isFalse);
-      expect(dto.expiryDate, DateTime(2026, 10));
       expect(dto.toJson()['qtyOnHand'], '45.0000');
-      expect(dto.toJson()['expiryDate'], '2026-10-01');
+    });
+
+    test('BalanceDto has no batch when the row is not batch tracked', () {
+      final dto = BalanceDto.fromJson(const {
+        'product': {'id': 25, 'sku': 'DETERGENT', 'name': 'Yuyucu vasitə'},
+        'location': {'id': 1, 'code': 'WH-01', 'name': 'Mərkəzi anbar'},
+        'qtyOnHand': '12.0000',
+        'qtyReserved': '0.0000',
+      });
+
+      expect(dto.batch, isNull);
+      expect(dto.qtyAvailable, Quantity.parse('12'));
     });
 
     test('ProductDto exposes cost only when the server sends it', () {
@@ -157,8 +184,8 @@ void main() {
         adapter.enqueueJson({
           'items': [
             {
-              'productId': 1,
-              'locationId': 2,
+              'product': {'id': 1, 'sku': 'LETTUCE', 'name': 'Kahı'},
+              'location': {'id': 2, 'code': 'WH-01', 'name': 'Mərkəzi anbar'},
               'qtyOnHand': '1.0000',
               'qtyReserved': '0.0000',
             },

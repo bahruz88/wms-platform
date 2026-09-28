@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$BalanceDto {
 
- int get productId; int get locationId; Quantity get qtyOnHand; Quantity get qtyReserved; int get batchId; String? get productSku; String? get productName; String? get locationCode; String? get locationName; String? get batchNo;@NullableDateOnlyConverter() DateTime? get expiryDate; String? get baseUomCode; Money? get avgUnitCost; Money? get totalValue; DateTime? get updatedAt;
+ ProductRefDto get product; LocationRefDto get location; Quantity get qtyOnHand; Quantity get qtyReserved; BatchRefDto? get batch; int? get baseUomId; String? get baseUomCode; Money? get avgUnitCost; Money? get totalValue; Quantity? get minStock; bool get isBelowMin; int? get daysToExpiry; int? get lastMovementId; DateTime? get updatedAt;
 /// Create a copy of BalanceDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +30,20 @@ $BalanceDtoCopyWith<BalanceDto> get copyWith => _$BalanceDtoCopyWithImpl<Balance
 @override
 bool operator ==(Object other) {
   final _this = this as BalanceDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BalanceDto&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.locationId, _this.locationId) || other.locationId == _this.locationId)&&(identical(other.qtyOnHand, _this.qtyOnHand) || other.qtyOnHand == _this.qtyOnHand)&&(identical(other.qtyReserved, _this.qtyReserved) || other.qtyReserved == _this.qtyReserved)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId)&&(identical(other.productSku, _this.productSku) || other.productSku == _this.productSku)&&(identical(other.productName, _this.productName) || other.productName == _this.productName)&&(identical(other.locationCode, _this.locationCode) || other.locationCode == _this.locationCode)&&(identical(other.locationName, _this.locationName) || other.locationName == _this.locationName)&&(identical(other.batchNo, _this.batchNo) || other.batchNo == _this.batchNo)&&(identical(other.expiryDate, _this.expiryDate) || other.expiryDate == _this.expiryDate)&&(identical(other.baseUomCode, _this.baseUomCode) || other.baseUomCode == _this.baseUomCode)&&(identical(other.avgUnitCost, _this.avgUnitCost) || other.avgUnitCost == _this.avgUnitCost)&&(identical(other.totalValue, _this.totalValue) || other.totalValue == _this.totalValue)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BalanceDto&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.location, _this.location) || other.location == _this.location)&&(identical(other.qtyOnHand, _this.qtyOnHand) || other.qtyOnHand == _this.qtyOnHand)&&(identical(other.qtyReserved, _this.qtyReserved) || other.qtyReserved == _this.qtyReserved)&&(identical(other.batch, _this.batch) || other.batch == _this.batch)&&(identical(other.baseUomId, _this.baseUomId) || other.baseUomId == _this.baseUomId)&&(identical(other.baseUomCode, _this.baseUomCode) || other.baseUomCode == _this.baseUomCode)&&(identical(other.avgUnitCost, _this.avgUnitCost) || other.avgUnitCost == _this.avgUnitCost)&&(identical(other.totalValue, _this.totalValue) || other.totalValue == _this.totalValue)&&(identical(other.minStock, _this.minStock) || other.minStock == _this.minStock)&&(identical(other.isBelowMin, _this.isBelowMin) || other.isBelowMin == _this.isBelowMin)&&(identical(other.daysToExpiry, _this.daysToExpiry) || other.daysToExpiry == _this.daysToExpiry)&&(identical(other.lastMovementId, _this.lastMovementId) || other.lastMovementId == _this.lastMovementId)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as BalanceDto;
-  return Object.hash(runtimeType,_this.productId,_this.locationId,_this.qtyOnHand,_this.qtyReserved,_this.batchId,_this.productSku,_this.productName,_this.locationCode,_this.locationName,_this.batchNo,_this.expiryDate,_this.baseUomCode,_this.avgUnitCost,_this.totalValue,_this.updatedAt);
+  return Object.hash(runtimeType,_this.product,_this.location,_this.qtyOnHand,_this.qtyReserved,_this.batch,_this.baseUomId,_this.baseUomCode,_this.avgUnitCost,_this.totalValue,_this.minStock,_this.isBelowMin,_this.daysToExpiry,_this.lastMovementId,_this.updatedAt);
 }
 
 @override
 String toString() {
   final _this = this as BalanceDto;
-  return 'BalanceDto(productId: ${_this.productId}, locationId: ${_this.locationId}, qtyOnHand: ${_this.qtyOnHand}, qtyReserved: ${_this.qtyReserved}, batchId: ${_this.batchId}, productSku: ${_this.productSku}, productName: ${_this.productName}, locationCode: ${_this.locationCode}, locationName: ${_this.locationName}, batchNo: ${_this.batchNo}, expiryDate: ${_this.expiryDate}, baseUomCode: ${_this.baseUomCode}, avgUnitCost: ${_this.avgUnitCost}, totalValue: ${_this.totalValue}, updatedAt: ${_this.updatedAt})';
+  return 'BalanceDto(product: ${_this.product}, location: ${_this.location}, qtyOnHand: ${_this.qtyOnHand}, qtyReserved: ${_this.qtyReserved}, batch: ${_this.batch}, baseUomId: ${_this.baseUomId}, baseUomCode: ${_this.baseUomCode}, avgUnitCost: ${_this.avgUnitCost}, totalValue: ${_this.totalValue}, minStock: ${_this.minStock}, isBelowMin: ${_this.isBelowMin}, daysToExpiry: ${_this.daysToExpiry}, lastMovementId: ${_this.lastMovementId}, updatedAt: ${_this.updatedAt})';
 }
 
 
@@ -54,11 +54,11 @@ abstract mixin class $BalanceDtoCopyWith<$Res>  {
   factory $BalanceDtoCopyWith(BalanceDto value, $Res Function(BalanceDto) _then) = _$BalanceDtoCopyWithImpl;
 @useResult
 $Res call({
- int productId, int locationId, Quantity qtyOnHand, Quantity qtyReserved, int batchId, String? productSku, String? productName, String? locationCode, String? locationName, String? batchNo,@NullableDateOnlyConverter() DateTime? expiryDate, String? baseUomCode, Money? avgUnitCost, Money? totalValue, DateTime? updatedAt
+ ProductRefDto product, LocationRefDto location, Quantity qtyOnHand, Quantity qtyReserved, BatchRefDto? batch, int? baseUomId, String? baseUomCode, Money? avgUnitCost, Money? totalValue, Quantity? minStock, bool isBelowMin, int? daysToExpiry, int? lastMovementId, DateTime? updatedAt
 });
 
 
-
+$ProductRefDtoCopyWith<$Res> get product;$LocationRefDtoCopyWith<$Res> get location;$BatchRefDtoCopyWith<$Res>? get batch;
 
 }
 /// @nodoc
@@ -71,27 +71,56 @@ class _$BalanceDtoCopyWithImpl<$Res>
 
 /// Create a copy of BalanceDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? locationId = null,Object? qtyOnHand = null,Object? qtyReserved = null,Object? batchId = null,Object? productSku = freezed,Object? productName = freezed,Object? locationCode = freezed,Object? locationName = freezed,Object? batchNo = freezed,Object? expiryDate = freezed,Object? baseUomCode = freezed,Object? avgUnitCost = freezed,Object? totalValue = freezed,Object? updatedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? product = null,Object? location = null,Object? qtyOnHand = null,Object? qtyReserved = null,Object? batch = freezed,Object? baseUomId = freezed,Object? baseUomCode = freezed,Object? avgUnitCost = freezed,Object? totalValue = freezed,Object? minStock = freezed,Object? isBelowMin = null,Object? daysToExpiry = freezed,Object? lastMovementId = freezed,Object? updatedAt = freezed,}) {
   return _then(BalanceDto(
-productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,locationId: null == locationId ? _self.locationId : locationId // ignore: cast_nullable_to_non_nullable
-as int,qtyOnHand: null == qtyOnHand ? _self.qtyOnHand : qtyOnHand // ignore: cast_nullable_to_non_nullable
+product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,qtyOnHand: null == qtyOnHand ? _self.qtyOnHand : qtyOnHand // ignore: cast_nullable_to_non_nullable
 as Quantity,qtyReserved: null == qtyReserved ? _self.qtyReserved : qtyReserved // ignore: cast_nullable_to_non_nullable
-as Quantity,batchId: null == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int,productSku: freezed == productSku ? _self.productSku : productSku // ignore: cast_nullable_to_non_nullable
-as String?,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,locationCode: freezed == locationCode ? _self.locationCode : locationCode // ignore: cast_nullable_to_non_nullable
-as String?,locationName: freezed == locationName ? _self.locationName : locationName // ignore: cast_nullable_to_non_nullable
-as String?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
-as String?,expiryDate: freezed == expiryDate ? _self.expiryDate : expiryDate // ignore: cast_nullable_to_non_nullable
-as DateTime?,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
+as Quantity,batch: freezed == batch ? _self.batch : batch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,baseUomId: freezed == baseUomId ? _self.baseUomId : baseUomId // ignore: cast_nullable_to_non_nullable
+as int?,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
 as String?,avgUnitCost: freezed == avgUnitCost ? _self.avgUnitCost : avgUnitCost // ignore: cast_nullable_to_non_nullable
 as Money?,totalValue: freezed == totalValue ? _self.totalValue : totalValue // ignore: cast_nullable_to_non_nullable
-as Money?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as Money?,minStock: freezed == minStock ? _self.minStock : minStock // ignore: cast_nullable_to_non_nullable
+as Quantity?,isBelowMin: null == isBelowMin ? _self.isBelowMin : isBelowMin // ignore: cast_nullable_to_non_nullable
+as bool,daysToExpiry: freezed == daysToExpiry ? _self.daysToExpiry : daysToExpiry // ignore: cast_nullable_to_non_nullable
+as int?,lastMovementId: freezed == lastMovementId ? _self.lastMovementId : lastMovementId // ignore: cast_nullable_to_non_nullable
+as int?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }
+/// Create a copy of BalanceDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}/// Create a copy of BalanceDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get location {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.location, (value) {
+    return _then(_self.copyWith(location: value));
+  });
+}/// Create a copy of BalanceDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get batch {
+    if (_self.batch == null) {
+    return null;
+  }
 
+  return $BatchRefDtoCopyWith<$Res>(_self.batch!, (value) {
+    return _then(_self.copyWith(batch: value));
+  });
+}
 }
 
 
@@ -173,10 +202,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int productId,  int locationId,  Quantity qtyOnHand,  Quantity qtyReserved,  int batchId,  String? productSku,  String? productName,  String? locationCode,  String? locationName,  String? batchNo, @NullableDateOnlyConverter()  DateTime? expiryDate,  String? baseUomCode,  Money? avgUnitCost,  Money? totalValue,  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ProductRefDto product,  LocationRefDto location,  Quantity qtyOnHand,  Quantity qtyReserved,  BatchRefDto? batch,  int? baseUomId,  String? baseUomCode,  Money? avgUnitCost,  Money? totalValue,  Quantity? minStock,  bool isBelowMin,  int? daysToExpiry,  int? lastMovementId,  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BalanceDto() when $default != null:
-return $default(_that.productId,_that.locationId,_that.qtyOnHand,_that.qtyReserved,_that.batchId,_that.productSku,_that.productName,_that.locationCode,_that.locationName,_that.batchNo,_that.expiryDate,_that.baseUomCode,_that.avgUnitCost,_that.totalValue,_that.updatedAt);case _:
+return $default(_that.product,_that.location,_that.qtyOnHand,_that.qtyReserved,_that.batch,_that.baseUomId,_that.baseUomCode,_that.avgUnitCost,_that.totalValue,_that.minStock,_that.isBelowMin,_that.daysToExpiry,_that.lastMovementId,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -194,10 +223,10 @@ return $default(_that.productId,_that.locationId,_that.qtyOnHand,_that.qtyReserv
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int productId,  int locationId,  Quantity qtyOnHand,  Quantity qtyReserved,  int batchId,  String? productSku,  String? productName,  String? locationCode,  String? locationName,  String? batchNo, @NullableDateOnlyConverter()  DateTime? expiryDate,  String? baseUomCode,  Money? avgUnitCost,  Money? totalValue,  DateTime? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ProductRefDto product,  LocationRefDto location,  Quantity qtyOnHand,  Quantity qtyReserved,  BatchRefDto? batch,  int? baseUomId,  String? baseUomCode,  Money? avgUnitCost,  Money? totalValue,  Quantity? minStock,  bool isBelowMin,  int? daysToExpiry,  int? lastMovementId,  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _BalanceDto():
-return $default(_that.productId,_that.locationId,_that.qtyOnHand,_that.qtyReserved,_that.batchId,_that.productSku,_that.productName,_that.locationCode,_that.locationName,_that.batchNo,_that.expiryDate,_that.baseUomCode,_that.avgUnitCost,_that.totalValue,_that.updatedAt);case _:
+return $default(_that.product,_that.location,_that.qtyOnHand,_that.qtyReserved,_that.batch,_that.baseUomId,_that.baseUomCode,_that.avgUnitCost,_that.totalValue,_that.minStock,_that.isBelowMin,_that.daysToExpiry,_that.lastMovementId,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -214,10 +243,10 @@ return $default(_that.productId,_that.locationId,_that.qtyOnHand,_that.qtyReserv
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int productId,  int locationId,  Quantity qtyOnHand,  Quantity qtyReserved,  int batchId,  String? productSku,  String? productName,  String? locationCode,  String? locationName,  String? batchNo, @NullableDateOnlyConverter()  DateTime? expiryDate,  String? baseUomCode,  Money? avgUnitCost,  Money? totalValue,  DateTime? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ProductRefDto product,  LocationRefDto location,  Quantity qtyOnHand,  Quantity qtyReserved,  BatchRefDto? batch,  int? baseUomId,  String? baseUomCode,  Money? avgUnitCost,  Money? totalValue,  Quantity? minStock,  bool isBelowMin,  int? daysToExpiry,  int? lastMovementId,  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _BalanceDto() when $default != null:
-return $default(_that.productId,_that.locationId,_that.qtyOnHand,_that.qtyReserved,_that.batchId,_that.productSku,_that.productName,_that.locationCode,_that.locationName,_that.batchNo,_that.expiryDate,_that.baseUomCode,_that.avgUnitCost,_that.totalValue,_that.updatedAt);case _:
+return $default(_that.product,_that.location,_that.qtyOnHand,_that.qtyReserved,_that.batch,_that.baseUomId,_that.baseUomCode,_that.avgUnitCost,_that.totalValue,_that.minStock,_that.isBelowMin,_that.daysToExpiry,_that.lastMovementId,_that.updatedAt);case _:
   return null;
 
 }
@@ -229,23 +258,22 @@ return $default(_that.productId,_that.locationId,_that.qtyOnHand,_that.qtyReserv
 @JsonSerializable()
 
 class _BalanceDto extends BalanceDto {
-  const _BalanceDto({required this.productId, required this.locationId, required this.qtyOnHand, required this.qtyReserved, this.batchId = 0, this.productSku, this.productName, this.locationCode, this.locationName, this.batchNo, @NullableDateOnlyConverter() this.expiryDate, this.baseUomCode, this.avgUnitCost, this.totalValue, this.updatedAt}): super._();
+  const _BalanceDto({required this.product, required this.location, required this.qtyOnHand, required this.qtyReserved, this.batch, this.baseUomId, this.baseUomCode, this.avgUnitCost, this.totalValue, this.minStock, this.isBelowMin = false, this.daysToExpiry, this.lastMovementId, this.updatedAt}): super._();
   factory _BalanceDto.fromJson(Map<String, dynamic> json) => _$BalanceDtoFromJson(json);
 
-@override final  int productId;
-@override final  int locationId;
+@override final  ProductRefDto product;
+@override final  LocationRefDto location;
 @override final  Quantity qtyOnHand;
 @override final  Quantity qtyReserved;
-@override@JsonKey() final  int batchId;
-@override final  String? productSku;
-@override final  String? productName;
-@override final  String? locationCode;
-@override final  String? locationName;
-@override final  String? batchNo;
-@override@NullableDateOnlyConverter() final  DateTime? expiryDate;
+@override final  BatchRefDto? batch;
+@override final  int? baseUomId;
 @override final  String? baseUomCode;
 @override final  Money? avgUnitCost;
 @override final  Money? totalValue;
+@override final  Quantity? minStock;
+@override@JsonKey() final  bool isBelowMin;
+@override final  int? daysToExpiry;
+@override final  int? lastMovementId;
 @override final  DateTime? updatedAt;
 
 /// Create a copy of BalanceDto
@@ -261,18 +289,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _BalanceDto&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.qtyOnHand, qtyOnHand) || other.qtyOnHand == qtyOnHand)&&(identical(other.qtyReserved, qtyReserved) || other.qtyReserved == qtyReserved)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.productSku, productSku) || other.productSku == productSku)&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.locationCode, locationCode) || other.locationCode == locationCode)&&(identical(other.locationName, locationName) || other.locationName == locationName)&&(identical(other.batchNo, batchNo) || other.batchNo == batchNo)&&(identical(other.expiryDate, expiryDate) || other.expiryDate == expiryDate)&&(identical(other.baseUomCode, baseUomCode) || other.baseUomCode == baseUomCode)&&(identical(other.avgUnitCost, avgUnitCost) || other.avgUnitCost == avgUnitCost)&&(identical(other.totalValue, totalValue) || other.totalValue == totalValue)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _BalanceDto&&(identical(other.product, product) || other.product == product)&&(identical(other.location, location) || other.location == location)&&(identical(other.qtyOnHand, qtyOnHand) || other.qtyOnHand == qtyOnHand)&&(identical(other.qtyReserved, qtyReserved) || other.qtyReserved == qtyReserved)&&(identical(other.batch, batch) || other.batch == batch)&&(identical(other.baseUomId, baseUomId) || other.baseUomId == baseUomId)&&(identical(other.baseUomCode, baseUomCode) || other.baseUomCode == baseUomCode)&&(identical(other.avgUnitCost, avgUnitCost) || other.avgUnitCost == avgUnitCost)&&(identical(other.totalValue, totalValue) || other.totalValue == totalValue)&&(identical(other.minStock, minStock) || other.minStock == minStock)&&(identical(other.isBelowMin, isBelowMin) || other.isBelowMin == isBelowMin)&&(identical(other.daysToExpiry, daysToExpiry) || other.daysToExpiry == daysToExpiry)&&(identical(other.lastMovementId, lastMovementId) || other.lastMovementId == lastMovementId)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,productId,locationId,qtyOnHand,qtyReserved,batchId,productSku,productName,locationCode,locationName,batchNo,expiryDate,baseUomCode,avgUnitCost,totalValue,updatedAt);
+    return Object.hash(runtimeType,product,location,qtyOnHand,qtyReserved,batch,baseUomId,baseUomCode,avgUnitCost,totalValue,minStock,isBelowMin,daysToExpiry,lastMovementId,updatedAt);
 }
 
 @override
 String toString() {
-    return 'BalanceDto(productId: $productId, locationId: $locationId, qtyOnHand: $qtyOnHand, qtyReserved: $qtyReserved, batchId: $batchId, productSku: $productSku, productName: $productName, locationCode: $locationCode, locationName: $locationName, batchNo: $batchNo, expiryDate: $expiryDate, baseUomCode: $baseUomCode, avgUnitCost: $avgUnitCost, totalValue: $totalValue, updatedAt: $updatedAt)';
+    return 'BalanceDto(product: $product, location: $location, qtyOnHand: $qtyOnHand, qtyReserved: $qtyReserved, batch: $batch, baseUomId: $baseUomId, baseUomCode: $baseUomCode, avgUnitCost: $avgUnitCost, totalValue: $totalValue, minStock: $minStock, isBelowMin: $isBelowMin, daysToExpiry: $daysToExpiry, lastMovementId: $lastMovementId, updatedAt: $updatedAt)';
 }
 
 
@@ -283,11 +311,11 @@ abstract mixin class _$BalanceDtoCopyWith<$Res> implements $BalanceDtoCopyWith<$
   factory _$BalanceDtoCopyWith(_BalanceDto value, $Res Function(_BalanceDto) _then) = __$BalanceDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int productId, int locationId, Quantity qtyOnHand, Quantity qtyReserved, int batchId, String? productSku, String? productName, String? locationCode, String? locationName, String? batchNo,@NullableDateOnlyConverter() DateTime? expiryDate, String? baseUomCode, Money? avgUnitCost, Money? totalValue, DateTime? updatedAt
+ ProductRefDto product, LocationRefDto location, Quantity qtyOnHand, Quantity qtyReserved, BatchRefDto? batch, int? baseUomId, String? baseUomCode, Money? avgUnitCost, Money? totalValue, Quantity? minStock, bool isBelowMin, int? daysToExpiry, int? lastMovementId, DateTime? updatedAt
 });
 
 
-
+@override $ProductRefDtoCopyWith<$Res> get product;@override $LocationRefDtoCopyWith<$Res> get location;@override $BatchRefDtoCopyWith<$Res>? get batch;
 
 }
 /// @nodoc
@@ -300,35 +328,64 @@ class __$BalanceDtoCopyWithImpl<$Res>
 
 /// Create a copy of BalanceDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? locationId = null,Object? qtyOnHand = null,Object? qtyReserved = null,Object? batchId = null,Object? productSku = freezed,Object? productName = freezed,Object? locationCode = freezed,Object? locationName = freezed,Object? batchNo = freezed,Object? expiryDate = freezed,Object? baseUomCode = freezed,Object? avgUnitCost = freezed,Object? totalValue = freezed,Object? updatedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? product = null,Object? location = null,Object? qtyOnHand = null,Object? qtyReserved = null,Object? batch = freezed,Object? baseUomId = freezed,Object? baseUomCode = freezed,Object? avgUnitCost = freezed,Object? totalValue = freezed,Object? minStock = freezed,Object? isBelowMin = null,Object? daysToExpiry = freezed,Object? lastMovementId = freezed,Object? updatedAt = freezed,}) {
   return _then(_BalanceDto(
-productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,locationId: null == locationId ? _self.locationId : locationId // ignore: cast_nullable_to_non_nullable
-as int,qtyOnHand: null == qtyOnHand ? _self.qtyOnHand : qtyOnHand // ignore: cast_nullable_to_non_nullable
+product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,qtyOnHand: null == qtyOnHand ? _self.qtyOnHand : qtyOnHand // ignore: cast_nullable_to_non_nullable
 as Quantity,qtyReserved: null == qtyReserved ? _self.qtyReserved : qtyReserved // ignore: cast_nullable_to_non_nullable
-as Quantity,batchId: null == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int,productSku: freezed == productSku ? _self.productSku : productSku // ignore: cast_nullable_to_non_nullable
-as String?,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,locationCode: freezed == locationCode ? _self.locationCode : locationCode // ignore: cast_nullable_to_non_nullable
-as String?,locationName: freezed == locationName ? _self.locationName : locationName // ignore: cast_nullable_to_non_nullable
-as String?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
-as String?,expiryDate: freezed == expiryDate ? _self.expiryDate : expiryDate // ignore: cast_nullable_to_non_nullable
-as DateTime?,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
+as Quantity,batch: freezed == batch ? _self.batch : batch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,baseUomId: freezed == baseUomId ? _self.baseUomId : baseUomId // ignore: cast_nullable_to_non_nullable
+as int?,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
 as String?,avgUnitCost: freezed == avgUnitCost ? _self.avgUnitCost : avgUnitCost // ignore: cast_nullable_to_non_nullable
 as Money?,totalValue: freezed == totalValue ? _self.totalValue : totalValue // ignore: cast_nullable_to_non_nullable
-as Money?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
+as Money?,minStock: freezed == minStock ? _self.minStock : minStock // ignore: cast_nullable_to_non_nullable
+as Quantity?,isBelowMin: null == isBelowMin ? _self.isBelowMin : isBelowMin // ignore: cast_nullable_to_non_nullable
+as bool,daysToExpiry: freezed == daysToExpiry ? _self.daysToExpiry : daysToExpiry // ignore: cast_nullable_to_non_nullable
+as int?,lastMovementId: freezed == lastMovementId ? _self.lastMovementId : lastMovementId // ignore: cast_nullable_to_non_nullable
+as int?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
   ));
 }
 
+/// Create a copy of BalanceDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}/// Create a copy of BalanceDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get location {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.location, (value) {
+    return _then(_self.copyWith(location: value));
+  });
+}/// Create a copy of BalanceDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get batch {
+    if (_self.batch == null) {
+    return null;
+  }
 
+  return $BatchRefDtoCopyWith<$Res>(_self.batch!, (value) {
+    return _then(_self.copyWith(batch: value));
+  });
+}
 }
 
 
 /// @nodoc
 mixin _$BatchDto {
 
- int get id; int get productId; String get batchNo; DateTime get receivedAt; BatchStatus get status;@NullableDateOnlyConverter() DateTime? get productionDate;@NullableDateOnlyConverter() DateTime? get expiryDate; int? get supplierId;
+ int get id; ProductRefDto get product; String get batchNo; DateTime get receivedAt; BatchStatus get status; Quantity get qtyOnHand; int get rowVersion;@NullableDateOnlyConverter() DateTime? get productionDate;@NullableDateOnlyConverter() DateTime? get expiryDate; int? get supplierId; int? get daysToExpiry;
 /// Create a copy of BatchDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -342,20 +399,20 @@ $BatchDtoCopyWith<BatchDto> get copyWith => _$BatchDtoCopyWithImpl<BatchDto>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as BatchDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BatchDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.batchNo, _this.batchNo) || other.batchNo == _this.batchNo)&&(identical(other.receivedAt, _this.receivedAt) || other.receivedAt == _this.receivedAt)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.productionDate, _this.productionDate) || other.productionDate == _this.productionDate)&&(identical(other.expiryDate, _this.expiryDate) || other.expiryDate == _this.expiryDate)&&(identical(other.supplierId, _this.supplierId) || other.supplierId == _this.supplierId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BatchDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.batchNo, _this.batchNo) || other.batchNo == _this.batchNo)&&(identical(other.receivedAt, _this.receivedAt) || other.receivedAt == _this.receivedAt)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.qtyOnHand, _this.qtyOnHand) || other.qtyOnHand == _this.qtyOnHand)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&(identical(other.productionDate, _this.productionDate) || other.productionDate == _this.productionDate)&&(identical(other.expiryDate, _this.expiryDate) || other.expiryDate == _this.expiryDate)&&(identical(other.supplierId, _this.supplierId) || other.supplierId == _this.supplierId)&&(identical(other.daysToExpiry, _this.daysToExpiry) || other.daysToExpiry == _this.daysToExpiry));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as BatchDto;
-  return Object.hash(runtimeType,_this.id,_this.productId,_this.batchNo,_this.receivedAt,_this.status,_this.productionDate,_this.expiryDate,_this.supplierId);
+  return Object.hash(runtimeType,_this.id,_this.product,_this.batchNo,_this.receivedAt,_this.status,_this.qtyOnHand,_this.rowVersion,_this.productionDate,_this.expiryDate,_this.supplierId,_this.daysToExpiry);
 }
 
 @override
 String toString() {
   final _this = this as BatchDto;
-  return 'BatchDto(id: ${_this.id}, productId: ${_this.productId}, batchNo: ${_this.batchNo}, receivedAt: ${_this.receivedAt}, status: ${_this.status}, productionDate: ${_this.productionDate}, expiryDate: ${_this.expiryDate}, supplierId: ${_this.supplierId})';
+  return 'BatchDto(id: ${_this.id}, product: ${_this.product}, batchNo: ${_this.batchNo}, receivedAt: ${_this.receivedAt}, status: ${_this.status}, qtyOnHand: ${_this.qtyOnHand}, rowVersion: ${_this.rowVersion}, productionDate: ${_this.productionDate}, expiryDate: ${_this.expiryDate}, supplierId: ${_this.supplierId}, daysToExpiry: ${_this.daysToExpiry})';
 }
 
 
@@ -366,11 +423,11 @@ abstract mixin class $BatchDtoCopyWith<$Res>  {
   factory $BatchDtoCopyWith(BatchDto value, $Res Function(BatchDto) _then) = _$BatchDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, int productId, String batchNo, DateTime receivedAt, BatchStatus status,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, int? supplierId
+ int id, ProductRefDto product, String batchNo, DateTime receivedAt, BatchStatus status, Quantity qtyOnHand, int rowVersion,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, int? supplierId, int? daysToExpiry
 });
 
 
-
+$ProductRefDtoCopyWith<$Res> get product;
 
 }
 /// @nodoc
@@ -383,20 +440,32 @@ class _$BatchDtoCopyWithImpl<$Res>
 
 /// Create a copy of BatchDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? productId = null,Object? batchNo = null,Object? receivedAt = null,Object? status = null,Object? productionDate = freezed,Object? expiryDate = freezed,Object? supplierId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? product = null,Object? batchNo = null,Object? receivedAt = null,Object? status = null,Object? qtyOnHand = null,Object? rowVersion = null,Object? productionDate = freezed,Object? expiryDate = freezed,Object? supplierId = freezed,Object? daysToExpiry = freezed,}) {
   return _then(BatchDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,batchNo: null == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,batchNo: null == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
 as String,receivedAt: null == receivedAt ? _self.receivedAt : receivedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as BatchStatus,productionDate: freezed == productionDate ? _self.productionDate : productionDate // ignore: cast_nullable_to_non_nullable
+as BatchStatus,qtyOnHand: null == qtyOnHand ? _self.qtyOnHand : qtyOnHand // ignore: cast_nullable_to_non_nullable
+as Quantity,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as int,productionDate: freezed == productionDate ? _self.productionDate : productionDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,expiryDate: freezed == expiryDate ? _self.expiryDate : expiryDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,supplierId: freezed == supplierId ? _self.supplierId : supplierId // ignore: cast_nullable_to_non_nullable
+as int?,daysToExpiry: freezed == daysToExpiry ? _self.daysToExpiry : daysToExpiry // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
 }
-
+/// Create a copy of BatchDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}
 }
 
 
@@ -478,10 +547,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int productId,  String batchNo,  DateTime receivedAt,  BatchStatus status, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  ProductRefDto product,  String batchNo,  DateTime receivedAt,  BatchStatus status,  Quantity qtyOnHand,  int rowVersion, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId,  int? daysToExpiry)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BatchDto() when $default != null:
-return $default(_that.id,_that.productId,_that.batchNo,_that.receivedAt,_that.status,_that.productionDate,_that.expiryDate,_that.supplierId);case _:
+return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.status,_that.qtyOnHand,_that.rowVersion,_that.productionDate,_that.expiryDate,_that.supplierId,_that.daysToExpiry);case _:
   return orElse();
 
 }
@@ -499,10 +568,10 @@ return $default(_that.id,_that.productId,_that.batchNo,_that.receivedAt,_that.st
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int productId,  String batchNo,  DateTime receivedAt,  BatchStatus status, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  ProductRefDto product,  String batchNo,  DateTime receivedAt,  BatchStatus status,  Quantity qtyOnHand,  int rowVersion, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId,  int? daysToExpiry)  $default,) {final _that = this;
 switch (_that) {
 case _BatchDto():
-return $default(_that.id,_that.productId,_that.batchNo,_that.receivedAt,_that.status,_that.productionDate,_that.expiryDate,_that.supplierId);case _:
+return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.status,_that.qtyOnHand,_that.rowVersion,_that.productionDate,_that.expiryDate,_that.supplierId,_that.daysToExpiry);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -519,10 +588,10 @@ return $default(_that.id,_that.productId,_that.batchNo,_that.receivedAt,_that.st
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int productId,  String batchNo,  DateTime receivedAt,  BatchStatus status, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  ProductRefDto product,  String batchNo,  DateTime receivedAt,  BatchStatus status,  Quantity qtyOnHand,  int rowVersion, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId,  int? daysToExpiry)?  $default,) {final _that = this;
 switch (_that) {
 case _BatchDto() when $default != null:
-return $default(_that.id,_that.productId,_that.batchNo,_that.receivedAt,_that.status,_that.productionDate,_that.expiryDate,_that.supplierId);case _:
+return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.status,_that.qtyOnHand,_that.rowVersion,_that.productionDate,_that.expiryDate,_that.supplierId,_that.daysToExpiry);case _:
   return null;
 
 }
@@ -534,17 +603,20 @@ return $default(_that.id,_that.productId,_that.batchNo,_that.receivedAt,_that.st
 @JsonSerializable()
 
 class _BatchDto implements BatchDto {
-  const _BatchDto({required this.id, required this.productId, required this.batchNo, required this.receivedAt, required this.status, @NullableDateOnlyConverter() this.productionDate, @NullableDateOnlyConverter() this.expiryDate, this.supplierId});
+  const _BatchDto({required this.id, required this.product, required this.batchNo, required this.receivedAt, required this.status, required this.qtyOnHand, this.rowVersion = 1, @NullableDateOnlyConverter() this.productionDate, @NullableDateOnlyConverter() this.expiryDate, this.supplierId, this.daysToExpiry});
   factory _BatchDto.fromJson(Map<String, dynamic> json) => _$BatchDtoFromJson(json);
 
 @override final  int id;
-@override final  int productId;
+@override final  ProductRefDto product;
 @override final  String batchNo;
 @override final  DateTime receivedAt;
 @override final  BatchStatus status;
+@override final  Quantity qtyOnHand;
+@override@JsonKey() final  int rowVersion;
 @override@NullableDateOnlyConverter() final  DateTime? productionDate;
 @override@NullableDateOnlyConverter() final  DateTime? expiryDate;
 @override final  int? supplierId;
+@override final  int? daysToExpiry;
 
 /// Create a copy of BatchDto
 /// with the given fields replaced by the non-null parameter values.
@@ -559,18 +631,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _BatchDto&&(identical(other.id, id) || other.id == id)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.batchNo, batchNo) || other.batchNo == batchNo)&&(identical(other.receivedAt, receivedAt) || other.receivedAt == receivedAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.productionDate, productionDate) || other.productionDate == productionDate)&&(identical(other.expiryDate, expiryDate) || other.expiryDate == expiryDate)&&(identical(other.supplierId, supplierId) || other.supplierId == supplierId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _BatchDto&&(identical(other.id, id) || other.id == id)&&(identical(other.product, product) || other.product == product)&&(identical(other.batchNo, batchNo) || other.batchNo == batchNo)&&(identical(other.receivedAt, receivedAt) || other.receivedAt == receivedAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.qtyOnHand, qtyOnHand) || other.qtyOnHand == qtyOnHand)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.productionDate, productionDate) || other.productionDate == productionDate)&&(identical(other.expiryDate, expiryDate) || other.expiryDate == expiryDate)&&(identical(other.supplierId, supplierId) || other.supplierId == supplierId)&&(identical(other.daysToExpiry, daysToExpiry) || other.daysToExpiry == daysToExpiry));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,productId,batchNo,receivedAt,status,productionDate,expiryDate,supplierId);
+    return Object.hash(runtimeType,id,product,batchNo,receivedAt,status,qtyOnHand,rowVersion,productionDate,expiryDate,supplierId,daysToExpiry);
 }
 
 @override
 String toString() {
-    return 'BatchDto(id: $id, productId: $productId, batchNo: $batchNo, receivedAt: $receivedAt, status: $status, productionDate: $productionDate, expiryDate: $expiryDate, supplierId: $supplierId)';
+    return 'BatchDto(id: $id, product: $product, batchNo: $batchNo, receivedAt: $receivedAt, status: $status, qtyOnHand: $qtyOnHand, rowVersion: $rowVersion, productionDate: $productionDate, expiryDate: $expiryDate, supplierId: $supplierId, daysToExpiry: $daysToExpiry)';
 }
 
 
@@ -581,11 +653,11 @@ abstract mixin class _$BatchDtoCopyWith<$Res> implements $BatchDtoCopyWith<$Res>
   factory _$BatchDtoCopyWith(_BatchDto value, $Res Function(_BatchDto) _then) = __$BatchDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int productId, String batchNo, DateTime receivedAt, BatchStatus status,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, int? supplierId
+ int id, ProductRefDto product, String batchNo, DateTime receivedAt, BatchStatus status, Quantity qtyOnHand, int rowVersion,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, int? supplierId, int? daysToExpiry
 });
 
 
-
+@override $ProductRefDtoCopyWith<$Res> get product;
 
 }
 /// @nodoc
@@ -598,21 +670,33 @@ class __$BatchDtoCopyWithImpl<$Res>
 
 /// Create a copy of BatchDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? productId = null,Object? batchNo = null,Object? receivedAt = null,Object? status = null,Object? productionDate = freezed,Object? expiryDate = freezed,Object? supplierId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? product = null,Object? batchNo = null,Object? receivedAt = null,Object? status = null,Object? qtyOnHand = null,Object? rowVersion = null,Object? productionDate = freezed,Object? expiryDate = freezed,Object? supplierId = freezed,Object? daysToExpiry = freezed,}) {
   return _then(_BatchDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,batchNo: null == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,batchNo: null == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
 as String,receivedAt: null == receivedAt ? _self.receivedAt : receivedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as BatchStatus,productionDate: freezed == productionDate ? _self.productionDate : productionDate // ignore: cast_nullable_to_non_nullable
+as BatchStatus,qtyOnHand: null == qtyOnHand ? _self.qtyOnHand : qtyOnHand // ignore: cast_nullable_to_non_nullable
+as Quantity,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as int,productionDate: freezed == productionDate ? _self.productionDate : productionDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,expiryDate: freezed == expiryDate ? _self.expiryDate : expiryDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,supplierId: freezed == supplierId ? _self.supplierId : supplierId // ignore: cast_nullable_to_non_nullable
+as int?,daysToExpiry: freezed == daysToExpiry ? _self.daysToExpiry : daysToExpiry // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
 }
 
-
+/// Create a copy of BatchDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}
 }
 
 

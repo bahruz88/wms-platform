@@ -11,12 +11,15 @@ import 'package:wms_l10n/wms_l10n.dart';
 
 import 'fake_inventory_repository.dart';
 
+// The nested refs are the shape the API sends; see the note in wms_api_client's DTO test.
 final _balance = BalanceDto(
-  productId: 1,
-  locationId: 2,
-  productSku: 'CHS-0042',
-  productName: 'Chicken Strips',
-  locationCode: 'FOOD-WH',
+  product: const ProductRefDto(
+    id: 1,
+    sku: 'CHS-0042',
+    name: 'Chicken Strips',
+    baseUomCode: 'KG',
+  ),
+  location: const LocationRefDto(id: 2, code: 'FOOD-WH', name: 'Qida anbarı'),
   baseUomCode: 'KG',
   qtyOnHand: Quantity.parse('45'),
   qtyReserved: Quantity.parse('5.5'),

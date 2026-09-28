@@ -98,7 +98,7 @@ class BalancesScreen extends ConsumerWidget {
                     WmsDataTable<BalanceDto>(
                       permissions: permissions,
                       rowKey: (row, _) =>
-                          '${row.productId}-${row.locationId}-${row.batchId}',
+                          '${row.product.id}-${row.location.id}-${row.batch?.id ?? 0}',
                       emptyReason: 'Bu lokasiyada qalıq yoxdur.',
                       emptyNextStep: 'Qəbul sənədi yaradın.',
                       columns: [
@@ -107,7 +107,7 @@ class BalancesScreen extends ConsumerWidget {
                           header: 'SKU',
                           flex: 2,
                           render: (row, _) => Text(
-                            row.productSku ?? '#${row.productId}',
+                            row.product.sku,
                             style: WmsTypography.docNo.copyWith(color: c.ink),
                           ),
                         ),
@@ -115,21 +115,20 @@ class BalancesScreen extends ConsumerWidget {
                           key: 'product',
                           header: l10n.labelProduct,
                           flex: 4,
-                          cell: (row) => row.productName ?? '',
+                          cell: (row) => row.product.name,
                         ),
                         WmsColumn(
                           key: 'location',
                           header: l10n.labelLocation,
                           flex: 2,
-                          cell: (row) =>
-                              row.locationCode ?? '#${row.locationId}',
+                          cell: (row) => row.location.code,
                         ),
                         WmsColumn(
                           key: 'batch',
                           header: l10n.labelBatchNo,
                           flex: 2,
                           render: (row, _) => Text(
-                            row.batchNo ?? '—',
+                            row.batch?.batchNo ?? '—',
                             style: WmsTypography.docNo.copyWith(color: c.ink),
                           ),
                         ),
@@ -137,7 +136,7 @@ class BalancesScreen extends ConsumerWidget {
                           key: 'expiry',
                           header: l10n.labelExpiryDate,
                           width: 120,
-                          cell: (row) => WmsFormat.date(row.expiryDate),
+                          cell: (row) => WmsFormat.date(row.batch?.expiryDate),
                         ),
                         WmsColumn(
                           key: 'onHand',

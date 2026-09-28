@@ -7,19 +7,14 @@ part of 'inventory_dtos.dart';
 // **************************************************************************
 
 _BalanceDto _$BalanceDtoFromJson(Map<String, dynamic> json) => _BalanceDto(
-  productId: (json['productId'] as num).toInt(),
-  locationId: (json['locationId'] as num).toInt(),
+  product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
+  location: LocationRefDto.fromJson(json['location'] as Map<String, dynamic>),
   qtyOnHand: Quantity.fromJson(json['qtyOnHand'] as String),
   qtyReserved: Quantity.fromJson(json['qtyReserved'] as String),
-  batchId: (json['batchId'] as num?)?.toInt() ?? 0,
-  productSku: json['productSku'] as String?,
-  productName: json['productName'] as String?,
-  locationCode: json['locationCode'] as String?,
-  locationName: json['locationName'] as String?,
-  batchNo: json['batchNo'] as String?,
-  expiryDate: const NullableDateOnlyConverter().fromJson(
-    json['expiryDate'] as String?,
-  ),
+  batch: json['batch'] == null
+      ? null
+      : BatchRefDto.fromJson(json['batch'] as Map<String, dynamic>),
+  baseUomId: (json['baseUomId'] as num?)?.toInt(),
   baseUomCode: json['baseUomCode'] as String?,
   avgUnitCost: json['avgUnitCost'] == null
       ? null
@@ -27,37 +22,43 @@ _BalanceDto _$BalanceDtoFromJson(Map<String, dynamic> json) => _BalanceDto(
   totalValue: json['totalValue'] == null
       ? null
       : Money.fromJson(json['totalValue'] as String),
+  minStock: json['minStock'] == null
+      ? null
+      : Quantity.fromJson(json['minStock'] as String),
+  isBelowMin: json['isBelowMin'] as bool? ?? false,
+  daysToExpiry: (json['daysToExpiry'] as num?)?.toInt(),
+  lastMovementId: (json['lastMovementId'] as num?)?.toInt(),
   updatedAt: json['updatedAt'] == null
       ? null
       : DateTime.parse(json['updatedAt'] as String),
 );
 
-Map<String, dynamic> _$BalanceDtoToJson(
-  _BalanceDto instance,
-) => <String, dynamic>{
-  'productId': instance.productId,
-  'locationId': instance.locationId,
-  'qtyOnHand': instance.qtyOnHand.toJson(),
-  'qtyReserved': instance.qtyReserved.toJson(),
-  'batchId': instance.batchId,
-  'productSku': instance.productSku,
-  'productName': instance.productName,
-  'locationCode': instance.locationCode,
-  'locationName': instance.locationName,
-  'batchNo': instance.batchNo,
-  'expiryDate': const NullableDateOnlyConverter().toJson(instance.expiryDate),
-  'baseUomCode': instance.baseUomCode,
-  'avgUnitCost': instance.avgUnitCost?.toJson(),
-  'totalValue': instance.totalValue?.toJson(),
-  'updatedAt': instance.updatedAt?.toIso8601String(),
-};
+Map<String, dynamic> _$BalanceDtoToJson(_BalanceDto instance) =>
+    <String, dynamic>{
+      'product': instance.product.toJson(),
+      'location': instance.location.toJson(),
+      'qtyOnHand': instance.qtyOnHand.toJson(),
+      'qtyReserved': instance.qtyReserved.toJson(),
+      'batch': instance.batch?.toJson(),
+      'baseUomId': instance.baseUomId,
+      'baseUomCode': instance.baseUomCode,
+      'avgUnitCost': instance.avgUnitCost?.toJson(),
+      'totalValue': instance.totalValue?.toJson(),
+      'minStock': instance.minStock?.toJson(),
+      'isBelowMin': instance.isBelowMin,
+      'daysToExpiry': instance.daysToExpiry,
+      'lastMovementId': instance.lastMovementId,
+      'updatedAt': instance.updatedAt?.toIso8601String(),
+    };
 
 _BatchDto _$BatchDtoFromJson(Map<String, dynamic> json) => _BatchDto(
   id: (json['id'] as num).toInt(),
-  productId: (json['productId'] as num).toInt(),
+  product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
   batchNo: json['batchNo'] as String,
   receivedAt: DateTime.parse(json['receivedAt'] as String),
   status: $enumDecode(_$BatchStatusEnumMap, json['status']),
+  qtyOnHand: Quantity.fromJson(json['qtyOnHand'] as String),
+  rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
   productionDate: const NullableDateOnlyConverter().fromJson(
     json['productionDate'] as String?,
   ),
@@ -65,19 +66,23 @@ _BatchDto _$BatchDtoFromJson(Map<String, dynamic> json) => _BatchDto(
     json['expiryDate'] as String?,
   ),
   supplierId: (json['supplierId'] as num?)?.toInt(),
+  daysToExpiry: (json['daysToExpiry'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$BatchDtoToJson(_BatchDto instance) => <String, dynamic>{
   'id': instance.id,
-  'productId': instance.productId,
+  'product': instance.product.toJson(),
   'batchNo': instance.batchNo,
   'receivedAt': instance.receivedAt.toIso8601String(),
   'status': _$BatchStatusEnumMap[instance.status]!,
+  'qtyOnHand': instance.qtyOnHand.toJson(),
+  'rowVersion': instance.rowVersion,
   'productionDate': const NullableDateOnlyConverter().toJson(
     instance.productionDate,
   ),
   'expiryDate': const NullableDateOnlyConverter().toJson(instance.expiryDate),
   'supplierId': instance.supplierId,
+  'daysToExpiry': instance.daysToExpiry,
 };
 
 const _$BatchStatusEnumMap = {

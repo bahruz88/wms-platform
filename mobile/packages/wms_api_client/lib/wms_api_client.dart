@@ -15,6 +15,7 @@ export 'src/apis/reporting_api.dart';
 export 'src/attachments/attachment_policy.dart';
 export 'src/client/token_provider.dart';
 export 'src/client/wms_api_client.dart';
+export 'src/dto/common/ref_dtos.dart';
 export 'src/dto/consumption/consumption_dtos.dart';
 export 'src/dto/documents/documents_dtos.dart';
 export 'src/dto/identity/identity_dtos.dart';

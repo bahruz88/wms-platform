@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:wms_core/wms_core.dart';
 
 import '../../json/date_only_converter.dart';
+import '../common/ref_dtos.dart';
 
 part 'inventory_dtos.freezed.dart';
 part 'inventory_dtos.g.dart';
@@ -11,25 +12,30 @@ part 'inventory_dtos.g.dart';
 // Balances / batches
 // ---------------------------------------------------------------------------
 
-/// `inv_balance` projection row. Cost/value fields are absent without
-/// `master.product.view_cost` (spec §16).
+/// `Balance` — one `inv_balance` row as the API sends it.
+///
+/// Product, location and batch arrive as nested objects, not as bare ids. The previous DTO expected
+/// `productId`/`locationId` and so could not parse a single balance row, while its unit test passed
+/// because the fixture had been written to the same wrong shape.
+///
+/// Cost and value are absent without `master.product.view_cost`: the server leaves the fields out
+/// rather than sending null, so a screen cannot print a blank where a number was withheld (spec §16).
 @freezed
 abstract class BalanceDto with _$BalanceDto {
   const factory BalanceDto({
-    required int productId,
-    required int locationId,
+    required ProductRefDto product,
+    required LocationRefDto location,
     required Quantity qtyOnHand,
     required Quantity qtyReserved,
-    @Default(0) int batchId,
-    String? productSku,
-    String? productName,
-    String? locationCode,
-    String? locationName,
-    String? batchNo,
-    @NullableDateOnlyConverter() DateTime? expiryDate,
+    BatchRefDto? batch,
+    int? baseUomId,
     String? baseUomCode,
     Money? avgUnitCost,
     Money? totalValue,
+    Quantity? minStock,
+    @Default(false) bool isBelowMin,
+    int? daysToExpiry,
+    int? lastMovementId,
     DateTime? updatedAt,
   }) = _BalanceDto;
 
@@ -38,24 +44,30 @@ abstract class BalanceDto with _$BalanceDto {
   factory BalanceDto.fromJson(Map<String, Object?> json) =>
       _$BalanceDtoFromJson(json);
 
-  /// `qty_available = qty_on_hand - qty_reserved` (spec §9.5).
+  /// `qty_available = qty_on_hand − qty_reserved` (spec §9.5).
+  ///
+  /// Recomputed rather than read from the response, so a screen can never show a total that
+  /// disagrees with the two numbers printed next to it.
   Quantity get qtyAvailable => qtyOnHand - qtyReserved;
 
   bool get hasCostInfo => avgUnitCost != null || totalValue != null;
 }
 
-/// `inv_batch`.
+/// `Batch` — `inv_batch` with the product embedded and the stock it still holds.
 @freezed
 abstract class BatchDto with _$BatchDto {
   const factory BatchDto({
     required int id,
-    required int productId,
+    required ProductRefDto product,
     required String batchNo,
     required DateTime receivedAt,
     required BatchStatus status,
+    required Quantity qtyOnHand,
+    @Default(1) int rowVersion,
     @NullableDateOnlyConverter() DateTime? productionDate,
     @NullableDateOnlyConverter() DateTime? expiryDate,
     int? supplierId,
+    int? daysToExpiry,
   }) = _BatchDto;
 
   factory BatchDto.fromJson(Map<String, Object?> json) =>
