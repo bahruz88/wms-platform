@@ -74,6 +74,14 @@ jobs:
         working-directory: mobile
         run: flutter analyze --no-pub
 
+      # The DTOs are hand-written and their unit tests use hand-written fixtures, so a DTO that
+      # disagrees with the contract has a test that agrees with the DTO. This check compares the
+      # contract's field names against what the generated serializers actually read, and fails when
+      # a DTO expects a required field the contract never sends — the one kind of difference that
+      # makes `fromJson` throw on a real response.
+      - name: DTO / contract drift
+        run: python3 scripts/check-dto-drift.py
+
       # melos exec --dir-exists=test runs `flutter test` in every package/app that has tests.
       - name: Test (all packages)
         working-directory: mobile
