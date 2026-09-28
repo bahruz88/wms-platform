@@ -84,10 +84,24 @@ export function sidebar(page: Page) {
 }
 
 /** Labels of every navigation entry the signed-in user is offered. */
+/**
+ * The entries the sidebar offers, by accessible name.
+ *
+ * Not `innerText`: an entry may carry a badge — the unread notification count — and its digits
+ * would join the link's text, turning «Bildirişlər» into «Bildirişlər 5» the moment somebody has
+ * an unread message. The accessible name is the label alone, which is what «offered» means here.
+ */
 export async function navLabels(page: Page): Promise<string[]> {
   const links = sidebar(page).getByRole('link');
   await expect(links.first()).toBeVisible();
-  return (await links.allInnerTexts()).map((t) => t.trim()).filter(Boolean);
+  const count = await links.count();
+  const labels: string[] = [];
+  for (let i = 0; i < count; i++) {
+    const label = (await links.nth(i).getAttribute('aria-label'))?.trim();
+    const text = label && label.length > 0 ? label : (await links.nth(i).innerText()).trim();
+    if (text) labels.push(text);
+  }
+  return labels;
 }
 
 /** Opens the user menu pinned to the bottom of the sidebar. */

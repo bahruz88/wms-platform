@@ -139,12 +139,20 @@ export function AppShell() {
                   <Link
                     key={item.to}
                     to={item.to}
+                    // The accessible name is the label alone. Without this the unread count joins
+                    // the link's text, so a screen reader announces «Bildirişlər 5» and any test
+                    // that lists the navigation sees a different entry once the badge appears.
+                    aria-label={t(item.labelKey)}
                     aria-current={active ? 'page' : undefined}
                     className={active ? 'wms-side__link wms-side__link--active' : 'wms-side__link'}
                   >
                     {t(item.labelKey)}
                     {item.badge === 'unreadNotifications' && unreadTotal > 0 ? (
-                      <span className="wms-side__badge" aria-label={t('app.unreadCount', { count: unreadTotal })}>
+                      <span
+                        className="wms-side__badge"
+                        title={t('app.unreadCount', { count: unreadTotal })}
+                        aria-hidden="true"
+                      >
                         {unreadTotal > 99 ? '99+' : unreadTotal}
                       </span>
                     ) : null}

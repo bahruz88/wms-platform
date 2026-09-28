@@ -114,4 +114,44 @@ public sealed class BatchAllocationTests
         Assert.True(result.IsFailure);
         Assert.Equal("INSUFFICIENT_STOCK", result.Error.Code);
     }
+
+    [Fact]
+    public void An_expired_batch_is_not_allocatable_by_default()
+    {
+        var candidates = new[] { Candidate(1, "2026-09-01", 1, 50m, BatchStatus.Expired) };
+
+        var result = BatchAllocator.Allocate(candidates, 10m, IssueStrategy.Fefo);
+
+        Assert.True(result.IsFailure);
+    }
+
+    [Fact]
+    public void A_disposal_may_draw_on_an_expired_batch()
+    {
+        // Waste, return to vendor and count adjustment are the only three ways expired stock can
+        // leave the ledger. Refusing them left it on the balance for ever.
+        var candidates = new[] { Candidate(1, "2026-09-01", 1, 50m, BatchStatus.Expired) };
+
+        var result = BatchAllocator.Allocate(candidates, 10m, IssueStrategy.Fefo, allowNonActive: true);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(new BatchAllocation(1, 10m), result.Value[0]);
+    }
+
+    [Fact]
+    public void A_disposal_still_takes_the_earliest_expiry_first()
+    {
+        var candidates = new[]
+        {
+            Candidate(1, "2026-10-01", 1, 30m, BatchStatus.Active),
+            Candidate(2, "2026-09-01", 2, 30m, BatchStatus.Expired),
+        };
+
+        var result = BatchAllocator.Allocate(candidates, 40m, IssueStrategy.Fefo, allowNonActive: true);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, result.Value[0].BatchId);
+        Assert.Equal(30m, result.Value[0].Qty);
+        Assert.Equal(1, result.Value[1].BatchId);
+    }
 }

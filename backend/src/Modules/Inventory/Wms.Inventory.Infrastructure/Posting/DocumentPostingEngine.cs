@@ -83,7 +83,7 @@ public sealed class DocumentPostingEngine(
 
             // Lock FIRST, allocate after: the availability the decision is based on cannot change underneath it.
             var rows = await balances.GetAllForUpdateAsync(tenantId, line.ProductId, line.FromLocationId, cancellationToken).ConfigureAwait(false);
-            var candidates = await BuildCandidatesAsync(tenantId, rows, request.DocDate, cancellationToken).ConfigureAwait(false);
+            var candidates = await BuildCandidatesAsync(tenantId, rows, request.DocDate, request.DocType, cancellationToken).ConfigureAwait(false);
 
             var strategy = string.Equals(product.IssueStrategy, "FIFO", StringComparison.OrdinalIgnoreCase)
                 ? IssueStrategy.Fifo
@@ -101,7 +101,12 @@ public sealed class DocumentPostingEngine(
                 ? candidates.Where(c => c.Candidate.BatchId == explicitBatch).ToList()
                 : candidates;
 
-            var allocation = BatchAllocator.Allocate(pool.Select(c => c.Candidate), qtyBase.Value, strategy);
+            // The same three document types that may see an expired batch may also draw on it.
+            var allocation = BatchAllocator.Allocate(
+                pool.Select(c => c.Candidate),
+                qtyBase.Value,
+                strategy,
+                allowNonActive: IsDisposal(request.DocType));
             if (allocation.IsFailure)
             {
                 return allocation.Error;
@@ -172,11 +177,26 @@ public sealed class DocumentPostingEngine(
         return new PostingResult(group.Value.Id, group.Value.DocNo, Replayed: false, posted);
     }
 
-    /// <summary>Turns locked balance rows into allocation candidates, dropping non-allocatable and expired batches.</summary>
+    /// <summary>
+    /// Turns locked balance rows into allocation candidates.
+    ///
+    /// A batch that is not <c>Active</c>, or expired on the document date, is normally dropped: it
+    /// must not leave the warehouse towards a branch or back to a supplier.
+    ///
+    /// Expired stock has exactly three legitimate exits, and all three are allowed here: the bin
+    /// (<c>Waste</c>), the supplier it came from (<c>Return</c> — returning spoiled goods is usually
+    /// the reason for the return), and a physical recount (<c>CountAdjust</c>, which must be able to
+    /// reconcile whatever is actually on the shelf). Everything else — issue, transfer, sample —
+    /// stays refused: expired food must not reach a branch.
+    ///
+    /// Excluding all three left expired stock with no way out of the ledger at all. It stayed on the
+    /// balance for ever, overstating both the quantity and the stock value.
+    /// </summary>
     private async Task<List<CandidateRow>> BuildCandidatesAsync(
         uint tenantId,
         IReadOnlyList<StockBalance> rows,
         DateOnly docDate,
+        DocType docType,
         CancellationToken cancellationToken)
     {
         var withStock = rows.Where(r => r.QtyAvailable() > 0m).ToList();
@@ -205,7 +225,13 @@ public sealed class DocumentPostingEngine(
                 continue;
             }
 
-            if (!batches.TryGetValue(row.BatchId, out var batch) || !batch.IsAllocatable() || batch.IsExpiredOn(docDate))
+            if (!batches.TryGetValue(row.BatchId, out var batch))
+            {
+                continue;
+            }
+
+            // Only the three exits above may take from an expired or blocked batch.
+            if (!IsDisposal(docType) && (!batch.IsAllocatable() || batch.IsExpiredOn(docDate)))
             {
                 continue;
             }
@@ -217,6 +243,13 @@ public sealed class DocumentPostingEngine(
 
         return candidates;
     }
+
+    /// <summary>
+    /// The three document types that may draw on an expired or blocked batch: the bin, the supplier
+    /// it came from, and a physical recount. Everything else must leave expired stock where it is.
+    /// </summary>
+    private static bool IsDisposal(DocType docType) =>
+        docType is DocType.Waste or DocType.Return or DocType.CountAdjust;
 
     private sealed record CandidateRow(BatchCandidate Candidate, decimal? UnitCost);
 }

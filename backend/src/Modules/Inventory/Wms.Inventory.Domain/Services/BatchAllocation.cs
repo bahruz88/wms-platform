@@ -57,8 +57,19 @@ public sealed class BatchIssueComparer(IssueStrategy strategy) : IComparer<Batch
 
 public static class BatchAllocator
 {
-    /// <summary>Allocates <paramref name="requestedQty"/> across ACTIVE batches with available stock in strategy order.</summary>
-    public static Result<IReadOnlyList<BatchAllocation>> Allocate(IEnumerable<BatchCandidate> candidates, decimal requestedQty, IssueStrategy strategy)
+    /// <summary>
+    /// Allocates <paramref name="requestedQty"/> across batches with available stock, in strategy order.
+    ///
+    /// Only ACTIVE batches are allocatable, with one exception: a disposal — waste, a return to the
+    /// supplier, or a count adjustment — may also draw on an EXPIRED or BLOCKED batch. Those are the
+    /// only three ways expired stock can legitimately leave, and refusing them here left it stuck on
+    /// the balance for ever. The caller decides, because only the caller knows the document type.
+    /// </summary>
+    public static Result<IReadOnlyList<BatchAllocation>> Allocate(
+        IEnumerable<BatchCandidate> candidates,
+        decimal requestedQty,
+        IssueStrategy strategy,
+        bool allowNonActive = false)
     {
         ArgumentNullException.ThrowIfNull(candidates);
         if (requestedQty <= 0m)
@@ -67,7 +78,7 @@ public static class BatchAllocator
         }
 
         var ordered = candidates
-            .Where(c => c.Status == BatchStatus.Active && c.QtyAvailable > 0m)
+            .Where(c => (allowNonActive || c.Status == BatchStatus.Active) && c.QtyAvailable > 0m)
             .OrderBy(c => c, new BatchIssueComparer(strategy))
             .ToList();
 
