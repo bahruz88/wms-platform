@@ -49,19 +49,37 @@ MODULES = {
 
 
 def contract_schemas(path: Path) -> dict[str, set[str]]:
-    """Schema name -> declared property names. Handles the `allOf` nesting the contracts use."""
-    out: dict[str, set[str]] = {}
+    """
+    Schema name -> every property name the schema carries, `allOf` bases included.
+
+    The contracts build detail schemas on their summary: `GoodsReceipt` is `allOf: [GoodsReceiptSummary,
+    {the extra fields}]`. Reading only the extension block makes `docNo` and `id` look invented by the
+    DTO, which is how an earlier version of this script over-reported the damage.
+    """
+    own: dict[str, set[str]] = {}
+    bases: dict[str, list[str]] = {}
     name: str | None = None
     props: set[str] = set()
+    parents: list[str] = []
     in_props = False
+
+    def flush() -> None:
+        if name:
+            own[name] = props
+            bases[name] = parents
+
     for line in path.read_text(encoding="utf-8").split("\n"):
         m = re.match(r"^    (\w+):\s*$", line)
         if m:
-            if name:
-                out[name] = props
-            name, props, in_props = m.group(1), set(), False
+            flush()
+            name, props, parents, in_props = m.group(1), set(), [], False
             continue
         if name is None:
+            continue
+        # `- $ref: '#/components/schemas/X'` directly under allOf is a base schema.
+        m = re.match(r"^\s+- \$ref: '#/components/schemas/(\w+)'\s*$", line)
+        if m:
+            parents.append(m.group(1))
             continue
         if re.match(r"^      properties:\s*$", line) or re.match(r"^          properties:\s*$", line):
             in_props = True
@@ -70,21 +88,39 @@ def contract_schemas(path: Path) -> dict[str, set[str]]:
         if m and in_props:
             props.add(m.group(1))
         if re.match(r"^[a-z]", line) and name:
-            out[name] = props
+            flush()
             name = None
-    if name:
-        out[name] = props
-    return {k: v for k, v in out.items() if v}
+    flush()
+
+    def resolve(schema: str, seen: frozenset[str] = frozenset()) -> set[str]:
+        if schema in seen or schema not in own:
+            return set()
+        out = set(own[schema])
+        for base in bases.get(schema, []):
+            out |= resolve(base, seen | {schema})
+        return out
+
+    resolved = {k: resolve(k) for k in own}
+    return {k: v for k, v in resolved.items() if v}
 
 
-def dart_dtos(path: Path) -> dict[str, set[str]]:
-    """Class name -> the JSON keys its generated `fromJson` reads."""
+def dart_dtos(path: Path) -> dict[str, tuple[set[str], set[str]]]:
+    """
+    Class name -> (every JSON key its `fromJson` reads, the subset it reads *unguarded*).
+
+    json_serializable wraps a nullable field in `json['x'] == null ? null : …` and reads a required
+    one directly. That distinction is the whole difference between a DTO that cannot parse a real
+    response and one that merely carries a field nobody sends: a missing nullable key yields null,
+    a missing required key throws.
+    """
     text = path.read_text(encoding="utf-8")
-    out: dict[str, set[str]] = {}
+    out: dict[str, tuple[set[str], set[str]]] = {}
     for m in re.finditer(r"_\$(\w+)FromJson\(Map<String, dynamic> json\) =>(.*?)\n\n", text, re.S):
-        keys = set(re.findall(r"json\['(\w+)'\]", m.group(2)))
+        body = m.group(2)
+        keys = set(re.findall(r"json\['(\w+)'\]", body))
+        guarded = set(re.findall(r"json\['(\w+)'\] == null", body))
         if keys:
-            out[m.group(1)] = keys
+            out[m.group(1)] = (keys, keys - guarded)
     return out
 
 
@@ -104,24 +140,28 @@ def main() -> int:
             findings.append(f"  {module}: no DTO serializers under {folder}/ — run build_runner")
             continue
 
-        for cls, keys in sorted(dart_dtos(Path(generated[0])).items()):
+        for cls, (keys, required) in sorted(dart_dtos(Path(generated[0])).items()):
             base = cls[:-3] if cls.endswith("Dto") else cls
             if base not in schemas:
                 continue
             checked += 1
             ignored = sorted(schemas[base] - keys)
             invented = sorted(keys - schemas[base])
+            # Only a *required* invented field breaks parsing; a nullable one just reads as null.
+            fatal = sorted(required - schemas[base])
             if not ignored and not invented:
                 continue
-            if invented:
+            if fatal:
                 broken += 1
-            elif ignored:
+            else:
                 incomplete += 1
             findings.append(f"  {module}/{cls}")
-            if invented:
+            if fatal:
                 findings.append(
-                    f"      BROKEN — the DTO expects fields the contract never sends: {', '.join(invented)}"
+                    f"      BROKEN — required fields the contract never sends: {', '.join(fatal)}"
                 )
+            for spare in (f for f in invented if f not in fatal):
+                findings.append(f"      dead field — nullable, never sent: {spare}")
             if ignored:
                 findings.append(f"      incomplete — the contract sends, the DTO ignores: {', '.join(ignored)}")
 

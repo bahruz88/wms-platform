@@ -82,8 +82,8 @@ class _IssueConfirmScreenState extends ConsumerState<IssueConfirmScreen> {
               ),
               const SizedBox(height: WmsSpacing.space2),
               Text(
-                '${data.fromLocationName ?? '#${data.fromLocationId}'} → '
-                '${data.toLocationName ?? '#${data.toLocationId}'}',
+                '${data.fromLocation.name} → '
+                '${data.toLocation.name}',
                 style: WmsTypography.body.copyWith(color: c.inkMuted),
               ),
               const SizedBox(height: WmsSpacing.space4),
@@ -169,12 +169,12 @@ class _ConfirmLine extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            line.productName ?? 'Məhsul #${line.productId}',
+            line.product.name,
             style: WmsTypography.bodyStrong.copyWith(color: c.ink),
           ),
-          if (line.batchNo != null)
+          if (line.batch != null)
             Text(
-              line.batchNo!,
+              line.batch!.batchNo,
               style: WmsTypography.docNo.copyWith(color: c.inkMuted),
             ),
           const SizedBox(height: WmsSpacing.space3),

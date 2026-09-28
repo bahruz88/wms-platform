@@ -95,12 +95,11 @@ const _$BatchStatusEnumMap = {
 _GoodsReceiptLineDto _$GoodsReceiptLineDtoFromJson(Map<String, dynamic> json) =>
     _GoodsReceiptLineDto(
       lineNo: (json['lineNo'] as num).toInt(),
-      productId: (json['productId'] as num).toInt(),
+      product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
       receivedQty: Quantity.fromJson(json['receivedQty'] as String),
       uomId: (json['uomId'] as num).toInt(),
       rejectedQty: Quantity.fromJson(json['rejectedQty'] as String),
       id: (json['id'] as num?)?.toInt(),
-      productName: json['productName'] as String?,
       poLineId: (json['poLineId'] as num?)?.toInt(),
       orderedQty: json['orderedQty'] == null
           ? null
@@ -124,12 +123,11 @@ Map<String, dynamic> _$GoodsReceiptLineDtoToJson(
   _GoodsReceiptLineDto instance,
 ) => <String, dynamic>{
   'lineNo': instance.lineNo,
-  'productId': instance.productId,
+  'product': instance.product.toJson(),
   'receivedQty': instance.receivedQty.toJson(),
   'uomId': instance.uomId,
   'rejectedQty': instance.rejectedQty.toJson(),
   'id': instance.id,
-  'productName': instance.productName,
   'poLineId': instance.poLineId,
   'orderedQty': instance.orderedQty?.toJson(),
   'uomCode': instance.uomCode,
@@ -161,9 +159,12 @@ _GoodsReceiptDto _$GoodsReceiptDtoFromJson(Map<String, dynamic> json) =>
           : Decimal.fromJson(json['temperatureC'] as String),
       packagingNote: json['packagingNote'] as String?,
       movementGroupId: (json['movementGroupId'] as num?)?.toInt(),
-      createdAt: json['createdAt'] == null
+      postedAt: json['postedAt'] == null
           ? null
-          : DateTime.parse(json['createdAt'] as String),
+          : DateTime.parse(json['postedAt'] as String),
+      audit: json['audit'] == null
+          ? null
+          : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
       rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
       lines:
           (json['lines'] as List<dynamic>?)
@@ -190,7 +191,8 @@ Map<String, dynamic> _$GoodsReceiptDtoToJson(_GoodsReceiptDto instance) =>
       'temperatureC': instance.temperatureC?.toJson(),
       'packagingNote': instance.packagingNote,
       'movementGroupId': instance.movementGroupId,
-      'createdAt': instance.createdAt?.toIso8601String(),
+      'postedAt': instance.postedAt?.toIso8601String(),
+      'audit': instance.audit?.toJson(),
       'rowVersion': instance.rowVersion,
       'lines': instance.lines.map((e) => e.toJson()).toList(),
     };
@@ -286,11 +288,11 @@ Map<String, dynamic> _$CreateGoodsReceiptRequestToJson(
 _StockRequestLineDto _$StockRequestLineDtoFromJson(Map<String, dynamic> json) =>
     _StockRequestLineDto(
       lineNo: (json['lineNo'] as num).toInt(),
-      productId: (json['productId'] as num).toInt(),
+      product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
       qty: Quantity.fromJson(json['qty'] as String),
       uomId: (json['uomId'] as num).toInt(),
       issuedQty: Quantity.fromJson(json['issuedQty'] as String),
-      productName: json['productName'] as String?,
+      id: (json['id'] as num?)?.toInt(),
       uomCode: json['uomCode'] as String?,
       note: json['note'] as String?,
     );
@@ -299,11 +301,11 @@ Map<String, dynamic> _$StockRequestLineDtoToJson(
   _StockRequestLineDto instance,
 ) => <String, dynamic>{
   'lineNo': instance.lineNo,
-  'productId': instance.productId,
+  'product': instance.product.toJson(),
   'qty': instance.qty.toJson(),
   'uomId': instance.uomId,
   'issuedQty': instance.issuedQty.toJson(),
-  'productName': instance.productName,
+  'id': instance.id,
   'uomCode': instance.uomCode,
   'note': instance.note,
 };
@@ -313,18 +315,20 @@ _StockRequestDto _$StockRequestDtoFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       docNo: json['docNo'] as String,
       docDate: const DateOnlyConverter().fromJson(json['docDate'] as String),
-      fromLocationId: (json['fromLocationId'] as num).toInt(),
-      toLocationId: (json['toLocationId'] as num).toInt(),
+      fromLocation: LocationRefDto.fromJson(
+        json['fromLocation'] as Map<String, dynamic>,
+      ),
+      toLocation: LocationRefDto.fromJson(
+        json['toLocation'] as Map<String, dynamic>,
+      ),
       status: $enumDecode(_$StockRequestStatusEnumMap, json['status']),
-      fromLocationName: json['fromLocationName'] as String?,
-      toLocationName: json['toLocationName'] as String?,
       requiredDate: const NullableDateOnlyConverter().fromJson(
         json['requiredDate'] as String?,
       ),
       note: json['note'] as String?,
-      createdAt: json['createdAt'] == null
+      audit: json['audit'] == null
           ? null
-          : DateTime.parse(json['createdAt'] as String),
+          : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
       rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
       lines:
           (json['lines'] as List<dynamic>?)
@@ -340,16 +344,14 @@ Map<String, dynamic> _$StockRequestDtoToJson(_StockRequestDto instance) =>
       'id': instance.id,
       'docNo': instance.docNo,
       'docDate': const DateOnlyConverter().toJson(instance.docDate),
-      'fromLocationId': instance.fromLocationId,
-      'toLocationId': instance.toLocationId,
+      'fromLocation': instance.fromLocation.toJson(),
+      'toLocation': instance.toLocation.toJson(),
       'status': _$StockRequestStatusEnumMap[instance.status]!,
-      'fromLocationName': instance.fromLocationName,
-      'toLocationName': instance.toLocationName,
       'requiredDate': const NullableDateOnlyConverter().toJson(
         instance.requiredDate,
       ),
       'note': instance.note,
-      'createdAt': instance.createdAt?.toIso8601String(),
+      'audit': instance.audit?.toJson(),
       'rowVersion': instance.rowVersion,
       'lines': instance.lines.map((e) => e.toJson()).toList(),
     };
@@ -410,36 +412,46 @@ Map<String, dynamic> _$CreateStockRequestRequestToJson(
   'note': instance.note,
 };
 
-_IssueLineDto _$IssueLineDtoFromJson(Map<String, dynamic> json) =>
-    _IssueLineDto(
-      lineNo: (json['lineNo'] as num).toInt(),
-      productId: (json['productId'] as num).toInt(),
-      qty: Quantity.fromJson(json['qty'] as String),
-      uomId: (json['uomId'] as num).toInt(),
-      productName: json['productName'] as String?,
-      batchId: (json['batchId'] as num?)?.toInt(),
-      batchNo: json['batchNo'] as String?,
-      uomCode: json['uomCode'] as String?,
-      receivedQty: json['receivedQty'] == null
-          ? null
-          : Quantity.fromJson(json['receivedQty'] as String),
-      reasonCodeId: (json['reasonCodeId'] as num?)?.toInt(),
-      note: json['note'] as String?,
-    );
+_IssueLineDto _$IssueLineDtoFromJson(
+  Map<String, dynamic> json,
+) => _IssueLineDto(
+  lineNo: (json['lineNo'] as num).toInt(),
+  product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
+  qty: Quantity.fromJson(json['qty'] as String),
+  uomId: (json['uomId'] as num).toInt(),
+  batch: json['batch'] == null
+      ? null
+      : BatchRefDto.fromJson(json['batch'] as Map<String, dynamic>),
+  suggestedBatch: json['suggestedBatch'] == null
+      ? null
+      : BatchRefDto.fromJson(json['suggestedBatch'] as Map<String, dynamic>),
+  uomCode: json['uomCode'] as String?,
+  receivedQty: json['receivedQty'] == null
+      ? null
+      : Quantity.fromJson(json['receivedQty'] as String),
+  discrepancyQty: json['discrepancyQty'] == null
+      ? null
+      : Quantity.fromJson(json['discrepancyQty'] as String),
+  batchOverrideReasonCodeId: (json['batchOverrideReasonCodeId'] as num?)
+      ?.toInt(),
+  discrepancyReasonCodeId: (json['discrepancyReasonCodeId'] as num?)?.toInt(),
+  discrepancyNote: json['discrepancyNote'] as String?,
+);
 
 Map<String, dynamic> _$IssueLineDtoToJson(_IssueLineDto instance) =>
     <String, dynamic>{
       'lineNo': instance.lineNo,
-      'productId': instance.productId,
+      'product': instance.product.toJson(),
       'qty': instance.qty.toJson(),
       'uomId': instance.uomId,
-      'productName': instance.productName,
-      'batchId': instance.batchId,
-      'batchNo': instance.batchNo,
+      'batch': instance.batch?.toJson(),
+      'suggestedBatch': instance.suggestedBatch?.toJson(),
       'uomCode': instance.uomCode,
       'receivedQty': instance.receivedQty?.toJson(),
-      'reasonCodeId': instance.reasonCodeId,
-      'note': instance.note,
+      'discrepancyQty': instance.discrepancyQty?.toJson(),
+      'batchOverrideReasonCodeId': instance.batchOverrideReasonCodeId,
+      'discrepancyReasonCodeId': instance.discrepancyReasonCodeId,
+      'discrepancyNote': instance.discrepancyNote,
     };
 
 _IssueDto _$IssueDtoFromJson(Map<String, dynamic> json) => _IssueDto(
@@ -447,11 +459,13 @@ _IssueDto _$IssueDtoFromJson(Map<String, dynamic> json) => _IssueDto(
   docNo: json['docNo'] as String,
   docDate: const DateOnlyConverter().fromJson(json['docDate'] as String),
   issueType: $enumDecode(_$IssueTypeEnumMap, json['issueType']),
-  fromLocationId: (json['fromLocationId'] as num).toInt(),
-  toLocationId: (json['toLocationId'] as num).toInt(),
+  fromLocation: LocationRefDto.fromJson(
+    json['fromLocation'] as Map<String, dynamic>,
+  ),
+  toLocation: LocationRefDto.fromJson(
+    json['toLocation'] as Map<String, dynamic>,
+  ),
   status: $enumDecode(_$IssueStatusEnumMap, json['status']),
-  fromLocationName: json['fromLocationName'] as String?,
-  toLocationName: json['toLocationName'] as String?,
   requestId: (json['requestId'] as num?)?.toInt(),
   dispatchGroupId: (json['dispatchGroupId'] as num?)?.toInt(),
   receiptGroupId: (json['receiptGroupId'] as num?)?.toInt(),
@@ -475,11 +489,9 @@ Map<String, dynamic> _$IssueDtoToJson(_IssueDto instance) => <String, dynamic>{
   'docNo': instance.docNo,
   'docDate': const DateOnlyConverter().toJson(instance.docDate),
   'issueType': _$IssueTypeEnumMap[instance.issueType]!,
-  'fromLocationId': instance.fromLocationId,
-  'toLocationId': instance.toLocationId,
+  'fromLocation': instance.fromLocation.toJson(),
+  'toLocation': instance.toLocation.toJson(),
   'status': _$IssueStatusEnumMap[instance.status]!,
-  'fromLocationName': instance.fromLocationName,
-  'toLocationName': instance.toLocationName,
   'requestId': instance.requestId,
   'dispatchGroupId': instance.dispatchGroupId,
   'receiptGroupId': instance.receiptGroupId,
@@ -580,12 +592,12 @@ Map<String, dynamic> _$ConfirmIssueRequestToJson(
 _CountLineDto _$CountLineDtoFromJson(Map<String, dynamic> json) =>
     _CountLineDto(
       id: (json['id'] as num).toInt(),
-      productId: (json['productId'] as num).toInt(),
+      product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
       bookQty: Quantity.fromJson(json['bookQty'] as String),
-      productName: json['productName'] as String?,
       baseUomCode: json['baseUomCode'] as String?,
-      batchId: (json['batchId'] as num?)?.toInt(),
-      batchNo: json['batchNo'] as String?,
+      batch: json['batch'] == null
+          ? null
+          : BatchRefDto.fromJson(json['batch'] as Map<String, dynamic>),
       countedQty: json['countedQty'] == null
           ? null
           : Quantity.fromJson(json['countedQty'] as String),
@@ -602,12 +614,10 @@ _CountLineDto _$CountLineDtoFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$CountLineDtoToJson(_CountLineDto instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'productId': instance.productId,
+      'product': instance.product.toJson(),
       'bookQty': instance.bookQty.toJson(),
-      'productName': instance.productName,
       'baseUomCode': instance.baseUomCode,
-      'batchId': instance.batchId,
-      'batchNo': instance.batchNo,
+      'batch': instance.batch?.toJson(),
       'countedQty': instance.countedQty?.toJson(),
       'varianceQty': instance.varianceQty?.toJson(),
       'variancePct': instance.variancePct?.toJson(),
@@ -618,10 +628,9 @@ Map<String, dynamic> _$CountLineDtoToJson(_CountLineDto instance) =>
 _CountDto _$CountDtoFromJson(Map<String, dynamic> json) => _CountDto(
   id: (json['id'] as num).toInt(),
   docNo: json['docNo'] as String,
-  locationId: (json['locationId'] as num).toInt(),
+  location: LocationRefDto.fromJson(json['location'] as Map<String, dynamic>),
   countType: $enumDecode(_$CountTypeEnumMap, json['countType']),
   status: $enumDecode(_$CountStatusEnumMap, json['status']),
-  locationName: json['locationName'] as String?,
   frozenAt: json['frozenAt'] == null
       ? null
       : DateTime.parse(json['frozenAt'] as String),
@@ -641,10 +650,9 @@ _CountDto _$CountDtoFromJson(Map<String, dynamic> json) => _CountDto(
 Map<String, dynamic> _$CountDtoToJson(_CountDto instance) => <String, dynamic>{
   'id': instance.id,
   'docNo': instance.docNo,
-  'locationId': instance.locationId,
+  'location': instance.location.toJson(),
   'countType': _$CountTypeEnumMap[instance.countType]!,
   'status': _$CountStatusEnumMap[instance.status]!,
-  'locationName': instance.locationName,
   'frozenAt': instance.frozenAt?.toIso8601String(),
   'approvedBy': instance.approvedBy,
   'approvedAt': instance.approvedAt?.toIso8601String(),
@@ -714,13 +722,18 @@ Map<String, dynamic> _$EnterCountRequestToJson(_EnterCountRequest instance) =>
 _WasteLineDto _$WasteLineDtoFromJson(Map<String, dynamic> json) =>
     _WasteLineDto(
       lineNo: (json['lineNo'] as num).toInt(),
-      productId: (json['productId'] as num).toInt(),
+      product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
       qty: Quantity.fromJson(json['qty'] as String),
       uomId: (json['uomId'] as num).toInt(),
-      productName: json['productName'] as String?,
-      batchId: (json['batchId'] as num?)?.toInt(),
-      batchNo: json['batchNo'] as String?,
+      batch: json['batch'] == null
+          ? null
+          : BatchRefDto.fromJson(json['batch'] as Map<String, dynamic>),
       uomCode: json['uomCode'] as String?,
+      id: (json['id'] as num?)?.toInt(),
+      qtyBase: json['qtyBase'] == null
+          ? null
+          : Quantity.fromJson(json['qtyBase'] as String),
+      note: json['note'] as String?,
       unitCost: json['unitCost'] == null
           ? null
           : Money.fromJson(json['unitCost'] as String),
@@ -732,13 +745,14 @@ _WasteLineDto _$WasteLineDtoFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$WasteLineDtoToJson(_WasteLineDto instance) =>
     <String, dynamic>{
       'lineNo': instance.lineNo,
-      'productId': instance.productId,
+      'product': instance.product.toJson(),
       'qty': instance.qty.toJson(),
       'uomId': instance.uomId,
-      'productName': instance.productName,
-      'batchId': instance.batchId,
-      'batchNo': instance.batchNo,
+      'batch': instance.batch?.toJson(),
       'uomCode': instance.uomCode,
+      'id': instance.id,
+      'qtyBase': instance.qtyBase?.toJson(),
+      'note': instance.note,
       'unitCost': instance.unitCost?.toJson(),
       'lineValue': instance.lineValue?.toJson(),
     };
@@ -747,10 +761,9 @@ _WasteDto _$WasteDtoFromJson(Map<String, dynamic> json) => _WasteDto(
   id: (json['id'] as num).toInt(),
   docNo: json['docNo'] as String,
   docDate: const DateOnlyConverter().fromJson(json['docDate'] as String),
-  locationId: (json['locationId'] as num).toInt(),
+  location: LocationRefDto.fromJson(json['location'] as Map<String, dynamic>),
   reasonCodeId: (json['reasonCodeId'] as num).toInt(),
   status: $enumDecode(_$WasteStatusEnumMap, json['status']),
-  locationName: json['locationName'] as String?,
   reasonCodeName: json['reasonCodeName'] as String?,
   note: json['note'] as String?,
   approvedBy: (json['approvedBy'] as num?)?.toInt(),
@@ -775,10 +788,9 @@ Map<String, dynamic> _$WasteDtoToJson(_WasteDto instance) => <String, dynamic>{
   'id': instance.id,
   'docNo': instance.docNo,
   'docDate': const DateOnlyConverter().toJson(instance.docDate),
-  'locationId': instance.locationId,
+  'location': instance.location.toJson(),
   'reasonCodeId': instance.reasonCodeId,
   'status': _$WasteStatusEnumMap[instance.status]!,
-  'locationName': instance.locationName,
   'reasonCodeName': instance.reasonCodeName,
   'note': instance.note,
   'approvedBy': instance.approvedBy,
@@ -842,34 +854,39 @@ Map<String, dynamic> _$CreateWasteRequestToJson(_CreateWasteRequest instance) =>
 _SampleLineDto _$SampleLineDtoFromJson(Map<String, dynamic> json) =>
     _SampleLineDto(
       lineNo: (json['lineNo'] as num).toInt(),
-      productId: (json['productId'] as num).toInt(),
+      product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
       qty: Quantity.fromJson(json['qty'] as String),
       uomId: (json['uomId'] as num).toInt(),
-      productName: json['productName'] as String?,
-      batchId: (json['batchId'] as num?)?.toInt(),
-      batchNo: json['batchNo'] as String?,
+      batch: json['batch'] == null
+          ? null
+          : BatchRefDto.fromJson(json['batch'] as Map<String, dynamic>),
       uomCode: json['uomCode'] as String?,
+      id: (json['id'] as num?)?.toInt(),
+      qtyBase: json['qtyBase'] == null
+          ? null
+          : Quantity.fromJson(json['qtyBase'] as String),
+      note: json['note'] as String?,
     );
 
 Map<String, dynamic> _$SampleLineDtoToJson(_SampleLineDto instance) =>
     <String, dynamic>{
       'lineNo': instance.lineNo,
-      'productId': instance.productId,
+      'product': instance.product.toJson(),
       'qty': instance.qty.toJson(),
       'uomId': instance.uomId,
-      'productName': instance.productName,
-      'batchId': instance.batchId,
-      'batchNo': instance.batchNo,
+      'batch': instance.batch?.toJson(),
       'uomCode': instance.uomCode,
+      'id': instance.id,
+      'qtyBase': instance.qtyBase?.toJson(),
+      'note': instance.note,
     };
 
 _SampleDto _$SampleDtoFromJson(Map<String, dynamic> json) => _SampleDto(
   id: (json['id'] as num).toInt(),
   docNo: json['docNo'] as String,
   docDate: const DateOnlyConverter().fromJson(json['docDate'] as String),
-  locationId: (json['locationId'] as num).toInt(),
+  location: LocationRefDto.fromJson(json['location'] as Map<String, dynamic>),
   authority: json['authority'] as String? ?? 'AQTA',
-  locationName: json['locationName'] as String?,
   purpose: json['purpose'] as String?,
   movementGroupId: (json['movementGroupId'] as num?)?.toInt(),
   lines:
@@ -884,9 +901,8 @@ Map<String, dynamic> _$SampleDtoToJson(_SampleDto instance) =>
       'id': instance.id,
       'docNo': instance.docNo,
       'docDate': const DateOnlyConverter().toJson(instance.docDate),
-      'locationId': instance.locationId,
+      'location': instance.location.toJson(),
       'authority': instance.authority,
-      'locationName': instance.locationName,
       'purpose': instance.purpose,
       'movementGroupId': instance.movementGroupId,
       'lines': instance.lines.map((e) => e.toJson()).toList(),

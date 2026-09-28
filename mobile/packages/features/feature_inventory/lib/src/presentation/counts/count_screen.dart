@@ -106,7 +106,7 @@ class _CountScreenState extends ConsumerState<CountScreen> {
               ),
               const SizedBox(height: WmsSpacing.space2),
               Text(
-                '${data.locationName ?? '#${data.locationId}'} · ${data.countType.wire}',
+                '${data.location.name} · ${data.countType.wire}',
                 style: WmsTypography.body.copyWith(color: c.inkMuted),
               ),
               const SizedBox(height: WmsSpacing.space4),
@@ -222,12 +222,12 @@ class _CountLineCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            line.productName ?? 'Məhsul #${line.productId}',
+            line.product.name,
             style: WmsTypography.bodyStrong.copyWith(color: c.ink),
           ),
-          if (line.batchNo != null)
+          if (line.batch != null)
             Text(
-              line.batchNo!,
+              line.batch!.batchNo,
               style: WmsTypography.docNo.copyWith(color: c.inkMuted),
             ),
           const SizedBox(height: WmsSpacing.space3),

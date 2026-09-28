@@ -107,7 +107,7 @@ void main() {
     test('GoodsReceiptLineDto variance rules', () {
       final line = GoodsReceiptLineDto.fromJson(const {
         'lineNo': 1,
-        'productId': 1,
+        'product': {'id': 1, 'sku': 'CHK-001', 'name': 'Toyuq döşü'},
         'receivedQty': '90',
         'orderedQty': '100',
         'rejectedQty': '0',
@@ -124,7 +124,7 @@ void main() {
     test('CountLineDto requires reason code when variance != 0', () {
       final line = CountLineDto.fromJson(const {
         'id': 1,
-        'productId': 1,
+        'product': {'id': 1, 'sku': 'CHK-001', 'name': 'Toyuq döşü'},
         'bookQty': '10',
         'countedQty': '9.5',
         'variancePct': '-5.0000',

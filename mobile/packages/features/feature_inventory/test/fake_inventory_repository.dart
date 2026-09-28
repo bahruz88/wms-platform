@@ -125,7 +125,11 @@ class FakeInventoryRepository implements InventoryRepository {
         id: 1,
         docNo: 'WS-2026-00001',
         docDate: request.docDate,
-        locationId: request.locationId,
+        location: LocationRefDto(
+          id: request.locationId,
+          code: 'WH-01',
+          name: 'Mərkəzi anbar',
+        ),
         reasonCodeId: request.reasonCodeId,
         status: WasteStatus.pendingApproval,
         attachmentIds: request.attachmentIds,

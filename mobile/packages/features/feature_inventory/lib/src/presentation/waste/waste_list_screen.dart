@@ -68,7 +68,7 @@ class WasteListScreen extends ConsumerWidget {
                 key: 'location',
                 header: l10n.labelLocation,
                 flex: 2,
-                cell: (row) => row.locationName ?? '#${row.locationId}',
+                cell: (row) => row.location.name,
               ),
               WmsColumn(
                 key: 'reason',

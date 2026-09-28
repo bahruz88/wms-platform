@@ -62,13 +62,13 @@ class IssueListScreen extends ConsumerWidget {
                 key: 'from',
                 header: 'Mənbə',
                 flex: 2,
-                cell: (row) => row.fromLocationName ?? '#${row.fromLocationId}',
+                cell: (row) => row.fromLocation.name,
               ),
               WmsColumn(
                 key: 'to',
                 header: 'Hədəf',
                 flex: 2,
-                cell: (row) => row.toLocationName ?? '#${row.toLocationId}',
+                cell: (row) => row.toLocation.name,
               ),
               WmsColumn(
                 key: 'status',

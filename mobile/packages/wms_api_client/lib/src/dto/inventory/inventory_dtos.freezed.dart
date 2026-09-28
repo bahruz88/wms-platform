@@ -703,7 +703,7 @@ $ProductRefDtoCopyWith<$Res> get product {
 /// @nodoc
 mixin _$GoodsReceiptLineDto {
 
- int get lineNo; int get productId; Quantity get receivedQty; int get uomId; Quantity get rejectedQty; int? get id; String? get productName; int? get poLineId; Quantity? get orderedQty; String? get uomCode; String? get batchNo;@NullableDateOnlyConverter() DateTime? get productionDate;@NullableDateOnlyConverter() DateTime? get expiryDate; Money? get unitPrice; String? get currency; String? get varianceNote;
+ int get lineNo; ProductRefDto get product; Quantity get receivedQty; int get uomId; Quantity get rejectedQty; int? get id; int? get poLineId; Quantity? get orderedQty; String? get uomCode; String? get batchNo;@NullableDateOnlyConverter() DateTime? get productionDate;@NullableDateOnlyConverter() DateTime? get expiryDate; Money? get unitPrice; String? get currency; String? get varianceNote;
 /// Create a copy of GoodsReceiptLineDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -717,20 +717,20 @@ $GoodsReceiptLineDtoCopyWith<GoodsReceiptLineDto> get copyWith => _$GoodsReceipt
 @override
 bool operator ==(Object other) {
   final _this = this as GoodsReceiptLineDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GoodsReceiptLineDto&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.receivedQty, _this.receivedQty) || other.receivedQty == _this.receivedQty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.rejectedQty, _this.rejectedQty) || other.rejectedQty == _this.rejectedQty)&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.productName, _this.productName) || other.productName == _this.productName)&&(identical(other.poLineId, _this.poLineId) || other.poLineId == _this.poLineId)&&(identical(other.orderedQty, _this.orderedQty) || other.orderedQty == _this.orderedQty)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.batchNo, _this.batchNo) || other.batchNo == _this.batchNo)&&(identical(other.productionDate, _this.productionDate) || other.productionDate == _this.productionDate)&&(identical(other.expiryDate, _this.expiryDate) || other.expiryDate == _this.expiryDate)&&(identical(other.unitPrice, _this.unitPrice) || other.unitPrice == _this.unitPrice)&&(identical(other.currency, _this.currency) || other.currency == _this.currency)&&(identical(other.varianceNote, _this.varianceNote) || other.varianceNote == _this.varianceNote));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GoodsReceiptLineDto&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.receivedQty, _this.receivedQty) || other.receivedQty == _this.receivedQty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.rejectedQty, _this.rejectedQty) || other.rejectedQty == _this.rejectedQty)&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.poLineId, _this.poLineId) || other.poLineId == _this.poLineId)&&(identical(other.orderedQty, _this.orderedQty) || other.orderedQty == _this.orderedQty)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.batchNo, _this.batchNo) || other.batchNo == _this.batchNo)&&(identical(other.productionDate, _this.productionDate) || other.productionDate == _this.productionDate)&&(identical(other.expiryDate, _this.expiryDate) || other.expiryDate == _this.expiryDate)&&(identical(other.unitPrice, _this.unitPrice) || other.unitPrice == _this.unitPrice)&&(identical(other.currency, _this.currency) || other.currency == _this.currency)&&(identical(other.varianceNote, _this.varianceNote) || other.varianceNote == _this.varianceNote));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as GoodsReceiptLineDto;
-  return Object.hash(runtimeType,_this.lineNo,_this.productId,_this.receivedQty,_this.uomId,_this.rejectedQty,_this.id,_this.productName,_this.poLineId,_this.orderedQty,_this.uomCode,_this.batchNo,_this.productionDate,_this.expiryDate,_this.unitPrice,_this.currency,_this.varianceNote);
+  return Object.hash(runtimeType,_this.lineNo,_this.product,_this.receivedQty,_this.uomId,_this.rejectedQty,_this.id,_this.poLineId,_this.orderedQty,_this.uomCode,_this.batchNo,_this.productionDate,_this.expiryDate,_this.unitPrice,_this.currency,_this.varianceNote);
 }
 
 @override
 String toString() {
   final _this = this as GoodsReceiptLineDto;
-  return 'GoodsReceiptLineDto(lineNo: ${_this.lineNo}, productId: ${_this.productId}, receivedQty: ${_this.receivedQty}, uomId: ${_this.uomId}, rejectedQty: ${_this.rejectedQty}, id: ${_this.id}, productName: ${_this.productName}, poLineId: ${_this.poLineId}, orderedQty: ${_this.orderedQty}, uomCode: ${_this.uomCode}, batchNo: ${_this.batchNo}, productionDate: ${_this.productionDate}, expiryDate: ${_this.expiryDate}, unitPrice: ${_this.unitPrice}, currency: ${_this.currency}, varianceNote: ${_this.varianceNote})';
+  return 'GoodsReceiptLineDto(lineNo: ${_this.lineNo}, product: ${_this.product}, receivedQty: ${_this.receivedQty}, uomId: ${_this.uomId}, rejectedQty: ${_this.rejectedQty}, id: ${_this.id}, poLineId: ${_this.poLineId}, orderedQty: ${_this.orderedQty}, uomCode: ${_this.uomCode}, batchNo: ${_this.batchNo}, productionDate: ${_this.productionDate}, expiryDate: ${_this.expiryDate}, unitPrice: ${_this.unitPrice}, currency: ${_this.currency}, varianceNote: ${_this.varianceNote})';
 }
 
 
@@ -741,11 +741,11 @@ abstract mixin class $GoodsReceiptLineDtoCopyWith<$Res>  {
   factory $GoodsReceiptLineDtoCopyWith(GoodsReceiptLineDto value, $Res Function(GoodsReceiptLineDto) _then) = _$GoodsReceiptLineDtoCopyWithImpl;
 @useResult
 $Res call({
- int lineNo, int productId, Quantity receivedQty, int uomId, Quantity rejectedQty, int? id, String? productName, int? poLineId, Quantity? orderedQty, String? uomCode, String? batchNo,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, Money? unitPrice, String? currency, String? varianceNote
+ int lineNo, ProductRefDto product, Quantity receivedQty, int uomId, Quantity rejectedQty, int? id, int? poLineId, Quantity? orderedQty, String? uomCode, String? batchNo,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, Money? unitPrice, String? currency, String? varianceNote
 });
 
 
-
+$ProductRefDtoCopyWith<$Res> get product;
 
 }
 /// @nodoc
@@ -758,16 +758,15 @@ class _$GoodsReceiptLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of GoodsReceiptLineDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? productId = null,Object? receivedQty = null,Object? uomId = null,Object? rejectedQty = null,Object? id = freezed,Object? productName = freezed,Object? poLineId = freezed,Object? orderedQty = freezed,Object? uomCode = freezed,Object? batchNo = freezed,Object? productionDate = freezed,Object? expiryDate = freezed,Object? unitPrice = freezed,Object? currency = freezed,Object? varianceNote = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? product = null,Object? receivedQty = null,Object? uomId = null,Object? rejectedQty = null,Object? id = freezed,Object? poLineId = freezed,Object? orderedQty = freezed,Object? uomCode = freezed,Object? batchNo = freezed,Object? productionDate = freezed,Object? expiryDate = freezed,Object? unitPrice = freezed,Object? currency = freezed,Object? varianceNote = freezed,}) {
   return _then(GoodsReceiptLineDto(
 lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,receivedQty: null == receivedQty ? _self.receivedQty : receivedQty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,receivedQty: null == receivedQty ? _self.receivedQty : receivedQty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
 as int,rejectedQty: null == rejectedQty ? _self.rejectedQty : rejectedQty // ignore: cast_nullable_to_non_nullable
 as Quantity,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int?,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,poLineId: freezed == poLineId ? _self.poLineId : poLineId // ignore: cast_nullable_to_non_nullable
+as int?,poLineId: freezed == poLineId ? _self.poLineId : poLineId // ignore: cast_nullable_to_non_nullable
 as int?,orderedQty: freezed == orderedQty ? _self.orderedQty : orderedQty // ignore: cast_nullable_to_non_nullable
 as Quantity?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
 as String?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
@@ -779,7 +778,16 @@ as String?,varianceNote: freezed == varianceNote ? _self.varianceNote : variance
 as String?,
   ));
 }
-
+/// Create a copy of GoodsReceiptLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}
 }
 
 
@@ -861,10 +869,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  int productId,  Quantity receivedQty,  int uomId,  Quantity rejectedQty,  int? id,  String? productName,  int? poLineId,  Quantity? orderedQty,  String? uomCode,  String? batchNo, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  Money? unitPrice,  String? currency,  String? varianceNote)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity receivedQty,  int uomId,  Quantity rejectedQty,  int? id,  int? poLineId,  Quantity? orderedQty,  String? uomCode,  String? batchNo, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  Money? unitPrice,  String? currency,  String? varianceNote)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GoodsReceiptLineDto() when $default != null:
-return $default(_that.lineNo,_that.productId,_that.receivedQty,_that.uomId,_that.rejectedQty,_that.id,_that.productName,_that.poLineId,_that.orderedQty,_that.uomCode,_that.batchNo,_that.productionDate,_that.expiryDate,_that.unitPrice,_that.currency,_that.varianceNote);case _:
+return $default(_that.lineNo,_that.product,_that.receivedQty,_that.uomId,_that.rejectedQty,_that.id,_that.poLineId,_that.orderedQty,_that.uomCode,_that.batchNo,_that.productionDate,_that.expiryDate,_that.unitPrice,_that.currency,_that.varianceNote);case _:
   return orElse();
 
 }
@@ -882,10 +890,10 @@ return $default(_that.lineNo,_that.productId,_that.receivedQty,_that.uomId,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  int productId,  Quantity receivedQty,  int uomId,  Quantity rejectedQty,  int? id,  String? productName,  int? poLineId,  Quantity? orderedQty,  String? uomCode,  String? batchNo, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  Money? unitPrice,  String? currency,  String? varianceNote)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity receivedQty,  int uomId,  Quantity rejectedQty,  int? id,  int? poLineId,  Quantity? orderedQty,  String? uomCode,  String? batchNo, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  Money? unitPrice,  String? currency,  String? varianceNote)  $default,) {final _that = this;
 switch (_that) {
 case _GoodsReceiptLineDto():
-return $default(_that.lineNo,_that.productId,_that.receivedQty,_that.uomId,_that.rejectedQty,_that.id,_that.productName,_that.poLineId,_that.orderedQty,_that.uomCode,_that.batchNo,_that.productionDate,_that.expiryDate,_that.unitPrice,_that.currency,_that.varianceNote);case _:
+return $default(_that.lineNo,_that.product,_that.receivedQty,_that.uomId,_that.rejectedQty,_that.id,_that.poLineId,_that.orderedQty,_that.uomCode,_that.batchNo,_that.productionDate,_that.expiryDate,_that.unitPrice,_that.currency,_that.varianceNote);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -902,10 +910,10 @@ return $default(_that.lineNo,_that.productId,_that.receivedQty,_that.uomId,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  int productId,  Quantity receivedQty,  int uomId,  Quantity rejectedQty,  int? id,  String? productName,  int? poLineId,  Quantity? orderedQty,  String? uomCode,  String? batchNo, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  Money? unitPrice,  String? currency,  String? varianceNote)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  ProductRefDto product,  Quantity receivedQty,  int uomId,  Quantity rejectedQty,  int? id,  int? poLineId,  Quantity? orderedQty,  String? uomCode,  String? batchNo, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  Money? unitPrice,  String? currency,  String? varianceNote)?  $default,) {final _that = this;
 switch (_that) {
 case _GoodsReceiptLineDto() when $default != null:
-return $default(_that.lineNo,_that.productId,_that.receivedQty,_that.uomId,_that.rejectedQty,_that.id,_that.productName,_that.poLineId,_that.orderedQty,_that.uomCode,_that.batchNo,_that.productionDate,_that.expiryDate,_that.unitPrice,_that.currency,_that.varianceNote);case _:
+return $default(_that.lineNo,_that.product,_that.receivedQty,_that.uomId,_that.rejectedQty,_that.id,_that.poLineId,_that.orderedQty,_that.uomCode,_that.batchNo,_that.productionDate,_that.expiryDate,_that.unitPrice,_that.currency,_that.varianceNote);case _:
   return null;
 
 }
@@ -917,16 +925,15 @@ return $default(_that.lineNo,_that.productId,_that.receivedQty,_that.uomId,_that
 @JsonSerializable()
 
 class _GoodsReceiptLineDto extends GoodsReceiptLineDto {
-  const _GoodsReceiptLineDto({required this.lineNo, required this.productId, required this.receivedQty, required this.uomId, required this.rejectedQty, this.id, this.productName, this.poLineId, this.orderedQty, this.uomCode, this.batchNo, @NullableDateOnlyConverter() this.productionDate, @NullableDateOnlyConverter() this.expiryDate, this.unitPrice, this.currency, this.varianceNote}): super._();
+  const _GoodsReceiptLineDto({required this.lineNo, required this.product, required this.receivedQty, required this.uomId, required this.rejectedQty, this.id, this.poLineId, this.orderedQty, this.uomCode, this.batchNo, @NullableDateOnlyConverter() this.productionDate, @NullableDateOnlyConverter() this.expiryDate, this.unitPrice, this.currency, this.varianceNote}): super._();
   factory _GoodsReceiptLineDto.fromJson(Map<String, dynamic> json) => _$GoodsReceiptLineDtoFromJson(json);
 
 @override final  int lineNo;
-@override final  int productId;
+@override final  ProductRefDto product;
 @override final  Quantity receivedQty;
 @override final  int uomId;
 @override final  Quantity rejectedQty;
 @override final  int? id;
-@override final  String? productName;
 @override final  int? poLineId;
 @override final  Quantity? orderedQty;
 @override final  String? uomCode;
@@ -950,18 +957,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GoodsReceiptLineDto&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.receivedQty, receivedQty) || other.receivedQty == receivedQty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.rejectedQty, rejectedQty) || other.rejectedQty == rejectedQty)&&(identical(other.id, id) || other.id == id)&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.poLineId, poLineId) || other.poLineId == poLineId)&&(identical(other.orderedQty, orderedQty) || other.orderedQty == orderedQty)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.batchNo, batchNo) || other.batchNo == batchNo)&&(identical(other.productionDate, productionDate) || other.productionDate == productionDate)&&(identical(other.expiryDate, expiryDate) || other.expiryDate == expiryDate)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.varianceNote, varianceNote) || other.varianceNote == varianceNote));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GoodsReceiptLineDto&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.product, product) || other.product == product)&&(identical(other.receivedQty, receivedQty) || other.receivedQty == receivedQty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.rejectedQty, rejectedQty) || other.rejectedQty == rejectedQty)&&(identical(other.id, id) || other.id == id)&&(identical(other.poLineId, poLineId) || other.poLineId == poLineId)&&(identical(other.orderedQty, orderedQty) || other.orderedQty == orderedQty)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.batchNo, batchNo) || other.batchNo == batchNo)&&(identical(other.productionDate, productionDate) || other.productionDate == productionDate)&&(identical(other.expiryDate, expiryDate) || other.expiryDate == expiryDate)&&(identical(other.unitPrice, unitPrice) || other.unitPrice == unitPrice)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.varianceNote, varianceNote) || other.varianceNote == varianceNote));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,lineNo,productId,receivedQty,uomId,rejectedQty,id,productName,poLineId,orderedQty,uomCode,batchNo,productionDate,expiryDate,unitPrice,currency,varianceNote);
+    return Object.hash(runtimeType,lineNo,product,receivedQty,uomId,rejectedQty,id,poLineId,orderedQty,uomCode,batchNo,productionDate,expiryDate,unitPrice,currency,varianceNote);
 }
 
 @override
 String toString() {
-    return 'GoodsReceiptLineDto(lineNo: $lineNo, productId: $productId, receivedQty: $receivedQty, uomId: $uomId, rejectedQty: $rejectedQty, id: $id, productName: $productName, poLineId: $poLineId, orderedQty: $orderedQty, uomCode: $uomCode, batchNo: $batchNo, productionDate: $productionDate, expiryDate: $expiryDate, unitPrice: $unitPrice, currency: $currency, varianceNote: $varianceNote)';
+    return 'GoodsReceiptLineDto(lineNo: $lineNo, product: $product, receivedQty: $receivedQty, uomId: $uomId, rejectedQty: $rejectedQty, id: $id, poLineId: $poLineId, orderedQty: $orderedQty, uomCode: $uomCode, batchNo: $batchNo, productionDate: $productionDate, expiryDate: $expiryDate, unitPrice: $unitPrice, currency: $currency, varianceNote: $varianceNote)';
 }
 
 
@@ -972,11 +979,11 @@ abstract mixin class _$GoodsReceiptLineDtoCopyWith<$Res> implements $GoodsReceip
   factory _$GoodsReceiptLineDtoCopyWith(_GoodsReceiptLineDto value, $Res Function(_GoodsReceiptLineDto) _then) = __$GoodsReceiptLineDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int lineNo, int productId, Quantity receivedQty, int uomId, Quantity rejectedQty, int? id, String? productName, int? poLineId, Quantity? orderedQty, String? uomCode, String? batchNo,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, Money? unitPrice, String? currency, String? varianceNote
+ int lineNo, ProductRefDto product, Quantity receivedQty, int uomId, Quantity rejectedQty, int? id, int? poLineId, Quantity? orderedQty, String? uomCode, String? batchNo,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, Money? unitPrice, String? currency, String? varianceNote
 });
 
 
-
+@override $ProductRefDtoCopyWith<$Res> get product;
 
 }
 /// @nodoc
@@ -989,16 +996,15 @@ class __$GoodsReceiptLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of GoodsReceiptLineDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? productId = null,Object? receivedQty = null,Object? uomId = null,Object? rejectedQty = null,Object? id = freezed,Object? productName = freezed,Object? poLineId = freezed,Object? orderedQty = freezed,Object? uomCode = freezed,Object? batchNo = freezed,Object? productionDate = freezed,Object? expiryDate = freezed,Object? unitPrice = freezed,Object? currency = freezed,Object? varianceNote = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? product = null,Object? receivedQty = null,Object? uomId = null,Object? rejectedQty = null,Object? id = freezed,Object? poLineId = freezed,Object? orderedQty = freezed,Object? uomCode = freezed,Object? batchNo = freezed,Object? productionDate = freezed,Object? expiryDate = freezed,Object? unitPrice = freezed,Object? currency = freezed,Object? varianceNote = freezed,}) {
   return _then(_GoodsReceiptLineDto(
 lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,receivedQty: null == receivedQty ? _self.receivedQty : receivedQty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,receivedQty: null == receivedQty ? _self.receivedQty : receivedQty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
 as int,rejectedQty: null == rejectedQty ? _self.rejectedQty : rejectedQty // ignore: cast_nullable_to_non_nullable
 as Quantity,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int?,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,poLineId: freezed == poLineId ? _self.poLineId : poLineId // ignore: cast_nullable_to_non_nullable
+as int?,poLineId: freezed == poLineId ? _self.poLineId : poLineId // ignore: cast_nullable_to_non_nullable
 as int?,orderedQty: freezed == orderedQty ? _self.orderedQty : orderedQty // ignore: cast_nullable_to_non_nullable
 as Quantity?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
 as String?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
@@ -1011,14 +1017,23 @@ as String?,
   ));
 }
 
-
+/// Create a copy of GoodsReceiptLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}
 }
 
 
 /// @nodoc
 mixin _$GoodsReceiptDto {
 
- int get id; String get docNo;@DateOnlyConverter() DateTime get docDate; int get supplierId; int get locationId; QualityStatus get qualityStatus; ReceiptStatus get status; int? get poId; String? get poDocNo; String? get supplierName; String? get locationName; Decimal? get temperatureC; String? get packagingNote; int? get movementGroupId; DateTime? get createdAt; int get rowVersion; List<GoodsReceiptLineDto> get lines;
+ int get id; String get docNo;@DateOnlyConverter() DateTime get docDate; int get supplierId; int get locationId; QualityStatus get qualityStatus; ReceiptStatus get status; int? get poId; String? get poDocNo; String? get supplierName; String? get locationName; Decimal? get temperatureC; String? get packagingNote; int? get movementGroupId; DateTime? get postedAt; AuditFieldsDto? get audit; int get rowVersion; List<GoodsReceiptLineDto> get lines;
 /// Create a copy of GoodsReceiptDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1032,20 +1047,20 @@ $GoodsReceiptDtoCopyWith<GoodsReceiptDto> get copyWith => _$GoodsReceiptDtoCopyW
 @override
 bool operator ==(Object other) {
   final _this = this as GoodsReceiptDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is GoodsReceiptDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.docDate, _this.docDate) || other.docDate == _this.docDate)&&(identical(other.supplierId, _this.supplierId) || other.supplierId == _this.supplierId)&&(identical(other.locationId, _this.locationId) || other.locationId == _this.locationId)&&(identical(other.qualityStatus, _this.qualityStatus) || other.qualityStatus == _this.qualityStatus)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.poId, _this.poId) || other.poId == _this.poId)&&(identical(other.poDocNo, _this.poDocNo) || other.poDocNo == _this.poDocNo)&&(identical(other.supplierName, _this.supplierName) || other.supplierName == _this.supplierName)&&(identical(other.locationName, _this.locationName) || other.locationName == _this.locationName)&&(identical(other.temperatureC, _this.temperatureC) || other.temperatureC == _this.temperatureC)&&(identical(other.packagingNote, _this.packagingNote) || other.packagingNote == _this.packagingNote)&&(identical(other.movementGroupId, _this.movementGroupId) || other.movementGroupId == _this.movementGroupId)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is GoodsReceiptDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.docDate, _this.docDate) || other.docDate == _this.docDate)&&(identical(other.supplierId, _this.supplierId) || other.supplierId == _this.supplierId)&&(identical(other.locationId, _this.locationId) || other.locationId == _this.locationId)&&(identical(other.qualityStatus, _this.qualityStatus) || other.qualityStatus == _this.qualityStatus)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.poId, _this.poId) || other.poId == _this.poId)&&(identical(other.poDocNo, _this.poDocNo) || other.poDocNo == _this.poDocNo)&&(identical(other.supplierName, _this.supplierName) || other.supplierName == _this.supplierName)&&(identical(other.locationName, _this.locationName) || other.locationName == _this.locationName)&&(identical(other.temperatureC, _this.temperatureC) || other.temperatureC == _this.temperatureC)&&(identical(other.packagingNote, _this.packagingNote) || other.packagingNote == _this.packagingNote)&&(identical(other.movementGroupId, _this.movementGroupId) || other.movementGroupId == _this.movementGroupId)&&(identical(other.postedAt, _this.postedAt) || other.postedAt == _this.postedAt)&&(identical(other.audit, _this.audit) || other.audit == _this.audit)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as GoodsReceiptDto;
-  return Object.hash(runtimeType,_this.id,_this.docNo,_this.docDate,_this.supplierId,_this.locationId,_this.qualityStatus,_this.status,_this.poId,_this.poDocNo,_this.supplierName,_this.locationName,_this.temperatureC,_this.packagingNote,_this.movementGroupId,_this.createdAt,_this.rowVersion,const DeepCollectionEquality().hash(_this.lines));
+  return Object.hash(runtimeType,_this.id,_this.docNo,_this.docDate,_this.supplierId,_this.locationId,_this.qualityStatus,_this.status,_this.poId,_this.poDocNo,_this.supplierName,_this.locationName,_this.temperatureC,_this.packagingNote,_this.movementGroupId,_this.postedAt,_this.audit,_this.rowVersion,const DeepCollectionEquality().hash(_this.lines));
 }
 
 @override
 String toString() {
   final _this = this as GoodsReceiptDto;
-  return 'GoodsReceiptDto(id: ${_this.id}, docNo: ${_this.docNo}, docDate: ${_this.docDate}, supplierId: ${_this.supplierId}, locationId: ${_this.locationId}, qualityStatus: ${_this.qualityStatus}, status: ${_this.status}, poId: ${_this.poId}, poDocNo: ${_this.poDocNo}, supplierName: ${_this.supplierName}, locationName: ${_this.locationName}, temperatureC: ${_this.temperatureC}, packagingNote: ${_this.packagingNote}, movementGroupId: ${_this.movementGroupId}, createdAt: ${_this.createdAt}, rowVersion: ${_this.rowVersion}, lines: ${_this.lines})';
+  return 'GoodsReceiptDto(id: ${_this.id}, docNo: ${_this.docNo}, docDate: ${_this.docDate}, supplierId: ${_this.supplierId}, locationId: ${_this.locationId}, qualityStatus: ${_this.qualityStatus}, status: ${_this.status}, poId: ${_this.poId}, poDocNo: ${_this.poDocNo}, supplierName: ${_this.supplierName}, locationName: ${_this.locationName}, temperatureC: ${_this.temperatureC}, packagingNote: ${_this.packagingNote}, movementGroupId: ${_this.movementGroupId}, postedAt: ${_this.postedAt}, audit: ${_this.audit}, rowVersion: ${_this.rowVersion}, lines: ${_this.lines})';
 }
 
 
@@ -1056,11 +1071,11 @@ abstract mixin class $GoodsReceiptDtoCopyWith<$Res>  {
   factory $GoodsReceiptDtoCopyWith(GoodsReceiptDto value, $Res Function(GoodsReceiptDto) _then) = _$GoodsReceiptDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String docNo,@DateOnlyConverter() DateTime docDate, int supplierId, int locationId, QualityStatus qualityStatus, ReceiptStatus status, int? poId, String? poDocNo, String? supplierName, String? locationName, Decimal? temperatureC, String? packagingNote, int? movementGroupId, DateTime? createdAt, int rowVersion, List<GoodsReceiptLineDto> lines
+ int id, String docNo,@DateOnlyConverter() DateTime docDate, int supplierId, int locationId, QualityStatus qualityStatus, ReceiptStatus status, int? poId, String? poDocNo, String? supplierName, String? locationName, Decimal? temperatureC, String? packagingNote, int? movementGroupId, DateTime? postedAt, AuditFieldsDto? audit, int rowVersion, List<GoodsReceiptLineDto> lines
 });
 
 
-
+$AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -1073,7 +1088,7 @@ class _$GoodsReceiptDtoCopyWithImpl<$Res>
 
 /// Create a copy of GoodsReceiptDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? supplierId = null,Object? locationId = null,Object? qualityStatus = null,Object? status = null,Object? poId = freezed,Object? poDocNo = freezed,Object? supplierName = freezed,Object? locationName = freezed,Object? temperatureC = freezed,Object? packagingNote = freezed,Object? movementGroupId = freezed,Object? createdAt = freezed,Object? rowVersion = null,Object? lines = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? supplierId = null,Object? locationId = null,Object? qualityStatus = null,Object? status = null,Object? poId = freezed,Object? poDocNo = freezed,Object? supplierName = freezed,Object? locationName = freezed,Object? temperatureC = freezed,Object? packagingNote = freezed,Object? movementGroupId = freezed,Object? postedAt = freezed,Object? audit = freezed,Object? rowVersion = null,Object? lines = null,}) {
   return _then(GoodsReceiptDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
@@ -1089,13 +1104,26 @@ as String?,locationName: freezed == locationName ? _self.locationName : location
 as String?,temperatureC: freezed == temperatureC ? _self.temperatureC : temperatureC // ignore: cast_nullable_to_non_nullable
 as Decimal?,packagingNote: freezed == packagingNote ? _self.packagingNote : packagingNote // ignore: cast_nullable_to_non_nullable
 as String?,movementGroupId: freezed == movementGroupId ? _self.movementGroupId : movementGroupId // ignore: cast_nullable_to_non_nullable
-as int?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as int?,postedAt: freezed == postedAt ? _self.postedAt : postedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
 as int,lines: null == lines ? _self.lines : lines // ignore: cast_nullable_to_non_nullable
 as List<GoodsReceiptLineDto>,
   ));
 }
+/// Create a copy of GoodsReceiptDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
@@ -1177,10 +1205,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int supplierId,  int locationId,  QualityStatus qualityStatus,  ReceiptStatus status,  int? poId,  String? poDocNo,  String? supplierName,  String? locationName,  Decimal? temperatureC,  String? packagingNote,  int? movementGroupId,  DateTime? createdAt,  int rowVersion,  List<GoodsReceiptLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int supplierId,  int locationId,  QualityStatus qualityStatus,  ReceiptStatus status,  int? poId,  String? poDocNo,  String? supplierName,  String? locationName,  Decimal? temperatureC,  String? packagingNote,  int? movementGroupId,  DateTime? postedAt,  AuditFieldsDto? audit,  int rowVersion,  List<GoodsReceiptLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _GoodsReceiptDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.docDate,_that.supplierId,_that.locationId,_that.qualityStatus,_that.status,_that.poId,_that.poDocNo,_that.supplierName,_that.locationName,_that.temperatureC,_that.packagingNote,_that.movementGroupId,_that.createdAt,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.supplierId,_that.locationId,_that.qualityStatus,_that.status,_that.poId,_that.poDocNo,_that.supplierName,_that.locationName,_that.temperatureC,_that.packagingNote,_that.movementGroupId,_that.postedAt,_that.audit,_that.rowVersion,_that.lines);case _:
   return orElse();
 
 }
@@ -1198,10 +1226,10 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.supplierId,_that.locati
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int supplierId,  int locationId,  QualityStatus qualityStatus,  ReceiptStatus status,  int? poId,  String? poDocNo,  String? supplierName,  String? locationName,  Decimal? temperatureC,  String? packagingNote,  int? movementGroupId,  DateTime? createdAt,  int rowVersion,  List<GoodsReceiptLineDto> lines)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int supplierId,  int locationId,  QualityStatus qualityStatus,  ReceiptStatus status,  int? poId,  String? poDocNo,  String? supplierName,  String? locationName,  Decimal? temperatureC,  String? packagingNote,  int? movementGroupId,  DateTime? postedAt,  AuditFieldsDto? audit,  int rowVersion,  List<GoodsReceiptLineDto> lines)  $default,) {final _that = this;
 switch (_that) {
 case _GoodsReceiptDto():
-return $default(_that.id,_that.docNo,_that.docDate,_that.supplierId,_that.locationId,_that.qualityStatus,_that.status,_that.poId,_that.poDocNo,_that.supplierName,_that.locationName,_that.temperatureC,_that.packagingNote,_that.movementGroupId,_that.createdAt,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.supplierId,_that.locationId,_that.qualityStatus,_that.status,_that.poId,_that.poDocNo,_that.supplierName,_that.locationName,_that.temperatureC,_that.packagingNote,_that.movementGroupId,_that.postedAt,_that.audit,_that.rowVersion,_that.lines);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1218,10 +1246,10 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.supplierId,_that.locati
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int supplierId,  int locationId,  QualityStatus qualityStatus,  ReceiptStatus status,  int? poId,  String? poDocNo,  String? supplierName,  String? locationName,  Decimal? temperatureC,  String? packagingNote,  int? movementGroupId,  DateTime? createdAt,  int rowVersion,  List<GoodsReceiptLineDto> lines)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int supplierId,  int locationId,  QualityStatus qualityStatus,  ReceiptStatus status,  int? poId,  String? poDocNo,  String? supplierName,  String? locationName,  Decimal? temperatureC,  String? packagingNote,  int? movementGroupId,  DateTime? postedAt,  AuditFieldsDto? audit,  int rowVersion,  List<GoodsReceiptLineDto> lines)?  $default,) {final _that = this;
 switch (_that) {
 case _GoodsReceiptDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.docDate,_that.supplierId,_that.locationId,_that.qualityStatus,_that.status,_that.poId,_that.poDocNo,_that.supplierName,_that.locationName,_that.temperatureC,_that.packagingNote,_that.movementGroupId,_that.createdAt,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.supplierId,_that.locationId,_that.qualityStatus,_that.status,_that.poId,_that.poDocNo,_that.supplierName,_that.locationName,_that.temperatureC,_that.packagingNote,_that.movementGroupId,_that.postedAt,_that.audit,_that.rowVersion,_that.lines);case _:
   return null;
 
 }
@@ -1233,7 +1261,7 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.supplierId,_that.locati
 @JsonSerializable()
 
 class _GoodsReceiptDto implements GoodsReceiptDto {
-  const _GoodsReceiptDto({required this.id, required this.docNo, @DateOnlyConverter() required this.docDate, required this.supplierId, required this.locationId, required this.qualityStatus, required this.status, this.poId, this.poDocNo, this.supplierName, this.locationName, this.temperatureC, this.packagingNote, this.movementGroupId, this.createdAt, this.rowVersion = 1,  List<GoodsReceiptLineDto> lines = const <GoodsReceiptLineDto>[]}): _lines = lines;
+  const _GoodsReceiptDto({required this.id, required this.docNo, @DateOnlyConverter() required this.docDate, required this.supplierId, required this.locationId, required this.qualityStatus, required this.status, this.poId, this.poDocNo, this.supplierName, this.locationName, this.temperatureC, this.packagingNote, this.movementGroupId, this.postedAt, this.audit, this.rowVersion = 1,  List<GoodsReceiptLineDto> lines = const <GoodsReceiptLineDto>[]}): _lines = lines;
   factory _GoodsReceiptDto.fromJson(Map<String, dynamic> json) => _$GoodsReceiptDtoFromJson(json);
 
 @override final  int id;
@@ -1250,7 +1278,8 @@ class _GoodsReceiptDto implements GoodsReceiptDto {
 @override final  Decimal? temperatureC;
 @override final  String? packagingNote;
 @override final  int? movementGroupId;
-@override final  DateTime? createdAt;
+@override final  DateTime? postedAt;
+@override final  AuditFieldsDto? audit;
 @override@JsonKey() final  int rowVersion;
  final  List<GoodsReceiptLineDto> _lines;
 @override@JsonKey() List<GoodsReceiptLineDto> get lines {
@@ -1273,18 +1302,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GoodsReceiptDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.docDate, docDate) || other.docDate == docDate)&&(identical(other.supplierId, supplierId) || other.supplierId == supplierId)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.qualityStatus, qualityStatus) || other.qualityStatus == qualityStatus)&&(identical(other.status, status) || other.status == status)&&(identical(other.poId, poId) || other.poId == poId)&&(identical(other.poDocNo, poDocNo) || other.poDocNo == poDocNo)&&(identical(other.supplierName, supplierName) || other.supplierName == supplierName)&&(identical(other.locationName, locationName) || other.locationName == locationName)&&(identical(other.temperatureC, temperatureC) || other.temperatureC == temperatureC)&&(identical(other.packagingNote, packagingNote) || other.packagingNote == packagingNote)&&(identical(other.movementGroupId, movementGroupId) || other.movementGroupId == movementGroupId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&const DeepCollectionEquality().equals(other.lines, _lines));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _GoodsReceiptDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.docDate, docDate) || other.docDate == docDate)&&(identical(other.supplierId, supplierId) || other.supplierId == supplierId)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.qualityStatus, qualityStatus) || other.qualityStatus == qualityStatus)&&(identical(other.status, status) || other.status == status)&&(identical(other.poId, poId) || other.poId == poId)&&(identical(other.poDocNo, poDocNo) || other.poDocNo == poDocNo)&&(identical(other.supplierName, supplierName) || other.supplierName == supplierName)&&(identical(other.locationName, locationName) || other.locationName == locationName)&&(identical(other.temperatureC, temperatureC) || other.temperatureC == temperatureC)&&(identical(other.packagingNote, packagingNote) || other.packagingNote == packagingNote)&&(identical(other.movementGroupId, movementGroupId) || other.movementGroupId == movementGroupId)&&(identical(other.postedAt, postedAt) || other.postedAt == postedAt)&&(identical(other.audit, audit) || other.audit == audit)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&const DeepCollectionEquality().equals(other.lines, _lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,docNo,docDate,supplierId,locationId,qualityStatus,status,poId,poDocNo,supplierName,locationName,temperatureC,packagingNote,movementGroupId,createdAt,rowVersion,const DeepCollectionEquality().hash(_lines));
+    return Object.hash(runtimeType,id,docNo,docDate,supplierId,locationId,qualityStatus,status,poId,poDocNo,supplierName,locationName,temperatureC,packagingNote,movementGroupId,postedAt,audit,rowVersion,const DeepCollectionEquality().hash(_lines));
 }
 
 @override
 String toString() {
-    return 'GoodsReceiptDto(id: $id, docNo: $docNo, docDate: $docDate, supplierId: $supplierId, locationId: $locationId, qualityStatus: $qualityStatus, status: $status, poId: $poId, poDocNo: $poDocNo, supplierName: $supplierName, locationName: $locationName, temperatureC: $temperatureC, packagingNote: $packagingNote, movementGroupId: $movementGroupId, createdAt: $createdAt, rowVersion: $rowVersion, lines: $lines)';
+    return 'GoodsReceiptDto(id: $id, docNo: $docNo, docDate: $docDate, supplierId: $supplierId, locationId: $locationId, qualityStatus: $qualityStatus, status: $status, poId: $poId, poDocNo: $poDocNo, supplierName: $supplierName, locationName: $locationName, temperatureC: $temperatureC, packagingNote: $packagingNote, movementGroupId: $movementGroupId, postedAt: $postedAt, audit: $audit, rowVersion: $rowVersion, lines: $lines)';
 }
 
 
@@ -1295,11 +1324,11 @@ abstract mixin class _$GoodsReceiptDtoCopyWith<$Res> implements $GoodsReceiptDto
   factory _$GoodsReceiptDtoCopyWith(_GoodsReceiptDto value, $Res Function(_GoodsReceiptDto) _then) = __$GoodsReceiptDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String docNo,@DateOnlyConverter() DateTime docDate, int supplierId, int locationId, QualityStatus qualityStatus, ReceiptStatus status, int? poId, String? poDocNo, String? supplierName, String? locationName, Decimal? temperatureC, String? packagingNote, int? movementGroupId, DateTime? createdAt, int rowVersion, List<GoodsReceiptLineDto> lines
+ int id, String docNo,@DateOnlyConverter() DateTime docDate, int supplierId, int locationId, QualityStatus qualityStatus, ReceiptStatus status, int? poId, String? poDocNo, String? supplierName, String? locationName, Decimal? temperatureC, String? packagingNote, int? movementGroupId, DateTime? postedAt, AuditFieldsDto? audit, int rowVersion, List<GoodsReceiptLineDto> lines
 });
 
 
-
+@override $AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -1312,7 +1341,7 @@ class __$GoodsReceiptDtoCopyWithImpl<$Res>
 
 /// Create a copy of GoodsReceiptDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? supplierId = null,Object? locationId = null,Object? qualityStatus = null,Object? status = null,Object? poId = freezed,Object? poDocNo = freezed,Object? supplierName = freezed,Object? locationName = freezed,Object? temperatureC = freezed,Object? packagingNote = freezed,Object? movementGroupId = freezed,Object? createdAt = freezed,Object? rowVersion = null,Object? lines = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? supplierId = null,Object? locationId = null,Object? qualityStatus = null,Object? status = null,Object? poId = freezed,Object? poDocNo = freezed,Object? supplierName = freezed,Object? locationName = freezed,Object? temperatureC = freezed,Object? packagingNote = freezed,Object? movementGroupId = freezed,Object? postedAt = freezed,Object? audit = freezed,Object? rowVersion = null,Object? lines = null,}) {
   return _then(_GoodsReceiptDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
@@ -1328,14 +1357,27 @@ as String?,locationName: freezed == locationName ? _self.locationName : location
 as String?,temperatureC: freezed == temperatureC ? _self.temperatureC : temperatureC // ignore: cast_nullable_to_non_nullable
 as Decimal?,packagingNote: freezed == packagingNote ? _self.packagingNote : packagingNote // ignore: cast_nullable_to_non_nullable
 as String?,movementGroupId: freezed == movementGroupId ? _self.movementGroupId : movementGroupId // ignore: cast_nullable_to_non_nullable
-as int?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as int?,postedAt: freezed == postedAt ? _self.postedAt : postedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
 as int,lines: null == lines ? _self._lines : lines // ignore: cast_nullable_to_non_nullable
 as List<GoodsReceiptLineDto>,
   ));
 }
 
+/// Create a copy of GoodsReceiptDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
@@ -1942,7 +1984,7 @@ as String?,
 /// @nodoc
 mixin _$StockRequestLineDto {
 
- int get lineNo; int get productId; Quantity get qty; int get uomId; Quantity get issuedQty; String? get productName; String? get uomCode; String? get note;
+ int get lineNo; ProductRefDto get product; Quantity get qty; int get uomId; Quantity get issuedQty; int? get id; String? get uomCode; String? get note;
 /// Create a copy of StockRequestLineDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1956,20 +1998,20 @@ $StockRequestLineDtoCopyWith<StockRequestLineDto> get copyWith => _$StockRequest
 @override
 bool operator ==(Object other) {
   final _this = this as StockRequestLineDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StockRequestLineDto&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.issuedQty, _this.issuedQty) || other.issuedQty == _this.issuedQty)&&(identical(other.productName, _this.productName) || other.productName == _this.productName)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.note, _this.note) || other.note == _this.note));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StockRequestLineDto&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.issuedQty, _this.issuedQty) || other.issuedQty == _this.issuedQty)&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.note, _this.note) || other.note == _this.note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as StockRequestLineDto;
-  return Object.hash(runtimeType,_this.lineNo,_this.productId,_this.qty,_this.uomId,_this.issuedQty,_this.productName,_this.uomCode,_this.note);
+  return Object.hash(runtimeType,_this.lineNo,_this.product,_this.qty,_this.uomId,_this.issuedQty,_this.id,_this.uomCode,_this.note);
 }
 
 @override
 String toString() {
   final _this = this as StockRequestLineDto;
-  return 'StockRequestLineDto(lineNo: ${_this.lineNo}, productId: ${_this.productId}, qty: ${_this.qty}, uomId: ${_this.uomId}, issuedQty: ${_this.issuedQty}, productName: ${_this.productName}, uomCode: ${_this.uomCode}, note: ${_this.note})';
+  return 'StockRequestLineDto(lineNo: ${_this.lineNo}, product: ${_this.product}, qty: ${_this.qty}, uomId: ${_this.uomId}, issuedQty: ${_this.issuedQty}, id: ${_this.id}, uomCode: ${_this.uomCode}, note: ${_this.note})';
 }
 
 
@@ -1980,11 +2022,11 @@ abstract mixin class $StockRequestLineDtoCopyWith<$Res>  {
   factory $StockRequestLineDtoCopyWith(StockRequestLineDto value, $Res Function(StockRequestLineDto) _then) = _$StockRequestLineDtoCopyWithImpl;
 @useResult
 $Res call({
- int lineNo, int productId, Quantity qty, int uomId, Quantity issuedQty, String? productName, String? uomCode, String? note
+ int lineNo, ProductRefDto product, Quantity qty, int uomId, Quantity issuedQty, int? id, String? uomCode, String? note
 });
 
 
-
+$ProductRefDtoCopyWith<$Res> get product;
 
 }
 /// @nodoc
@@ -1997,20 +2039,29 @@ class _$StockRequestLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of StockRequestLineDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? productId = null,Object? qty = null,Object? uomId = null,Object? issuedQty = null,Object? productName = freezed,Object? uomCode = freezed,Object? note = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? issuedQty = null,Object? id = freezed,Object? uomCode = freezed,Object? note = freezed,}) {
   return _then(StockRequestLineDto(
 lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
 as int,issuedQty: null == issuedQty ? _self.issuedQty : issuedQty // ignore: cast_nullable_to_non_nullable
-as Quantity,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as Quantity,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
 as String?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
-
+/// Create a copy of StockRequestLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}
 }
 
 
@@ -2092,10 +2143,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  int productId,  Quantity qty,  int uomId,  Quantity issuedQty,  String? productName,  String? uomCode,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  Quantity issuedQty,  int? id,  String? uomCode,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StockRequestLineDto() when $default != null:
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.issuedQty,_that.productName,_that.uomCode,_that.note);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.issuedQty,_that.id,_that.uomCode,_that.note);case _:
   return orElse();
 
 }
@@ -2113,10 +2164,10 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.issuedQ
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  int productId,  Quantity qty,  int uomId,  Quantity issuedQty,  String? productName,  String? uomCode,  String? note)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  Quantity issuedQty,  int? id,  String? uomCode,  String? note)  $default,) {final _that = this;
 switch (_that) {
 case _StockRequestLineDto():
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.issuedQty,_that.productName,_that.uomCode,_that.note);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.issuedQty,_that.id,_that.uomCode,_that.note);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2133,10 +2184,10 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.issuedQ
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  int productId,  Quantity qty,  int uomId,  Quantity issuedQty,  String? productName,  String? uomCode,  String? note)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  Quantity issuedQty,  int? id,  String? uomCode,  String? note)?  $default,) {final _that = this;
 switch (_that) {
 case _StockRequestLineDto() when $default != null:
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.issuedQty,_that.productName,_that.uomCode,_that.note);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.issuedQty,_that.id,_that.uomCode,_that.note);case _:
   return null;
 
 }
@@ -2148,15 +2199,15 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.issuedQ
 @JsonSerializable()
 
 class _StockRequestLineDto implements StockRequestLineDto {
-  const _StockRequestLineDto({required this.lineNo, required this.productId, required this.qty, required this.uomId, required this.issuedQty, this.productName, this.uomCode, this.note});
+  const _StockRequestLineDto({required this.lineNo, required this.product, required this.qty, required this.uomId, required this.issuedQty, this.id, this.uomCode, this.note});
   factory _StockRequestLineDto.fromJson(Map<String, dynamic> json) => _$StockRequestLineDtoFromJson(json);
 
 @override final  int lineNo;
-@override final  int productId;
+@override final  ProductRefDto product;
 @override final  Quantity qty;
 @override final  int uomId;
 @override final  Quantity issuedQty;
-@override final  String? productName;
+@override final  int? id;
 @override final  String? uomCode;
 @override final  String? note;
 
@@ -2173,18 +2224,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StockRequestLineDto&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.issuedQty, issuedQty) || other.issuedQty == issuedQty)&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.note, note) || other.note == note));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StockRequestLineDto&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.product, product) || other.product == product)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.issuedQty, issuedQty) || other.issuedQty == issuedQty)&&(identical(other.id, id) || other.id == id)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.note, note) || other.note == note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,lineNo,productId,qty,uomId,issuedQty,productName,uomCode,note);
+    return Object.hash(runtimeType,lineNo,product,qty,uomId,issuedQty,id,uomCode,note);
 }
 
 @override
 String toString() {
-    return 'StockRequestLineDto(lineNo: $lineNo, productId: $productId, qty: $qty, uomId: $uomId, issuedQty: $issuedQty, productName: $productName, uomCode: $uomCode, note: $note)';
+    return 'StockRequestLineDto(lineNo: $lineNo, product: $product, qty: $qty, uomId: $uomId, issuedQty: $issuedQty, id: $id, uomCode: $uomCode, note: $note)';
 }
 
 
@@ -2195,11 +2246,11 @@ abstract mixin class _$StockRequestLineDtoCopyWith<$Res> implements $StockReques
   factory _$StockRequestLineDtoCopyWith(_StockRequestLineDto value, $Res Function(_StockRequestLineDto) _then) = __$StockRequestLineDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int lineNo, int productId, Quantity qty, int uomId, Quantity issuedQty, String? productName, String? uomCode, String? note
+ int lineNo, ProductRefDto product, Quantity qty, int uomId, Quantity issuedQty, int? id, String? uomCode, String? note
 });
 
 
-
+@override $ProductRefDtoCopyWith<$Res> get product;
 
 }
 /// @nodoc
@@ -2212,28 +2263,37 @@ class __$StockRequestLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of StockRequestLineDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? productId = null,Object? qty = null,Object? uomId = null,Object? issuedQty = null,Object? productName = freezed,Object? uomCode = freezed,Object? note = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? issuedQty = null,Object? id = freezed,Object? uomCode = freezed,Object? note = freezed,}) {
   return _then(_StockRequestLineDto(
 lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
 as int,issuedQty: null == issuedQty ? _self.issuedQty : issuedQty // ignore: cast_nullable_to_non_nullable
-as Quantity,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as Quantity,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
 as String?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
 
-
+/// Create a copy of StockRequestLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}
 }
 
 
 /// @nodoc
 mixin _$StockRequestDto {
 
- int get id; String get docNo;@DateOnlyConverter() DateTime get docDate; int get fromLocationId; int get toLocationId; StockRequestStatus get status; String? get fromLocationName; String? get toLocationName;@NullableDateOnlyConverter() DateTime? get requiredDate; String? get note; DateTime? get createdAt; int get rowVersion; List<StockRequestLineDto> get lines;
+ int get id; String get docNo;@DateOnlyConverter() DateTime get docDate; LocationRefDto get fromLocation; LocationRefDto get toLocation; StockRequestStatus get status;@NullableDateOnlyConverter() DateTime? get requiredDate; String? get note; AuditFieldsDto? get audit; int get rowVersion; List<StockRequestLineDto> get lines;
 /// Create a copy of StockRequestDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2247,20 +2307,20 @@ $StockRequestDtoCopyWith<StockRequestDto> get copyWith => _$StockRequestDtoCopyW
 @override
 bool operator ==(Object other) {
   final _this = this as StockRequestDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StockRequestDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.docDate, _this.docDate) || other.docDate == _this.docDate)&&(identical(other.fromLocationId, _this.fromLocationId) || other.fromLocationId == _this.fromLocationId)&&(identical(other.toLocationId, _this.toLocationId) || other.toLocationId == _this.toLocationId)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.fromLocationName, _this.fromLocationName) || other.fromLocationName == _this.fromLocationName)&&(identical(other.toLocationName, _this.toLocationName) || other.toLocationName == _this.toLocationName)&&(identical(other.requiredDate, _this.requiredDate) || other.requiredDate == _this.requiredDate)&&(identical(other.note, _this.note) || other.note == _this.note)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StockRequestDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.docDate, _this.docDate) || other.docDate == _this.docDate)&&(identical(other.fromLocation, _this.fromLocation) || other.fromLocation == _this.fromLocation)&&(identical(other.toLocation, _this.toLocation) || other.toLocation == _this.toLocation)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.requiredDate, _this.requiredDate) || other.requiredDate == _this.requiredDate)&&(identical(other.note, _this.note) || other.note == _this.note)&&(identical(other.audit, _this.audit) || other.audit == _this.audit)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as StockRequestDto;
-  return Object.hash(runtimeType,_this.id,_this.docNo,_this.docDate,_this.fromLocationId,_this.toLocationId,_this.status,_this.fromLocationName,_this.toLocationName,_this.requiredDate,_this.note,_this.createdAt,_this.rowVersion,const DeepCollectionEquality().hash(_this.lines));
+  return Object.hash(runtimeType,_this.id,_this.docNo,_this.docDate,_this.fromLocation,_this.toLocation,_this.status,_this.requiredDate,_this.note,_this.audit,_this.rowVersion,const DeepCollectionEquality().hash(_this.lines));
 }
 
 @override
 String toString() {
   final _this = this as StockRequestDto;
-  return 'StockRequestDto(id: ${_this.id}, docNo: ${_this.docNo}, docDate: ${_this.docDate}, fromLocationId: ${_this.fromLocationId}, toLocationId: ${_this.toLocationId}, status: ${_this.status}, fromLocationName: ${_this.fromLocationName}, toLocationName: ${_this.toLocationName}, requiredDate: ${_this.requiredDate}, note: ${_this.note}, createdAt: ${_this.createdAt}, rowVersion: ${_this.rowVersion}, lines: ${_this.lines})';
+  return 'StockRequestDto(id: ${_this.id}, docNo: ${_this.docNo}, docDate: ${_this.docDate}, fromLocation: ${_this.fromLocation}, toLocation: ${_this.toLocation}, status: ${_this.status}, requiredDate: ${_this.requiredDate}, note: ${_this.note}, audit: ${_this.audit}, rowVersion: ${_this.rowVersion}, lines: ${_this.lines})';
 }
 
 
@@ -2271,11 +2331,11 @@ abstract mixin class $StockRequestDtoCopyWith<$Res>  {
   factory $StockRequestDtoCopyWith(StockRequestDto value, $Res Function(StockRequestDto) _then) = _$StockRequestDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String docNo,@DateOnlyConverter() DateTime docDate, int fromLocationId, int toLocationId, StockRequestStatus status, String? fromLocationName, String? toLocationName,@NullableDateOnlyConverter() DateTime? requiredDate, String? note, DateTime? createdAt, int rowVersion, List<StockRequestLineDto> lines
+ int id, String docNo,@DateOnlyConverter() DateTime docDate, LocationRefDto fromLocation, LocationRefDto toLocation, StockRequestStatus status,@NullableDateOnlyConverter() DateTime? requiredDate, String? note, AuditFieldsDto? audit, int rowVersion, List<StockRequestLineDto> lines
 });
 
 
-
+$LocationRefDtoCopyWith<$Res> get fromLocation;$LocationRefDtoCopyWith<$Res> get toLocation;$AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -2288,25 +2348,53 @@ class _$StockRequestDtoCopyWithImpl<$Res>
 
 /// Create a copy of StockRequestDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? fromLocationId = null,Object? toLocationId = null,Object? status = null,Object? fromLocationName = freezed,Object? toLocationName = freezed,Object? requiredDate = freezed,Object? note = freezed,Object? createdAt = freezed,Object? rowVersion = null,Object? lines = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? fromLocation = null,Object? toLocation = null,Object? status = null,Object? requiredDate = freezed,Object? note = freezed,Object? audit = freezed,Object? rowVersion = null,Object? lines = null,}) {
   return _then(StockRequestDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
 as String,docDate: null == docDate ? _self.docDate : docDate // ignore: cast_nullable_to_non_nullable
-as DateTime,fromLocationId: null == fromLocationId ? _self.fromLocationId : fromLocationId // ignore: cast_nullable_to_non_nullable
-as int,toLocationId: null == toLocationId ? _self.toLocationId : toLocationId // ignore: cast_nullable_to_non_nullable
-as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as StockRequestStatus,fromLocationName: freezed == fromLocationName ? _self.fromLocationName : fromLocationName // ignore: cast_nullable_to_non_nullable
-as String?,toLocationName: freezed == toLocationName ? _self.toLocationName : toLocationName // ignore: cast_nullable_to_non_nullable
-as String?,requiredDate: freezed == requiredDate ? _self.requiredDate : requiredDate // ignore: cast_nullable_to_non_nullable
+as DateTime,fromLocation: null == fromLocation ? _self.fromLocation : fromLocation // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,toLocation: null == toLocation ? _self.toLocation : toLocation // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as StockRequestStatus,requiredDate: freezed == requiredDate ? _self.requiredDate : requiredDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
-as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as String?,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
 as int,lines: null == lines ? _self.lines : lines // ignore: cast_nullable_to_non_nullable
 as List<StockRequestLineDto>,
   ));
 }
+/// Create a copy of StockRequestDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get fromLocation {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.fromLocation, (value) {
+    return _then(_self.copyWith(fromLocation: value));
+  });
+}/// Create a copy of StockRequestDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get toLocation {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.toLocation, (value) {
+    return _then(_self.copyWith(toLocation: value));
+  });
+}/// Create a copy of StockRequestDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
@@ -2388,10 +2476,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int fromLocationId,  int toLocationId,  StockRequestStatus status,  String? fromLocationName,  String? toLocationName, @NullableDateOnlyConverter()  DateTime? requiredDate,  String? note,  DateTime? createdAt,  int rowVersion,  List<StockRequestLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  LocationRefDto fromLocation,  LocationRefDto toLocation,  StockRequestStatus status, @NullableDateOnlyConverter()  DateTime? requiredDate,  String? note,  AuditFieldsDto? audit,  int rowVersion,  List<StockRequestLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _StockRequestDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.docDate,_that.fromLocationId,_that.toLocationId,_that.status,_that.fromLocationName,_that.toLocationName,_that.requiredDate,_that.note,_that.createdAt,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.fromLocation,_that.toLocation,_that.status,_that.requiredDate,_that.note,_that.audit,_that.rowVersion,_that.lines);case _:
   return orElse();
 
 }
@@ -2409,10 +2497,10 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.fromLocationId,_that.to
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int fromLocationId,  int toLocationId,  StockRequestStatus status,  String? fromLocationName,  String? toLocationName, @NullableDateOnlyConverter()  DateTime? requiredDate,  String? note,  DateTime? createdAt,  int rowVersion,  List<StockRequestLineDto> lines)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  LocationRefDto fromLocation,  LocationRefDto toLocation,  StockRequestStatus status, @NullableDateOnlyConverter()  DateTime? requiredDate,  String? note,  AuditFieldsDto? audit,  int rowVersion,  List<StockRequestLineDto> lines)  $default,) {final _that = this;
 switch (_that) {
 case _StockRequestDto():
-return $default(_that.id,_that.docNo,_that.docDate,_that.fromLocationId,_that.toLocationId,_that.status,_that.fromLocationName,_that.toLocationName,_that.requiredDate,_that.note,_that.createdAt,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.fromLocation,_that.toLocation,_that.status,_that.requiredDate,_that.note,_that.audit,_that.rowVersion,_that.lines);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2429,10 +2517,10 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.fromLocationId,_that.to
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int fromLocationId,  int toLocationId,  StockRequestStatus status,  String? fromLocationName,  String? toLocationName, @NullableDateOnlyConverter()  DateTime? requiredDate,  String? note,  DateTime? createdAt,  int rowVersion,  List<StockRequestLineDto> lines)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  LocationRefDto fromLocation,  LocationRefDto toLocation,  StockRequestStatus status, @NullableDateOnlyConverter()  DateTime? requiredDate,  String? note,  AuditFieldsDto? audit,  int rowVersion,  List<StockRequestLineDto> lines)?  $default,) {final _that = this;
 switch (_that) {
 case _StockRequestDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.docDate,_that.fromLocationId,_that.toLocationId,_that.status,_that.fromLocationName,_that.toLocationName,_that.requiredDate,_that.note,_that.createdAt,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.fromLocation,_that.toLocation,_that.status,_that.requiredDate,_that.note,_that.audit,_that.rowVersion,_that.lines);case _:
   return null;
 
 }
@@ -2444,20 +2532,18 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.fromLocationId,_that.to
 @JsonSerializable()
 
 class _StockRequestDto implements StockRequestDto {
-  const _StockRequestDto({required this.id, required this.docNo, @DateOnlyConverter() required this.docDate, required this.fromLocationId, required this.toLocationId, required this.status, this.fromLocationName, this.toLocationName, @NullableDateOnlyConverter() this.requiredDate, this.note, this.createdAt, this.rowVersion = 1,  List<StockRequestLineDto> lines = const <StockRequestLineDto>[]}): _lines = lines;
+  const _StockRequestDto({required this.id, required this.docNo, @DateOnlyConverter() required this.docDate, required this.fromLocation, required this.toLocation, required this.status, @NullableDateOnlyConverter() this.requiredDate, this.note, this.audit, this.rowVersion = 1,  List<StockRequestLineDto> lines = const <StockRequestLineDto>[]}): _lines = lines;
   factory _StockRequestDto.fromJson(Map<String, dynamic> json) => _$StockRequestDtoFromJson(json);
 
 @override final  int id;
 @override final  String docNo;
 @override@DateOnlyConverter() final  DateTime docDate;
-@override final  int fromLocationId;
-@override final  int toLocationId;
+@override final  LocationRefDto fromLocation;
+@override final  LocationRefDto toLocation;
 @override final  StockRequestStatus status;
-@override final  String? fromLocationName;
-@override final  String? toLocationName;
 @override@NullableDateOnlyConverter() final  DateTime? requiredDate;
 @override final  String? note;
-@override final  DateTime? createdAt;
+@override final  AuditFieldsDto? audit;
 @override@JsonKey() final  int rowVersion;
  final  List<StockRequestLineDto> _lines;
 @override@JsonKey() List<StockRequestLineDto> get lines {
@@ -2480,18 +2566,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StockRequestDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.docDate, docDate) || other.docDate == docDate)&&(identical(other.fromLocationId, fromLocationId) || other.fromLocationId == fromLocationId)&&(identical(other.toLocationId, toLocationId) || other.toLocationId == toLocationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.fromLocationName, fromLocationName) || other.fromLocationName == fromLocationName)&&(identical(other.toLocationName, toLocationName) || other.toLocationName == toLocationName)&&(identical(other.requiredDate, requiredDate) || other.requiredDate == requiredDate)&&(identical(other.note, note) || other.note == note)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&const DeepCollectionEquality().equals(other.lines, _lines));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StockRequestDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.docDate, docDate) || other.docDate == docDate)&&(identical(other.fromLocation, fromLocation) || other.fromLocation == fromLocation)&&(identical(other.toLocation, toLocation) || other.toLocation == toLocation)&&(identical(other.status, status) || other.status == status)&&(identical(other.requiredDate, requiredDate) || other.requiredDate == requiredDate)&&(identical(other.note, note) || other.note == note)&&(identical(other.audit, audit) || other.audit == audit)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&const DeepCollectionEquality().equals(other.lines, _lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,docNo,docDate,fromLocationId,toLocationId,status,fromLocationName,toLocationName,requiredDate,note,createdAt,rowVersion,const DeepCollectionEquality().hash(_lines));
+    return Object.hash(runtimeType,id,docNo,docDate,fromLocation,toLocation,status,requiredDate,note,audit,rowVersion,const DeepCollectionEquality().hash(_lines));
 }
 
 @override
 String toString() {
-    return 'StockRequestDto(id: $id, docNo: $docNo, docDate: $docDate, fromLocationId: $fromLocationId, toLocationId: $toLocationId, status: $status, fromLocationName: $fromLocationName, toLocationName: $toLocationName, requiredDate: $requiredDate, note: $note, createdAt: $createdAt, rowVersion: $rowVersion, lines: $lines)';
+    return 'StockRequestDto(id: $id, docNo: $docNo, docDate: $docDate, fromLocation: $fromLocation, toLocation: $toLocation, status: $status, requiredDate: $requiredDate, note: $note, audit: $audit, rowVersion: $rowVersion, lines: $lines)';
 }
 
 
@@ -2502,11 +2588,11 @@ abstract mixin class _$StockRequestDtoCopyWith<$Res> implements $StockRequestDto
   factory _$StockRequestDtoCopyWith(_StockRequestDto value, $Res Function(_StockRequestDto) _then) = __$StockRequestDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String docNo,@DateOnlyConverter() DateTime docDate, int fromLocationId, int toLocationId, StockRequestStatus status, String? fromLocationName, String? toLocationName,@NullableDateOnlyConverter() DateTime? requiredDate, String? note, DateTime? createdAt, int rowVersion, List<StockRequestLineDto> lines
+ int id, String docNo,@DateOnlyConverter() DateTime docDate, LocationRefDto fromLocation, LocationRefDto toLocation, StockRequestStatus status,@NullableDateOnlyConverter() DateTime? requiredDate, String? note, AuditFieldsDto? audit, int rowVersion, List<StockRequestLineDto> lines
 });
 
 
-
+@override $LocationRefDtoCopyWith<$Res> get fromLocation;@override $LocationRefDtoCopyWith<$Res> get toLocation;@override $AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -2519,26 +2605,54 @@ class __$StockRequestDtoCopyWithImpl<$Res>
 
 /// Create a copy of StockRequestDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? fromLocationId = null,Object? toLocationId = null,Object? status = null,Object? fromLocationName = freezed,Object? toLocationName = freezed,Object? requiredDate = freezed,Object? note = freezed,Object? createdAt = freezed,Object? rowVersion = null,Object? lines = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? fromLocation = null,Object? toLocation = null,Object? status = null,Object? requiredDate = freezed,Object? note = freezed,Object? audit = freezed,Object? rowVersion = null,Object? lines = null,}) {
   return _then(_StockRequestDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
 as String,docDate: null == docDate ? _self.docDate : docDate // ignore: cast_nullable_to_non_nullable
-as DateTime,fromLocationId: null == fromLocationId ? _self.fromLocationId : fromLocationId // ignore: cast_nullable_to_non_nullable
-as int,toLocationId: null == toLocationId ? _self.toLocationId : toLocationId // ignore: cast_nullable_to_non_nullable
-as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as StockRequestStatus,fromLocationName: freezed == fromLocationName ? _self.fromLocationName : fromLocationName // ignore: cast_nullable_to_non_nullable
-as String?,toLocationName: freezed == toLocationName ? _self.toLocationName : toLocationName // ignore: cast_nullable_to_non_nullable
-as String?,requiredDate: freezed == requiredDate ? _self.requiredDate : requiredDate // ignore: cast_nullable_to_non_nullable
+as DateTime,fromLocation: null == fromLocation ? _self.fromLocation : fromLocation // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,toLocation: null == toLocation ? _self.toLocation : toLocation // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as StockRequestStatus,requiredDate: freezed == requiredDate ? _self.requiredDate : requiredDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
-as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as String?,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
 as int,lines: null == lines ? _self._lines : lines // ignore: cast_nullable_to_non_nullable
 as List<StockRequestLineDto>,
   ));
 }
 
+/// Create a copy of StockRequestDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get fromLocation {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.fromLocation, (value) {
+    return _then(_self.copyWith(fromLocation: value));
+  });
+}/// Create a copy of StockRequestDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get toLocation {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.toLocation, (value) {
+    return _then(_self.copyWith(toLocation: value));
+  });
+}/// Create a copy of StockRequestDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
@@ -3115,7 +3229,7 @@ as String?,
 /// @nodoc
 mixin _$IssueLineDto {
 
- int get lineNo; int get productId; Quantity get qty; int get uomId; String? get productName; int? get batchId; String? get batchNo; String? get uomCode; Quantity? get receivedQty; int? get reasonCodeId; String? get note;
+ int get lineNo; ProductRefDto get product; Quantity get qty; int get uomId; BatchRefDto? get batch; BatchRefDto? get suggestedBatch; String? get uomCode; Quantity? get receivedQty; Quantity? get discrepancyQty; int? get batchOverrideReasonCodeId; int? get discrepancyReasonCodeId; String? get discrepancyNote;
 /// Create a copy of IssueLineDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3129,20 +3243,20 @@ $IssueLineDtoCopyWith<IssueLineDto> get copyWith => _$IssueLineDtoCopyWithImpl<I
 @override
 bool operator ==(Object other) {
   final _this = this as IssueLineDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueLineDto&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.productName, _this.productName) || other.productName == _this.productName)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId)&&(identical(other.batchNo, _this.batchNo) || other.batchNo == _this.batchNo)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.receivedQty, _this.receivedQty) || other.receivedQty == _this.receivedQty)&&(identical(other.reasonCodeId, _this.reasonCodeId) || other.reasonCodeId == _this.reasonCodeId)&&(identical(other.note, _this.note) || other.note == _this.note));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueLineDto&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.batch, _this.batch) || other.batch == _this.batch)&&(identical(other.suggestedBatch, _this.suggestedBatch) || other.suggestedBatch == _this.suggestedBatch)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.receivedQty, _this.receivedQty) || other.receivedQty == _this.receivedQty)&&(identical(other.discrepancyQty, _this.discrepancyQty) || other.discrepancyQty == _this.discrepancyQty)&&(identical(other.batchOverrideReasonCodeId, _this.batchOverrideReasonCodeId) || other.batchOverrideReasonCodeId == _this.batchOverrideReasonCodeId)&&(identical(other.discrepancyReasonCodeId, _this.discrepancyReasonCodeId) || other.discrepancyReasonCodeId == _this.discrepancyReasonCodeId)&&(identical(other.discrepancyNote, _this.discrepancyNote) || other.discrepancyNote == _this.discrepancyNote));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as IssueLineDto;
-  return Object.hash(runtimeType,_this.lineNo,_this.productId,_this.qty,_this.uomId,_this.productName,_this.batchId,_this.batchNo,_this.uomCode,_this.receivedQty,_this.reasonCodeId,_this.note);
+  return Object.hash(runtimeType,_this.lineNo,_this.product,_this.qty,_this.uomId,_this.batch,_this.suggestedBatch,_this.uomCode,_this.receivedQty,_this.discrepancyQty,_this.batchOverrideReasonCodeId,_this.discrepancyReasonCodeId,_this.discrepancyNote);
 }
 
 @override
 String toString() {
   final _this = this as IssueLineDto;
-  return 'IssueLineDto(lineNo: ${_this.lineNo}, productId: ${_this.productId}, qty: ${_this.qty}, uomId: ${_this.uomId}, productName: ${_this.productName}, batchId: ${_this.batchId}, batchNo: ${_this.batchNo}, uomCode: ${_this.uomCode}, receivedQty: ${_this.receivedQty}, reasonCodeId: ${_this.reasonCodeId}, note: ${_this.note})';
+  return 'IssueLineDto(lineNo: ${_this.lineNo}, product: ${_this.product}, qty: ${_this.qty}, uomId: ${_this.uomId}, batch: ${_this.batch}, suggestedBatch: ${_this.suggestedBatch}, uomCode: ${_this.uomCode}, receivedQty: ${_this.receivedQty}, discrepancyQty: ${_this.discrepancyQty}, batchOverrideReasonCodeId: ${_this.batchOverrideReasonCodeId}, discrepancyReasonCodeId: ${_this.discrepancyReasonCodeId}, discrepancyNote: ${_this.discrepancyNote})';
 }
 
 
@@ -3153,11 +3267,11 @@ abstract mixin class $IssueLineDtoCopyWith<$Res>  {
   factory $IssueLineDtoCopyWith(IssueLineDto value, $Res Function(IssueLineDto) _then) = _$IssueLineDtoCopyWithImpl;
 @useResult
 $Res call({
- int lineNo, int productId, Quantity qty, int uomId, String? productName, int? batchId, String? batchNo, String? uomCode, Quantity? receivedQty, int? reasonCodeId, String? note
+ int lineNo, ProductRefDto product, Quantity qty, int uomId, BatchRefDto? batch, BatchRefDto? suggestedBatch, String? uomCode, Quantity? receivedQty, Quantity? discrepancyQty, int? batchOverrideReasonCodeId, int? discrepancyReasonCodeId, String? discrepancyNote
 });
 
 
-
+$ProductRefDtoCopyWith<$Res> get product;$BatchRefDtoCopyWith<$Res>? get batch;$BatchRefDtoCopyWith<$Res>? get suggestedBatch;
 
 }
 /// @nodoc
@@ -3170,23 +3284,57 @@ class _$IssueLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueLineDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? productId = null,Object? qty = null,Object? uomId = null,Object? productName = freezed,Object? batchId = freezed,Object? batchNo = freezed,Object? uomCode = freezed,Object? receivedQty = freezed,Object? reasonCodeId = freezed,Object? note = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? batch = freezed,Object? suggestedBatch = freezed,Object? uomCode = freezed,Object? receivedQty = freezed,Object? discrepancyQty = freezed,Object? batchOverrideReasonCodeId = freezed,Object? discrepancyReasonCodeId = freezed,Object? discrepancyNote = freezed,}) {
   return _then(IssueLineDto(
 lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
-as String?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as int,batch: freezed == batch ? _self.batch : batch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,suggestedBatch: freezed == suggestedBatch ? _self.suggestedBatch : suggestedBatch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
 as String?,receivedQty: freezed == receivedQty ? _self.receivedQty : receivedQty // ignore: cast_nullable_to_non_nullable
-as Quantity?,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
-as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as Quantity?,discrepancyQty: freezed == discrepancyQty ? _self.discrepancyQty : discrepancyQty // ignore: cast_nullable_to_non_nullable
+as Quantity?,batchOverrideReasonCodeId: freezed == batchOverrideReasonCodeId ? _self.batchOverrideReasonCodeId : batchOverrideReasonCodeId // ignore: cast_nullable_to_non_nullable
+as int?,discrepancyReasonCodeId: freezed == discrepancyReasonCodeId ? _self.discrepancyReasonCodeId : discrepancyReasonCodeId // ignore: cast_nullable_to_non_nullable
+as int?,discrepancyNote: freezed == discrepancyNote ? _self.discrepancyNote : discrepancyNote // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
+/// Create a copy of IssueLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}/// Create a copy of IssueLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get batch {
+    if (_self.batch == null) {
+    return null;
+  }
 
+  return $BatchRefDtoCopyWith<$Res>(_self.batch!, (value) {
+    return _then(_self.copyWith(batch: value));
+  });
+}/// Create a copy of IssueLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get suggestedBatch {
+    if (_self.suggestedBatch == null) {
+    return null;
+  }
+
+  return $BatchRefDtoCopyWith<$Res>(_self.suggestedBatch!, (value) {
+    return _then(_self.copyWith(suggestedBatch: value));
+  });
+}
 }
 
 
@@ -3268,10 +3416,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  int productId,  Quantity qty,  int uomId,  String? productName,  int? batchId,  String? batchNo,  String? uomCode,  Quantity? receivedQty,  int? reasonCodeId,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  BatchRefDto? suggestedBatch,  String? uomCode,  Quantity? receivedQty,  Quantity? discrepancyQty,  int? batchOverrideReasonCodeId,  int? discrepancyReasonCodeId,  String? discrepancyNote)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueLineDto() when $default != null:
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.productName,_that.batchId,_that.batchNo,_that.uomCode,_that.receivedQty,_that.reasonCodeId,_that.note);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.suggestedBatch,_that.uomCode,_that.receivedQty,_that.discrepancyQty,_that.batchOverrideReasonCodeId,_that.discrepancyReasonCodeId,_that.discrepancyNote);case _:
   return orElse();
 
 }
@@ -3289,10 +3437,10 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.product
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  int productId,  Quantity qty,  int uomId,  String? productName,  int? batchId,  String? batchNo,  String? uomCode,  Quantity? receivedQty,  int? reasonCodeId,  String? note)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  BatchRefDto? suggestedBatch,  String? uomCode,  Quantity? receivedQty,  Quantity? discrepancyQty,  int? batchOverrideReasonCodeId,  int? discrepancyReasonCodeId,  String? discrepancyNote)  $default,) {final _that = this;
 switch (_that) {
 case _IssueLineDto():
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.productName,_that.batchId,_that.batchNo,_that.uomCode,_that.receivedQty,_that.reasonCodeId,_that.note);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.suggestedBatch,_that.uomCode,_that.receivedQty,_that.discrepancyQty,_that.batchOverrideReasonCodeId,_that.discrepancyReasonCodeId,_that.discrepancyNote);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3309,10 +3457,10 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.product
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  int productId,  Quantity qty,  int uomId,  String? productName,  int? batchId,  String? batchNo,  String? uomCode,  Quantity? receivedQty,  int? reasonCodeId,  String? note)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  BatchRefDto? suggestedBatch,  String? uomCode,  Quantity? receivedQty,  Quantity? discrepancyQty,  int? batchOverrideReasonCodeId,  int? discrepancyReasonCodeId,  String? discrepancyNote)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueLineDto() when $default != null:
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.productName,_that.batchId,_that.batchNo,_that.uomCode,_that.receivedQty,_that.reasonCodeId,_that.note);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.suggestedBatch,_that.uomCode,_that.receivedQty,_that.discrepancyQty,_that.batchOverrideReasonCodeId,_that.discrepancyReasonCodeId,_that.discrepancyNote);case _:
   return null;
 
 }
@@ -3324,20 +3472,21 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.product
 @JsonSerializable()
 
 class _IssueLineDto extends IssueLineDto {
-  const _IssueLineDto({required this.lineNo, required this.productId, required this.qty, required this.uomId, this.productName, this.batchId, this.batchNo, this.uomCode, this.receivedQty, this.reasonCodeId, this.note}): super._();
+  const _IssueLineDto({required this.lineNo, required this.product, required this.qty, required this.uomId, this.batch, this.suggestedBatch, this.uomCode, this.receivedQty, this.discrepancyQty, this.batchOverrideReasonCodeId, this.discrepancyReasonCodeId, this.discrepancyNote}): super._();
   factory _IssueLineDto.fromJson(Map<String, dynamic> json) => _$IssueLineDtoFromJson(json);
 
 @override final  int lineNo;
-@override final  int productId;
+@override final  ProductRefDto product;
 @override final  Quantity qty;
 @override final  int uomId;
-@override final  String? productName;
-@override final  int? batchId;
-@override final  String? batchNo;
+@override final  BatchRefDto? batch;
+@override final  BatchRefDto? suggestedBatch;
 @override final  String? uomCode;
 @override final  Quantity? receivedQty;
-@override final  int? reasonCodeId;
-@override final  String? note;
+@override final  Quantity? discrepancyQty;
+@override final  int? batchOverrideReasonCodeId;
+@override final  int? discrepancyReasonCodeId;
+@override final  String? discrepancyNote;
 
 /// Create a copy of IssueLineDto
 /// with the given fields replaced by the non-null parameter values.
@@ -3352,18 +3501,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueLineDto&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.batchNo, batchNo) || other.batchNo == batchNo)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.receivedQty, receivedQty) || other.receivedQty == receivedQty)&&(identical(other.reasonCodeId, reasonCodeId) || other.reasonCodeId == reasonCodeId)&&(identical(other.note, note) || other.note == note));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueLineDto&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.product, product) || other.product == product)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.batch, batch) || other.batch == batch)&&(identical(other.suggestedBatch, suggestedBatch) || other.suggestedBatch == suggestedBatch)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.receivedQty, receivedQty) || other.receivedQty == receivedQty)&&(identical(other.discrepancyQty, discrepancyQty) || other.discrepancyQty == discrepancyQty)&&(identical(other.batchOverrideReasonCodeId, batchOverrideReasonCodeId) || other.batchOverrideReasonCodeId == batchOverrideReasonCodeId)&&(identical(other.discrepancyReasonCodeId, discrepancyReasonCodeId) || other.discrepancyReasonCodeId == discrepancyReasonCodeId)&&(identical(other.discrepancyNote, discrepancyNote) || other.discrepancyNote == discrepancyNote));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,lineNo,productId,qty,uomId,productName,batchId,batchNo,uomCode,receivedQty,reasonCodeId,note);
+    return Object.hash(runtimeType,lineNo,product,qty,uomId,batch,suggestedBatch,uomCode,receivedQty,discrepancyQty,batchOverrideReasonCodeId,discrepancyReasonCodeId,discrepancyNote);
 }
 
 @override
 String toString() {
-    return 'IssueLineDto(lineNo: $lineNo, productId: $productId, qty: $qty, uomId: $uomId, productName: $productName, batchId: $batchId, batchNo: $batchNo, uomCode: $uomCode, receivedQty: $receivedQty, reasonCodeId: $reasonCodeId, note: $note)';
+    return 'IssueLineDto(lineNo: $lineNo, product: $product, qty: $qty, uomId: $uomId, batch: $batch, suggestedBatch: $suggestedBatch, uomCode: $uomCode, receivedQty: $receivedQty, discrepancyQty: $discrepancyQty, batchOverrideReasonCodeId: $batchOverrideReasonCodeId, discrepancyReasonCodeId: $discrepancyReasonCodeId, discrepancyNote: $discrepancyNote)';
 }
 
 
@@ -3374,11 +3523,11 @@ abstract mixin class _$IssueLineDtoCopyWith<$Res> implements $IssueLineDtoCopyWi
   factory _$IssueLineDtoCopyWith(_IssueLineDto value, $Res Function(_IssueLineDto) _then) = __$IssueLineDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int lineNo, int productId, Quantity qty, int uomId, String? productName, int? batchId, String? batchNo, String? uomCode, Quantity? receivedQty, int? reasonCodeId, String? note
+ int lineNo, ProductRefDto product, Quantity qty, int uomId, BatchRefDto? batch, BatchRefDto? suggestedBatch, String? uomCode, Quantity? receivedQty, Quantity? discrepancyQty, int? batchOverrideReasonCodeId, int? discrepancyReasonCodeId, String? discrepancyNote
 });
 
 
-
+@override $ProductRefDtoCopyWith<$Res> get product;@override $BatchRefDtoCopyWith<$Res>? get batch;@override $BatchRefDtoCopyWith<$Res>? get suggestedBatch;
 
 }
 /// @nodoc
@@ -3391,31 +3540,65 @@ class __$IssueLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueLineDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? productId = null,Object? qty = null,Object? uomId = null,Object? productName = freezed,Object? batchId = freezed,Object? batchNo = freezed,Object? uomCode = freezed,Object? receivedQty = freezed,Object? reasonCodeId = freezed,Object? note = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? batch = freezed,Object? suggestedBatch = freezed,Object? uomCode = freezed,Object? receivedQty = freezed,Object? discrepancyQty = freezed,Object? batchOverrideReasonCodeId = freezed,Object? discrepancyReasonCodeId = freezed,Object? discrepancyNote = freezed,}) {
   return _then(_IssueLineDto(
 lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
-as String?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as int,batch: freezed == batch ? _self.batch : batch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,suggestedBatch: freezed == suggestedBatch ? _self.suggestedBatch : suggestedBatch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
 as String?,receivedQty: freezed == receivedQty ? _self.receivedQty : receivedQty // ignore: cast_nullable_to_non_nullable
-as Quantity?,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
-as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as Quantity?,discrepancyQty: freezed == discrepancyQty ? _self.discrepancyQty : discrepancyQty // ignore: cast_nullable_to_non_nullable
+as Quantity?,batchOverrideReasonCodeId: freezed == batchOverrideReasonCodeId ? _self.batchOverrideReasonCodeId : batchOverrideReasonCodeId // ignore: cast_nullable_to_non_nullable
+as int?,discrepancyReasonCodeId: freezed == discrepancyReasonCodeId ? _self.discrepancyReasonCodeId : discrepancyReasonCodeId // ignore: cast_nullable_to_non_nullable
+as int?,discrepancyNote: freezed == discrepancyNote ? _self.discrepancyNote : discrepancyNote // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
 
+/// Create a copy of IssueLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}/// Create a copy of IssueLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get batch {
+    if (_self.batch == null) {
+    return null;
+  }
 
+  return $BatchRefDtoCopyWith<$Res>(_self.batch!, (value) {
+    return _then(_self.copyWith(batch: value));
+  });
+}/// Create a copy of IssueLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get suggestedBatch {
+    if (_self.suggestedBatch == null) {
+    return null;
+  }
+
+  return $BatchRefDtoCopyWith<$Res>(_self.suggestedBatch!, (value) {
+    return _then(_self.copyWith(suggestedBatch: value));
+  });
+}
 }
 
 
 /// @nodoc
 mixin _$IssueDto {
 
- int get id; String get docNo;@DateOnlyConverter() DateTime get docDate; IssueType get issueType; int get fromLocationId; int get toLocationId; IssueStatus get status; String? get fromLocationName; String? get toLocationName; int? get requestId; int? get dispatchGroupId; int? get receiptGroupId; DateTime? get dispatchedAt; DateTime? get receivedAt; int? get receivedBy; int get rowVersion; List<IssueLineDto> get lines;
+ int get id; String get docNo;@DateOnlyConverter() DateTime get docDate; IssueType get issueType; LocationRefDto get fromLocation; LocationRefDto get toLocation; IssueStatus get status; int? get requestId; int? get dispatchGroupId; int? get receiptGroupId; DateTime? get dispatchedAt; DateTime? get receivedAt; int? get receivedBy; int get rowVersion; List<IssueLineDto> get lines;
 /// Create a copy of IssueDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3429,20 +3612,20 @@ $IssueDtoCopyWith<IssueDto> get copyWith => _$IssueDtoCopyWithImpl<IssueDto>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as IssueDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.docDate, _this.docDate) || other.docDate == _this.docDate)&&(identical(other.issueType, _this.issueType) || other.issueType == _this.issueType)&&(identical(other.fromLocationId, _this.fromLocationId) || other.fromLocationId == _this.fromLocationId)&&(identical(other.toLocationId, _this.toLocationId) || other.toLocationId == _this.toLocationId)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.fromLocationName, _this.fromLocationName) || other.fromLocationName == _this.fromLocationName)&&(identical(other.toLocationName, _this.toLocationName) || other.toLocationName == _this.toLocationName)&&(identical(other.requestId, _this.requestId) || other.requestId == _this.requestId)&&(identical(other.dispatchGroupId, _this.dispatchGroupId) || other.dispatchGroupId == _this.dispatchGroupId)&&(identical(other.receiptGroupId, _this.receiptGroupId) || other.receiptGroupId == _this.receiptGroupId)&&(identical(other.dispatchedAt, _this.dispatchedAt) || other.dispatchedAt == _this.dispatchedAt)&&(identical(other.receivedAt, _this.receivedAt) || other.receivedAt == _this.receivedAt)&&(identical(other.receivedBy, _this.receivedBy) || other.receivedBy == _this.receivedBy)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.docDate, _this.docDate) || other.docDate == _this.docDate)&&(identical(other.issueType, _this.issueType) || other.issueType == _this.issueType)&&(identical(other.fromLocation, _this.fromLocation) || other.fromLocation == _this.fromLocation)&&(identical(other.toLocation, _this.toLocation) || other.toLocation == _this.toLocation)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.requestId, _this.requestId) || other.requestId == _this.requestId)&&(identical(other.dispatchGroupId, _this.dispatchGroupId) || other.dispatchGroupId == _this.dispatchGroupId)&&(identical(other.receiptGroupId, _this.receiptGroupId) || other.receiptGroupId == _this.receiptGroupId)&&(identical(other.dispatchedAt, _this.dispatchedAt) || other.dispatchedAt == _this.dispatchedAt)&&(identical(other.receivedAt, _this.receivedAt) || other.receivedAt == _this.receivedAt)&&(identical(other.receivedBy, _this.receivedBy) || other.receivedBy == _this.receivedBy)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as IssueDto;
-  return Object.hash(runtimeType,_this.id,_this.docNo,_this.docDate,_this.issueType,_this.fromLocationId,_this.toLocationId,_this.status,_this.fromLocationName,_this.toLocationName,_this.requestId,_this.dispatchGroupId,_this.receiptGroupId,_this.dispatchedAt,_this.receivedAt,_this.receivedBy,_this.rowVersion,const DeepCollectionEquality().hash(_this.lines));
+  return Object.hash(runtimeType,_this.id,_this.docNo,_this.docDate,_this.issueType,_this.fromLocation,_this.toLocation,_this.status,_this.requestId,_this.dispatchGroupId,_this.receiptGroupId,_this.dispatchedAt,_this.receivedAt,_this.receivedBy,_this.rowVersion,const DeepCollectionEquality().hash(_this.lines));
 }
 
 @override
 String toString() {
   final _this = this as IssueDto;
-  return 'IssueDto(id: ${_this.id}, docNo: ${_this.docNo}, docDate: ${_this.docDate}, issueType: ${_this.issueType}, fromLocationId: ${_this.fromLocationId}, toLocationId: ${_this.toLocationId}, status: ${_this.status}, fromLocationName: ${_this.fromLocationName}, toLocationName: ${_this.toLocationName}, requestId: ${_this.requestId}, dispatchGroupId: ${_this.dispatchGroupId}, receiptGroupId: ${_this.receiptGroupId}, dispatchedAt: ${_this.dispatchedAt}, receivedAt: ${_this.receivedAt}, receivedBy: ${_this.receivedBy}, rowVersion: ${_this.rowVersion}, lines: ${_this.lines})';
+  return 'IssueDto(id: ${_this.id}, docNo: ${_this.docNo}, docDate: ${_this.docDate}, issueType: ${_this.issueType}, fromLocation: ${_this.fromLocation}, toLocation: ${_this.toLocation}, status: ${_this.status}, requestId: ${_this.requestId}, dispatchGroupId: ${_this.dispatchGroupId}, receiptGroupId: ${_this.receiptGroupId}, dispatchedAt: ${_this.dispatchedAt}, receivedAt: ${_this.receivedAt}, receivedBy: ${_this.receivedBy}, rowVersion: ${_this.rowVersion}, lines: ${_this.lines})';
 }
 
 
@@ -3453,11 +3636,11 @@ abstract mixin class $IssueDtoCopyWith<$Res>  {
   factory $IssueDtoCopyWith(IssueDto value, $Res Function(IssueDto) _then) = _$IssueDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String docNo,@DateOnlyConverter() DateTime docDate, IssueType issueType, int fromLocationId, int toLocationId, IssueStatus status, String? fromLocationName, String? toLocationName, int? requestId, int? dispatchGroupId, int? receiptGroupId, DateTime? dispatchedAt, DateTime? receivedAt, int? receivedBy, int rowVersion, List<IssueLineDto> lines
+ int id, String docNo,@DateOnlyConverter() DateTime docDate, IssueType issueType, LocationRefDto fromLocation, LocationRefDto toLocation, IssueStatus status, int? requestId, int? dispatchGroupId, int? receiptGroupId, DateTime? dispatchedAt, DateTime? receivedAt, int? receivedBy, int rowVersion, List<IssueLineDto> lines
 });
 
 
-
+$LocationRefDtoCopyWith<$Res> get fromLocation;$LocationRefDtoCopyWith<$Res> get toLocation;
 
 }
 /// @nodoc
@@ -3470,18 +3653,16 @@ class _$IssueDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? issueType = null,Object? fromLocationId = null,Object? toLocationId = null,Object? status = null,Object? fromLocationName = freezed,Object? toLocationName = freezed,Object? requestId = freezed,Object? dispatchGroupId = freezed,Object? receiptGroupId = freezed,Object? dispatchedAt = freezed,Object? receivedAt = freezed,Object? receivedBy = freezed,Object? rowVersion = null,Object? lines = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? issueType = null,Object? fromLocation = null,Object? toLocation = null,Object? status = null,Object? requestId = freezed,Object? dispatchGroupId = freezed,Object? receiptGroupId = freezed,Object? dispatchedAt = freezed,Object? receivedAt = freezed,Object? receivedBy = freezed,Object? rowVersion = null,Object? lines = null,}) {
   return _then(IssueDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
 as String,docDate: null == docDate ? _self.docDate : docDate // ignore: cast_nullable_to_non_nullable
 as DateTime,issueType: null == issueType ? _self.issueType : issueType // ignore: cast_nullable_to_non_nullable
-as IssueType,fromLocationId: null == fromLocationId ? _self.fromLocationId : fromLocationId // ignore: cast_nullable_to_non_nullable
-as int,toLocationId: null == toLocationId ? _self.toLocationId : toLocationId // ignore: cast_nullable_to_non_nullable
-as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as IssueStatus,fromLocationName: freezed == fromLocationName ? _self.fromLocationName : fromLocationName // ignore: cast_nullable_to_non_nullable
-as String?,toLocationName: freezed == toLocationName ? _self.toLocationName : toLocationName // ignore: cast_nullable_to_non_nullable
-as String?,requestId: freezed == requestId ? _self.requestId : requestId // ignore: cast_nullable_to_non_nullable
+as IssueType,fromLocation: null == fromLocation ? _self.fromLocation : fromLocation // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,toLocation: null == toLocation ? _self.toLocation : toLocation // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as IssueStatus,requestId: freezed == requestId ? _self.requestId : requestId // ignore: cast_nullable_to_non_nullable
 as int?,dispatchGroupId: freezed == dispatchGroupId ? _self.dispatchGroupId : dispatchGroupId // ignore: cast_nullable_to_non_nullable
 as int?,receiptGroupId: freezed == receiptGroupId ? _self.receiptGroupId : receiptGroupId // ignore: cast_nullable_to_non_nullable
 as int?,dispatchedAt: freezed == dispatchedAt ? _self.dispatchedAt : dispatchedAt // ignore: cast_nullable_to_non_nullable
@@ -3492,7 +3673,25 @@ as int,lines: null == lines ? _self.lines : lines // ignore: cast_nullable_to_no
 as List<IssueLineDto>,
   ));
 }
-
+/// Create a copy of IssueDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get fromLocation {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.fromLocation, (value) {
+    return _then(_self.copyWith(fromLocation: value));
+  });
+}/// Create a copy of IssueDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get toLocation {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.toLocation, (value) {
+    return _then(_self.copyWith(toLocation: value));
+  });
+}
 }
 
 
@@ -3574,10 +3773,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  IssueType issueType,  int fromLocationId,  int toLocationId,  IssueStatus status,  String? fromLocationName,  String? toLocationName,  int? requestId,  int? dispatchGroupId,  int? receiptGroupId,  DateTime? dispatchedAt,  DateTime? receivedAt,  int? receivedBy,  int rowVersion,  List<IssueLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  IssueType issueType,  LocationRefDto fromLocation,  LocationRefDto toLocation,  IssueStatus status,  int? requestId,  int? dispatchGroupId,  int? receiptGroupId,  DateTime? dispatchedAt,  DateTime? receivedAt,  int? receivedBy,  int rowVersion,  List<IssueLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.docDate,_that.issueType,_that.fromLocationId,_that.toLocationId,_that.status,_that.fromLocationName,_that.toLocationName,_that.requestId,_that.dispatchGroupId,_that.receiptGroupId,_that.dispatchedAt,_that.receivedAt,_that.receivedBy,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.issueType,_that.fromLocation,_that.toLocation,_that.status,_that.requestId,_that.dispatchGroupId,_that.receiptGroupId,_that.dispatchedAt,_that.receivedAt,_that.receivedBy,_that.rowVersion,_that.lines);case _:
   return orElse();
 
 }
@@ -3595,10 +3794,10 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.issueType,_that.fromLoc
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  IssueType issueType,  int fromLocationId,  int toLocationId,  IssueStatus status,  String? fromLocationName,  String? toLocationName,  int? requestId,  int? dispatchGroupId,  int? receiptGroupId,  DateTime? dispatchedAt,  DateTime? receivedAt,  int? receivedBy,  int rowVersion,  List<IssueLineDto> lines)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  IssueType issueType,  LocationRefDto fromLocation,  LocationRefDto toLocation,  IssueStatus status,  int? requestId,  int? dispatchGroupId,  int? receiptGroupId,  DateTime? dispatchedAt,  DateTime? receivedAt,  int? receivedBy,  int rowVersion,  List<IssueLineDto> lines)  $default,) {final _that = this;
 switch (_that) {
 case _IssueDto():
-return $default(_that.id,_that.docNo,_that.docDate,_that.issueType,_that.fromLocationId,_that.toLocationId,_that.status,_that.fromLocationName,_that.toLocationName,_that.requestId,_that.dispatchGroupId,_that.receiptGroupId,_that.dispatchedAt,_that.receivedAt,_that.receivedBy,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.issueType,_that.fromLocation,_that.toLocation,_that.status,_that.requestId,_that.dispatchGroupId,_that.receiptGroupId,_that.dispatchedAt,_that.receivedAt,_that.receivedBy,_that.rowVersion,_that.lines);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3615,10 +3814,10 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.issueType,_that.fromLoc
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  IssueType issueType,  int fromLocationId,  int toLocationId,  IssueStatus status,  String? fromLocationName,  String? toLocationName,  int? requestId,  int? dispatchGroupId,  int? receiptGroupId,  DateTime? dispatchedAt,  DateTime? receivedAt,  int? receivedBy,  int rowVersion,  List<IssueLineDto> lines)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  IssueType issueType,  LocationRefDto fromLocation,  LocationRefDto toLocation,  IssueStatus status,  int? requestId,  int? dispatchGroupId,  int? receiptGroupId,  DateTime? dispatchedAt,  DateTime? receivedAt,  int? receivedBy,  int rowVersion,  List<IssueLineDto> lines)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.docDate,_that.issueType,_that.fromLocationId,_that.toLocationId,_that.status,_that.fromLocationName,_that.toLocationName,_that.requestId,_that.dispatchGroupId,_that.receiptGroupId,_that.dispatchedAt,_that.receivedAt,_that.receivedBy,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.issueType,_that.fromLocation,_that.toLocation,_that.status,_that.requestId,_that.dispatchGroupId,_that.receiptGroupId,_that.dispatchedAt,_that.receivedAt,_that.receivedBy,_that.rowVersion,_that.lines);case _:
   return null;
 
 }
@@ -3630,18 +3829,16 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.issueType,_that.fromLoc
 @JsonSerializable()
 
 class _IssueDto implements IssueDto {
-  const _IssueDto({required this.id, required this.docNo, @DateOnlyConverter() required this.docDate, required this.issueType, required this.fromLocationId, required this.toLocationId, required this.status, this.fromLocationName, this.toLocationName, this.requestId, this.dispatchGroupId, this.receiptGroupId, this.dispatchedAt, this.receivedAt, this.receivedBy, this.rowVersion = 1,  List<IssueLineDto> lines = const <IssueLineDto>[]}): _lines = lines;
+  const _IssueDto({required this.id, required this.docNo, @DateOnlyConverter() required this.docDate, required this.issueType, required this.fromLocation, required this.toLocation, required this.status, this.requestId, this.dispatchGroupId, this.receiptGroupId, this.dispatchedAt, this.receivedAt, this.receivedBy, this.rowVersion = 1,  List<IssueLineDto> lines = const <IssueLineDto>[]}): _lines = lines;
   factory _IssueDto.fromJson(Map<String, dynamic> json) => _$IssueDtoFromJson(json);
 
 @override final  int id;
 @override final  String docNo;
 @override@DateOnlyConverter() final  DateTime docDate;
 @override final  IssueType issueType;
-@override final  int fromLocationId;
-@override final  int toLocationId;
+@override final  LocationRefDto fromLocation;
+@override final  LocationRefDto toLocation;
 @override final  IssueStatus status;
-@override final  String? fromLocationName;
-@override final  String? toLocationName;
 @override final  int? requestId;
 @override final  int? dispatchGroupId;
 @override final  int? receiptGroupId;
@@ -3670,18 +3867,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.docDate, docDate) || other.docDate == docDate)&&(identical(other.issueType, issueType) || other.issueType == issueType)&&(identical(other.fromLocationId, fromLocationId) || other.fromLocationId == fromLocationId)&&(identical(other.toLocationId, toLocationId) || other.toLocationId == toLocationId)&&(identical(other.status, status) || other.status == status)&&(identical(other.fromLocationName, fromLocationName) || other.fromLocationName == fromLocationName)&&(identical(other.toLocationName, toLocationName) || other.toLocationName == toLocationName)&&(identical(other.requestId, requestId) || other.requestId == requestId)&&(identical(other.dispatchGroupId, dispatchGroupId) || other.dispatchGroupId == dispatchGroupId)&&(identical(other.receiptGroupId, receiptGroupId) || other.receiptGroupId == receiptGroupId)&&(identical(other.dispatchedAt, dispatchedAt) || other.dispatchedAt == dispatchedAt)&&(identical(other.receivedAt, receivedAt) || other.receivedAt == receivedAt)&&(identical(other.receivedBy, receivedBy) || other.receivedBy == receivedBy)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&const DeepCollectionEquality().equals(other.lines, _lines));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.docDate, docDate) || other.docDate == docDate)&&(identical(other.issueType, issueType) || other.issueType == issueType)&&(identical(other.fromLocation, fromLocation) || other.fromLocation == fromLocation)&&(identical(other.toLocation, toLocation) || other.toLocation == toLocation)&&(identical(other.status, status) || other.status == status)&&(identical(other.requestId, requestId) || other.requestId == requestId)&&(identical(other.dispatchGroupId, dispatchGroupId) || other.dispatchGroupId == dispatchGroupId)&&(identical(other.receiptGroupId, receiptGroupId) || other.receiptGroupId == receiptGroupId)&&(identical(other.dispatchedAt, dispatchedAt) || other.dispatchedAt == dispatchedAt)&&(identical(other.receivedAt, receivedAt) || other.receivedAt == receivedAt)&&(identical(other.receivedBy, receivedBy) || other.receivedBy == receivedBy)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&const DeepCollectionEquality().equals(other.lines, _lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,docNo,docDate,issueType,fromLocationId,toLocationId,status,fromLocationName,toLocationName,requestId,dispatchGroupId,receiptGroupId,dispatchedAt,receivedAt,receivedBy,rowVersion,const DeepCollectionEquality().hash(_lines));
+    return Object.hash(runtimeType,id,docNo,docDate,issueType,fromLocation,toLocation,status,requestId,dispatchGroupId,receiptGroupId,dispatchedAt,receivedAt,receivedBy,rowVersion,const DeepCollectionEquality().hash(_lines));
 }
 
 @override
 String toString() {
-    return 'IssueDto(id: $id, docNo: $docNo, docDate: $docDate, issueType: $issueType, fromLocationId: $fromLocationId, toLocationId: $toLocationId, status: $status, fromLocationName: $fromLocationName, toLocationName: $toLocationName, requestId: $requestId, dispatchGroupId: $dispatchGroupId, receiptGroupId: $receiptGroupId, dispatchedAt: $dispatchedAt, receivedAt: $receivedAt, receivedBy: $receivedBy, rowVersion: $rowVersion, lines: $lines)';
+    return 'IssueDto(id: $id, docNo: $docNo, docDate: $docDate, issueType: $issueType, fromLocation: $fromLocation, toLocation: $toLocation, status: $status, requestId: $requestId, dispatchGroupId: $dispatchGroupId, receiptGroupId: $receiptGroupId, dispatchedAt: $dispatchedAt, receivedAt: $receivedAt, receivedBy: $receivedBy, rowVersion: $rowVersion, lines: $lines)';
 }
 
 
@@ -3692,11 +3889,11 @@ abstract mixin class _$IssueDtoCopyWith<$Res> implements $IssueDtoCopyWith<$Res>
   factory _$IssueDtoCopyWith(_IssueDto value, $Res Function(_IssueDto) _then) = __$IssueDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String docNo,@DateOnlyConverter() DateTime docDate, IssueType issueType, int fromLocationId, int toLocationId, IssueStatus status, String? fromLocationName, String? toLocationName, int? requestId, int? dispatchGroupId, int? receiptGroupId, DateTime? dispatchedAt, DateTime? receivedAt, int? receivedBy, int rowVersion, List<IssueLineDto> lines
+ int id, String docNo,@DateOnlyConverter() DateTime docDate, IssueType issueType, LocationRefDto fromLocation, LocationRefDto toLocation, IssueStatus status, int? requestId, int? dispatchGroupId, int? receiptGroupId, DateTime? dispatchedAt, DateTime? receivedAt, int? receivedBy, int rowVersion, List<IssueLineDto> lines
 });
 
 
-
+@override $LocationRefDtoCopyWith<$Res> get fromLocation;@override $LocationRefDtoCopyWith<$Res> get toLocation;
 
 }
 /// @nodoc
@@ -3709,18 +3906,16 @@ class __$IssueDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? issueType = null,Object? fromLocationId = null,Object? toLocationId = null,Object? status = null,Object? fromLocationName = freezed,Object? toLocationName = freezed,Object? requestId = freezed,Object? dispatchGroupId = freezed,Object? receiptGroupId = freezed,Object? dispatchedAt = freezed,Object? receivedAt = freezed,Object? receivedBy = freezed,Object? rowVersion = null,Object? lines = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? issueType = null,Object? fromLocation = null,Object? toLocation = null,Object? status = null,Object? requestId = freezed,Object? dispatchGroupId = freezed,Object? receiptGroupId = freezed,Object? dispatchedAt = freezed,Object? receivedAt = freezed,Object? receivedBy = freezed,Object? rowVersion = null,Object? lines = null,}) {
   return _then(_IssueDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
 as String,docDate: null == docDate ? _self.docDate : docDate // ignore: cast_nullable_to_non_nullable
 as DateTime,issueType: null == issueType ? _self.issueType : issueType // ignore: cast_nullable_to_non_nullable
-as IssueType,fromLocationId: null == fromLocationId ? _self.fromLocationId : fromLocationId // ignore: cast_nullable_to_non_nullable
-as int,toLocationId: null == toLocationId ? _self.toLocationId : toLocationId // ignore: cast_nullable_to_non_nullable
-as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as IssueStatus,fromLocationName: freezed == fromLocationName ? _self.fromLocationName : fromLocationName // ignore: cast_nullable_to_non_nullable
-as String?,toLocationName: freezed == toLocationName ? _self.toLocationName : toLocationName // ignore: cast_nullable_to_non_nullable
-as String?,requestId: freezed == requestId ? _self.requestId : requestId // ignore: cast_nullable_to_non_nullable
+as IssueType,fromLocation: null == fromLocation ? _self.fromLocation : fromLocation // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,toLocation: null == toLocation ? _self.toLocation : toLocation // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as IssueStatus,requestId: freezed == requestId ? _self.requestId : requestId // ignore: cast_nullable_to_non_nullable
 as int?,dispatchGroupId: freezed == dispatchGroupId ? _self.dispatchGroupId : dispatchGroupId // ignore: cast_nullable_to_non_nullable
 as int?,receiptGroupId: freezed == receiptGroupId ? _self.receiptGroupId : receiptGroupId // ignore: cast_nullable_to_non_nullable
 as int?,dispatchedAt: freezed == dispatchedAt ? _self.dispatchedAt : dispatchedAt // ignore: cast_nullable_to_non_nullable
@@ -3732,7 +3927,25 @@ as List<IssueLineDto>,
   ));
 }
 
-
+/// Create a copy of IssueDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get fromLocation {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.fromLocation, (value) {
+    return _then(_self.copyWith(fromLocation: value));
+  });
+}/// Create a copy of IssueDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get toLocation {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.toLocation, (value) {
+    return _then(_self.copyWith(toLocation: value));
+  });
+}
 }
 
 
@@ -4873,7 +5086,7 @@ as String?,
 /// @nodoc
 mixin _$CountLineDto {
 
- int get id; int get productId; Quantity get bookQty; String? get productName; String? get baseUomCode; int? get batchId; String? get batchNo; Quantity? get countedQty; Quantity? get varianceQty; Decimal? get variancePct; int? get reasonCodeId; String? get note;
+ int get id; ProductRefDto get product; Quantity get bookQty; String? get baseUomCode; BatchRefDto? get batch; Quantity? get countedQty; Quantity? get varianceQty; Decimal? get variancePct; int? get reasonCodeId; String? get note;
 /// Create a copy of CountLineDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4887,20 +5100,20 @@ $CountLineDtoCopyWith<CountLineDto> get copyWith => _$CountLineDtoCopyWithImpl<C
 @override
 bool operator ==(Object other) {
   final _this = this as CountLineDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CountLineDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.bookQty, _this.bookQty) || other.bookQty == _this.bookQty)&&(identical(other.productName, _this.productName) || other.productName == _this.productName)&&(identical(other.baseUomCode, _this.baseUomCode) || other.baseUomCode == _this.baseUomCode)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId)&&(identical(other.batchNo, _this.batchNo) || other.batchNo == _this.batchNo)&&(identical(other.countedQty, _this.countedQty) || other.countedQty == _this.countedQty)&&(identical(other.varianceQty, _this.varianceQty) || other.varianceQty == _this.varianceQty)&&(identical(other.variancePct, _this.variancePct) || other.variancePct == _this.variancePct)&&(identical(other.reasonCodeId, _this.reasonCodeId) || other.reasonCodeId == _this.reasonCodeId)&&(identical(other.note, _this.note) || other.note == _this.note));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CountLineDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.bookQty, _this.bookQty) || other.bookQty == _this.bookQty)&&(identical(other.baseUomCode, _this.baseUomCode) || other.baseUomCode == _this.baseUomCode)&&(identical(other.batch, _this.batch) || other.batch == _this.batch)&&(identical(other.countedQty, _this.countedQty) || other.countedQty == _this.countedQty)&&(identical(other.varianceQty, _this.varianceQty) || other.varianceQty == _this.varianceQty)&&(identical(other.variancePct, _this.variancePct) || other.variancePct == _this.variancePct)&&(identical(other.reasonCodeId, _this.reasonCodeId) || other.reasonCodeId == _this.reasonCodeId)&&(identical(other.note, _this.note) || other.note == _this.note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as CountLineDto;
-  return Object.hash(runtimeType,_this.id,_this.productId,_this.bookQty,_this.productName,_this.baseUomCode,_this.batchId,_this.batchNo,_this.countedQty,_this.varianceQty,_this.variancePct,_this.reasonCodeId,_this.note);
+  return Object.hash(runtimeType,_this.id,_this.product,_this.bookQty,_this.baseUomCode,_this.batch,_this.countedQty,_this.varianceQty,_this.variancePct,_this.reasonCodeId,_this.note);
 }
 
 @override
 String toString() {
   final _this = this as CountLineDto;
-  return 'CountLineDto(id: ${_this.id}, productId: ${_this.productId}, bookQty: ${_this.bookQty}, productName: ${_this.productName}, baseUomCode: ${_this.baseUomCode}, batchId: ${_this.batchId}, batchNo: ${_this.batchNo}, countedQty: ${_this.countedQty}, varianceQty: ${_this.varianceQty}, variancePct: ${_this.variancePct}, reasonCodeId: ${_this.reasonCodeId}, note: ${_this.note})';
+  return 'CountLineDto(id: ${_this.id}, product: ${_this.product}, bookQty: ${_this.bookQty}, baseUomCode: ${_this.baseUomCode}, batch: ${_this.batch}, countedQty: ${_this.countedQty}, varianceQty: ${_this.varianceQty}, variancePct: ${_this.variancePct}, reasonCodeId: ${_this.reasonCodeId}, note: ${_this.note})';
 }
 
 
@@ -4911,11 +5124,11 @@ abstract mixin class $CountLineDtoCopyWith<$Res>  {
   factory $CountLineDtoCopyWith(CountLineDto value, $Res Function(CountLineDto) _then) = _$CountLineDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, int productId, Quantity bookQty, String? productName, String? baseUomCode, int? batchId, String? batchNo, Quantity? countedQty, Quantity? varianceQty, Decimal? variancePct, int? reasonCodeId, String? note
+ int id, ProductRefDto product, Quantity bookQty, String? baseUomCode, BatchRefDto? batch, Quantity? countedQty, Quantity? varianceQty, Decimal? variancePct, int? reasonCodeId, String? note
 });
 
 
-
+$ProductRefDtoCopyWith<$Res> get product;$BatchRefDtoCopyWith<$Res>? get batch;
 
 }
 /// @nodoc
@@ -4928,16 +5141,14 @@ class _$CountLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of CountLineDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? productId = null,Object? bookQty = null,Object? productName = freezed,Object? baseUomCode = freezed,Object? batchId = freezed,Object? batchNo = freezed,Object? countedQty = freezed,Object? varianceQty = freezed,Object? variancePct = freezed,Object? reasonCodeId = freezed,Object? note = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? product = null,Object? bookQty = null,Object? baseUomCode = freezed,Object? batch = freezed,Object? countedQty = freezed,Object? varianceQty = freezed,Object? variancePct = freezed,Object? reasonCodeId = freezed,Object? note = freezed,}) {
   return _then(CountLineDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,bookQty: null == bookQty ? _self.bookQty : bookQty // ignore: cast_nullable_to_non_nullable
-as Quantity,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
-as String?,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
-as String?,countedQty: freezed == countedQty ? _self.countedQty : countedQty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,bookQty: null == bookQty ? _self.bookQty : bookQty // ignore: cast_nullable_to_non_nullable
+as Quantity,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
+as String?,batch: freezed == batch ? _self.batch : batch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,countedQty: freezed == countedQty ? _self.countedQty : countedQty // ignore: cast_nullable_to_non_nullable
 as Quantity?,varianceQty: freezed == varianceQty ? _self.varianceQty : varianceQty // ignore: cast_nullable_to_non_nullable
 as Quantity?,variancePct: freezed == variancePct ? _self.variancePct : variancePct // ignore: cast_nullable_to_non_nullable
 as Decimal?,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
@@ -4945,7 +5156,28 @@ as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_no
 as String?,
   ));
 }
+/// Create a copy of CountLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}/// Create a copy of CountLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get batch {
+    if (_self.batch == null) {
+    return null;
+  }
 
+  return $BatchRefDtoCopyWith<$Res>(_self.batch!, (value) {
+    return _then(_self.copyWith(batch: value));
+  });
+}
 }
 
 
@@ -5027,10 +5259,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int productId,  Quantity bookQty,  String? productName,  String? baseUomCode,  int? batchId,  String? batchNo,  Quantity? countedQty,  Quantity? varianceQty,  Decimal? variancePct,  int? reasonCodeId,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  ProductRefDto product,  Quantity bookQty,  String? baseUomCode,  BatchRefDto? batch,  Quantity? countedQty,  Quantity? varianceQty,  Decimal? variancePct,  int? reasonCodeId,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CountLineDto() when $default != null:
-return $default(_that.id,_that.productId,_that.bookQty,_that.productName,_that.baseUomCode,_that.batchId,_that.batchNo,_that.countedQty,_that.varianceQty,_that.variancePct,_that.reasonCodeId,_that.note);case _:
+return $default(_that.id,_that.product,_that.bookQty,_that.baseUomCode,_that.batch,_that.countedQty,_that.varianceQty,_that.variancePct,_that.reasonCodeId,_that.note);case _:
   return orElse();
 
 }
@@ -5048,10 +5280,10 @@ return $default(_that.id,_that.productId,_that.bookQty,_that.productName,_that.b
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int productId,  Quantity bookQty,  String? productName,  String? baseUomCode,  int? batchId,  String? batchNo,  Quantity? countedQty,  Quantity? varianceQty,  Decimal? variancePct,  int? reasonCodeId,  String? note)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  ProductRefDto product,  Quantity bookQty,  String? baseUomCode,  BatchRefDto? batch,  Quantity? countedQty,  Quantity? varianceQty,  Decimal? variancePct,  int? reasonCodeId,  String? note)  $default,) {final _that = this;
 switch (_that) {
 case _CountLineDto():
-return $default(_that.id,_that.productId,_that.bookQty,_that.productName,_that.baseUomCode,_that.batchId,_that.batchNo,_that.countedQty,_that.varianceQty,_that.variancePct,_that.reasonCodeId,_that.note);case _:
+return $default(_that.id,_that.product,_that.bookQty,_that.baseUomCode,_that.batch,_that.countedQty,_that.varianceQty,_that.variancePct,_that.reasonCodeId,_that.note);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -5068,10 +5300,10 @@ return $default(_that.id,_that.productId,_that.bookQty,_that.productName,_that.b
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int productId,  Quantity bookQty,  String? productName,  String? baseUomCode,  int? batchId,  String? batchNo,  Quantity? countedQty,  Quantity? varianceQty,  Decimal? variancePct,  int? reasonCodeId,  String? note)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  ProductRefDto product,  Quantity bookQty,  String? baseUomCode,  BatchRefDto? batch,  Quantity? countedQty,  Quantity? varianceQty,  Decimal? variancePct,  int? reasonCodeId,  String? note)?  $default,) {final _that = this;
 switch (_that) {
 case _CountLineDto() when $default != null:
-return $default(_that.id,_that.productId,_that.bookQty,_that.productName,_that.baseUomCode,_that.batchId,_that.batchNo,_that.countedQty,_that.varianceQty,_that.variancePct,_that.reasonCodeId,_that.note);case _:
+return $default(_that.id,_that.product,_that.bookQty,_that.baseUomCode,_that.batch,_that.countedQty,_that.varianceQty,_that.variancePct,_that.reasonCodeId,_that.note);case _:
   return null;
 
 }
@@ -5083,16 +5315,14 @@ return $default(_that.id,_that.productId,_that.bookQty,_that.productName,_that.b
 @JsonSerializable()
 
 class _CountLineDto extends CountLineDto {
-  const _CountLineDto({required this.id, required this.productId, required this.bookQty, this.productName, this.baseUomCode, this.batchId, this.batchNo, this.countedQty, this.varianceQty, this.variancePct, this.reasonCodeId, this.note}): super._();
+  const _CountLineDto({required this.id, required this.product, required this.bookQty, this.baseUomCode, this.batch, this.countedQty, this.varianceQty, this.variancePct, this.reasonCodeId, this.note}): super._();
   factory _CountLineDto.fromJson(Map<String, dynamic> json) => _$CountLineDtoFromJson(json);
 
 @override final  int id;
-@override final  int productId;
+@override final  ProductRefDto product;
 @override final  Quantity bookQty;
-@override final  String? productName;
 @override final  String? baseUomCode;
-@override final  int? batchId;
-@override final  String? batchNo;
+@override final  BatchRefDto? batch;
 @override final  Quantity? countedQty;
 @override final  Quantity? varianceQty;
 @override final  Decimal? variancePct;
@@ -5112,18 +5342,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CountLineDto&&(identical(other.id, id) || other.id == id)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.bookQty, bookQty) || other.bookQty == bookQty)&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.baseUomCode, baseUomCode) || other.baseUomCode == baseUomCode)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.batchNo, batchNo) || other.batchNo == batchNo)&&(identical(other.countedQty, countedQty) || other.countedQty == countedQty)&&(identical(other.varianceQty, varianceQty) || other.varianceQty == varianceQty)&&(identical(other.variancePct, variancePct) || other.variancePct == variancePct)&&(identical(other.reasonCodeId, reasonCodeId) || other.reasonCodeId == reasonCodeId)&&(identical(other.note, note) || other.note == note));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CountLineDto&&(identical(other.id, id) || other.id == id)&&(identical(other.product, product) || other.product == product)&&(identical(other.bookQty, bookQty) || other.bookQty == bookQty)&&(identical(other.baseUomCode, baseUomCode) || other.baseUomCode == baseUomCode)&&(identical(other.batch, batch) || other.batch == batch)&&(identical(other.countedQty, countedQty) || other.countedQty == countedQty)&&(identical(other.varianceQty, varianceQty) || other.varianceQty == varianceQty)&&(identical(other.variancePct, variancePct) || other.variancePct == variancePct)&&(identical(other.reasonCodeId, reasonCodeId) || other.reasonCodeId == reasonCodeId)&&(identical(other.note, note) || other.note == note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,productId,bookQty,productName,baseUomCode,batchId,batchNo,countedQty,varianceQty,variancePct,reasonCodeId,note);
+    return Object.hash(runtimeType,id,product,bookQty,baseUomCode,batch,countedQty,varianceQty,variancePct,reasonCodeId,note);
 }
 
 @override
 String toString() {
-    return 'CountLineDto(id: $id, productId: $productId, bookQty: $bookQty, productName: $productName, baseUomCode: $baseUomCode, batchId: $batchId, batchNo: $batchNo, countedQty: $countedQty, varianceQty: $varianceQty, variancePct: $variancePct, reasonCodeId: $reasonCodeId, note: $note)';
+    return 'CountLineDto(id: $id, product: $product, bookQty: $bookQty, baseUomCode: $baseUomCode, batch: $batch, countedQty: $countedQty, varianceQty: $varianceQty, variancePct: $variancePct, reasonCodeId: $reasonCodeId, note: $note)';
 }
 
 
@@ -5134,11 +5364,11 @@ abstract mixin class _$CountLineDtoCopyWith<$Res> implements $CountLineDtoCopyWi
   factory _$CountLineDtoCopyWith(_CountLineDto value, $Res Function(_CountLineDto) _then) = __$CountLineDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int productId, Quantity bookQty, String? productName, String? baseUomCode, int? batchId, String? batchNo, Quantity? countedQty, Quantity? varianceQty, Decimal? variancePct, int? reasonCodeId, String? note
+ int id, ProductRefDto product, Quantity bookQty, String? baseUomCode, BatchRefDto? batch, Quantity? countedQty, Quantity? varianceQty, Decimal? variancePct, int? reasonCodeId, String? note
 });
 
 
-
+@override $ProductRefDtoCopyWith<$Res> get product;@override $BatchRefDtoCopyWith<$Res>? get batch;
 
 }
 /// @nodoc
@@ -5151,16 +5381,14 @@ class __$CountLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of CountLineDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? productId = null,Object? bookQty = null,Object? productName = freezed,Object? baseUomCode = freezed,Object? batchId = freezed,Object? batchNo = freezed,Object? countedQty = freezed,Object? varianceQty = freezed,Object? variancePct = freezed,Object? reasonCodeId = freezed,Object? note = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? product = null,Object? bookQty = null,Object? baseUomCode = freezed,Object? batch = freezed,Object? countedQty = freezed,Object? varianceQty = freezed,Object? variancePct = freezed,Object? reasonCodeId = freezed,Object? note = freezed,}) {
   return _then(_CountLineDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,bookQty: null == bookQty ? _self.bookQty : bookQty // ignore: cast_nullable_to_non_nullable
-as Quantity,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
-as String?,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
-as String?,countedQty: freezed == countedQty ? _self.countedQty : countedQty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,bookQty: null == bookQty ? _self.bookQty : bookQty // ignore: cast_nullable_to_non_nullable
+as Quantity,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
+as String?,batch: freezed == batch ? _self.batch : batch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,countedQty: freezed == countedQty ? _self.countedQty : countedQty // ignore: cast_nullable_to_non_nullable
 as Quantity?,varianceQty: freezed == varianceQty ? _self.varianceQty : varianceQty // ignore: cast_nullable_to_non_nullable
 as Quantity?,variancePct: freezed == variancePct ? _self.variancePct : variancePct // ignore: cast_nullable_to_non_nullable
 as Decimal?,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
@@ -5169,14 +5397,35 @@ as String?,
   ));
 }
 
+/// Create a copy of CountLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}/// Create a copy of CountLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get batch {
+    if (_self.batch == null) {
+    return null;
+  }
 
+  return $BatchRefDtoCopyWith<$Res>(_self.batch!, (value) {
+    return _then(_self.copyWith(batch: value));
+  });
+}
 }
 
 
 /// @nodoc
 mixin _$CountDto {
 
- int get id; String get docNo; int get locationId; CountType get countType; CountStatus get status; String? get locationName; DateTime? get frozenAt; int? get approvedBy; DateTime? get approvedAt; int? get adjustGroupId; int get rowVersion; List<CountLineDto> get lines;
+ int get id; String get docNo; LocationRefDto get location; CountType get countType; CountStatus get status; DateTime? get frozenAt; int? get approvedBy; DateTime? get approvedAt; int? get adjustGroupId; int get rowVersion; List<CountLineDto> get lines;
 /// Create a copy of CountDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -5190,20 +5439,20 @@ $CountDtoCopyWith<CountDto> get copyWith => _$CountDtoCopyWithImpl<CountDto>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as CountDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CountDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.locationId, _this.locationId) || other.locationId == _this.locationId)&&(identical(other.countType, _this.countType) || other.countType == _this.countType)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.locationName, _this.locationName) || other.locationName == _this.locationName)&&(identical(other.frozenAt, _this.frozenAt) || other.frozenAt == _this.frozenAt)&&(identical(other.approvedBy, _this.approvedBy) || other.approvedBy == _this.approvedBy)&&(identical(other.approvedAt, _this.approvedAt) || other.approvedAt == _this.approvedAt)&&(identical(other.adjustGroupId, _this.adjustGroupId) || other.adjustGroupId == _this.adjustGroupId)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CountDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.location, _this.location) || other.location == _this.location)&&(identical(other.countType, _this.countType) || other.countType == _this.countType)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.frozenAt, _this.frozenAt) || other.frozenAt == _this.frozenAt)&&(identical(other.approvedBy, _this.approvedBy) || other.approvedBy == _this.approvedBy)&&(identical(other.approvedAt, _this.approvedAt) || other.approvedAt == _this.approvedAt)&&(identical(other.adjustGroupId, _this.adjustGroupId) || other.adjustGroupId == _this.adjustGroupId)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as CountDto;
-  return Object.hash(runtimeType,_this.id,_this.docNo,_this.locationId,_this.countType,_this.status,_this.locationName,_this.frozenAt,_this.approvedBy,_this.approvedAt,_this.adjustGroupId,_this.rowVersion,const DeepCollectionEquality().hash(_this.lines));
+  return Object.hash(runtimeType,_this.id,_this.docNo,_this.location,_this.countType,_this.status,_this.frozenAt,_this.approvedBy,_this.approvedAt,_this.adjustGroupId,_this.rowVersion,const DeepCollectionEquality().hash(_this.lines));
 }
 
 @override
 String toString() {
   final _this = this as CountDto;
-  return 'CountDto(id: ${_this.id}, docNo: ${_this.docNo}, locationId: ${_this.locationId}, countType: ${_this.countType}, status: ${_this.status}, locationName: ${_this.locationName}, frozenAt: ${_this.frozenAt}, approvedBy: ${_this.approvedBy}, approvedAt: ${_this.approvedAt}, adjustGroupId: ${_this.adjustGroupId}, rowVersion: ${_this.rowVersion}, lines: ${_this.lines})';
+  return 'CountDto(id: ${_this.id}, docNo: ${_this.docNo}, location: ${_this.location}, countType: ${_this.countType}, status: ${_this.status}, frozenAt: ${_this.frozenAt}, approvedBy: ${_this.approvedBy}, approvedAt: ${_this.approvedAt}, adjustGroupId: ${_this.adjustGroupId}, rowVersion: ${_this.rowVersion}, lines: ${_this.lines})';
 }
 
 
@@ -5214,11 +5463,11 @@ abstract mixin class $CountDtoCopyWith<$Res>  {
   factory $CountDtoCopyWith(CountDto value, $Res Function(CountDto) _then) = _$CountDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String docNo, int locationId, CountType countType, CountStatus status, String? locationName, DateTime? frozenAt, int? approvedBy, DateTime? approvedAt, int? adjustGroupId, int rowVersion, List<CountLineDto> lines
+ int id, String docNo, LocationRefDto location, CountType countType, CountStatus status, DateTime? frozenAt, int? approvedBy, DateTime? approvedAt, int? adjustGroupId, int rowVersion, List<CountLineDto> lines
 });
 
 
-
+$LocationRefDtoCopyWith<$Res> get location;
 
 }
 /// @nodoc
@@ -5231,15 +5480,14 @@ class _$CountDtoCopyWithImpl<$Res>
 
 /// Create a copy of CountDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? locationId = null,Object? countType = null,Object? status = null,Object? locationName = freezed,Object? frozenAt = freezed,Object? approvedBy = freezed,Object? approvedAt = freezed,Object? adjustGroupId = freezed,Object? rowVersion = null,Object? lines = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? location = null,Object? countType = null,Object? status = null,Object? frozenAt = freezed,Object? approvedBy = freezed,Object? approvedAt = freezed,Object? adjustGroupId = freezed,Object? rowVersion = null,Object? lines = null,}) {
   return _then(CountDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
-as String,locationId: null == locationId ? _self.locationId : locationId // ignore: cast_nullable_to_non_nullable
-as int,countType: null == countType ? _self.countType : countType // ignore: cast_nullable_to_non_nullable
+as String,location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,countType: null == countType ? _self.countType : countType // ignore: cast_nullable_to_non_nullable
 as CountType,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as CountStatus,locationName: freezed == locationName ? _self.locationName : locationName // ignore: cast_nullable_to_non_nullable
-as String?,frozenAt: freezed == frozenAt ? _self.frozenAt : frozenAt // ignore: cast_nullable_to_non_nullable
+as CountStatus,frozenAt: freezed == frozenAt ? _self.frozenAt : frozenAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,approvedBy: freezed == approvedBy ? _self.approvedBy : approvedBy // ignore: cast_nullable_to_non_nullable
 as int?,approvedAt: freezed == approvedAt ? _self.approvedAt : approvedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,adjustGroupId: freezed == adjustGroupId ? _self.adjustGroupId : adjustGroupId // ignore: cast_nullable_to_non_nullable
@@ -5248,7 +5496,16 @@ as int,lines: null == lines ? _self.lines : lines // ignore: cast_nullable_to_no
 as List<CountLineDto>,
   ));
 }
-
+/// Create a copy of CountDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get location {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.location, (value) {
+    return _then(_self.copyWith(location: value));
+  });
+}
 }
 
 
@@ -5330,10 +5587,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo,  int locationId,  CountType countType,  CountStatus status,  String? locationName,  DateTime? frozenAt,  int? approvedBy,  DateTime? approvedAt,  int? adjustGroupId,  int rowVersion,  List<CountLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo,  LocationRefDto location,  CountType countType,  CountStatus status,  DateTime? frozenAt,  int? approvedBy,  DateTime? approvedAt,  int? adjustGroupId,  int rowVersion,  List<CountLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CountDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.locationId,_that.countType,_that.status,_that.locationName,_that.frozenAt,_that.approvedBy,_that.approvedAt,_that.adjustGroupId,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.location,_that.countType,_that.status,_that.frozenAt,_that.approvedBy,_that.approvedAt,_that.adjustGroupId,_that.rowVersion,_that.lines);case _:
   return orElse();
 
 }
@@ -5351,10 +5608,10 @@ return $default(_that.id,_that.docNo,_that.locationId,_that.countType,_that.stat
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo,  int locationId,  CountType countType,  CountStatus status,  String? locationName,  DateTime? frozenAt,  int? approvedBy,  DateTime? approvedAt,  int? adjustGroupId,  int rowVersion,  List<CountLineDto> lines)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo,  LocationRefDto location,  CountType countType,  CountStatus status,  DateTime? frozenAt,  int? approvedBy,  DateTime? approvedAt,  int? adjustGroupId,  int rowVersion,  List<CountLineDto> lines)  $default,) {final _that = this;
 switch (_that) {
 case _CountDto():
-return $default(_that.id,_that.docNo,_that.locationId,_that.countType,_that.status,_that.locationName,_that.frozenAt,_that.approvedBy,_that.approvedAt,_that.adjustGroupId,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.location,_that.countType,_that.status,_that.frozenAt,_that.approvedBy,_that.approvedAt,_that.adjustGroupId,_that.rowVersion,_that.lines);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -5371,10 +5628,10 @@ return $default(_that.id,_that.docNo,_that.locationId,_that.countType,_that.stat
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo,  int locationId,  CountType countType,  CountStatus status,  String? locationName,  DateTime? frozenAt,  int? approvedBy,  DateTime? approvedAt,  int? adjustGroupId,  int rowVersion,  List<CountLineDto> lines)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo,  LocationRefDto location,  CountType countType,  CountStatus status,  DateTime? frozenAt,  int? approvedBy,  DateTime? approvedAt,  int? adjustGroupId,  int rowVersion,  List<CountLineDto> lines)?  $default,) {final _that = this;
 switch (_that) {
 case _CountDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.locationId,_that.countType,_that.status,_that.locationName,_that.frozenAt,_that.approvedBy,_that.approvedAt,_that.adjustGroupId,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.location,_that.countType,_that.status,_that.frozenAt,_that.approvedBy,_that.approvedAt,_that.adjustGroupId,_that.rowVersion,_that.lines);case _:
   return null;
 
 }
@@ -5386,15 +5643,14 @@ return $default(_that.id,_that.docNo,_that.locationId,_that.countType,_that.stat
 @JsonSerializable()
 
 class _CountDto implements CountDto {
-  const _CountDto({required this.id, required this.docNo, required this.locationId, required this.countType, required this.status, this.locationName, this.frozenAt, this.approvedBy, this.approvedAt, this.adjustGroupId, this.rowVersion = 1,  List<CountLineDto> lines = const <CountLineDto>[]}): _lines = lines;
+  const _CountDto({required this.id, required this.docNo, required this.location, required this.countType, required this.status, this.frozenAt, this.approvedBy, this.approvedAt, this.adjustGroupId, this.rowVersion = 1,  List<CountLineDto> lines = const <CountLineDto>[]}): _lines = lines;
   factory _CountDto.fromJson(Map<String, dynamic> json) => _$CountDtoFromJson(json);
 
 @override final  int id;
 @override final  String docNo;
-@override final  int locationId;
+@override final  LocationRefDto location;
 @override final  CountType countType;
 @override final  CountStatus status;
-@override final  String? locationName;
 @override final  DateTime? frozenAt;
 @override final  int? approvedBy;
 @override final  DateTime? approvedAt;
@@ -5421,18 +5677,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CountDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.countType, countType) || other.countType == countType)&&(identical(other.status, status) || other.status == status)&&(identical(other.locationName, locationName) || other.locationName == locationName)&&(identical(other.frozenAt, frozenAt) || other.frozenAt == frozenAt)&&(identical(other.approvedBy, approvedBy) || other.approvedBy == approvedBy)&&(identical(other.approvedAt, approvedAt) || other.approvedAt == approvedAt)&&(identical(other.adjustGroupId, adjustGroupId) || other.adjustGroupId == adjustGroupId)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&const DeepCollectionEquality().equals(other.lines, _lines));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CountDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.location, location) || other.location == location)&&(identical(other.countType, countType) || other.countType == countType)&&(identical(other.status, status) || other.status == status)&&(identical(other.frozenAt, frozenAt) || other.frozenAt == frozenAt)&&(identical(other.approvedBy, approvedBy) || other.approvedBy == approvedBy)&&(identical(other.approvedAt, approvedAt) || other.approvedAt == approvedAt)&&(identical(other.adjustGroupId, adjustGroupId) || other.adjustGroupId == adjustGroupId)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&const DeepCollectionEquality().equals(other.lines, _lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,docNo,locationId,countType,status,locationName,frozenAt,approvedBy,approvedAt,adjustGroupId,rowVersion,const DeepCollectionEquality().hash(_lines));
+    return Object.hash(runtimeType,id,docNo,location,countType,status,frozenAt,approvedBy,approvedAt,adjustGroupId,rowVersion,const DeepCollectionEquality().hash(_lines));
 }
 
 @override
 String toString() {
-    return 'CountDto(id: $id, docNo: $docNo, locationId: $locationId, countType: $countType, status: $status, locationName: $locationName, frozenAt: $frozenAt, approvedBy: $approvedBy, approvedAt: $approvedAt, adjustGroupId: $adjustGroupId, rowVersion: $rowVersion, lines: $lines)';
+    return 'CountDto(id: $id, docNo: $docNo, location: $location, countType: $countType, status: $status, frozenAt: $frozenAt, approvedBy: $approvedBy, approvedAt: $approvedAt, adjustGroupId: $adjustGroupId, rowVersion: $rowVersion, lines: $lines)';
 }
 
 
@@ -5443,11 +5699,11 @@ abstract mixin class _$CountDtoCopyWith<$Res> implements $CountDtoCopyWith<$Res>
   factory _$CountDtoCopyWith(_CountDto value, $Res Function(_CountDto) _then) = __$CountDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String docNo, int locationId, CountType countType, CountStatus status, String? locationName, DateTime? frozenAt, int? approvedBy, DateTime? approvedAt, int? adjustGroupId, int rowVersion, List<CountLineDto> lines
+ int id, String docNo, LocationRefDto location, CountType countType, CountStatus status, DateTime? frozenAt, int? approvedBy, DateTime? approvedAt, int? adjustGroupId, int rowVersion, List<CountLineDto> lines
 });
 
 
-
+@override $LocationRefDtoCopyWith<$Res> get location;
 
 }
 /// @nodoc
@@ -5460,15 +5716,14 @@ class __$CountDtoCopyWithImpl<$Res>
 
 /// Create a copy of CountDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? locationId = null,Object? countType = null,Object? status = null,Object? locationName = freezed,Object? frozenAt = freezed,Object? approvedBy = freezed,Object? approvedAt = freezed,Object? adjustGroupId = freezed,Object? rowVersion = null,Object? lines = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? location = null,Object? countType = null,Object? status = null,Object? frozenAt = freezed,Object? approvedBy = freezed,Object? approvedAt = freezed,Object? adjustGroupId = freezed,Object? rowVersion = null,Object? lines = null,}) {
   return _then(_CountDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
-as String,locationId: null == locationId ? _self.locationId : locationId // ignore: cast_nullable_to_non_nullable
-as int,countType: null == countType ? _self.countType : countType // ignore: cast_nullable_to_non_nullable
+as String,location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,countType: null == countType ? _self.countType : countType // ignore: cast_nullable_to_non_nullable
 as CountType,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as CountStatus,locationName: freezed == locationName ? _self.locationName : locationName // ignore: cast_nullable_to_non_nullable
-as String?,frozenAt: freezed == frozenAt ? _self.frozenAt : frozenAt // ignore: cast_nullable_to_non_nullable
+as CountStatus,frozenAt: freezed == frozenAt ? _self.frozenAt : frozenAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,approvedBy: freezed == approvedBy ? _self.approvedBy : approvedBy // ignore: cast_nullable_to_non_nullable
 as int?,approvedAt: freezed == approvedAt ? _self.approvedAt : approvedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,adjustGroupId: freezed == adjustGroupId ? _self.adjustGroupId : adjustGroupId // ignore: cast_nullable_to_non_nullable
@@ -5478,7 +5733,16 @@ as List<CountLineDto>,
   ));
 }
 
-
+/// Create a copy of CountDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get location {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.location, (value) {
+    return _then(_self.copyWith(location: value));
+  });
+}
 }
 
 
@@ -6316,7 +6580,7 @@ as int,
 /// @nodoc
 mixin _$WasteLineDto {
 
- int get lineNo; int get productId; Quantity get qty; int get uomId; String? get productName; int? get batchId; String? get batchNo; String? get uomCode; Money? get unitCost; Money? get lineValue;
+ int get lineNo; ProductRefDto get product; Quantity get qty; int get uomId; BatchRefDto? get batch; String? get uomCode; int? get id; Quantity? get qtyBase; String? get note; Money? get unitCost; Money? get lineValue;
 /// Create a copy of WasteLineDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -6330,20 +6594,20 @@ $WasteLineDtoCopyWith<WasteLineDto> get copyWith => _$WasteLineDtoCopyWithImpl<W
 @override
 bool operator ==(Object other) {
   final _this = this as WasteLineDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WasteLineDto&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.productName, _this.productName) || other.productName == _this.productName)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId)&&(identical(other.batchNo, _this.batchNo) || other.batchNo == _this.batchNo)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.unitCost, _this.unitCost) || other.unitCost == _this.unitCost)&&(identical(other.lineValue, _this.lineValue) || other.lineValue == _this.lineValue));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WasteLineDto&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.batch, _this.batch) || other.batch == _this.batch)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.qtyBase, _this.qtyBase) || other.qtyBase == _this.qtyBase)&&(identical(other.note, _this.note) || other.note == _this.note)&&(identical(other.unitCost, _this.unitCost) || other.unitCost == _this.unitCost)&&(identical(other.lineValue, _this.lineValue) || other.lineValue == _this.lineValue));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as WasteLineDto;
-  return Object.hash(runtimeType,_this.lineNo,_this.productId,_this.qty,_this.uomId,_this.productName,_this.batchId,_this.batchNo,_this.uomCode,_this.unitCost,_this.lineValue);
+  return Object.hash(runtimeType,_this.lineNo,_this.product,_this.qty,_this.uomId,_this.batch,_this.uomCode,_this.id,_this.qtyBase,_this.note,_this.unitCost,_this.lineValue);
 }
 
 @override
 String toString() {
   final _this = this as WasteLineDto;
-  return 'WasteLineDto(lineNo: ${_this.lineNo}, productId: ${_this.productId}, qty: ${_this.qty}, uomId: ${_this.uomId}, productName: ${_this.productName}, batchId: ${_this.batchId}, batchNo: ${_this.batchNo}, uomCode: ${_this.uomCode}, unitCost: ${_this.unitCost}, lineValue: ${_this.lineValue})';
+  return 'WasteLineDto(lineNo: ${_this.lineNo}, product: ${_this.product}, qty: ${_this.qty}, uomId: ${_this.uomId}, batch: ${_this.batch}, uomCode: ${_this.uomCode}, id: ${_this.id}, qtyBase: ${_this.qtyBase}, note: ${_this.note}, unitCost: ${_this.unitCost}, lineValue: ${_this.lineValue})';
 }
 
 
@@ -6354,11 +6618,11 @@ abstract mixin class $WasteLineDtoCopyWith<$Res>  {
   factory $WasteLineDtoCopyWith(WasteLineDto value, $Res Function(WasteLineDto) _then) = _$WasteLineDtoCopyWithImpl;
 @useResult
 $Res call({
- int lineNo, int productId, Quantity qty, int uomId, String? productName, int? batchId, String? batchNo, String? uomCode, Money? unitCost, Money? lineValue
+ int lineNo, ProductRefDto product, Quantity qty, int uomId, BatchRefDto? batch, String? uomCode, int? id, Quantity? qtyBase, String? note, Money? unitCost, Money? lineValue
 });
 
 
-
+$ProductRefDtoCopyWith<$Res> get product;$BatchRefDtoCopyWith<$Res>? get batch;
 
 }
 /// @nodoc
@@ -6371,22 +6635,44 @@ class _$WasteLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of WasteLineDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? productId = null,Object? qty = null,Object? uomId = null,Object? productName = freezed,Object? batchId = freezed,Object? batchNo = freezed,Object? uomCode = freezed,Object? unitCost = freezed,Object? lineValue = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? batch = freezed,Object? uomCode = freezed,Object? id = freezed,Object? qtyBase = freezed,Object? note = freezed,Object? unitCost = freezed,Object? lineValue = freezed,}) {
   return _then(WasteLineDto(
 lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
-as String?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as int,batch: freezed == batch ? _self.batch : batch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as String?,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,qtyBase: freezed == qtyBase ? _self.qtyBase : qtyBase // ignore: cast_nullable_to_non_nullable
+as Quantity?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,unitCost: freezed == unitCost ? _self.unitCost : unitCost // ignore: cast_nullable_to_non_nullable
 as Money?,lineValue: freezed == lineValue ? _self.lineValue : lineValue // ignore: cast_nullable_to_non_nullable
 as Money?,
   ));
 }
+/// Create a copy of WasteLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}/// Create a copy of WasteLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get batch {
+    if (_self.batch == null) {
+    return null;
+  }
 
+  return $BatchRefDtoCopyWith<$Res>(_self.batch!, (value) {
+    return _then(_self.copyWith(batch: value));
+  });
+}
 }
 
 
@@ -6468,10 +6754,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  int productId,  Quantity qty,  int uomId,  String? productName,  int? batchId,  String? batchNo,  String? uomCode,  Money? unitCost,  Money? lineValue)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  String? uomCode,  int? id,  Quantity? qtyBase,  String? note,  Money? unitCost,  Money? lineValue)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WasteLineDto() when $default != null:
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.productName,_that.batchId,_that.batchNo,_that.uomCode,_that.unitCost,_that.lineValue);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.uomCode,_that.id,_that.qtyBase,_that.note,_that.unitCost,_that.lineValue);case _:
   return orElse();
 
 }
@@ -6489,10 +6775,10 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.product
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  int productId,  Quantity qty,  int uomId,  String? productName,  int? batchId,  String? batchNo,  String? uomCode,  Money? unitCost,  Money? lineValue)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  String? uomCode,  int? id,  Quantity? qtyBase,  String? note,  Money? unitCost,  Money? lineValue)  $default,) {final _that = this;
 switch (_that) {
 case _WasteLineDto():
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.productName,_that.batchId,_that.batchNo,_that.uomCode,_that.unitCost,_that.lineValue);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.uomCode,_that.id,_that.qtyBase,_that.note,_that.unitCost,_that.lineValue);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -6509,10 +6795,10 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.product
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  int productId,  Quantity qty,  int uomId,  String? productName,  int? batchId,  String? batchNo,  String? uomCode,  Money? unitCost,  Money? lineValue)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  String? uomCode,  int? id,  Quantity? qtyBase,  String? note,  Money? unitCost,  Money? lineValue)?  $default,) {final _that = this;
 switch (_that) {
 case _WasteLineDto() when $default != null:
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.productName,_that.batchId,_that.batchNo,_that.uomCode,_that.unitCost,_that.lineValue);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.uomCode,_that.id,_that.qtyBase,_that.note,_that.unitCost,_that.lineValue);case _:
   return null;
 
 }
@@ -6524,17 +6810,18 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.product
 @JsonSerializable()
 
 class _WasteLineDto implements WasteLineDto {
-  const _WasteLineDto({required this.lineNo, required this.productId, required this.qty, required this.uomId, this.productName, this.batchId, this.batchNo, this.uomCode, this.unitCost, this.lineValue});
+  const _WasteLineDto({required this.lineNo, required this.product, required this.qty, required this.uomId, this.batch, this.uomCode, this.id, this.qtyBase, this.note, this.unitCost, this.lineValue});
   factory _WasteLineDto.fromJson(Map<String, dynamic> json) => _$WasteLineDtoFromJson(json);
 
 @override final  int lineNo;
-@override final  int productId;
+@override final  ProductRefDto product;
 @override final  Quantity qty;
 @override final  int uomId;
-@override final  String? productName;
-@override final  int? batchId;
-@override final  String? batchNo;
+@override final  BatchRefDto? batch;
 @override final  String? uomCode;
+@override final  int? id;
+@override final  Quantity? qtyBase;
+@override final  String? note;
 @override final  Money? unitCost;
 @override final  Money? lineValue;
 
@@ -6551,18 +6838,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WasteLineDto&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.batchNo, batchNo) || other.batchNo == batchNo)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.unitCost, unitCost) || other.unitCost == unitCost)&&(identical(other.lineValue, lineValue) || other.lineValue == lineValue));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WasteLineDto&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.product, product) || other.product == product)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.batch, batch) || other.batch == batch)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.id, id) || other.id == id)&&(identical(other.qtyBase, qtyBase) || other.qtyBase == qtyBase)&&(identical(other.note, note) || other.note == note)&&(identical(other.unitCost, unitCost) || other.unitCost == unitCost)&&(identical(other.lineValue, lineValue) || other.lineValue == lineValue));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,lineNo,productId,qty,uomId,productName,batchId,batchNo,uomCode,unitCost,lineValue);
+    return Object.hash(runtimeType,lineNo,product,qty,uomId,batch,uomCode,id,qtyBase,note,unitCost,lineValue);
 }
 
 @override
 String toString() {
-    return 'WasteLineDto(lineNo: $lineNo, productId: $productId, qty: $qty, uomId: $uomId, productName: $productName, batchId: $batchId, batchNo: $batchNo, uomCode: $uomCode, unitCost: $unitCost, lineValue: $lineValue)';
+    return 'WasteLineDto(lineNo: $lineNo, product: $product, qty: $qty, uomId: $uomId, batch: $batch, uomCode: $uomCode, id: $id, qtyBase: $qtyBase, note: $note, unitCost: $unitCost, lineValue: $lineValue)';
 }
 
 
@@ -6573,11 +6860,11 @@ abstract mixin class _$WasteLineDtoCopyWith<$Res> implements $WasteLineDtoCopyWi
   factory _$WasteLineDtoCopyWith(_WasteLineDto value, $Res Function(_WasteLineDto) _then) = __$WasteLineDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int lineNo, int productId, Quantity qty, int uomId, String? productName, int? batchId, String? batchNo, String? uomCode, Money? unitCost, Money? lineValue
+ int lineNo, ProductRefDto product, Quantity qty, int uomId, BatchRefDto? batch, String? uomCode, int? id, Quantity? qtyBase, String? note, Money? unitCost, Money? lineValue
 });
 
 
-
+@override $ProductRefDtoCopyWith<$Res> get product;@override $BatchRefDtoCopyWith<$Res>? get batch;
 
 }
 /// @nodoc
@@ -6590,30 +6877,52 @@ class __$WasteLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of WasteLineDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? productId = null,Object? qty = null,Object? uomId = null,Object? productName = freezed,Object? batchId = freezed,Object? batchNo = freezed,Object? uomCode = freezed,Object? unitCost = freezed,Object? lineValue = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? batch = freezed,Object? uomCode = freezed,Object? id = freezed,Object? qtyBase = freezed,Object? note = freezed,Object? unitCost = freezed,Object? lineValue = freezed,}) {
   return _then(_WasteLineDto(
 lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
-as String?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as int,batch: freezed == batch ? _self.batch : batch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as String?,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,qtyBase: freezed == qtyBase ? _self.qtyBase : qtyBase // ignore: cast_nullable_to_non_nullable
+as Quantity?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,unitCost: freezed == unitCost ? _self.unitCost : unitCost // ignore: cast_nullable_to_non_nullable
 as Money?,lineValue: freezed == lineValue ? _self.lineValue : lineValue // ignore: cast_nullable_to_non_nullable
 as Money?,
   ));
 }
 
+/// Create a copy of WasteLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}/// Create a copy of WasteLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get batch {
+    if (_self.batch == null) {
+    return null;
+  }
 
+  return $BatchRefDtoCopyWith<$Res>(_self.batch!, (value) {
+    return _then(_self.copyWith(batch: value));
+  });
+}
 }
 
 
 /// @nodoc
 mixin _$WasteDto {
 
- int get id; String get docNo;@DateOnlyConverter() DateTime get docDate; int get locationId; int get reasonCodeId; WasteStatus get status; String? get locationName; String? get reasonCodeName; String? get note; int? get approvedBy; DateTime? get approvedAt; int? get movementGroupId; List<int> get attachmentIds; int get rowVersion; List<WasteLineDto> get lines;
+ int get id; String get docNo;@DateOnlyConverter() DateTime get docDate; LocationRefDto get location; int get reasonCodeId; WasteStatus get status; String? get reasonCodeName; String? get note; int? get approvedBy; DateTime? get approvedAt; int? get movementGroupId; List<int> get attachmentIds; int get rowVersion; List<WasteLineDto> get lines;
 /// Create a copy of WasteDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -6627,20 +6936,20 @@ $WasteDtoCopyWith<WasteDto> get copyWith => _$WasteDtoCopyWithImpl<WasteDto>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as WasteDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WasteDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.docDate, _this.docDate) || other.docDate == _this.docDate)&&(identical(other.locationId, _this.locationId) || other.locationId == _this.locationId)&&(identical(other.reasonCodeId, _this.reasonCodeId) || other.reasonCodeId == _this.reasonCodeId)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.locationName, _this.locationName) || other.locationName == _this.locationName)&&(identical(other.reasonCodeName, _this.reasonCodeName) || other.reasonCodeName == _this.reasonCodeName)&&(identical(other.note, _this.note) || other.note == _this.note)&&(identical(other.approvedBy, _this.approvedBy) || other.approvedBy == _this.approvedBy)&&(identical(other.approvedAt, _this.approvedAt) || other.approvedAt == _this.approvedAt)&&(identical(other.movementGroupId, _this.movementGroupId) || other.movementGroupId == _this.movementGroupId)&&const DeepCollectionEquality().equals(other.attachmentIds, _this.attachmentIds)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WasteDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.docDate, _this.docDate) || other.docDate == _this.docDate)&&(identical(other.location, _this.location) || other.location == _this.location)&&(identical(other.reasonCodeId, _this.reasonCodeId) || other.reasonCodeId == _this.reasonCodeId)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.reasonCodeName, _this.reasonCodeName) || other.reasonCodeName == _this.reasonCodeName)&&(identical(other.note, _this.note) || other.note == _this.note)&&(identical(other.approvedBy, _this.approvedBy) || other.approvedBy == _this.approvedBy)&&(identical(other.approvedAt, _this.approvedAt) || other.approvedAt == _this.approvedAt)&&(identical(other.movementGroupId, _this.movementGroupId) || other.movementGroupId == _this.movementGroupId)&&const DeepCollectionEquality().equals(other.attachmentIds, _this.attachmentIds)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as WasteDto;
-  return Object.hash(runtimeType,_this.id,_this.docNo,_this.docDate,_this.locationId,_this.reasonCodeId,_this.status,_this.locationName,_this.reasonCodeName,_this.note,_this.approvedBy,_this.approvedAt,_this.movementGroupId,const DeepCollectionEquality().hash(_this.attachmentIds),_this.rowVersion,const DeepCollectionEquality().hash(_this.lines));
+  return Object.hash(runtimeType,_this.id,_this.docNo,_this.docDate,_this.location,_this.reasonCodeId,_this.status,_this.reasonCodeName,_this.note,_this.approvedBy,_this.approvedAt,_this.movementGroupId,const DeepCollectionEquality().hash(_this.attachmentIds),_this.rowVersion,const DeepCollectionEquality().hash(_this.lines));
 }
 
 @override
 String toString() {
   final _this = this as WasteDto;
-  return 'WasteDto(id: ${_this.id}, docNo: ${_this.docNo}, docDate: ${_this.docDate}, locationId: ${_this.locationId}, reasonCodeId: ${_this.reasonCodeId}, status: ${_this.status}, locationName: ${_this.locationName}, reasonCodeName: ${_this.reasonCodeName}, note: ${_this.note}, approvedBy: ${_this.approvedBy}, approvedAt: ${_this.approvedAt}, movementGroupId: ${_this.movementGroupId}, attachmentIds: ${_this.attachmentIds}, rowVersion: ${_this.rowVersion}, lines: ${_this.lines})';
+  return 'WasteDto(id: ${_this.id}, docNo: ${_this.docNo}, docDate: ${_this.docDate}, location: ${_this.location}, reasonCodeId: ${_this.reasonCodeId}, status: ${_this.status}, reasonCodeName: ${_this.reasonCodeName}, note: ${_this.note}, approvedBy: ${_this.approvedBy}, approvedAt: ${_this.approvedAt}, movementGroupId: ${_this.movementGroupId}, attachmentIds: ${_this.attachmentIds}, rowVersion: ${_this.rowVersion}, lines: ${_this.lines})';
 }
 
 
@@ -6651,11 +6960,11 @@ abstract mixin class $WasteDtoCopyWith<$Res>  {
   factory $WasteDtoCopyWith(WasteDto value, $Res Function(WasteDto) _then) = _$WasteDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String docNo,@DateOnlyConverter() DateTime docDate, int locationId, int reasonCodeId, WasteStatus status, String? locationName, String? reasonCodeName, String? note, int? approvedBy, DateTime? approvedAt, int? movementGroupId, List<int> attachmentIds, int rowVersion, List<WasteLineDto> lines
+ int id, String docNo,@DateOnlyConverter() DateTime docDate, LocationRefDto location, int reasonCodeId, WasteStatus status, String? reasonCodeName, String? note, int? approvedBy, DateTime? approvedAt, int? movementGroupId, List<int> attachmentIds, int rowVersion, List<WasteLineDto> lines
 });
 
 
-
+$LocationRefDtoCopyWith<$Res> get location;
 
 }
 /// @nodoc
@@ -6668,16 +6977,15 @@ class _$WasteDtoCopyWithImpl<$Res>
 
 /// Create a copy of WasteDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? locationId = null,Object? reasonCodeId = null,Object? status = null,Object? locationName = freezed,Object? reasonCodeName = freezed,Object? note = freezed,Object? approvedBy = freezed,Object? approvedAt = freezed,Object? movementGroupId = freezed,Object? attachmentIds = null,Object? rowVersion = null,Object? lines = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? location = null,Object? reasonCodeId = null,Object? status = null,Object? reasonCodeName = freezed,Object? note = freezed,Object? approvedBy = freezed,Object? approvedAt = freezed,Object? movementGroupId = freezed,Object? attachmentIds = null,Object? rowVersion = null,Object? lines = null,}) {
   return _then(WasteDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
 as String,docDate: null == docDate ? _self.docDate : docDate // ignore: cast_nullable_to_non_nullable
-as DateTime,locationId: null == locationId ? _self.locationId : locationId // ignore: cast_nullable_to_non_nullable
-as int,reasonCodeId: null == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
+as DateTime,location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,reasonCodeId: null == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
 as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as WasteStatus,locationName: freezed == locationName ? _self.locationName : locationName // ignore: cast_nullable_to_non_nullable
-as String?,reasonCodeName: freezed == reasonCodeName ? _self.reasonCodeName : reasonCodeName // ignore: cast_nullable_to_non_nullable
+as WasteStatus,reasonCodeName: freezed == reasonCodeName ? _self.reasonCodeName : reasonCodeName // ignore: cast_nullable_to_non_nullable
 as String?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,approvedBy: freezed == approvedBy ? _self.approvedBy : approvedBy // ignore: cast_nullable_to_non_nullable
 as int?,approvedAt: freezed == approvedAt ? _self.approvedAt : approvedAt // ignore: cast_nullable_to_non_nullable
@@ -6688,7 +6996,16 @@ as int,lines: null == lines ? _self.lines : lines // ignore: cast_nullable_to_no
 as List<WasteLineDto>,
   ));
 }
-
+/// Create a copy of WasteDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get location {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.location, (value) {
+    return _then(_self.copyWith(location: value));
+  });
+}
 }
 
 
@@ -6770,10 +7087,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int locationId,  int reasonCodeId,  WasteStatus status,  String? locationName,  String? reasonCodeName,  String? note,  int? approvedBy,  DateTime? approvedAt,  int? movementGroupId,  List<int> attachmentIds,  int rowVersion,  List<WasteLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  LocationRefDto location,  int reasonCodeId,  WasteStatus status,  String? reasonCodeName,  String? note,  int? approvedBy,  DateTime? approvedAt,  int? movementGroupId,  List<int> attachmentIds,  int rowVersion,  List<WasteLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WasteDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.reasonCodeId,_that.status,_that.locationName,_that.reasonCodeName,_that.note,_that.approvedBy,_that.approvedAt,_that.movementGroupId,_that.attachmentIds,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.location,_that.reasonCodeId,_that.status,_that.reasonCodeName,_that.note,_that.approvedBy,_that.approvedAt,_that.movementGroupId,_that.attachmentIds,_that.rowVersion,_that.lines);case _:
   return orElse();
 
 }
@@ -6791,10 +7108,10 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.reason
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int locationId,  int reasonCodeId,  WasteStatus status,  String? locationName,  String? reasonCodeName,  String? note,  int? approvedBy,  DateTime? approvedAt,  int? movementGroupId,  List<int> attachmentIds,  int rowVersion,  List<WasteLineDto> lines)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  LocationRefDto location,  int reasonCodeId,  WasteStatus status,  String? reasonCodeName,  String? note,  int? approvedBy,  DateTime? approvedAt,  int? movementGroupId,  List<int> attachmentIds,  int rowVersion,  List<WasteLineDto> lines)  $default,) {final _that = this;
 switch (_that) {
 case _WasteDto():
-return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.reasonCodeId,_that.status,_that.locationName,_that.reasonCodeName,_that.note,_that.approvedBy,_that.approvedAt,_that.movementGroupId,_that.attachmentIds,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.location,_that.reasonCodeId,_that.status,_that.reasonCodeName,_that.note,_that.approvedBy,_that.approvedAt,_that.movementGroupId,_that.attachmentIds,_that.rowVersion,_that.lines);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -6811,10 +7128,10 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.reason
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int locationId,  int reasonCodeId,  WasteStatus status,  String? locationName,  String? reasonCodeName,  String? note,  int? approvedBy,  DateTime? approvedAt,  int? movementGroupId,  List<int> attachmentIds,  int rowVersion,  List<WasteLineDto> lines)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  LocationRefDto location,  int reasonCodeId,  WasteStatus status,  String? reasonCodeName,  String? note,  int? approvedBy,  DateTime? approvedAt,  int? movementGroupId,  List<int> attachmentIds,  int rowVersion,  List<WasteLineDto> lines)?  $default,) {final _that = this;
 switch (_that) {
 case _WasteDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.reasonCodeId,_that.status,_that.locationName,_that.reasonCodeName,_that.note,_that.approvedBy,_that.approvedAt,_that.movementGroupId,_that.attachmentIds,_that.rowVersion,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.location,_that.reasonCodeId,_that.status,_that.reasonCodeName,_that.note,_that.approvedBy,_that.approvedAt,_that.movementGroupId,_that.attachmentIds,_that.rowVersion,_that.lines);case _:
   return null;
 
 }
@@ -6826,16 +7143,15 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.reason
 @JsonSerializable()
 
 class _WasteDto implements WasteDto {
-  const _WasteDto({required this.id, required this.docNo, @DateOnlyConverter() required this.docDate, required this.locationId, required this.reasonCodeId, required this.status, this.locationName, this.reasonCodeName, this.note, this.approvedBy, this.approvedAt, this.movementGroupId,  List<int> attachmentIds = const <int>[], this.rowVersion = 1,  List<WasteLineDto> lines = const <WasteLineDto>[]}): _attachmentIds = attachmentIds,_lines = lines;
+  const _WasteDto({required this.id, required this.docNo, @DateOnlyConverter() required this.docDate, required this.location, required this.reasonCodeId, required this.status, this.reasonCodeName, this.note, this.approvedBy, this.approvedAt, this.movementGroupId,  List<int> attachmentIds = const <int>[], this.rowVersion = 1,  List<WasteLineDto> lines = const <WasteLineDto>[]}): _attachmentIds = attachmentIds,_lines = lines;
   factory _WasteDto.fromJson(Map<String, dynamic> json) => _$WasteDtoFromJson(json);
 
 @override final  int id;
 @override final  String docNo;
 @override@DateOnlyConverter() final  DateTime docDate;
-@override final  int locationId;
+@override final  LocationRefDto location;
 @override final  int reasonCodeId;
 @override final  WasteStatus status;
-@override final  String? locationName;
 @override final  String? reasonCodeName;
 @override final  String? note;
 @override final  int? approvedBy;
@@ -6870,18 +7186,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WasteDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.docDate, docDate) || other.docDate == docDate)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.reasonCodeId, reasonCodeId) || other.reasonCodeId == reasonCodeId)&&(identical(other.status, status) || other.status == status)&&(identical(other.locationName, locationName) || other.locationName == locationName)&&(identical(other.reasonCodeName, reasonCodeName) || other.reasonCodeName == reasonCodeName)&&(identical(other.note, note) || other.note == note)&&(identical(other.approvedBy, approvedBy) || other.approvedBy == approvedBy)&&(identical(other.approvedAt, approvedAt) || other.approvedAt == approvedAt)&&(identical(other.movementGroupId, movementGroupId) || other.movementGroupId == movementGroupId)&&const DeepCollectionEquality().equals(other.attachmentIds, _attachmentIds)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&const DeepCollectionEquality().equals(other.lines, _lines));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WasteDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.docDate, docDate) || other.docDate == docDate)&&(identical(other.location, location) || other.location == location)&&(identical(other.reasonCodeId, reasonCodeId) || other.reasonCodeId == reasonCodeId)&&(identical(other.status, status) || other.status == status)&&(identical(other.reasonCodeName, reasonCodeName) || other.reasonCodeName == reasonCodeName)&&(identical(other.note, note) || other.note == note)&&(identical(other.approvedBy, approvedBy) || other.approvedBy == approvedBy)&&(identical(other.approvedAt, approvedAt) || other.approvedAt == approvedAt)&&(identical(other.movementGroupId, movementGroupId) || other.movementGroupId == movementGroupId)&&const DeepCollectionEquality().equals(other.attachmentIds, _attachmentIds)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&const DeepCollectionEquality().equals(other.lines, _lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,docNo,docDate,locationId,reasonCodeId,status,locationName,reasonCodeName,note,approvedBy,approvedAt,movementGroupId,const DeepCollectionEquality().hash(_attachmentIds),rowVersion,const DeepCollectionEquality().hash(_lines));
+    return Object.hash(runtimeType,id,docNo,docDate,location,reasonCodeId,status,reasonCodeName,note,approvedBy,approvedAt,movementGroupId,const DeepCollectionEquality().hash(_attachmentIds),rowVersion,const DeepCollectionEquality().hash(_lines));
 }
 
 @override
 String toString() {
-    return 'WasteDto(id: $id, docNo: $docNo, docDate: $docDate, locationId: $locationId, reasonCodeId: $reasonCodeId, status: $status, locationName: $locationName, reasonCodeName: $reasonCodeName, note: $note, approvedBy: $approvedBy, approvedAt: $approvedAt, movementGroupId: $movementGroupId, attachmentIds: $attachmentIds, rowVersion: $rowVersion, lines: $lines)';
+    return 'WasteDto(id: $id, docNo: $docNo, docDate: $docDate, location: $location, reasonCodeId: $reasonCodeId, status: $status, reasonCodeName: $reasonCodeName, note: $note, approvedBy: $approvedBy, approvedAt: $approvedAt, movementGroupId: $movementGroupId, attachmentIds: $attachmentIds, rowVersion: $rowVersion, lines: $lines)';
 }
 
 
@@ -6892,11 +7208,11 @@ abstract mixin class _$WasteDtoCopyWith<$Res> implements $WasteDtoCopyWith<$Res>
   factory _$WasteDtoCopyWith(_WasteDto value, $Res Function(_WasteDto) _then) = __$WasteDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String docNo,@DateOnlyConverter() DateTime docDate, int locationId, int reasonCodeId, WasteStatus status, String? locationName, String? reasonCodeName, String? note, int? approvedBy, DateTime? approvedAt, int? movementGroupId, List<int> attachmentIds, int rowVersion, List<WasteLineDto> lines
+ int id, String docNo,@DateOnlyConverter() DateTime docDate, LocationRefDto location, int reasonCodeId, WasteStatus status, String? reasonCodeName, String? note, int? approvedBy, DateTime? approvedAt, int? movementGroupId, List<int> attachmentIds, int rowVersion, List<WasteLineDto> lines
 });
 
 
-
+@override $LocationRefDtoCopyWith<$Res> get location;
 
 }
 /// @nodoc
@@ -6909,16 +7225,15 @@ class __$WasteDtoCopyWithImpl<$Res>
 
 /// Create a copy of WasteDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? locationId = null,Object? reasonCodeId = null,Object? status = null,Object? locationName = freezed,Object? reasonCodeName = freezed,Object? note = freezed,Object? approvedBy = freezed,Object? approvedAt = freezed,Object? movementGroupId = freezed,Object? attachmentIds = null,Object? rowVersion = null,Object? lines = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? location = null,Object? reasonCodeId = null,Object? status = null,Object? reasonCodeName = freezed,Object? note = freezed,Object? approvedBy = freezed,Object? approvedAt = freezed,Object? movementGroupId = freezed,Object? attachmentIds = null,Object? rowVersion = null,Object? lines = null,}) {
   return _then(_WasteDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
 as String,docDate: null == docDate ? _self.docDate : docDate // ignore: cast_nullable_to_non_nullable
-as DateTime,locationId: null == locationId ? _self.locationId : locationId // ignore: cast_nullable_to_non_nullable
-as int,reasonCodeId: null == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
+as DateTime,location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,reasonCodeId: null == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
 as int,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as WasteStatus,locationName: freezed == locationName ? _self.locationName : locationName // ignore: cast_nullable_to_non_nullable
-as String?,reasonCodeName: freezed == reasonCodeName ? _self.reasonCodeName : reasonCodeName // ignore: cast_nullable_to_non_nullable
+as WasteStatus,reasonCodeName: freezed == reasonCodeName ? _self.reasonCodeName : reasonCodeName // ignore: cast_nullable_to_non_nullable
 as String?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,approvedBy: freezed == approvedBy ? _self.approvedBy : approvedBy // ignore: cast_nullable_to_non_nullable
 as int?,approvedAt: freezed == approvedAt ? _self.approvedAt : approvedAt // ignore: cast_nullable_to_non_nullable
@@ -6930,7 +7245,16 @@ as List<WasteLineDto>,
   ));
 }
 
-
+/// Create a copy of WasteDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get location {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.location, (value) {
+    return _then(_self.copyWith(location: value));
+  });
+}
 }
 
 
@@ -7513,7 +7837,7 @@ as List<int>,
 /// @nodoc
 mixin _$SampleLineDto {
 
- int get lineNo; int get productId; Quantity get qty; int get uomId; String? get productName; int? get batchId; String? get batchNo; String? get uomCode;
+ int get lineNo; ProductRefDto get product; Quantity get qty; int get uomId; BatchRefDto? get batch; String? get uomCode; int? get id; Quantity? get qtyBase; String? get note;
 /// Create a copy of SampleLineDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -7527,20 +7851,20 @@ $SampleLineDtoCopyWith<SampleLineDto> get copyWith => _$SampleLineDtoCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as SampleLineDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SampleLineDto&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.productName, _this.productName) || other.productName == _this.productName)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId)&&(identical(other.batchNo, _this.batchNo) || other.batchNo == _this.batchNo)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SampleLineDto&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.batch, _this.batch) || other.batch == _this.batch)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.qtyBase, _this.qtyBase) || other.qtyBase == _this.qtyBase)&&(identical(other.note, _this.note) || other.note == _this.note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as SampleLineDto;
-  return Object.hash(runtimeType,_this.lineNo,_this.productId,_this.qty,_this.uomId,_this.productName,_this.batchId,_this.batchNo,_this.uomCode);
+  return Object.hash(runtimeType,_this.lineNo,_this.product,_this.qty,_this.uomId,_this.batch,_this.uomCode,_this.id,_this.qtyBase,_this.note);
 }
 
 @override
 String toString() {
   final _this = this as SampleLineDto;
-  return 'SampleLineDto(lineNo: ${_this.lineNo}, productId: ${_this.productId}, qty: ${_this.qty}, uomId: ${_this.uomId}, productName: ${_this.productName}, batchId: ${_this.batchId}, batchNo: ${_this.batchNo}, uomCode: ${_this.uomCode})';
+  return 'SampleLineDto(lineNo: ${_this.lineNo}, product: ${_this.product}, qty: ${_this.qty}, uomId: ${_this.uomId}, batch: ${_this.batch}, uomCode: ${_this.uomCode}, id: ${_this.id}, qtyBase: ${_this.qtyBase}, note: ${_this.note})';
 }
 
 
@@ -7551,11 +7875,11 @@ abstract mixin class $SampleLineDtoCopyWith<$Res>  {
   factory $SampleLineDtoCopyWith(SampleLineDto value, $Res Function(SampleLineDto) _then) = _$SampleLineDtoCopyWithImpl;
 @useResult
 $Res call({
- int lineNo, int productId, Quantity qty, int uomId, String? productName, int? batchId, String? batchNo, String? uomCode
+ int lineNo, ProductRefDto product, Quantity qty, int uomId, BatchRefDto? batch, String? uomCode, int? id, Quantity? qtyBase, String? note
 });
 
 
-
+$ProductRefDtoCopyWith<$Res> get product;$BatchRefDtoCopyWith<$Res>? get batch;
 
 }
 /// @nodoc
@@ -7568,20 +7892,42 @@ class _$SampleLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of SampleLineDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? productId = null,Object? qty = null,Object? uomId = null,Object? productName = freezed,Object? batchId = freezed,Object? batchNo = freezed,Object? uomCode = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? batch = freezed,Object? uomCode = freezed,Object? id = freezed,Object? qtyBase = freezed,Object? note = freezed,}) {
   return _then(SampleLineDto(
 lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
-as String?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as int,batch: freezed == batch ? _self.batch : batch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as String?,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,qtyBase: freezed == qtyBase ? _self.qtyBase : qtyBase // ignore: cast_nullable_to_non_nullable
+as Quantity?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
+/// Create a copy of SampleLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}/// Create a copy of SampleLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get batch {
+    if (_self.batch == null) {
+    return null;
+  }
 
+  return $BatchRefDtoCopyWith<$Res>(_self.batch!, (value) {
+    return _then(_self.copyWith(batch: value));
+  });
+}
 }
 
 
@@ -7663,10 +8009,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  int productId,  Quantity qty,  int uomId,  String? productName,  int? batchId,  String? batchNo,  String? uomCode)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  String? uomCode,  int? id,  Quantity? qtyBase,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SampleLineDto() when $default != null:
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.productName,_that.batchId,_that.batchNo,_that.uomCode);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.uomCode,_that.id,_that.qtyBase,_that.note);case _:
   return orElse();
 
 }
@@ -7684,10 +8030,10 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.product
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  int productId,  Quantity qty,  int uomId,  String? productName,  int? batchId,  String? batchNo,  String? uomCode)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  String? uomCode,  int? id,  Quantity? qtyBase,  String? note)  $default,) {final _that = this;
 switch (_that) {
 case _SampleLineDto():
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.productName,_that.batchId,_that.batchNo,_that.uomCode);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.uomCode,_that.id,_that.qtyBase,_that.note);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -7704,10 +8050,10 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.product
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  int productId,  Quantity qty,  int uomId,  String? productName,  int? batchId,  String? batchNo,  String? uomCode)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  String? uomCode,  int? id,  Quantity? qtyBase,  String? note)?  $default,) {final _that = this;
 switch (_that) {
 case _SampleLineDto() when $default != null:
-return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.productName,_that.batchId,_that.batchNo,_that.uomCode);case _:
+return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.uomCode,_that.id,_that.qtyBase,_that.note);case _:
   return null;
 
 }
@@ -7719,17 +8065,18 @@ return $default(_that.lineNo,_that.productId,_that.qty,_that.uomId,_that.product
 @JsonSerializable()
 
 class _SampleLineDto implements SampleLineDto {
-  const _SampleLineDto({required this.lineNo, required this.productId, required this.qty, required this.uomId, this.productName, this.batchId, this.batchNo, this.uomCode});
+  const _SampleLineDto({required this.lineNo, required this.product, required this.qty, required this.uomId, this.batch, this.uomCode, this.id, this.qtyBase, this.note});
   factory _SampleLineDto.fromJson(Map<String, dynamic> json) => _$SampleLineDtoFromJson(json);
 
 @override final  int lineNo;
-@override final  int productId;
+@override final  ProductRefDto product;
 @override final  Quantity qty;
 @override final  int uomId;
-@override final  String? productName;
-@override final  int? batchId;
-@override final  String? batchNo;
+@override final  BatchRefDto? batch;
 @override final  String? uomCode;
+@override final  int? id;
+@override final  Quantity? qtyBase;
+@override final  String? note;
 
 /// Create a copy of SampleLineDto
 /// with the given fields replaced by the non-null parameter values.
@@ -7744,18 +8091,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SampleLineDto&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.productName, productName) || other.productName == productName)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.batchNo, batchNo) || other.batchNo == batchNo)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SampleLineDto&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.product, product) || other.product == product)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.batch, batch) || other.batch == batch)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.id, id) || other.id == id)&&(identical(other.qtyBase, qtyBase) || other.qtyBase == qtyBase)&&(identical(other.note, note) || other.note == note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,lineNo,productId,qty,uomId,productName,batchId,batchNo,uomCode);
+    return Object.hash(runtimeType,lineNo,product,qty,uomId,batch,uomCode,id,qtyBase,note);
 }
 
 @override
 String toString() {
-    return 'SampleLineDto(lineNo: $lineNo, productId: $productId, qty: $qty, uomId: $uomId, productName: $productName, batchId: $batchId, batchNo: $batchNo, uomCode: $uomCode)';
+    return 'SampleLineDto(lineNo: $lineNo, product: $product, qty: $qty, uomId: $uomId, batch: $batch, uomCode: $uomCode, id: $id, qtyBase: $qtyBase, note: $note)';
 }
 
 
@@ -7766,11 +8113,11 @@ abstract mixin class _$SampleLineDtoCopyWith<$Res> implements $SampleLineDtoCopy
   factory _$SampleLineDtoCopyWith(_SampleLineDto value, $Res Function(_SampleLineDto) _then) = __$SampleLineDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int lineNo, int productId, Quantity qty, int uomId, String? productName, int? batchId, String? batchNo, String? uomCode
+ int lineNo, ProductRefDto product, Quantity qty, int uomId, BatchRefDto? batch, String? uomCode, int? id, Quantity? qtyBase, String? note
 });
 
 
-
+@override $ProductRefDtoCopyWith<$Res> get product;@override $BatchRefDtoCopyWith<$Res>? get batch;
 
 }
 /// @nodoc
@@ -7783,28 +8130,50 @@ class __$SampleLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of SampleLineDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? productId = null,Object? qty = null,Object? uomId = null,Object? productName = freezed,Object? batchId = freezed,Object? batchNo = freezed,Object? uomCode = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? batch = freezed,Object? uomCode = freezed,Object? id = freezed,Object? qtyBase = freezed,Object? note = freezed,}) {
   return _then(_SampleLineDto(
 lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
-as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
+as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
+as ProductRefDto,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,productName: freezed == productName ? _self.productName : productName // ignore: cast_nullable_to_non_nullable
-as String?,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,batchNo: freezed == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
-as String?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as int,batch: freezed == batch ? _self.batch : batch // ignore: cast_nullable_to_non_nullable
+as BatchRefDto?,uomCode: freezed == uomCode ? _self.uomCode : uomCode // ignore: cast_nullable_to_non_nullable
+as String?,id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int?,qtyBase: freezed == qtyBase ? _self.qtyBase : qtyBase // ignore: cast_nullable_to_non_nullable
+as Quantity?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
 
+/// Create a copy of SampleLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$ProductRefDtoCopyWith<$Res> get product {
+  
+  return $ProductRefDtoCopyWith<$Res>(_self.product, (value) {
+    return _then(_self.copyWith(product: value));
+  });
+}/// Create a copy of SampleLineDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$BatchRefDtoCopyWith<$Res>? get batch {
+    if (_self.batch == null) {
+    return null;
+  }
 
+  return $BatchRefDtoCopyWith<$Res>(_self.batch!, (value) {
+    return _then(_self.copyWith(batch: value));
+  });
+}
 }
 
 
 /// @nodoc
 mixin _$SampleDto {
 
- int get id; String get docNo;@DateOnlyConverter() DateTime get docDate; int get locationId; String get authority; String? get locationName; String? get purpose; int? get movementGroupId; List<SampleLineDto> get lines;
+ int get id; String get docNo;@DateOnlyConverter() DateTime get docDate; LocationRefDto get location; String get authority; String? get purpose; int? get movementGroupId; List<SampleLineDto> get lines;
 /// Create a copy of SampleDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -7818,20 +8187,20 @@ $SampleDtoCopyWith<SampleDto> get copyWith => _$SampleDtoCopyWithImpl<SampleDto>
 @override
 bool operator ==(Object other) {
   final _this = this as SampleDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SampleDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.docDate, _this.docDate) || other.docDate == _this.docDate)&&(identical(other.locationId, _this.locationId) || other.locationId == _this.locationId)&&(identical(other.authority, _this.authority) || other.authority == _this.authority)&&(identical(other.locationName, _this.locationName) || other.locationName == _this.locationName)&&(identical(other.purpose, _this.purpose) || other.purpose == _this.purpose)&&(identical(other.movementGroupId, _this.movementGroupId) || other.movementGroupId == _this.movementGroupId)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SampleDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.docNo, _this.docNo) || other.docNo == _this.docNo)&&(identical(other.docDate, _this.docDate) || other.docDate == _this.docDate)&&(identical(other.location, _this.location) || other.location == _this.location)&&(identical(other.authority, _this.authority) || other.authority == _this.authority)&&(identical(other.purpose, _this.purpose) || other.purpose == _this.purpose)&&(identical(other.movementGroupId, _this.movementGroupId) || other.movementGroupId == _this.movementGroupId)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as SampleDto;
-  return Object.hash(runtimeType,_this.id,_this.docNo,_this.docDate,_this.locationId,_this.authority,_this.locationName,_this.purpose,_this.movementGroupId,const DeepCollectionEquality().hash(_this.lines));
+  return Object.hash(runtimeType,_this.id,_this.docNo,_this.docDate,_this.location,_this.authority,_this.purpose,_this.movementGroupId,const DeepCollectionEquality().hash(_this.lines));
 }
 
 @override
 String toString() {
   final _this = this as SampleDto;
-  return 'SampleDto(id: ${_this.id}, docNo: ${_this.docNo}, docDate: ${_this.docDate}, locationId: ${_this.locationId}, authority: ${_this.authority}, locationName: ${_this.locationName}, purpose: ${_this.purpose}, movementGroupId: ${_this.movementGroupId}, lines: ${_this.lines})';
+  return 'SampleDto(id: ${_this.id}, docNo: ${_this.docNo}, docDate: ${_this.docDate}, location: ${_this.location}, authority: ${_this.authority}, purpose: ${_this.purpose}, movementGroupId: ${_this.movementGroupId}, lines: ${_this.lines})';
 }
 
 
@@ -7842,11 +8211,11 @@ abstract mixin class $SampleDtoCopyWith<$Res>  {
   factory $SampleDtoCopyWith(SampleDto value, $Res Function(SampleDto) _then) = _$SampleDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String docNo,@DateOnlyConverter() DateTime docDate, int locationId, String authority, String? locationName, String? purpose, int? movementGroupId, List<SampleLineDto> lines
+ int id, String docNo,@DateOnlyConverter() DateTime docDate, LocationRefDto location, String authority, String? purpose, int? movementGroupId, List<SampleLineDto> lines
 });
 
 
-
+$LocationRefDtoCopyWith<$Res> get location;
 
 }
 /// @nodoc
@@ -7859,21 +8228,29 @@ class _$SampleDtoCopyWithImpl<$Res>
 
 /// Create a copy of SampleDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? locationId = null,Object? authority = null,Object? locationName = freezed,Object? purpose = freezed,Object? movementGroupId = freezed,Object? lines = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? location = null,Object? authority = null,Object? purpose = freezed,Object? movementGroupId = freezed,Object? lines = null,}) {
   return _then(SampleDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
 as String,docDate: null == docDate ? _self.docDate : docDate // ignore: cast_nullable_to_non_nullable
-as DateTime,locationId: null == locationId ? _self.locationId : locationId // ignore: cast_nullable_to_non_nullable
-as int,authority: null == authority ? _self.authority : authority // ignore: cast_nullable_to_non_nullable
-as String,locationName: freezed == locationName ? _self.locationName : locationName // ignore: cast_nullable_to_non_nullable
-as String?,purpose: freezed == purpose ? _self.purpose : purpose // ignore: cast_nullable_to_non_nullable
+as DateTime,location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,authority: null == authority ? _self.authority : authority // ignore: cast_nullable_to_non_nullable
+as String,purpose: freezed == purpose ? _self.purpose : purpose // ignore: cast_nullable_to_non_nullable
 as String?,movementGroupId: freezed == movementGroupId ? _self.movementGroupId : movementGroupId // ignore: cast_nullable_to_non_nullable
 as int?,lines: null == lines ? _self.lines : lines // ignore: cast_nullable_to_non_nullable
 as List<SampleLineDto>,
   ));
 }
-
+/// Create a copy of SampleDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get location {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.location, (value) {
+    return _then(_self.copyWith(location: value));
+  });
+}
 }
 
 
@@ -7955,10 +8332,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int locationId,  String authority,  String? locationName,  String? purpose,  int? movementGroupId,  List<SampleLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  LocationRefDto location,  String authority,  String? purpose,  int? movementGroupId,  List<SampleLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SampleDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.authority,_that.locationName,_that.purpose,_that.movementGroupId,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.location,_that.authority,_that.purpose,_that.movementGroupId,_that.lines);case _:
   return orElse();
 
 }
@@ -7976,10 +8353,10 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.author
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int locationId,  String authority,  String? locationName,  String? purpose,  int? movementGroupId,  List<SampleLineDto> lines)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  LocationRefDto location,  String authority,  String? purpose,  int? movementGroupId,  List<SampleLineDto> lines)  $default,) {final _that = this;
 switch (_that) {
 case _SampleDto():
-return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.authority,_that.locationName,_that.purpose,_that.movementGroupId,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.location,_that.authority,_that.purpose,_that.movementGroupId,_that.lines);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -7996,10 +8373,10 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.author
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  int locationId,  String authority,  String? locationName,  String? purpose,  int? movementGroupId,  List<SampleLineDto> lines)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String docNo, @DateOnlyConverter()  DateTime docDate,  LocationRefDto location,  String authority,  String? purpose,  int? movementGroupId,  List<SampleLineDto> lines)?  $default,) {final _that = this;
 switch (_that) {
 case _SampleDto() when $default != null:
-return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.authority,_that.locationName,_that.purpose,_that.movementGroupId,_that.lines);case _:
+return $default(_that.id,_that.docNo,_that.docDate,_that.location,_that.authority,_that.purpose,_that.movementGroupId,_that.lines);case _:
   return null;
 
 }
@@ -8011,15 +8388,14 @@ return $default(_that.id,_that.docNo,_that.docDate,_that.locationId,_that.author
 @JsonSerializable()
 
 class _SampleDto implements SampleDto {
-  const _SampleDto({required this.id, required this.docNo, @DateOnlyConverter() required this.docDate, required this.locationId, this.authority = 'AQTA', this.locationName, this.purpose, this.movementGroupId,  List<SampleLineDto> lines = const <SampleLineDto>[]}): _lines = lines;
+  const _SampleDto({required this.id, required this.docNo, @DateOnlyConverter() required this.docDate, required this.location, this.authority = 'AQTA', this.purpose, this.movementGroupId,  List<SampleLineDto> lines = const <SampleLineDto>[]}): _lines = lines;
   factory _SampleDto.fromJson(Map<String, dynamic> json) => _$SampleDtoFromJson(json);
 
 @override final  int id;
 @override final  String docNo;
 @override@DateOnlyConverter() final  DateTime docDate;
-@override final  int locationId;
+@override final  LocationRefDto location;
 @override@JsonKey() final  String authority;
-@override final  String? locationName;
 @override final  String? purpose;
 @override final  int? movementGroupId;
  final  List<SampleLineDto> _lines;
@@ -8043,18 +8419,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SampleDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.docDate, docDate) || other.docDate == docDate)&&(identical(other.locationId, locationId) || other.locationId == locationId)&&(identical(other.authority, authority) || other.authority == authority)&&(identical(other.locationName, locationName) || other.locationName == locationName)&&(identical(other.purpose, purpose) || other.purpose == purpose)&&(identical(other.movementGroupId, movementGroupId) || other.movementGroupId == movementGroupId)&&const DeepCollectionEquality().equals(other.lines, _lines));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SampleDto&&(identical(other.id, id) || other.id == id)&&(identical(other.docNo, docNo) || other.docNo == docNo)&&(identical(other.docDate, docDate) || other.docDate == docDate)&&(identical(other.location, location) || other.location == location)&&(identical(other.authority, authority) || other.authority == authority)&&(identical(other.purpose, purpose) || other.purpose == purpose)&&(identical(other.movementGroupId, movementGroupId) || other.movementGroupId == movementGroupId)&&const DeepCollectionEquality().equals(other.lines, _lines));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,docNo,docDate,locationId,authority,locationName,purpose,movementGroupId,const DeepCollectionEquality().hash(_lines));
+    return Object.hash(runtimeType,id,docNo,docDate,location,authority,purpose,movementGroupId,const DeepCollectionEquality().hash(_lines));
 }
 
 @override
 String toString() {
-    return 'SampleDto(id: $id, docNo: $docNo, docDate: $docDate, locationId: $locationId, authority: $authority, locationName: $locationName, purpose: $purpose, movementGroupId: $movementGroupId, lines: $lines)';
+    return 'SampleDto(id: $id, docNo: $docNo, docDate: $docDate, location: $location, authority: $authority, purpose: $purpose, movementGroupId: $movementGroupId, lines: $lines)';
 }
 
 
@@ -8065,11 +8441,11 @@ abstract mixin class _$SampleDtoCopyWith<$Res> implements $SampleDtoCopyWith<$Re
   factory _$SampleDtoCopyWith(_SampleDto value, $Res Function(_SampleDto) _then) = __$SampleDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String docNo,@DateOnlyConverter() DateTime docDate, int locationId, String authority, String? locationName, String? purpose, int? movementGroupId, List<SampleLineDto> lines
+ int id, String docNo,@DateOnlyConverter() DateTime docDate, LocationRefDto location, String authority, String? purpose, int? movementGroupId, List<SampleLineDto> lines
 });
 
 
-
+@override $LocationRefDtoCopyWith<$Res> get location;
 
 }
 /// @nodoc
@@ -8082,22 +8458,30 @@ class __$SampleDtoCopyWithImpl<$Res>
 
 /// Create a copy of SampleDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? locationId = null,Object? authority = null,Object? locationName = freezed,Object? purpose = freezed,Object? movementGroupId = freezed,Object? lines = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? docNo = null,Object? docDate = null,Object? location = null,Object? authority = null,Object? purpose = freezed,Object? movementGroupId = freezed,Object? lines = null,}) {
   return _then(_SampleDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,docNo: null == docNo ? _self.docNo : docNo // ignore: cast_nullable_to_non_nullable
 as String,docDate: null == docDate ? _self.docDate : docDate // ignore: cast_nullable_to_non_nullable
-as DateTime,locationId: null == locationId ? _self.locationId : locationId // ignore: cast_nullable_to_non_nullable
-as int,authority: null == authority ? _self.authority : authority // ignore: cast_nullable_to_non_nullable
-as String,locationName: freezed == locationName ? _self.locationName : locationName // ignore: cast_nullable_to_non_nullable
-as String?,purpose: freezed == purpose ? _self.purpose : purpose // ignore: cast_nullable_to_non_nullable
+as DateTime,location: null == location ? _self.location : location // ignore: cast_nullable_to_non_nullable
+as LocationRefDto,authority: null == authority ? _self.authority : authority // ignore: cast_nullable_to_non_nullable
+as String,purpose: freezed == purpose ? _self.purpose : purpose // ignore: cast_nullable_to_non_nullable
 as String?,movementGroupId: freezed == movementGroupId ? _self.movementGroupId : movementGroupId // ignore: cast_nullable_to_non_nullable
 as int?,lines: null == lines ? _self._lines : lines // ignore: cast_nullable_to_non_nullable
 as List<SampleLineDto>,
   ));
 }
 
-
+/// Create a copy of SampleDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$LocationRefDtoCopyWith<$Res> get location {
+  
+  return $LocationRefDtoCopyWith<$Res>(_self.location, (value) {
+    return _then(_self.copyWith(location: value));
+  });
+}
 }
 
 

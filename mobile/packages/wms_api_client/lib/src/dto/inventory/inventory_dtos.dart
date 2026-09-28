@@ -4,6 +4,8 @@ import 'package:wms_core/wms_core.dart';
 
 import '../../json/date_only_converter.dart';
 import '../common/ref_dtos.dart';
+// `AuditFieldsDto` is defined once, with the identity DTOs.
+import '../identity/identity_dtos.dart';
 
 part 'inventory_dtos.freezed.dart';
 part 'inventory_dtos.g.dart';
@@ -83,12 +85,11 @@ abstract class BatchDto with _$BatchDto {
 abstract class GoodsReceiptLineDto with _$GoodsReceiptLineDto {
   const factory GoodsReceiptLineDto({
     required int lineNo,
-    required int productId,
+    required ProductRefDto product,
     required Quantity receivedQty,
     required int uomId,
     required Quantity rejectedQty,
     int? id,
-    String? productName,
     int? poLineId,
     Quantity? orderedQty,
     String? uomCode,
@@ -124,6 +125,10 @@ abstract class GoodsReceiptDto with _$GoodsReceiptDto {
     required int id,
     required String docNo,
     @DateOnlyConverter() required DateTime docDate,
+    // Flat, unlike its siblings: `GoodsReceiptSummary` declares `supplierId`/`supplierName` and
+    // `locationId`/`locationName`, where `IssueSummary`, `WasteSummary`, `CountSummary` and
+    // `StockRequestSummary` all declare nested refs. The contract is inconsistent here and the
+    // server follows the contract, so the DTO does too — changing it to a ref broke parsing.
     required int supplierId,
     required int locationId,
     required QualityStatus qualityStatus,
@@ -135,7 +140,8 @@ abstract class GoodsReceiptDto with _$GoodsReceiptDto {
     Decimal? temperatureC,
     String? packagingNote,
     int? movementGroupId,
-    DateTime? createdAt,
+    DateTime? postedAt,
+    AuditFieldsDto? audit,
     @Default(1) int rowVersion,
     @Default(<GoodsReceiptLineDto>[]) List<GoodsReceiptLineDto> lines,
   }) = _GoodsReceiptDto;
@@ -191,11 +197,11 @@ abstract class CreateGoodsReceiptRequest with _$CreateGoodsReceiptRequest {
 abstract class StockRequestLineDto with _$StockRequestLineDto {
   const factory StockRequestLineDto({
     required int lineNo,
-    required int productId,
+    required ProductRefDto product,
     required Quantity qty,
     required int uomId,
     required Quantity issuedQty,
-    String? productName,
+    int? id,
     String? uomCode,
     String? note,
   }) = _StockRequestLineDto;
@@ -211,14 +217,12 @@ abstract class StockRequestDto with _$StockRequestDto {
     required int id,
     required String docNo,
     @DateOnlyConverter() required DateTime docDate,
-    required int fromLocationId,
-    required int toLocationId,
+    required LocationRefDto fromLocation,
+    required LocationRefDto toLocation,
     required StockRequestStatus status,
-    String? fromLocationName,
-    String? toLocationName,
     @NullableDateOnlyConverter() DateTime? requiredDate,
     String? note,
-    DateTime? createdAt,
+    AuditFieldsDto? audit,
     @Default(1) int rowVersion,
     @Default(<StockRequestLineDto>[]) List<StockRequestLineDto> lines,
   }) = _StockRequestDto;
@@ -264,16 +268,17 @@ abstract class CreateStockRequestRequest with _$CreateStockRequestRequest {
 abstract class IssueLineDto with _$IssueLineDto {
   const factory IssueLineDto({
     required int lineNo,
-    required int productId,
+    required ProductRefDto product,
     required Quantity qty,
     required int uomId,
-    String? productName,
-    int? batchId,
-    String? batchNo,
+    BatchRefDto? batch,
+    BatchRefDto? suggestedBatch,
     String? uomCode,
     Quantity? receivedQty,
-    int? reasonCodeId,
-    String? note,
+    Quantity? discrepancyQty,
+    int? batchOverrideReasonCodeId,
+    int? discrepancyReasonCodeId,
+    String? discrepancyNote,
   }) = _IssueLineDto;
 
   const IssueLineDto._();
@@ -293,11 +298,9 @@ abstract class IssueDto with _$IssueDto {
     required String docNo,
     @DateOnlyConverter() required DateTime docDate,
     required IssueType issueType,
-    required int fromLocationId,
-    required int toLocationId,
+    required LocationRefDto fromLocation,
+    required LocationRefDto toLocation,
     required IssueStatus status,
-    String? fromLocationName,
-    String? toLocationName,
     int? requestId,
     int? dispatchGroupId,
     int? receiptGroupId,
@@ -376,12 +379,10 @@ abstract class ConfirmIssueRequest with _$ConfirmIssueRequest {
 abstract class CountLineDto with _$CountLineDto {
   const factory CountLineDto({
     required int id,
-    required int productId,
+    required ProductRefDto product,
     required Quantity bookQty,
-    String? productName,
     String? baseUomCode,
-    int? batchId,
-    String? batchNo,
+    BatchRefDto? batch,
     Quantity? countedQty,
     Quantity? varianceQty,
     Decimal? variancePct,
@@ -409,10 +410,9 @@ abstract class CountDto with _$CountDto {
   const factory CountDto({
     required int id,
     required String docNo,
-    required int locationId,
+    required LocationRefDto location,
     required CountType countType,
     required CountStatus status,
-    String? locationName,
     DateTime? frozenAt,
     int? approvedBy,
     DateTime? approvedAt,
@@ -470,13 +470,14 @@ abstract class EnterCountRequest with _$EnterCountRequest {
 abstract class WasteLineDto with _$WasteLineDto {
   const factory WasteLineDto({
     required int lineNo,
-    required int productId,
+    required ProductRefDto product,
     required Quantity qty,
     required int uomId,
-    String? productName,
-    int? batchId,
-    String? batchNo,
+    BatchRefDto? batch,
     String? uomCode,
+    int? id,
+    Quantity? qtyBase,
+    String? note,
     Money? unitCost,
     Money? lineValue,
   }) = _WasteLineDto;
@@ -492,10 +493,9 @@ abstract class WasteDto with _$WasteDto {
     required int id,
     required String docNo,
     @DateOnlyConverter() required DateTime docDate,
-    required int locationId,
+    required LocationRefDto location,
     required int reasonCodeId,
     required WasteStatus status,
-    String? locationName,
     String? reasonCodeName,
     String? note,
     int? approvedBy,
@@ -541,17 +541,20 @@ abstract class CreateWasteRequest with _$CreateWasteRequest {
       _$CreateWasteRequestFromJson(json);
 }
 
+/// A sample's lines are `WasteLine` in the contract: the same shape, because a sample and a waste
+/// document both take stock off the shelf against a reason code.
 @freezed
 abstract class SampleLineDto with _$SampleLineDto {
   const factory SampleLineDto({
     required int lineNo,
-    required int productId,
+    required ProductRefDto product,
     required Quantity qty,
     required int uomId,
-    String? productName,
-    int? batchId,
-    String? batchNo,
+    BatchRefDto? batch,
     String? uomCode,
+    int? id,
+    Quantity? qtyBase,
+    String? note,
   }) = _SampleLineDto;
 
   factory SampleLineDto.fromJson(Map<String, Object?> json) =>
@@ -565,9 +568,8 @@ abstract class SampleDto with _$SampleDto {
     required int id,
     required String docNo,
     @DateOnlyConverter() required DateTime docDate,
-    required int locationId,
+    required LocationRefDto location,
     @Default('AQTA') String authority,
-    String? locationName,
     String? purpose,
     int? movementGroupId,
     @Default(<SampleLineDto>[]) List<SampleLineDto> lines,

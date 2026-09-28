@@ -71,6 +71,7 @@ class GoodsReceiptListScreen extends ConsumerWidget {
                 key: 'supplier',
                 header: l10n.labelSupplier,
                 flex: 3,
+                // A goods receipt carries flat ids, not refs — see the note on GoodsReceiptDto.
                 cell: (row) => row.supplierName ?? '#${row.supplierId}',
               ),
               WmsColumn(

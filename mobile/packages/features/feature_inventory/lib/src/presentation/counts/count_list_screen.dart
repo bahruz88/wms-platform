@@ -47,7 +47,7 @@ class CountListScreen extends ConsumerWidget {
                 key: 'location',
                 header: l10n.labelLocation,
                 flex: 3,
-                cell: (row) => row.locationName ?? '#${row.locationId}',
+                cell: (row) => row.location.name,
               ),
               WmsColumn(
                 key: 'type',
