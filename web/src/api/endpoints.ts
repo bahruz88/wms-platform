@@ -889,6 +889,52 @@ export const listRecipeVersions = async (id: number) =>
 export const getRecipe = async (id: number) =>
   unwrap(await consumptionApi.GET('/recipes/{id}', { params: { path: { id } } }));
 
+// --- consumption writes ---------------------------------------------------------------------------------
+type ConsSchema<K extends keyof ConsumptionComponents['schemas']> = ConsumptionComponents['schemas'][K];
+
+export const createMenuItem = async (body: ConsSchema<'MenuItemCreate'>) =>
+  unwrap(
+    await consumptionApi.POST('/menu-items', {
+      params: { header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body,
+    }),
+  );
+
+export const updateMenuItem = async (id: number, body: ConsSchema<'MenuItemUpdate'>) =>
+  unwrap(await consumptionApi.PUT('/menu-items/{id}', { params: { path: { id } }, body }));
+
+/**
+ * A new version of a menu item's recipe. Versions are never edited in place once they have priced a
+ * consumption run — `validFrom` is what decides which one a run uses.
+ */
+export const createRecipeVersion = async (
+  menuItemId: number,
+  body: ConsSchema<'RecipeVersionCreate'>,
+) =>
+  unwrap(
+    await consumptionApi.POST('/menu-items/{id}/recipes', {
+      params: { path: { id: menuItemId }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body,
+    }),
+  );
+
+/** Lines are sent whole: the server replaces the previous set rather than merging. */
+export const updateRecipe = async (id: number, body: ConsSchema<'RecipeUpdate'>) =>
+  unwrap(await consumptionApi.PUT('/recipes/{id}', { params: { path: { id } }, body }));
+
+/**
+ * `DRAFT` → `ACTIVE`. The previous active version is closed at `validFrom − 1 day`, so the date
+ * decides the seam between two recipes and cannot fall before a posted consumption run
+ * (`409 PERIOD_CLOSED`).
+ */
+export const activateRecipe = async (id: number, rowVersion: number, validFrom: string) =>
+  unwrap(
+    await consumptionApi.POST('/recipes/{id}/activate', {
+      params: { path: { id }, header: { 'Idempotency-Key': crypto.randomUUID() } },
+      body: { rowVersion, validFrom },
+    }),
+  );
+
 export const explodeRecipe = async (
   id: number,
   query: Query<ConsumptionPaths, '/recipes/{id}/explosion'>,

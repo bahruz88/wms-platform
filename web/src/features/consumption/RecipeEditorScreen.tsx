@@ -1,21 +1,39 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Alert, Badge, DataTable, DocStatusBadge, TextField, type Column } from '@ds/index';
-import { useApiQuery } from '@api/hooks';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
+  Alert,
+  Badge,
+  Button,
+  DataTable,
+  DocStatusBadge,
+  QtyUomInput,
+  TextField,
+  type Column,
+} from '@ds/index';
+import { useApiPage, useApiQuery } from '@api/hooks';
+import {
+  activateRecipe,
+  createRecipeVersion,
   explodeRecipe,
   getMenuItem,
   getRecipe,
+  listProducts,
   listRecipeVersions,
+  updateRecipe,
+  type ProductSummary,
   type MenuItemDetail,
   type Recipe,
   type RecipeExplosion,
   type RecipeLine,
   type RecipeSummary,
 } from '@api/endpoints';
+import { useAuth } from '@auth/index';
+import { useProductUoms } from '@api/productUoms';
 import { Decimal } from '@core/decimal';
 import { formatDate, formatNumber, formatPercent } from '@core/format';
-import { DocNo, ErrorState, KeyValue, LoadingState, Page, Section } from '@/components/Page';
+import { Card, DocNo, ErrorState, KeyValue, LoadingState, Page, Section } from '@/components/Page';
+import { RefPicker } from '@/components/RefPicker';
 
 type ExplosionLine = RecipeExplosion['lines'][number];
 
@@ -30,15 +48,45 @@ type ExplosionLine = RecipeExplosion['lines'][number];
  * Sub-recipes are expanded recursively and each resulting line says which sub-recipe it came
  * through — the `depth` column makes a two-level explosion readable.
  *
- * Recipe lines are read-only here: `createRecipeVersion` / `updateRecipe` are POST operations the
- * gateway does not route yet, and an ACTIVE version must never be edited in place — a new version
- * is opened instead.
+ * An ACTIVE version is never edited in place. A change opens a new DRAFT (optionally copied from
+ * the current one), the draft's lines are edited here, and activating it closes the previous version
+ * at `validFrom − 1 day`. That seam is why `validFrom` cannot fall before a posted consumption run:
+ * the run was priced by the recipe that was active on its date, and moving the seam would rewrite
+ * history the ledger already recorded.
  */
+
+interface DraftLine {
+  key: string;
+  dirty: boolean;
+  productId: string;
+  qtyPerPortion: string;
+  uomId: string;
+  yieldPct: string;
+  note: string;
+}
+
+const emptyLine = (): DraftLine => ({
+  key: crypto.randomUUID(),
+  dirty: false,
+  productId: '',
+  qtyPerPortion: '',
+  uomId: '',
+  yieldPct: '100',
+  note: '',
+});
+
+const today = () => new Date().toISOString().slice(0, 10);
 export function RecipeEditorScreen() {
   const { menuItemId } = useParams();
   const itemId = Number(menuItemId);
+  const { can } = useAuth();
+  const queryClient = useQueryClient();
   const [portions, setPortions] = useState('10');
   const [selectedRecipeId, setSelectedRecipeId] = useState<number | null>(null);
+  const [lines, setLines] = useState<DraftLine[]>([]);
+  const [yieldPortions, setYieldPortions] = useState('1');
+  const [note, setNote] = useState('');
+  const [validFrom, setValidFrom] = useState(today);
 
   const menuItem = useApiQuery<MenuItemDetail>(['menu-item', itemId], () => getMenuItem(itemId));
   const versions = useApiQuery<RecipeSummary[]>(['recipe-versions', itemId], async () => {
@@ -67,6 +115,117 @@ export function RecipeEditorScreen() {
       return false;
     }
   }, [portions]);
+
+  const manage = can('cons.recipe.manage');
+  const isDraft = recipe.data?.status === 'DRAFT';
+
+  const products = useApiPage<ProductSummary>(
+    ['products', 'recipe'],
+    () => listProducts({ page: 1, size: 200, isActive: true, productType: 'FOOD' }),
+    200,
+    { retry: false },
+  );
+
+  // The draft's lines are seeded from the server each time a different version is selected, so the
+  // editor always starts from what is stored rather than from the previous version's leftovers.
+  useEffect(() => {
+    const doc = recipe.data;
+    if (!doc) return;
+    setYieldPortions(String(doc.yieldPortions ?? '1'));
+    setNote(doc.note ?? '');
+    setLines(
+      (doc.lines ?? [])
+        .filter((l) => l.componentType === 'FOOD_PRODUCT')
+        .map((l) => ({
+          key: crypto.randomUUID(),
+          dirty: false,
+          productId: String(l.productId ?? ''),
+          qtyPerPortion: String(l.qtyPerPortion),
+          uomId: String(l.uomId),
+          yieldPct: String(l.yieldPct ?? '100'),
+          note: l.note ?? '',
+        })),
+    );
+  }, [recipe.data]);
+
+  const productUoms = useProductUoms(
+    lines.map((l) => Number(l.productId)).filter((id) => Number.isFinite(id) && id > 0),
+    'issue',
+  );
+
+  const refresh = () => {
+    void queryClient.invalidateQueries({ queryKey: ['recipe'] });
+    void queryClient.invalidateQueries({ queryKey: ['recipe-versions', itemId] });
+    void queryClient.invalidateQueries({ queryKey: ['menu-item', itemId] });
+  };
+
+  const update = (key: string, patch: Partial<DraftLine>) =>
+    setLines((prev) => prev.map((l) => (l.key === key ? { ...l, ...patch, dirty: true } : l)));
+
+  const lineErrors = (line: DraftLine): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    if (!line.productId) errors.productId = 'Məhsul seçin.';
+    if (!line.qtyPerPortion) errors.qtyPerPortion = 'Porsiyaya düşən miqdarı yazın.';
+    else {
+      try {
+        if (new Decimal(line.qtyPerPortion).lessThanOrEqualTo(0))
+          errors.qtyPerPortion = 'Sıfırdan böyük olmalıdır.';
+      } catch {
+        errors.qtyPerPortion = 'Onluq ədəd yazın.';
+      }
+    }
+    try {
+      const y = new Decimal(line.yieldPct || '100');
+      if (y.lessThanOrEqualTo(0) || y.greaterThan(100)) errors.yieldPct = '0 ilə 100 arasında.';
+    } catch {
+      errors.yieldPct = 'Onluq ədəd yazın.';
+    }
+    return errors;
+  };
+
+  const linesValid = lines.length > 0 && lines.every((l) => Object.keys(lineErrors(l)).length === 0);
+
+  const uomOf = (line: DraftLine): number => {
+    if (line.uomId) return Number(line.uomId);
+    const p = (products.data?.items ?? []).find((x) => String(x.id) === line.productId);
+    return productUoms.uomsFor(p).defaultUomId ?? p?.baseUomId ?? 0;
+  };
+
+  const newVersion = useMutation({
+    mutationFn: () =>
+      createRecipeVersion(itemId, {
+        validFrom,
+        ...(activeId ? { copyFromRecipeId: activeId } : {}),
+      }),
+    onSuccess: (doc) => {
+      setSelectedRecipeId((doc as { id: number }).id);
+      refresh();
+    },
+  });
+
+  const saveDraft = useMutation({
+    mutationFn: () =>
+      updateRecipe(activeId as number, {
+        rowVersion: recipe.data?.rowVersion ?? 1,
+        yieldPortions,
+        ...(note.trim() ? { note: note.trim() } : {}),
+        lines: lines.map((l, index) => ({
+          lineNo: index + 1,
+          componentType: 'FOOD_PRODUCT' as const,
+          productId: Number(l.productId),
+          qtyPerPortion: l.qtyPerPortion,
+          uomId: uomOf(l),
+          yieldPct: l.yieldPct || '100',
+          ...(l.note.trim() ? { note: l.note.trim() } : {}),
+        })),
+      }),
+    onSuccess: refresh,
+  });
+
+  const activate = useMutation({
+    mutationFn: () => activateRecipe(activeId as number, recipe.data?.rowVersion ?? 1, validFrom),
+    onSuccess: refresh,
+  });
 
   const explosion = useApiQuery<RecipeExplosion>(
     ['recipe-explosion', activeId, portions],
@@ -190,6 +349,52 @@ export function RecipeEditorScreen() {
       </Section>
 
       <Section title="Resept versiyaları">
+        {manage ? (
+          <Card>
+            <div className="wms-toolbar">
+              <TextField
+                label="Qüvvəyə minmə tarixi"
+                mono
+                type="date"
+                value={validFrom}
+                hint="Yeni versiya bu tarixdən qüvvədədir; köhnəsi bir gün əvvəl bağlanır."
+                onChange={(e) => setValidFrom(e.target.value)}
+              />
+              <div className="wms-toolbar__spacer" />
+              <div className="wms-row">
+                <Button
+                  loading={newVersion.isPending}
+                  onClick={() => newVersion.mutate()}
+                  title={
+                    activeId
+                      ? 'Cari versiyanın tərkibi köçürülür'
+                      : 'Boş qaralama versiya yaradılır'
+                  }
+                >
+                  {activeId ? 'Yeni versiya (köçürərək)' : 'Yeni versiya'}
+                </Button>
+                {isDraft ? (
+                  <Button
+                    variant="primary"
+                    loading={activate.isPending}
+                    disabled={(recipe.data?.lines ?? []).length === 0}
+                    title={
+                      (recipe.data?.lines ?? []).length === 0
+                        ? 'Boş resept aktivləşdirilmir — əvvəlcə tərkibi yadda saxlayın'
+                        : undefined
+                    }
+                    onClick={() => activate.mutate()}
+                  >
+                    Aktivləşdir
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+            {newVersion.isError ? <ErrorState error={newVersion.error} /> : null}
+            {activate.isError ? <ErrorState error={activate.error} /> : null}
+          </Card>
+        ) : null}
+
         {versions.isError ? (
           <ErrorState error={versions.error} />
         ) : (
@@ -234,13 +439,135 @@ export function RecipeEditorScreen() {
                     `factorToBase` qaydası ilə eyni məntiqdir (screen-map §5.3).
                   </Alert>
                 ) : null}
-                <DataTable<RecipeLine>
-                  columns={lineColumns}
-                  rows={recipe.data?.lines ?? []}
-                  rowKey={(row) => row.lineNo}
-                  label="Resept sətirləri"
-                  empty="Bu versiyada sətir yoxdur. İnqrediyent əlavə edin."
-                />
+
+                {isDraft && manage ? (
+                  <Card
+                    title="Qaralama tərkibi"
+                    actions={
+                      <div className="wms-row">
+                        <Button
+                          size="sm"
+                          onClick={() => setLines((prev) => [...prev, emptyLine()])}
+                        >
+                          Sətir əlavə et
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          loading={saveDraft.isPending}
+                          disabled={!linesValid}
+                          title={!linesValid ? 'Sətirlərdə səhv var və ya sətir yoxdur' : undefined}
+                          onClick={() => saveDraft.mutate()}
+                        >
+                          Tərkibi yadda saxla
+                        </Button>
+                      </div>
+                    }
+                  >
+                    {saveDraft.isError ? <ErrorState error={saveDraft.error} /> : null}
+
+                    <div className="wms-toolbar">
+                      <TextField
+                        label="Çıxım porsiyası"
+                        mono
+                        align="right"
+                        value={yieldPortions}
+                        hint="Bu resept bir dəfə hazırlandıqda neçə porsiya verir."
+                        onChange={(e) => setYieldPortions(e.target.value)}
+                      />
+                      <TextField
+                        label="Qeyd"
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                      />
+                      <div className="wms-toolbar__spacer" />
+                    </div>
+
+                    <div className="wms-stack">
+                      {lines.map((line, index) => {
+                        const errors = line.dirty ? lineErrors(line) : {};
+                        const product = (products.data?.items ?? []).find(
+                          (p) => String(p.id) === line.productId,
+                        );
+                        const uomSet = productUoms.uomsFor(product);
+                        return (
+                          <Card key={line.key}>
+                            <div className="wms-toolbar">
+                              <RefPicker
+                                label={`Sətir ${index + 1} · inqrediyent`}
+                                required
+                                value={line.productId}
+                                placeholder="Məhsul seçin"
+                                operation="GET /masterdata/products"
+                                listError={products.error}
+                                error={errors.productId}
+                                options={(products.data?.items ?? []).map((p) => ({
+                                  value: String(p.id),
+                                  label: `${p.sku} · ${p.name}`,
+                                }))}
+                                onChange={(value) =>
+                                  update(line.key, { productId: value, uomId: '' })
+                                }
+                              />
+                              <QtyUomInput
+                                label="Porsiyaya"
+                                required
+                                qty={line.qtyPerPortion}
+                                uomId={line.uomId || String(uomSet.defaultUomId ?? '')}
+                                error={errors.qtyPerPortion}
+                                baseUomCode={product?.baseUomCode}
+                                decimals={4}
+                                uoms={
+                                  uomSet.options.length > 0
+                                    ? uomSet.options
+                                    : [{ id: '', code: '—', factorToBase: '1' }]
+                                }
+                                onQtyChange={(value) => update(line.key, { qtyPerPortion: value })}
+                                onUomChange={(value) => update(line.key, { uomId: value })}
+                              />
+                              <TextField
+                                label="Çıxım (%)"
+                                mono
+                                align="right"
+                                value={line.yieldPct}
+                                error={errors.yieldPct}
+                                hint="Kahının 8 %-i kəsilirsə 92."
+                                onChange={(e) => update(line.key, { yieldPct: e.target.value })}
+                              />
+                              <TextField
+                                label="Qeyd"
+                                value={line.note}
+                                onChange={(e) => update(line.key, { note: e.target.value })}
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  setLines((prev) => prev.filter((l) => l.key !== line.key))
+                                }
+                              >
+                                Sil
+                              </Button>
+                            </div>
+                          </Card>
+                        );
+                      })}
+                      {lines.length === 0 ? (
+                        <Alert tone="warning" title="Tərkib boşdur">
+                          Boş resept aktivləşdirilmir (422 RECIPE_EMPTY). İnqrediyent əlavə edin.
+                        </Alert>
+                      ) : null}
+                    </div>
+                  </Card>
+                ) : (
+                  <DataTable<RecipeLine>
+                    columns={lineColumns}
+                    rows={recipe.data?.lines ?? []}
+                    rowKey={(row) => row.lineNo}
+                    label="Resept sətirləri"
+                    empty="Bu versiyada sətir yoxdur. İnqrediyent əlavə edin."
+                  />
+                )}
               </>
             )}
           </Section>
