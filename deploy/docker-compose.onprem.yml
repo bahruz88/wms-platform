@@ -6,12 +6,17 @@
 #   No gateway: the web container proxies /api -> wms-api, and wms-api is also
 #   published directly on ${API_PORT} for integrations (1C etc.).
 #
-# First run:
+# First run - INFRA, THEN MIGRATE, THEN THE APP. wms-api starts Hangfire during startup and
+# dies on `Table 'wms.hangfire_DistributedLock' doesn't exist` if the schema is not there yet
+# (and the dead process keeps the container "running", so nothing restarts it):
 #   cp .env.example .env            # set EVERY password + KEYCLOAK_HOSTNAME + WEB_PUBLIC_URL
 #   ./onprem/render-realm.sh        # production realm (no dev users, real redirect URIs)
-#   docker compose -f docker-compose.onprem.yml up -d --build
+#   docker compose -f docker-compose.onprem.yml up -d --build \
+#       mysql redis rabbitmq rabbitmq-init minio minio-init keycloak
 #   docker compose -f docker-compose.onprem.yml --profile migrate run --rm migrator
 #   ../scripts/db-ledger-grants.sh -f docker-compose.onprem.yml
+#   docker compose -f docker-compose.onprem.yml up -d --build      # wms-api + web
+# Later upgrades: `up -d` is safe in one go, the schema already exists.
 #
 # Backup / DR (SPEC §18.4, RPO <= 15 min / RTO <= 4 h): deploy/onprem/backup.sh
 #   -> daily mysqldump + continuous binlog + MinIO mirror. Install it in cron, see README.
@@ -229,8 +234,20 @@ services:
       Antivirus__Host: ${ANTIVIRUS_HOST:-clamav}
       Antivirus__Port: ${ANTIVIRUS_PORT:-3310}
       Antivirus__TimeoutSeconds: ${ANTIVIRUS_TIMEOUT_SECONDS:-30}
-      Keycloak__Authority: http://keycloak:8080/realms/wms
+      # Backchannel to Keycloak over the compose network. KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
+      # keeps the discovery document's `issuer` at the PUBLIC ${KEYCLOAK_HOSTNAME} while the
+      # token/JWKS endpoints resolve to this internal address, so token validation matches.
+      Keycloak__Authority: ${KEYCLOAK_INTERNAL_AUTHORITY:-http://keycloak:8080/realms/wms}
       Keycloak__Audience: wms-api
+      # ASPNETCORE_ENVIRONMENT=Production loads appsettings.json, which sets
+      # Keycloak:RequireHttpsMetadata=true. With the plain-http internal authority above,
+      # JwtBearer then throws `The MetadataAddress or Authority must use HTTPS ...` on EVERY
+      # request - including /health/live, which sits behind the authentication middleware - so
+      # the whole container answers 500. TLS terminates at the customer's reverse proxy
+      # (KC_PROXY_HEADERS=xforwarded); the hop below is inside the docker network.
+      # Set this to true (and KEYCLOAK_INTERNAL_AUTHORITY to an https:// URL) if Keycloak is
+      # reached over TLS from the API container.
+      Keycloak__RequireHttpsMetadata: ${KEYCLOAK_REQUIRE_HTTPS_METADATA:-false}
       # Single container, ModuleTransport=InProcess: no module call leaves the process, so the secret is
       # only the guard that keeps /internal/* unreachable from outside. It still must be set and secret.
       InternalApi__Key: ${INTERNAL_API_KEY}

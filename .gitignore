@@ -58,3 +58,11 @@ yarn-error.log*
 # --- Generated OpenAPI clients (regenerate with `make gen-client` / `make gen-client-web`) ---
 mobile/packages/wms_api_client/lib/src/generated/
 web/src/api/generated/
+
+# --- Agent worktrees (33 MB of checkouts from parallel agent runs; not project content) ---
+.claude/
+
+# --- Rendered on-prem realm (derived from deploy/keycloak/realm-wms.json by render-realm.sh) ---
+# Generated per environment: it carries that deployment's public URL and has the dev users
+# stripped. Committing it would let it drift from the source realm it is rendered from.
+deploy/onprem/realm-wms.rendered.json

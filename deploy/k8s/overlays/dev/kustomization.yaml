@@ -4,6 +4,8 @@ kind: Kustomization
 namespace: wms-dev
 resources:
   - ../../base
+  # Placeholder credentials, dev clusters only. prod has no Secret of its own on purpose.
+  - secret-wms.dev.yaml
 images:
   - name: ghcr.io/example/wms-api
     newTag: dev
@@ -31,6 +33,16 @@ replicas:
   - name: wms-web
     count: 1
 patches:
+  # `dev` is a MUTABLE tag: the deploy workflow re-points it at a new build on every release.
+  # With imagePullPolicy: IfNotPresent (the base default, right for the immutable sha-/semver
+  # tags prod uses) a node that already cached `:dev` would keep serving the OLD image forever
+  # and a rollout would look successful. Dev therefore pulls every time.
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
   - target:
       kind: Ingress
       name: wms

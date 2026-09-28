@@ -1,0 +1,46 @@
+# Namespace guard rails, prod only.
+#
+# The numbers are the SPEC §18.1 footprint with room for a rollout surge (maxSurge: 1 per
+# Deployment) and for the HPAs in hpa.yaml to reach maxReplicas. Sum of the manifests at the
+# declared replica counts, for reference:
+#
+#   requests   ~4.2 CPU   ~5.2 Gi      limits   ~17.5 CPU   ~10.5 Gi
+#
+# So the quota below is roughly 2.5x the steady state - wide enough that it never blocks a
+# legitimate deploy, tight enough that a runaway (a bad HPA target, a crash-loop spawning
+# pods) hits a wall inside this namespace instead of eating the cluster.
+#
+# WATCH OUT: once a ResourceQuota with cpu/memory exists, EVERY container in the namespace
+# must declare requests AND limits or the pod is rejected outright. The LimitRange below
+# supplies defaults so a sidecar or a debug pod without resources still schedules.
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: wms
+spec:
+  hard:
+    requests.cpu: "12"
+    requests.memory: 16Gi
+    limits.cpu: "48"
+    limits.memory: 32Gi
+    pods: "40"
+    count/deployments.apps: "12"
+    count/jobs.batch: "6"
+    services: "12"
+    # No LoadBalancer Services: everything goes through the one Ingress.
+    services.loadbalancers: "0"
+    persistentvolumeclaims: "0"       # stateless by design; infra is managed/external
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: wms
+spec:
+  limits:
+    - type: Container
+      default:            { cpu: 500m, memory: 512Mi }
+      defaultRequest:     { cpu: 100m, memory: 128Mi }
+      # A single container may not exceed the largest thing we actually run
+      # (wms-inventory: 2 CPU / 1Gi), doubled for headroom.
+      max:                { cpu: "4",  memory: 2Gi }
+      min:                { cpu: 10m,  memory: 16Mi }

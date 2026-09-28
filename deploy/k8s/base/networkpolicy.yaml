@@ -1,0 +1,154 @@
+# Network policy for the wms namespace.
+#
+# WITHOUT THIS every pod in the cluster can reach every WMS pod on :8080, which defeats the
+# /internal/* guard (backend/README.md §8.15, SPEC §4.2): the shared-secret header is the only
+# thing standing between an arbitrary pod and the ledger write routes. The gateway refuses the
+# `internal` path segment, but it is not the only way in - a module Service is reachable
+# directly. These policies make the module Services reachable ONLY from the gateway and from
+# each other.
+#
+# REQUIRES A CNI THAT ENFORCES NetworkPolicy (Calico, Cilium, Antrea, AWS VPC CNI with policy
+# enabled, GKE Dataplane V2, AKS with Azure/Calico policy). kind's default CNI (kindnet) and
+# Docker Desktop's built-in Kubernetes DO NOT enforce them: the objects are accepted and have
+# no effect. Verify on the real cluster with a deny test, not by `kubectl get netpol`.
+#
+# Labels used here: app.kubernetes.io/part-of=wms on every WMS pod,
+# app.kubernetes.io/component in {gateway, api, web, worker, migration}.
+---
+# 1. Default deny for everything in the namespace, both directions. Every allow below is
+#    additive; anything not named is dropped.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wms-default-deny
+  labels:
+    app.kubernetes.io/part-of: wms
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+# 2. DNS egress for every pod - without it nothing can resolve the database host.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wms-allow-dns
+  labels:
+    app.kubernetes.io/part-of: wms
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+---
+# 3. Ingress controller -> web and gateway (the only two things exposed by the Ingress).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wms-allow-ingress-controller
+  labels:
+    app.kubernetes.io/part-of: wms
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values: [web, gateway]
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - { protocol: TCP, port: 8080 }
+---
+# 4. web -> gateway (the web container's nginx proxies /api itself, see deploy/docker/nginx.conf).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wms-allow-web-to-gateway
+  labels:
+    app.kubernetes.io/part-of: wms
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: gateway
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: web
+      ports:
+        - { protocol: TCP, port: 8080 }
+---
+# 5. gateway + module-to-module: the API pods accept :8080 from the gateway and from each other
+#    (ModuleTransport=Http), and from nothing else. This is what keeps /internal/* off the
+#    cluster network.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wms-allow-api-mesh
+  labels:
+    app.kubernetes.io/part-of: wms
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values: [api, worker]
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/component
+                operator: In
+                values: [gateway, api, worker]
+      ports:
+        - { protocol: TCP, port: 8080 }
+---
+# 6. Egress from the application pods: each other, plus the managed infrastructure.
+#    `wms-infra` is the namespace deploy/k8s/base/configmap-wms.yaml points at; change the
+#    label selector if MySQL/Redis/RabbitMQ/MinIO live elsewhere. The 0.0.0.0/0 rule with the
+#    private ranges excluded is what lets the pods reach Keycloak / S3 / SMTP on the internet
+#    while still refusing to talk to anything else inside the cluster.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: wms-allow-app-egress
+  labels:
+    app.kubernetes.io/part-of: wms
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/component
+        operator: In
+        values: [api, worker, gateway, web, migration]
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - podSelector: {}
+      ports:
+        - { protocol: TCP, port: 8080 }
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: wms-infra
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16
+      ports:
+        - { protocol: TCP, port: 443 }
+        - { protocol: TCP, port: 3306 }

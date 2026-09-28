@@ -1,13 +1,23 @@
-# prod cluster: replica counts of SPEC §18.1, pinned release tag, PodDisruptionBudgets.
-# Replace the example secrets: keep `secret-wms.example.yaml` out of prod by managing
-# `wms-secrets` / `wms-db-admin` with ESO/SealedSecrets and adding a strategic-merge patch here,
-# or delete them from the base resources list in your fork.
+# prod cluster: replica counts of SPEC §18.1, pinned release tag, PodDisruptionBudgets,
+# autoscaling and namespace quota.
+#
+# SECRETS ARE NOT IN HERE AND MUST NOT BE. `wms-secrets` and `wms-db-admin` are created and
+# rotated outside kustomize (External Secrets Operator, SealedSecrets, or a one-off
+# `kubectl create secret`); the placeholder file that used to live in base/ now belongs to
+# overlays/dev. If the Secrets are missing the pods stay in CreateContainerConfigError, which
+# is the correct fail-closed behaviour - far better than the old one, where every apply
+# overwrote the real passwords with CHANGE_ME and printed "configured".
+#
+# IMAGES: `kustomize edit set image` before applying, or let .github/workflows/deploy.yml do
+# it - it pins every image to the immutable `sha-<commit>` tag of the release build.
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: wms
 resources:
   - ../../base
   - pdb.yaml
+  - hpa.yaml
+  - resourcequota.yaml
 images:
   - name: ghcr.io/example/wms-api
     newTag: 1.0.0
@@ -35,6 +45,19 @@ replicas:
   - name: wms-web
     count: 2
 patches:
+  # Registry credentials for a private GHCR package. Hanging them on the ServiceAccount means
+  # every pod picks them up without touching nine workload files. Create the Secret once:
+  #   kubectl -n wms create secret docker-registry ghcr-pull \
+  #     --docker-server=ghcr.io --docker-username=<user> --docker-password=<PAT: read:packages>
+  # Public packages do not need this - delete the patch if your images are public.
+  - target:
+      kind: ServiceAccount
+      name: wms
+    patch: |-
+      - op: add
+        path: /imagePullSecrets
+        value:
+          - name: ghcr-pull
   - target:
       kind: Ingress
       name: wms

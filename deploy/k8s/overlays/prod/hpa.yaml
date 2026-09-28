@@ -1,0 +1,151 @@
+# Horizontal autoscaling, prod only.
+#
+# REQUIRES metrics-server in the cluster (`kubectl top pods` must work). Without it every HPA
+# reports `<unknown>/70%` and never scales - it does NOT scale to minReplicas and it does not
+# fail loudly, so check `kubectl -n wms describe hpa` after the first deploy.
+#
+# minReplicas equals the SPEC §18.1 replica count, which is also what overlays/prod declares in
+# `replicas:`. That equality matters: `kubectl apply -k` writes spec.replicas back on every
+# deploy, and if it were lower than the current HPA-chosen count the apply would briefly scale
+# the service DOWN before the HPA pulled it back up. Same number, no sawtooth.
+#
+# wms-worker deliberately has no HPA: it is the single Hangfire server (Recreate strategy) and
+# a second replica would run every recurring job twice.
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wms-gateway
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: wms-gateway }
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }
+  # Fast up, slow down: a five-minute scale-down window keeps a burst of receipts from
+  # thrashing the pool. (Written out per HPA on purpose - a YAML anchor cannot cross the
+  # `---` between documents, and kustomize rejects the file with "unknown anchor".)
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies: [{ type: Percent, value: 100, periodSeconds: 60 }]
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies: [{ type: Pods, value: 1, periodSeconds: 120 }]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wms-identity
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: wms-identity }
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies: [{ type: Percent, value: 100, periodSeconds: 60 }]
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies: [{ type: Pods, value: 1, periodSeconds: 120 }]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wms-masterdata
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: wms-masterdata }
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies: [{ type: Percent, value: 100, periodSeconds: 60 }]
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies: [{ type: Pods, value: 1, periodSeconds: 120 }]
+---
+# The ledger core (ADR-002). SPEC §17.3 sizes the whole system at 100 concurrent users and
+# p95 < 2 s; inventory is where that load lands, so it gets the widest range.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wms-inventory
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: wms-inventory }
+  minReplicas: 3
+  maxReplicas: 8
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 65 } }
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies: [{ type: Percent, value: 100, periodSeconds: 60 }]
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies: [{ type: Pods, value: 1, periodSeconds: 120 }]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wms-procurement
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: wms-procurement }
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies: [{ type: Percent, value: 100, periodSeconds: 60 }]
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies: [{ type: Pods, value: 1, periodSeconds: 120 }]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wms-reporting
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: wms-reporting }
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies: [{ type: Percent, value: 100, periodSeconds: 60 }]
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies: [{ type: Pods, value: 1, periodSeconds: 120 }]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: wms-web
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: wms-web }
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 80 } }
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies: [{ type: Percent, value: 100, periodSeconds: 60 }]
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies: [{ type: Pods, value: 1, periodSeconds: 120 }]

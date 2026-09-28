@@ -1,27 +1,36 @@
 #!/usr/bin/env bash
 # Shared helpers for scripts/*.sh (sourced, not executed).
-#   compose ...   -> docker compose bound to deploy/ (reads deploy/.env; -f override via COMPOSE_FILE_NAME)
-#   load_env      -> exports deploy/.env so port/credential overrides are visible to the scripts
+#   compose ...   -> docker compose bound to deploy/ (-f override via COMPOSE_FILE_NAME,
+#                    env file via ENV_FILE_NAME - both relative to deploy/)
+#   load_env      -> exports that env file so port/credential overrides are visible to the scripts
 # shellcheck shell=bash
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEPLOY_DIR="$ROOT_DIR/deploy"
 COMPOSE_FILE_NAME="${COMPOSE_FILE_NAME:-docker-compose.yml}"
+# Which env file compose interpolates from. Default `.env` = the dev stack. The on-prem
+# profile is normally run side by side with it and needs its own ports, so every script
+# takes `--env-file <path relative to deploy/>` (see deploy/onprem/env.smoke.example).
+ENV_FILE_NAME="${ENV_FILE_NAME:-.env}"
 
 compose() {
-  docker compose --project-directory "$DEPLOY_DIR" -f "$DEPLOY_DIR/$COMPOSE_FILE_NAME" "$@"
+  local env_args=()
+  [ -f "$DEPLOY_DIR/$ENV_FILE_NAME" ] && env_args=(--env-file "$DEPLOY_DIR/$ENV_FILE_NAME")
+  docker compose --project-directory "$DEPLOY_DIR" -f "$DEPLOY_DIR/$COMPOSE_FILE_NAME" \
+    ${env_args[@]+"${env_args[@]}"} "$@"
 }
 
 load_env() {
-  if [ -f "$DEPLOY_DIR/.env" ]; then
+  if [ -f "$DEPLOY_DIR/$ENV_FILE_NAME" ]; then
     set -a
     # shellcheck disable=SC1091
-    . "$DEPLOY_DIR/.env"
+    . "$DEPLOY_DIR/$ENV_FILE_NAME"
     set +a
   fi
 }
 
-# parse a leading `-f <compose-file>` (path relative to deploy/), shifts it away
+# parse a leading `-f <compose-file>` / `--env-file <env-file>` (paths relative to deploy/),
+# shifts them away
 # usage: parse_compose_file_arg "$@"; set -- ${REMAINING_ARGS[@]+"${REMAINING_ARGS[@]}"}
 #   (the ${a[@]+"${a[@]}"} form is required: bash 3.2 on macOS aborts on an empty
 #    array expansion under `set -u`)
@@ -29,7 +38,8 @@ parse_compose_file_arg() {
   REMAINING_ARGS=()
   while [ $# -gt 0 ]; do
     case "$1" in
-      -f|--file) COMPOSE_FILE_NAME="$2"; shift 2 ;;
+      -f|--file)   COMPOSE_FILE_NAME="$2"; shift 2 ;;
+      --env-file)  ENV_FILE_NAME="$2"; shift 2 ;;
       *) REMAINING_ARGS+=("$1"); shift ;;
     esac
   done

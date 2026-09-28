@@ -9,8 +9,15 @@ labels:
       app.kubernetes.io/managed-by: kustomize
 resources:
   - namespace.yaml
+  - serviceaccount.yaml
+  - networkpolicy.yaml
   - configmap-wms.yaml
-  - secret-wms.example.yaml
+  # NOTE: secret-wms.example.yaml is deliberately NOT here. It used to be, and because both
+  # overlays build on this base, `kubectl apply -k overlays/prod` shipped CHANGE_ME over the
+  # real `wms-secrets` and `wms-db-admin` on every single deploy - silently, since apply
+  # reports "configured" either way. The placeholders now live in overlays/dev only; prod
+  # expects both Secrets to exist in the namespace already (ESO / SealedSecrets / one-off
+  # `kubectl create secret`). See deploy/README.md §6.
   - job-migrator.yaml
   - deployment-gateway.yaml
   - service-gateway.yaml
@@ -29,7 +36,34 @@ resources:
   - deployment-web.yaml
   - service-web.yaml
   - ingress.yaml
+
+# Every workload runs as the `wms` ServiceAccount with no API token mounted. Kustomize applies
+# this to Deployments and to the migrator Job; doing it as one patch keeps the nine workload
+# files free of a line that must never differ between them.
+patches:
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: add
+        path: /spec/template/spec/serviceAccountName
+        value: wms
+      - op: add
+        path: /spec/template/spec/automountServiceAccountToken
+        value: false
+  - target:
+      kind: Job
+    patch: |-
+      - op: add
+        path: /spec/template/spec/serviceAccountName
+        value: wms
+      - op: add
+        path: /spec/template/spec/automountServiceAccountToken
+        value: false
+
 # Image names used in the manifests -> real registry. Overlays only change the tag.
+# `ghcr.io/example/...` is a PLACEHOLDER that does not exist - applying either overlay
+# unedited gives ImagePullBackOff with a 403 from ghcr.io. Point newName at your own
+# org/registry (the deploy workflow does this with `kustomize edit set image`).
 images:
   - name: wms/api
     newName: ghcr.io/example/wms-api
