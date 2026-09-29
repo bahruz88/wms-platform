@@ -6,9 +6,11 @@ import 'package:wms_design_system/wms_design_system.dart';
 import 'async_view.dart';
 import 'master_data_providers.dart';
 
-/// Product detail. Cost rows are rendered only when the server actually sent
-/// them ([ProductDto.hasCostInfo]) — absence of the field is the permission
-/// signal, there is no client-side masking.
+/// Product detail.
+///
+/// No cost rows: the master data contract carries no product cost at all. Average cost and last
+/// purchase price are reporting figures, and the DTO used to declare them as nullable fields the
+/// server never sent, so the block was dead in every case.
 class ProductDetailScreen extends ConsumerWidget {
   const ProductDetailScreen({required this.productId, super.key});
 
@@ -38,7 +40,7 @@ class ProductDetailScreen extends ConsumerWidget {
             const SizedBox(height: WmsSpacing.space4),
             _Row(
               label: 'Kateqoriya',
-              value: data.categoryName ?? '#${data.categoryId}',
+              value: data.categoryLabel,
             ),
             _Row(
               label: 'Base UoM',
@@ -69,22 +71,6 @@ class ProductDetailScreen extends ConsumerWidget {
               value: WmsFormat.percent(data.vatRate),
               numeric: true,
             ),
-            // Cost block: present only when the DTO carries it.
-            if (data.hasCostInfo) ...[
-              const SizedBox(height: WmsSpacing.space4),
-              Text('Maya', style: WmsTypography.title.copyWith(color: c.ink)),
-              const SizedBox(height: WmsSpacing.space2),
-              _Row(
-                label: 'Orta maya',
-                value: WmsFormat.money(data.avgUnitCost),
-                numeric: true,
-              ),
-              _Row(
-                label: 'Son alış qiyməti',
-                value: WmsFormat.money(data.lastPurchasePrice),
-                numeric: true,
-              ),
-            ],
             if (data.uoms.isNotEmpty) ...[
               const SizedBox(height: WmsSpacing.space5),
               WmsDataTable<ProductUomDto>(

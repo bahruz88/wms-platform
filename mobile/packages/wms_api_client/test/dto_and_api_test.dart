@@ -53,21 +53,51 @@ void main() {
       expect(dto.qtyAvailable, Quantity.parse('12'));
     });
 
-    test('ProductDto exposes cost only when the server sends it', () {
-      final withoutCost = ProductDto.fromJson(const {
+    test('ProductDto reads the detail form', () {
+      final detail = ProductDto.fromJson(const {
         'id': 1,
         'sku': 'CHK-001',
         'name': 'Chicken Strips',
+        'productType': 'FOOD',
         'categoryId': 2,
+        'categoryPath': 'Ət / Toyuq',
         'baseUomId': 1,
         'vatRate': '18.0000',
         'issueStrategy': 'FEFO',
+        'audit': {
+          'createdAt': '2026-09-01T08:00:00+00:00',
+          'createdBy': 1,
+          'rowVersion': 3,
+        },
       });
-      expect(withoutCost.hasCostInfo, isFalse);
-      expect(withoutCost.vatRate, Decimal.parse('18'));
-      final withCost = withoutCost.copyWith(avgUnitCost: Money.parse('12.5'));
-      expect(withCost.hasCostInfo, isTrue);
-      expect(withCost.toJson()['avgUnitCost'], '12.5000');
+
+      expect(detail.productType, ProductType.food);
+      expect(detail.vatRate, Decimal.parse('18'));
+      expect(detail.categoryLabel, 'Ət / Toyuq');
+      // The update endpoints need the token, and it lives inside `audit`.
+      expect(detail.rowVersion, 3);
+    });
+
+    test('ProductDto reads the list form, which omits the detail fields', () {
+      // Copied from `GET /masterdata/products` on the running gateway.
+      final row = ProductDto.fromJson(const {
+        'id': 25,
+        'sku': 'DETERGENT',
+        'name': 'Yuyucu vasitə',
+        'baseUomId': 5,
+        'baseUomCode': 'L',
+        'productType': 'NON_FOOD',
+        'requiresBatch': false,
+        'requiresExpiry': false,
+        'isActive': true,
+      });
+
+      expect(row.productType, ProductType.nonFood);
+      expect(row.categoryId, isNull);
+      expect(row.vatRate, isNull);
+      // No audit in the list form, so no row version — a list row cannot be submitted as an update.
+      expect(row.rowVersion, isNull);
+      expect(row.categoryLabel, '—');
     });
 
     test(

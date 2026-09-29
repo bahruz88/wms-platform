@@ -56,6 +56,11 @@ abstract class BalanceDto with _$BalanceDto {
 }
 
 /// `Batch` — `inv_batch` with the product embedded and the stock it still holds.
+///
+/// One DTO serves both the list and the detail, so everything only the detail carries is nullable.
+/// The quantity has two names on the wire: the list sends `totalQtyOnHand` with a `byLocation`
+/// breakdown, the contract calls them `qtyOnHand` and `balances`. Both spellings are read and
+/// `onHand` hides the difference from the screens.
 @freezed
 abstract class BatchDto with _$BatchDto {
   const factory BatchDto({
@@ -64,12 +69,15 @@ abstract class BatchDto with _$BatchDto {
     required String batchNo,
     required DateTime receivedAt,
     required BatchStatus status,
-    required Quantity qtyOnHand,
+    Quantity? qtyOnHand,
+    Quantity? totalQtyOnHand,
     @Default(1) int rowVersion,
     @NullableDateOnlyConverter() DateTime? productionDate,
     @NullableDateOnlyConverter() DateTime? expiryDate,
     int? supplierId,
+    String? supplierName,
     int? daysToExpiry,
+    @Default(<Object?>[]) List<Object?> byLocation,
   }) = _BatchDto;
 
   factory BatchDto.fromJson(Map<String, Object?> json) =>

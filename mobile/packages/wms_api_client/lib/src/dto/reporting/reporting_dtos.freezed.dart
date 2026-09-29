@@ -586,7 +586,7 @@ as String?,
 /// @nodoc
 mixin _$SeriesPointDto {
 
- String get label; String get value;
+@DateOnlyConverter() DateTime get date; Decimal get value;
 /// Create a copy of SeriesPointDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -600,20 +600,20 @@ $SeriesPointDtoCopyWith<SeriesPointDto> get copyWith => _$SeriesPointDtoCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as SeriesPointDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SeriesPointDto&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.value, _this.value) || other.value == _this.value));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SeriesPointDto&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.value, _this.value) || other.value == _this.value));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as SeriesPointDto;
-  return Object.hash(runtimeType,_this.label,_this.value);
+  return Object.hash(runtimeType,_this.date,_this.value);
 }
 
 @override
 String toString() {
   final _this = this as SeriesPointDto;
-  return 'SeriesPointDto(label: ${_this.label}, value: ${_this.value})';
+  return 'SeriesPointDto(date: ${_this.date}, value: ${_this.value})';
 }
 
 
@@ -624,7 +624,7 @@ abstract mixin class $SeriesPointDtoCopyWith<$Res>  {
   factory $SeriesPointDtoCopyWith(SeriesPointDto value, $Res Function(SeriesPointDto) _then) = _$SeriesPointDtoCopyWithImpl;
 @useResult
 $Res call({
- String label, String value
+@DateOnlyConverter() DateTime date, Decimal value
 });
 
 
@@ -641,11 +641,11 @@ class _$SeriesPointDtoCopyWithImpl<$Res>
 
 /// Create a copy of SeriesPointDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? label = null,Object? value = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? date = null,Object? value = null,}) {
   return _then(SeriesPointDto(
-label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
-as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as String,
+date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
+as DateTime,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as Decimal,
   ));
 }
 
@@ -730,10 +730,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String label,  String value)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@DateOnlyConverter()  DateTime date,  Decimal value)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SeriesPointDto() when $default != null:
-return $default(_that.label,_that.value);case _:
+return $default(_that.date,_that.value);case _:
   return orElse();
 
 }
@@ -751,10 +751,10 @@ return $default(_that.label,_that.value);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String label,  String value)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@DateOnlyConverter()  DateTime date,  Decimal value)  $default,) {final _that = this;
 switch (_that) {
 case _SeriesPointDto():
-return $default(_that.label,_that.value);case _:
+return $default(_that.date,_that.value);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -771,10 +771,10 @@ return $default(_that.label,_that.value);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String label,  String value)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@DateOnlyConverter()  DateTime date,  Decimal value)?  $default,) {final _that = this;
 switch (_that) {
 case _SeriesPointDto() when $default != null:
-return $default(_that.label,_that.value);case _:
+return $default(_that.date,_that.value);case _:
   return null;
 
 }
@@ -786,11 +786,11 @@ return $default(_that.label,_that.value);case _:
 @JsonSerializable()
 
 class _SeriesPointDto extends SeriesPointDto {
-  const _SeriesPointDto({required this.label, required this.value}): super._();
+  const _SeriesPointDto({@DateOnlyConverter() required this.date, required this.value}): super._();
   factory _SeriesPointDto.fromJson(Map<String, dynamic> json) => _$SeriesPointDtoFromJson(json);
 
-@override final  String label;
-@override final  String value;
+@override@DateOnlyConverter() final  DateTime date;
+@override final  Decimal value;
 
 /// Create a copy of SeriesPointDto
 /// with the given fields replaced by the non-null parameter values.
@@ -805,18 +805,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SeriesPointDto&&(identical(other.label, label) || other.label == label)&&(identical(other.value, value) || other.value == value));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SeriesPointDto&&(identical(other.date, date) || other.date == date)&&(identical(other.value, value) || other.value == value));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,label,value);
+    return Object.hash(runtimeType,date,value);
 }
 
 @override
 String toString() {
-    return 'SeriesPointDto(label: $label, value: $value)';
+    return 'SeriesPointDto(date: $date, value: $value)';
 }
 
 
@@ -827,7 +827,7 @@ abstract mixin class _$SeriesPointDtoCopyWith<$Res> implements $SeriesPointDtoCo
   factory _$SeriesPointDtoCopyWith(_SeriesPointDto value, $Res Function(_SeriesPointDto) _then) = __$SeriesPointDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String label, String value
+@DateOnlyConverter() DateTime date, Decimal value
 });
 
 
@@ -844,11 +844,11 @@ class __$SeriesPointDtoCopyWithImpl<$Res>
 
 /// Create a copy of SeriesPointDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? label = null,Object? value = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? date = null,Object? value = null,}) {
   return _then(_SeriesPointDto(
-label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
-as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
-as String,
+date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
+as DateTime,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as Decimal,
   ));
 }
 
@@ -859,7 +859,7 @@ as String,
 /// @nodoc
 mixin _$DashboardSeriesDto {
 
- String get key; String get label; bool get isCost; List<SeriesPointDto> get points;
+ String get key; String get label; bool get isCost; String? get unit; List<SeriesPointDto> get points;
 /// Create a copy of DashboardSeriesDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -873,20 +873,20 @@ $DashboardSeriesDtoCopyWith<DashboardSeriesDto> get copyWith => _$DashboardSerie
 @override
 bool operator ==(Object other) {
   final _this = this as DashboardSeriesDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardSeriesDto&&(identical(other.key, _this.key) || other.key == _this.key)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.isCost, _this.isCost) || other.isCost == _this.isCost)&&const DeepCollectionEquality().equals(other.points, _this.points));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardSeriesDto&&(identical(other.key, _this.key) || other.key == _this.key)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.isCost, _this.isCost) || other.isCost == _this.isCost)&&(identical(other.unit, _this.unit) || other.unit == _this.unit)&&const DeepCollectionEquality().equals(other.points, _this.points));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as DashboardSeriesDto;
-  return Object.hash(runtimeType,_this.key,_this.label,_this.isCost,const DeepCollectionEquality().hash(_this.points));
+  return Object.hash(runtimeType,_this.key,_this.label,_this.isCost,_this.unit,const DeepCollectionEquality().hash(_this.points));
 }
 
 @override
 String toString() {
   final _this = this as DashboardSeriesDto;
-  return 'DashboardSeriesDto(key: ${_this.key}, label: ${_this.label}, isCost: ${_this.isCost}, points: ${_this.points})';
+  return 'DashboardSeriesDto(key: ${_this.key}, label: ${_this.label}, isCost: ${_this.isCost}, unit: ${_this.unit}, points: ${_this.points})';
 }
 
 
@@ -897,7 +897,7 @@ abstract mixin class $DashboardSeriesDtoCopyWith<$Res>  {
   factory $DashboardSeriesDtoCopyWith(DashboardSeriesDto value, $Res Function(DashboardSeriesDto) _then) = _$DashboardSeriesDtoCopyWithImpl;
 @useResult
 $Res call({
- String key, String label, bool isCost, List<SeriesPointDto> points
+ String key, String label, bool isCost, String? unit, List<SeriesPointDto> points
 });
 
 
@@ -914,12 +914,13 @@ class _$DashboardSeriesDtoCopyWithImpl<$Res>
 
 /// Create a copy of DashboardSeriesDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? label = null,Object? isCost = null,Object? points = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? label = null,Object? isCost = null,Object? unit = freezed,Object? points = null,}) {
   return _then(DashboardSeriesDto(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,isCost: null == isCost ? _self.isCost : isCost // ignore: cast_nullable_to_non_nullable
-as bool,points: null == points ? _self.points : points // ignore: cast_nullable_to_non_nullable
+as bool,unit: freezed == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
+as String?,points: null == points ? _self.points : points // ignore: cast_nullable_to_non_nullable
 as List<SeriesPointDto>,
   ));
 }
@@ -1005,10 +1006,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String key,  String label,  bool isCost,  List<SeriesPointDto> points)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String key,  String label,  bool isCost,  String? unit,  List<SeriesPointDto> points)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DashboardSeriesDto() when $default != null:
-return $default(_that.key,_that.label,_that.isCost,_that.points);case _:
+return $default(_that.key,_that.label,_that.isCost,_that.unit,_that.points);case _:
   return orElse();
 
 }
@@ -1026,10 +1027,10 @@ return $default(_that.key,_that.label,_that.isCost,_that.points);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String key,  String label,  bool isCost,  List<SeriesPointDto> points)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String key,  String label,  bool isCost,  String? unit,  List<SeriesPointDto> points)  $default,) {final _that = this;
 switch (_that) {
 case _DashboardSeriesDto():
-return $default(_that.key,_that.label,_that.isCost,_that.points);case _:
+return $default(_that.key,_that.label,_that.isCost,_that.unit,_that.points);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1046,10 +1047,10 @@ return $default(_that.key,_that.label,_that.isCost,_that.points);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String key,  String label,  bool isCost,  List<SeriesPointDto> points)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String key,  String label,  bool isCost,  String? unit,  List<SeriesPointDto> points)?  $default,) {final _that = this;
 switch (_that) {
 case _DashboardSeriesDto() when $default != null:
-return $default(_that.key,_that.label,_that.isCost,_that.points);case _:
+return $default(_that.key,_that.label,_that.isCost,_that.unit,_that.points);case _:
   return null;
 
 }
@@ -1061,12 +1062,13 @@ return $default(_that.key,_that.label,_that.isCost,_that.points);case _:
 @JsonSerializable()
 
 class _DashboardSeriesDto extends DashboardSeriesDto {
-  const _DashboardSeriesDto({required this.key, required this.label, this.isCost = false,  List<SeriesPointDto> points = const <SeriesPointDto>[]}): _points = points,super._();
+  const _DashboardSeriesDto({required this.key, required this.label, this.isCost = false, this.unit,  List<SeriesPointDto> points = const <SeriesPointDto>[]}): _points = points,super._();
   factory _DashboardSeriesDto.fromJson(Map<String, dynamic> json) => _$DashboardSeriesDtoFromJson(json);
 
 @override final  String key;
 @override final  String label;
 @override@JsonKey() final  bool isCost;
+@override final  String? unit;
  final  List<SeriesPointDto> _points;
 @override@JsonKey() List<SeriesPointDto> get points {
   if (_points is EqualUnmodifiableListView) return _points;
@@ -1088,18 +1090,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardSeriesDto&&(identical(other.key, key) || other.key == key)&&(identical(other.label, label) || other.label == label)&&(identical(other.isCost, isCost) || other.isCost == isCost)&&const DeepCollectionEquality().equals(other.points, _points));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardSeriesDto&&(identical(other.key, key) || other.key == key)&&(identical(other.label, label) || other.label == label)&&(identical(other.isCost, isCost) || other.isCost == isCost)&&(identical(other.unit, unit) || other.unit == unit)&&const DeepCollectionEquality().equals(other.points, _points));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,key,label,isCost,const DeepCollectionEquality().hash(_points));
+    return Object.hash(runtimeType,key,label,isCost,unit,const DeepCollectionEquality().hash(_points));
 }
 
 @override
 String toString() {
-    return 'DashboardSeriesDto(key: $key, label: $label, isCost: $isCost, points: $points)';
+    return 'DashboardSeriesDto(key: $key, label: $label, isCost: $isCost, unit: $unit, points: $points)';
 }
 
 
@@ -1110,7 +1112,7 @@ abstract mixin class _$DashboardSeriesDtoCopyWith<$Res> implements $DashboardSer
   factory _$DashboardSeriesDtoCopyWith(_DashboardSeriesDto value, $Res Function(_DashboardSeriesDto) _then) = __$DashboardSeriesDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String key, String label, bool isCost, List<SeriesPointDto> points
+ String key, String label, bool isCost, String? unit, List<SeriesPointDto> points
 });
 
 
@@ -1127,12 +1129,13 @@ class __$DashboardSeriesDtoCopyWithImpl<$Res>
 
 /// Create a copy of DashboardSeriesDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? label = null,Object? isCost = null,Object? points = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? label = null,Object? isCost = null,Object? unit = freezed,Object? points = null,}) {
   return _then(_DashboardSeriesDto(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,isCost: null == isCost ? _self.isCost : isCost // ignore: cast_nullable_to_non_nullable
-as bool,points: null == points ? _self._points : points // ignore: cast_nullable_to_non_nullable
+as bool,unit: freezed == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
+as String?,points: null == points ? _self._points : points // ignore: cast_nullable_to_non_nullable
 as List<SeriesPointDto>,
   ));
 }
@@ -1452,7 +1455,7 @@ as Map<String, Object?>?,
 /// @nodoc
 mixin _$ReportDefinitionDto {
 
- String get code; String get name; String get category; String? get description; List<Object?> get parameters; List<Object?> get columns; List<String> get supportedFormats; bool get requiresCostPermission; int? get maxSyncRows;
+ String get code; String get name; String get category; String? get description; List<Object?> get parameters; List<ReportColumnDto> get columns; List<String> get supportedFormats; bool get requiresCostPermission; int? get maxSyncRows;
 /// Create a copy of ReportDefinitionDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1490,7 +1493,7 @@ abstract mixin class $ReportDefinitionDtoCopyWith<$Res>  {
   factory $ReportDefinitionDtoCopyWith(ReportDefinitionDto value, $Res Function(ReportDefinitionDto) _then) = _$ReportDefinitionDtoCopyWithImpl;
 @useResult
 $Res call({
- String code, String name, String category, String? description, List<Object?> parameters, List<Object?> columns, List<String> supportedFormats, bool requiresCostPermission, int? maxSyncRows
+ String code, String name, String category, String? description, List<Object?> parameters, List<ReportColumnDto> columns, List<String> supportedFormats, bool requiresCostPermission, int? maxSyncRows
 });
 
 
@@ -1515,7 +1518,7 @@ as String,category: null == category ? _self.category : category // ignore: cast
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,parameters: null == parameters ? _self.parameters : parameters // ignore: cast_nullable_to_non_nullable
 as List<Object?>,columns: null == columns ? _self.columns : columns // ignore: cast_nullable_to_non_nullable
-as List<Object?>,supportedFormats: null == supportedFormats ? _self.supportedFormats : supportedFormats // ignore: cast_nullable_to_non_nullable
+as List<ReportColumnDto>,supportedFormats: null == supportedFormats ? _self.supportedFormats : supportedFormats // ignore: cast_nullable_to_non_nullable
 as List<String>,requiresCostPermission: null == requiresCostPermission ? _self.requiresCostPermission : requiresCostPermission // ignore: cast_nullable_to_non_nullable
 as bool,maxSyncRows: freezed == maxSyncRows ? _self.maxSyncRows : maxSyncRows // ignore: cast_nullable_to_non_nullable
 as int?,
@@ -1603,7 +1606,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<Object?> columns,  List<String> supportedFormats,  bool requiresCostPermission,  int? maxSyncRows)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<ReportColumnDto> columns,  List<String> supportedFormats,  bool requiresCostPermission,  int? maxSyncRows)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReportDefinitionDto() when $default != null:
 return $default(_that.code,_that.name,_that.category,_that.description,_that.parameters,_that.columns,_that.supportedFormats,_that.requiresCostPermission,_that.maxSyncRows);case _:
@@ -1624,7 +1627,7 @@ return $default(_that.code,_that.name,_that.category,_that.description,_that.par
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<Object?> columns,  List<String> supportedFormats,  bool requiresCostPermission,  int? maxSyncRows)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<ReportColumnDto> columns,  List<String> supportedFormats,  bool requiresCostPermission,  int? maxSyncRows)  $default,) {final _that = this;
 switch (_that) {
 case _ReportDefinitionDto():
 return $default(_that.code,_that.name,_that.category,_that.description,_that.parameters,_that.columns,_that.supportedFormats,_that.requiresCostPermission,_that.maxSyncRows);case _:
@@ -1644,7 +1647,7 @@ return $default(_that.code,_that.name,_that.category,_that.description,_that.par
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<Object?> columns,  List<String> supportedFormats,  bool requiresCostPermission,  int? maxSyncRows)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<ReportColumnDto> columns,  List<String> supportedFormats,  bool requiresCostPermission,  int? maxSyncRows)?  $default,) {final _that = this;
 switch (_that) {
 case _ReportDefinitionDto() when $default != null:
 return $default(_that.code,_that.name,_that.category,_that.description,_that.parameters,_that.columns,_that.supportedFormats,_that.requiresCostPermission,_that.maxSyncRows);case _:
@@ -1659,7 +1662,7 @@ return $default(_that.code,_that.name,_that.category,_that.description,_that.par
 @JsonSerializable()
 
 class _ReportDefinitionDto extends ReportDefinitionDto {
-  const _ReportDefinitionDto({required this.code, required this.name, required this.category, this.description,  List<Object?> parameters = const <Object?>[],  List<Object?> columns = const <Object?>[],  List<String> supportedFormats = const <String>[], this.requiresCostPermission = false, this.maxSyncRows}): _parameters = parameters,_columns = columns,_supportedFormats = supportedFormats,super._();
+  const _ReportDefinitionDto({required this.code, required this.name, required this.category, this.description,  List<Object?> parameters = const <Object?>[],  List<ReportColumnDto> columns = const <ReportColumnDto>[],  List<String> supportedFormats = const <String>[], this.requiresCostPermission = false, this.maxSyncRows}): _parameters = parameters,_columns = columns,_supportedFormats = supportedFormats,super._();
   factory _ReportDefinitionDto.fromJson(Map<String, dynamic> json) => _$ReportDefinitionDtoFromJson(json);
 
 @override final  String code;
@@ -1673,8 +1676,8 @@ class _ReportDefinitionDto extends ReportDefinitionDto {
   return EqualUnmodifiableListView(_parameters);
 }
 
- final  List<Object?> _columns;
-@override@JsonKey() List<Object?> get columns {
+ final  List<ReportColumnDto> _columns;
+@override@JsonKey() List<ReportColumnDto> get columns {
   if (_columns is EqualUnmodifiableListView) return _columns;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_columns);
@@ -1725,7 +1728,7 @@ abstract mixin class _$ReportDefinitionDtoCopyWith<$Res> implements $ReportDefin
   factory _$ReportDefinitionDtoCopyWith(_ReportDefinitionDto value, $Res Function(_ReportDefinitionDto) _then) = __$ReportDefinitionDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String code, String name, String category, String? description, List<Object?> parameters, List<Object?> columns, List<String> supportedFormats, bool requiresCostPermission, int? maxSyncRows
+ String code, String name, String category, String? description, List<Object?> parameters, List<ReportColumnDto> columns, List<String> supportedFormats, bool requiresCostPermission, int? maxSyncRows
 });
 
 
@@ -1750,7 +1753,7 @@ as String,category: null == category ? _self.category : category // ignore: cast
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String?,parameters: null == parameters ? _self._parameters : parameters // ignore: cast_nullable_to_non_nullable
 as List<Object?>,columns: null == columns ? _self._columns : columns // ignore: cast_nullable_to_non_nullable
-as List<Object?>,supportedFormats: null == supportedFormats ? _self._supportedFormats : supportedFormats // ignore: cast_nullable_to_non_nullable
+as List<ReportColumnDto>,supportedFormats: null == supportedFormats ? _self._supportedFormats : supportedFormats // ignore: cast_nullable_to_non_nullable
 as List<String>,requiresCostPermission: null == requiresCostPermission ? _self.requiresCostPermission : requiresCostPermission // ignore: cast_nullable_to_non_nullable
 as bool,maxSyncRows: freezed == maxSyncRows ? _self.maxSyncRows : maxSyncRows // ignore: cast_nullable_to_non_nullable
 as int?,
@@ -2063,6 +2066,610 @@ as DateTime?,completedAt: freezed == completedAt ? _self.completedAt : completed
 as DateTime?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,statusUrl: freezed == statusUrl ? _self.statusUrl : statusUrl // ignore: cast_nullable_to_non_nullable
 as String?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$ReportColumnDto {
+
+ String get key; String get label; String get type; bool get isCost; String get align; int? get width;
+/// Create a copy of ReportColumnDto
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ReportColumnDtoCopyWith<ReportColumnDto> get copyWith => _$ReportColumnDtoCopyWithImpl<ReportColumnDto>(this as ReportColumnDto, _$identity);
+
+  /// Serializes this ReportColumnDto to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ReportColumnDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportColumnDto&&(identical(other.key, _this.key) || other.key == _this.key)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.isCost, _this.isCost) || other.isCost == _this.isCost)&&(identical(other.align, _this.align) || other.align == _this.align)&&(identical(other.width, _this.width) || other.width == _this.width));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as ReportColumnDto;
+  return Object.hash(runtimeType,_this.key,_this.label,_this.type,_this.isCost,_this.align,_this.width);
+}
+
+@override
+String toString() {
+  final _this = this as ReportColumnDto;
+  return 'ReportColumnDto(key: ${_this.key}, label: ${_this.label}, type: ${_this.type}, isCost: ${_this.isCost}, align: ${_this.align}, width: ${_this.width})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ReportColumnDtoCopyWith<$Res>  {
+  factory $ReportColumnDtoCopyWith(ReportColumnDto value, $Res Function(ReportColumnDto) _then) = _$ReportColumnDtoCopyWithImpl;
+@useResult
+$Res call({
+ String key, String label, String type, bool isCost, String align, int? width
+});
+
+
+
+
+}
+/// @nodoc
+class _$ReportColumnDtoCopyWithImpl<$Res>
+    implements $ReportColumnDtoCopyWith<$Res> {
+  _$ReportColumnDtoCopyWithImpl(this._self, this._then);
+
+  final ReportColumnDto _self;
+  final $Res Function(ReportColumnDto) _then;
+
+/// Create a copy of ReportColumnDto
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? label = null,Object? type = null,Object? isCost = null,Object? align = null,Object? width = freezed,}) {
+  return _then(ReportColumnDto(
+key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,isCost: null == isCost ? _self.isCost : isCost // ignore: cast_nullable_to_non_nullable
+as bool,align: null == align ? _self.align : align // ignore: cast_nullable_to_non_nullable
+as String,width: freezed == width ? _self.width : width // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ReportColumnDto].
+extension ReportColumnDtoPatterns on ReportColumnDto {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ReportColumnDto value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ReportColumnDto() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ReportColumnDto value)  $default,){
+final _that = this;
+switch (_that) {
+case _ReportColumnDto():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ReportColumnDto value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ReportColumnDto() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String key,  String label,  String type,  bool isCost,  String align,  int? width)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ReportColumnDto() when $default != null:
+return $default(_that.key,_that.label,_that.type,_that.isCost,_that.align,_that.width);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String key,  String label,  String type,  bool isCost,  String align,  int? width)  $default,) {final _that = this;
+switch (_that) {
+case _ReportColumnDto():
+return $default(_that.key,_that.label,_that.type,_that.isCost,_that.align,_that.width);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String key,  String label,  String type,  bool isCost,  String align,  int? width)?  $default,) {final _that = this;
+switch (_that) {
+case _ReportColumnDto() when $default != null:
+return $default(_that.key,_that.label,_that.type,_that.isCost,_that.align,_that.width);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ReportColumnDto extends ReportColumnDto {
+  const _ReportColumnDto({required this.key, required this.label, required this.type, this.isCost = false, this.align = 'LEFT', this.width}): super._();
+  factory _ReportColumnDto.fromJson(Map<String, dynamic> json) => _$ReportColumnDtoFromJson(json);
+
+@override final  String key;
+@override final  String label;
+@override final  String type;
+@override@JsonKey() final  bool isCost;
+@override@JsonKey() final  String align;
+@override final  int? width;
+
+/// Create a copy of ReportColumnDto
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ReportColumnDtoCopyWith<_ReportColumnDto> get copyWith => __$ReportColumnDtoCopyWithImpl<_ReportColumnDto>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ReportColumnDtoToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportColumnDto&&(identical(other.key, key) || other.key == key)&&(identical(other.label, label) || other.label == label)&&(identical(other.type, type) || other.type == type)&&(identical(other.isCost, isCost) || other.isCost == isCost)&&(identical(other.align, align) || other.align == align)&&(identical(other.width, width) || other.width == width));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,key,label,type,isCost,align,width);
+}
+
+@override
+String toString() {
+    return 'ReportColumnDto(key: $key, label: $label, type: $type, isCost: $isCost, align: $align, width: $width)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ReportColumnDtoCopyWith<$Res> implements $ReportColumnDtoCopyWith<$Res> {
+  factory _$ReportColumnDtoCopyWith(_ReportColumnDto value, $Res Function(_ReportColumnDto) _then) = __$ReportColumnDtoCopyWithImpl;
+@override @useResult
+$Res call({
+ String key, String label, String type, bool isCost, String align, int? width
+});
+
+
+
+
+}
+/// @nodoc
+class __$ReportColumnDtoCopyWithImpl<$Res>
+    implements _$ReportColumnDtoCopyWith<$Res> {
+  __$ReportColumnDtoCopyWithImpl(this._self, this._then);
+
+  final _ReportColumnDto _self;
+  final $Res Function(_ReportColumnDto) _then;
+
+/// Create a copy of ReportColumnDto
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? label = null,Object? type = null,Object? isCost = null,Object? align = null,Object? width = freezed,}) {
+  return _then(_ReportColumnDto(
+key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
+as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
+as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,isCost: null == isCost ? _self.isCost : isCost // ignore: cast_nullable_to_non_nullable
+as bool,align: null == align ? _self.align : align // ignore: cast_nullable_to_non_nullable
+as String,width: freezed == width ? _self.width : width // ignore: cast_nullable_to_non_nullable
+as int?,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$ReportResultPageDto {
+
+ String get code; DateTime get generatedAt; List<ReportColumnDto> get columns;@JsonKey(name: 'rows') List<List<Object?>>? get rawRows; Map<String, String>? get totals; DateTime? get dataAsOf; int get page; int get size; int get totalItems; int get totalPages;
+/// Create a copy of ReportResultPageDto
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ReportResultPageDtoCopyWith<ReportResultPageDto> get copyWith => _$ReportResultPageDtoCopyWithImpl<ReportResultPageDto>(this as ReportResultPageDto, _$identity);
+
+  /// Serializes this ReportResultPageDto to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as ReportResultPageDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportResultPageDto&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.generatedAt, _this.generatedAt) || other.generatedAt == _this.generatedAt)&&const DeepCollectionEquality().equals(other.columns, _this.columns)&&const DeepCollectionEquality().equals(other.rawRows, _this.rawRows)&&const DeepCollectionEquality().equals(other.totals, _this.totals)&&(identical(other.dataAsOf, _this.dataAsOf) || other.dataAsOf == _this.dataAsOf)&&(identical(other.page, _this.page) || other.page == _this.page)&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.totalItems, _this.totalItems) || other.totalItems == _this.totalItems)&&(identical(other.totalPages, _this.totalPages) || other.totalPages == _this.totalPages));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as ReportResultPageDto;
+  return Object.hash(runtimeType,_this.code,_this.generatedAt,const DeepCollectionEquality().hash(_this.columns),const DeepCollectionEquality().hash(_this.rawRows),const DeepCollectionEquality().hash(_this.totals),_this.dataAsOf,_this.page,_this.size,_this.totalItems,_this.totalPages);
+}
+
+@override
+String toString() {
+  final _this = this as ReportResultPageDto;
+  return 'ReportResultPageDto(code: ${_this.code}, generatedAt: ${_this.generatedAt}, columns: ${_this.columns}, rawRows: ${_this.rawRows}, totals: ${_this.totals}, dataAsOf: ${_this.dataAsOf}, page: ${_this.page}, size: ${_this.size}, totalItems: ${_this.totalItems}, totalPages: ${_this.totalPages})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $ReportResultPageDtoCopyWith<$Res>  {
+  factory $ReportResultPageDtoCopyWith(ReportResultPageDto value, $Res Function(ReportResultPageDto) _then) = _$ReportResultPageDtoCopyWithImpl;
+@useResult
+$Res call({
+ String code, DateTime generatedAt, List<ReportColumnDto> columns,@JsonKey(name: 'rows') List<List<Object?>>? rawRows, Map<String, String>? totals, DateTime? dataAsOf, int page, int size, int totalItems, int totalPages
+});
+
+
+
+
+}
+/// @nodoc
+class _$ReportResultPageDtoCopyWithImpl<$Res>
+    implements $ReportResultPageDtoCopyWith<$Res> {
+  _$ReportResultPageDtoCopyWithImpl(this._self, this._then);
+
+  final ReportResultPageDto _self;
+  final $Res Function(ReportResultPageDto) _then;
+
+/// Create a copy of ReportResultPageDto
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? generatedAt = null,Object? columns = null,Object? rawRows = freezed,Object? totals = freezed,Object? dataAsOf = freezed,Object? page = null,Object? size = null,Object? totalItems = null,Object? totalPages = null,}) {
+  return _then(ReportResultPageDto(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,columns: null == columns ? _self.columns : columns // ignore: cast_nullable_to_non_nullable
+as List<ReportColumnDto>,rawRows: freezed == rawRows ? _self.rawRows : rawRows // ignore: cast_nullable_to_non_nullable
+as List<List<Object?>>?,totals: freezed == totals ? _self.totals : totals // ignore: cast_nullable_to_non_nullable
+as Map<String, String>?,dataAsOf: freezed == dataAsOf ? _self.dataAsOf : dataAsOf // ignore: cast_nullable_to_non_nullable
+as DateTime?,page: null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
+as int,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
+as int,totalItems: null == totalItems ? _self.totalItems : totalItems // ignore: cast_nullable_to_non_nullable
+as int,totalPages: null == totalPages ? _self.totalPages : totalPages // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [ReportResultPageDto].
+extension ReportResultPageDtoPatterns on ReportResultPageDto {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ReportResultPageDto value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _ReportResultPageDto() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ReportResultPageDto value)  $default,){
+final _that = this;
+switch (_that) {
+case _ReportResultPageDto():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ReportResultPageDto value)?  $default,){
+final _that = this;
+switch (_that) {
+case _ReportResultPageDto() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  DateTime generatedAt,  List<ReportColumnDto> columns, @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals,  DateTime? dataAsOf,  int page,  int size,  int totalItems,  int totalPages)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _ReportResultPageDto() when $default != null:
+return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.totals,_that.dataAsOf,_that.page,_that.size,_that.totalItems,_that.totalPages);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  DateTime generatedAt,  List<ReportColumnDto> columns, @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals,  DateTime? dataAsOf,  int page,  int size,  int totalItems,  int totalPages)  $default,) {final _that = this;
+switch (_that) {
+case _ReportResultPageDto():
+return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.totals,_that.dataAsOf,_that.page,_that.size,_that.totalItems,_that.totalPages);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  DateTime generatedAt,  List<ReportColumnDto> columns, @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals,  DateTime? dataAsOf,  int page,  int size,  int totalItems,  int totalPages)?  $default,) {final _that = this;
+switch (_that) {
+case _ReportResultPageDto() when $default != null:
+return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.totals,_that.dataAsOf,_that.page,_that.size,_that.totalItems,_that.totalPages);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _ReportResultPageDto extends ReportResultPageDto {
+  const _ReportResultPageDto({required this.code, required this.generatedAt,  List<ReportColumnDto> columns = const <ReportColumnDto>[], @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals, this.dataAsOf, this.page = 0, this.size = 0, this.totalItems = 0, this.totalPages = 0}): _columns = columns,_rawRows = rawRows,_totals = totals,super._();
+  factory _ReportResultPageDto.fromJson(Map<String, dynamic> json) => _$ReportResultPageDtoFromJson(json);
+
+@override final  String code;
+@override final  DateTime generatedAt;
+ final  List<ReportColumnDto> _columns;
+@override@JsonKey() List<ReportColumnDto> get columns {
+  if (_columns is EqualUnmodifiableListView) return _columns;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_columns);
+}
+
+ final  List<List<Object?>>? _rawRows;
+@override@JsonKey(name: 'rows') List<List<Object?>>? get rawRows {
+  final value = _rawRows;
+  if (value == null) return null;
+  if (_rawRows is EqualUnmodifiableListView) return _rawRows;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
+}
+
+ final  Map<String, String>? _totals;
+@override Map<String, String>? get totals {
+  final value = _totals;
+  if (value == null) return null;
+  if (_totals is EqualUnmodifiableMapView) return _totals;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(value);
+}
+
+@override final  DateTime? dataAsOf;
+@override@JsonKey() final  int page;
+@override@JsonKey() final  int size;
+@override@JsonKey() final  int totalItems;
+@override@JsonKey() final  int totalPages;
+
+/// Create a copy of ReportResultPageDto
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$ReportResultPageDtoCopyWith<_ReportResultPageDto> get copyWith => __$ReportResultPageDtoCopyWithImpl<_ReportResultPageDto>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$ReportResultPageDtoToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportResultPageDto&&(identical(other.code, code) || other.code == code)&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other.columns, _columns)&&const DeepCollectionEquality().equals(other.rawRows, _rawRows)&&const DeepCollectionEquality().equals(other.totals, _totals)&&(identical(other.dataAsOf, dataAsOf) || other.dataAsOf == dataAsOf)&&(identical(other.page, page) || other.page == page)&&(identical(other.size, size) || other.size == size)&&(identical(other.totalItems, totalItems) || other.totalItems == totalItems)&&(identical(other.totalPages, totalPages) || other.totalPages == totalPages));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,code,generatedAt,const DeepCollectionEquality().hash(_columns),const DeepCollectionEquality().hash(_rawRows),const DeepCollectionEquality().hash(_totals),dataAsOf,page,size,totalItems,totalPages);
+}
+
+@override
+String toString() {
+    return 'ReportResultPageDto(code: $code, generatedAt: $generatedAt, columns: $columns, rawRows: $rawRows, totals: $totals, dataAsOf: $dataAsOf, page: $page, size: $size, totalItems: $totalItems, totalPages: $totalPages)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$ReportResultPageDtoCopyWith<$Res> implements $ReportResultPageDtoCopyWith<$Res> {
+  factory _$ReportResultPageDtoCopyWith(_ReportResultPageDto value, $Res Function(_ReportResultPageDto) _then) = __$ReportResultPageDtoCopyWithImpl;
+@override @useResult
+$Res call({
+ String code, DateTime generatedAt, List<ReportColumnDto> columns,@JsonKey(name: 'rows') List<List<Object?>>? rawRows, Map<String, String>? totals, DateTime? dataAsOf, int page, int size, int totalItems, int totalPages
+});
+
+
+
+
+}
+/// @nodoc
+class __$ReportResultPageDtoCopyWithImpl<$Res>
+    implements _$ReportResultPageDtoCopyWith<$Res> {
+  __$ReportResultPageDtoCopyWithImpl(this._self, this._then);
+
+  final _ReportResultPageDto _self;
+  final $Res Function(_ReportResultPageDto) _then;
+
+/// Create a copy of ReportResultPageDto
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? generatedAt = null,Object? columns = null,Object? rawRows = freezed,Object? totals = freezed,Object? dataAsOf = freezed,Object? page = null,Object? size = null,Object? totalItems = null,Object? totalPages = null,}) {
+  return _then(_ReportResultPageDto(
+code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable
+as DateTime,columns: null == columns ? _self._columns : columns // ignore: cast_nullable_to_non_nullable
+as List<ReportColumnDto>,rawRows: freezed == rawRows ? _self._rawRows : rawRows // ignore: cast_nullable_to_non_nullable
+as List<List<Object?>>?,totals: freezed == totals ? _self._totals : totals // ignore: cast_nullable_to_non_nullable
+as Map<String, String>?,dataAsOf: freezed == dataAsOf ? _self.dataAsOf : dataAsOf // ignore: cast_nullable_to_non_nullable
+as DateTime?,page: null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
+as int,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
+as int,totalItems: null == totalItems ? _self.totalItems : totalItems // ignore: cast_nullable_to_non_nullable
+as int,totalPages: null == totalPages ? _self.totalPages : totalPages // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

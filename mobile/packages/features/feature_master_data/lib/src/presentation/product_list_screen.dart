@@ -87,11 +87,10 @@ class ProductListScreen extends ConsumerWidget {
                           WmsFormat.quantity(row.minStock, decimals: 3),
                     ),
                     WmsColumn(
-                      key: 'cost',
-                      header: 'Orta maya',
-                      numeric: true,
-                      permission: Permissions.productViewCost,
-                      cell: (row) => WmsFormat.money(row.avgUnitCost),
+                      key: 'productType',
+                      header: 'Növ',
+                      width: 110,
+                      render: (row, _) => WmsBadge(text: row.productType.wire),
                     ),
                     WmsColumn(
                       key: 'status',

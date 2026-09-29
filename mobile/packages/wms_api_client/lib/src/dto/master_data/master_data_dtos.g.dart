@@ -85,11 +85,14 @@ _ProductDto _$ProductDtoFromJson(Map<String, dynamic> json) => _ProductDto(
   id: (json['id'] as num).toInt(),
   sku: json['sku'] as String,
   name: json['name'] as String,
-  categoryId: (json['categoryId'] as num).toInt(),
   baseUomId: (json['baseUomId'] as num).toInt(),
-  vatRate: Decimal.fromJson(json['vatRate'] as String),
+  productType: $enumDecode(_$ProductTypeEnumMap, json['productType']),
+  categoryId: (json['categoryId'] as num?)?.toInt(),
+  categoryPath: json['categoryPath'] as String?,
+  vatRate: json['vatRate'] == null
+      ? null
+      : Decimal.fromJson(json['vatRate'] as String),
   barcode: json['barcode'] as String?,
-  categoryName: json['categoryName'] as String?,
   brand: json['brand'] as String?,
   baseUomCode: json['baseUomCode'] as String?,
   defaultSupplierId: (json['defaultSupplierId'] as num?)?.toInt(),
@@ -108,21 +111,16 @@ _ProductDto _$ProductDtoFromJson(Map<String, dynamic> json) => _ProductDto(
       $enumDecodeNullable(_$IssueStrategyEnumMap, json['issueStrategy']) ??
       IssueStrategy.fefo,
   shelfLifeDays: (json['shelfLifeDays'] as num?)?.toInt(),
-  imageKey: json['imageKey'] as String?,
+  imageAttachmentId: (json['imageAttachmentId'] as num?)?.toInt(),
   isActive: json['isActive'] as bool? ?? true,
-  rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
   uoms:
       (json['uoms'] as List<dynamic>?)
           ?.map((e) => ProductUomDto.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <ProductUomDto>[],
-  avgUnitCost: json['avgUnitCost'] == null
+  audit: json['audit'] == null
       ? null
-      : Money.fromJson(json['avgUnitCost'] as String),
-  lastPurchasePrice: json['lastPurchasePrice'] == null
-      ? null
-      : Money.fromJson(json['lastPurchasePrice'] as String),
-  currency: json['currency'] as String?,
+      : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$ProductDtoToJson(_ProductDto instance) =>
@@ -130,11 +128,12 @@ Map<String, dynamic> _$ProductDtoToJson(_ProductDto instance) =>
       'id': instance.id,
       'sku': instance.sku,
       'name': instance.name,
-      'categoryId': instance.categoryId,
       'baseUomId': instance.baseUomId,
-      'vatRate': instance.vatRate.toJson(),
+      'productType': _$ProductTypeEnumMap[instance.productType]!,
+      'categoryId': instance.categoryId,
+      'categoryPath': instance.categoryPath,
+      'vatRate': instance.vatRate?.toJson(),
       'barcode': instance.barcode,
-      'categoryName': instance.categoryName,
       'brand': instance.brand,
       'baseUomCode': instance.baseUomCode,
       'defaultSupplierId': instance.defaultSupplierId,
@@ -145,13 +144,10 @@ Map<String, dynamic> _$ProductDtoToJson(_ProductDto instance) =>
       'requiresExpiry': instance.requiresExpiry,
       'issueStrategy': _$IssueStrategyEnumMap[instance.issueStrategy]!,
       'shelfLifeDays': instance.shelfLifeDays,
-      'imageKey': instance.imageKey,
+      'imageAttachmentId': instance.imageAttachmentId,
       'isActive': instance.isActive,
-      'rowVersion': instance.rowVersion,
       'uoms': instance.uoms.map((e) => e.toJson()).toList(),
-      'avgUnitCost': instance.avgUnitCost?.toJson(),
-      'lastPurchasePrice': instance.lastPurchasePrice?.toJson(),
-      'currency': instance.currency,
+      'audit': instance.audit?.toJson(),
     };
 
 const _$IssueStrategyEnumMap = {

@@ -26,6 +26,7 @@ final _product = ProductDto(
   id: 1,
   sku: 'CHS-0042',
   name: 'Chicken Strips',
+  productType: ProductType.food,
   categoryId: 2,
   baseUomId: 5,
   baseUomCode: 'KG',

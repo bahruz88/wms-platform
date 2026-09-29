@@ -3,27 +3,76 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'identity_dtos.freezed.dart';
 part 'identity_dtos.g.dart';
 
-/// `GET /identity/me` - the caller's profile, roles, effective permissions
-/// and location restrictions (`iam_user_location`).
+/// `UserSummary` — who the caller is, as `Me` embeds it.
+@freezed
+abstract class UserSummaryDto with _$UserSummaryDto {
+  const factory UserSummaryDto({
+    required int id,
+    required String username,
+    required String fullName,
+    String? email,
+    @Default(true) bool isActive,
+  }) = _UserSummaryDto;
+
+  const UserSummaryDto._();
+
+  factory UserSummaryDto.fromJson(Map<String, Object?> json) => _$UserSummaryDtoFromJson(json);
+}
+
+/// `Tenant` — the company the caller belongs to, and the currency every base amount is in.
+@freezed
+abstract class TenantDto with _$TenantDto {
+  const factory TenantDto({
+    required int id,
+    required String code,
+    required String name,
+    @Default('AZN') String defaultCurrency,
+    String? timezone,
+    String? locale,
+    @Default(true) bool isActive,
+  }) = _TenantDto;
+
+  const TenantDto._();
+
+  factory TenantDto.fromJson(Map<String, Object?> json) => _$TenantDtoFromJson(json);
+}
+
+/// `GET /identity/me` — the contract's `Me`.
+///
+/// The user and the tenant arrive as nested objects, not flattened onto the response. The previous
+/// DTO expected `id`/`tenantId`/`username` at the top level and so threw on every sign-in; no test
+/// noticed, because the drift check matches DTOs to schemas by name and `CurrentUserDto` does not
+/// look like `Me`.
+///
+/// `canViewCost` is sent explicitly rather than left for the client to infer from `permissions`:
+/// the server is the side that decides, and every cost figure it omits follows from this one flag
+/// (spec §16).
 @freezed
 abstract class CurrentUserDto with _$CurrentUserDto {
   const factory CurrentUserDto({
-    required int id,
-    required int tenantId,
-    required String username,
-    required String fullName,
-    String? externalId,
-    String? email,
-    String? phone,
+    required UserSummaryDto user,
+    required TenantDto tenant,
     @Default(<String>[]) List<String> roles,
     @Default(<String>[]) List<String> permissions,
     @Default(<int>[]) List<int> locationIds,
+    @Default(false) bool canViewCost,
+    @Default(<Object?>[]) List<Object?> activeDelegations,
   }) = _CurrentUserDto;
 
   const CurrentUserDto._();
 
   factory CurrentUserDto.fromJson(Map<String, Object?> json) =>
       _$CurrentUserDtoFromJson(json);
+
+  /// Shorthands, so a screen does not have to know the response is nested.
+  int get id => user.id;
+  int get tenantId => tenant.id;
+  String get username => user.username;
+  String get fullName => user.fullName;
+  String? get email => user.email;
+
+  /// An empty location list means every location — the one place where less grants more (spec §16).
+  bool get seesEveryLocation => locationIds.isEmpty;
 
   bool hasPermission(String code) => permissions.contains(code);
 }

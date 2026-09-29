@@ -1,5 +1,8 @@
+import 'package:decimal/decimal.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:wms_core/wms_core.dart';
+
+import '../../json/date_only_converter.dart';
 
 part 'reporting_dtos.freezed.dart';
 part 'reporting_dtos.g.dart';
@@ -53,12 +56,15 @@ abstract class DashboardAlertDto with _$DashboardAlertDto {
       _$DashboardAlertDtoFromJson(json);
 }
 
-/// One point of a dashboard series.
+/// One point of a dashboard series: a day and the figure for that day.
+///
+/// The x axis is a date, not a free-text label — the server sends `date`, and the chart formats it
+/// itself so the axis follows the app locale rather than the server's.
 @freezed
 abstract class SeriesPointDto with _$SeriesPointDto {
   const factory SeriesPointDto({
-    required String label,
-    required String value,
+    @DateOnlyConverter() required DateTime date,
+    required Decimal value,
   }) = _SeriesPointDto;
 
   const SeriesPointDto._();
@@ -73,6 +79,7 @@ abstract class DashboardSeriesDto with _$DashboardSeriesDto {
     required String key,
     required String label,
     @Default(false) bool isCost,
+    String? unit,
     @Default(<SeriesPointDto>[]) List<SeriesPointDto> points,
   }) = _DashboardSeriesDto;
 
@@ -119,7 +126,7 @@ abstract class ReportDefinitionDto with _$ReportDefinitionDto {
     required String category,
     String? description,
     @Default(<Object?>[]) List<Object?> parameters,
-    @Default(<Object?>[]) List<Object?> columns,
+    @Default(<ReportColumnDto>[]) List<ReportColumnDto> columns,
     @Default(<String>[]) List<String> supportedFormats,
     @Default(false) bool requiresCostPermission,
     int? maxSyncRows,
@@ -156,4 +163,69 @@ abstract class ExportJobDto with _$ExportJobDto {
   factory ExportJobDto.fromJson(Map<String, Object?> json) => _$ExportJobDtoFromJson(json);
 
   bool get isDownloadable => status == 'COMPLETED' && downloadUrl != null;
+}
+
+/// `ReportColumn` — one column of a report, as the server chose to return it.
+///
+/// A cost column is absent from `columns` entirely when the caller lacks `master.product.view_cost`,
+/// so the screen renders whatever arrives rather than filtering a fixed list itself.
+@freezed
+abstract class ReportColumnDto with _$ReportColumnDto {
+  const factory ReportColumnDto({
+    required String key,
+    required String label,
+    required String type,
+    @Default(false) bool isCost,
+    @Default('LEFT') String align,
+    int? width,
+  }) = _ReportColumnDto;
+
+  const ReportColumnDto._();
+
+  factory ReportColumnDto.fromJson(Map<String, Object?> json) => _$ReportColumnDtoFromJson(json);
+
+  /// Numeric column types arrive as strings (ADR-008) and are right-aligned by convention.
+  bool get isNumeric => type == 'DECIMAL' || type == 'MONEY' || type == 'PERCENT' || type == 'INT';
+}
+
+/// `ReportResultPage` — the answer to `runReport`.
+///
+/// Rows are positional arrays, not objects: one value per entry in [columns], in that order. The
+/// contract does it that way to keep the payload small, so reading a cell means indexing [columns].
+@freezed
+abstract class ReportResultPageDto with _$ReportResultPageDto {
+  const factory ReportResultPageDto({
+    required String code,
+    required DateTime generatedAt,
+    @Default(<ReportColumnDto>[]) List<ReportColumnDto> columns,
+    // Nullable rather than defaulted: freezed cannot build a default for a nested generic, so the
+    // empty case is handled by the `rows` getter below.
+    @JsonKey(name: 'rows') List<List<Object?>>? rawRows,
+    Map<String, String>? totals,
+    DateTime? dataAsOf,
+    @Default(0) int page,
+    @Default(0) int size,
+    @Default(0) int totalItems,
+    @Default(0) int totalPages,
+  }) = _ReportResultPageDto;
+
+  const ReportResultPageDto._();
+
+  factory ReportResultPageDto.fromJson(Map<String, Object?> json) =>
+      _$ReportResultPageDtoFromJson(json);
+
+  /// The result rows, positional per [columns].
+  List<List<Object?>> get rows => rawRows ?? const <List<Object?>>[];
+
+  /// The value at [rowIndex] under the column named [key], or null when the column was not returned.
+  Object? cell(int rowIndex, String key) {
+    final column = columns.indexWhere((c) => c.key == key);
+    if (column < 0 || rowIndex >= rows.length) return null;
+    final row = rows[rowIndex];
+    return column < row.length ? row[column] : null;
+  }
+
+  /// The read model behind a report lags the ledger by up to a minute, so a screen that shows
+  /// figures says when they were true.
+  DateTime get asOf => dataAsOf ?? generatedAt;
 }

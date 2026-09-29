@@ -51,14 +51,14 @@ class NotificationListNotifier extends AsyncNotifier<Page<NotificationDto>> {
   }
 }
 
-/// Unread counter behind the navigation badge. Returns `0` while loading or
-/// on error, so a transport hiccup never blocks navigation.
-final unreadCountProvider = FutureProvider<int>((ref) async {
+/// Unread counter behind the navigation badge. Falls back to an empty counter while loading or on
+/// error, so a transport hiccup never blocks navigation.
+final unreadCountProvider = FutureProvider<UnreadCountDto>((ref) async {
   final result = await ref.watch(notificationsRepositoryProvider).unreadCount();
-  return result.getOrElse((_) => 0);
+  return result.getOrElse((_) => const UnreadCountDto());
 });
 
 /// Synchronous badge value for the navigation shells.
 final unreadBadgeProvider = Provider<int>(
-  (ref) => ref.watch(unreadCountProvider).value ?? 0,
+  (ref) => ref.watch(unreadCountProvider).value?.total ?? 0,
 );

@@ -340,11 +340,17 @@ _PurchaseOrderDto _$PurchaseOrderDtoFromJson(
   docDate: const DateOnlyConverter().fromJson(json['docDate'] as String),
   supplier: SupplierRefDto.fromJson(json['supplier'] as Map<String, dynamic>),
   currency: json['currency'] as String,
-  fxRate: Decimal.fromJson(json['fxRate'] as String),
-  subtotal: Money.fromJson(json['subtotal'] as String),
-  vatAmount: Money.fromJson(json['vatAmount'] as String),
   totalAmount: Money.fromJson(json['totalAmount'] as String),
   totalAmountBase: Money.fromJson(json['totalAmountBase'] as String),
+  fxRate: json['fxRate'] == null
+      ? null
+      : Decimal.fromJson(json['fxRate'] as String),
+  subtotal: json['subtotal'] == null
+      ? null
+      : Money.fromJson(json['subtotal'] as String),
+  vatAmount: json['vatAmount'] == null
+      ? null
+      : Money.fromJson(json['vatAmount'] as String),
   deliveryLocation: LocationRefDto.fromJson(
     json['deliveryLocation'] as Map<String, dynamic>,
   ),
@@ -359,7 +365,9 @@ _PurchaseOrderDto _$PurchaseOrderDtoFromJson(
   createdAt: json['createdAt'] == null
       ? null
       : DateTime.parse(json['createdAt'] as String),
-  createdBy: (json['createdBy'] as num?)?.toInt(),
+  createdBy: json['createdBy'] == null
+      ? null
+      : UserRefDto.fromJson(json['createdBy'] as Map<String, dynamic>),
   rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
   lines:
       (json['lines'] as List<dynamic>?)
@@ -380,11 +388,11 @@ Map<String, dynamic> _$PurchaseOrderDtoToJson(_PurchaseOrderDto instance) =>
       'docDate': const DateOnlyConverter().toJson(instance.docDate),
       'supplier': instance.supplier.toJson(),
       'currency': instance.currency,
-      'fxRate': instance.fxRate.toJson(),
-      'subtotal': instance.subtotal.toJson(),
-      'vatAmount': instance.vatAmount.toJson(),
       'totalAmount': instance.totalAmount.toJson(),
       'totalAmountBase': instance.totalAmountBase.toJson(),
+      'fxRate': instance.fxRate?.toJson(),
+      'subtotal': instance.subtotal?.toJson(),
+      'vatAmount': instance.vatAmount?.toJson(),
       'deliveryLocation': instance.deliveryLocation.toJson(),
       'status': _$PoStatusEnumMap[instance.status]!,
       'expectedDate': const NullableDateOnlyConverter().toJson(
@@ -393,7 +401,7 @@ Map<String, dynamic> _$PurchaseOrderDtoToJson(_PurchaseOrderDto instance) =>
       'incoterms': instance.incoterms,
       'sentAt': instance.sentAt?.toIso8601String(),
       'createdAt': instance.createdAt?.toIso8601String(),
-      'createdBy': instance.createdBy,
+      'createdBy': instance.createdBy?.toJson(),
       'rowVersion': instance.rowVersion,
       'lines': instance.lines.map((e) => e.toJson()).toList(),
       'approvalSteps': instance.approvalSteps.map((e) => e.toJson()).toList(),

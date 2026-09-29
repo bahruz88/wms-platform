@@ -11,19 +11,16 @@ import 'package:wms_l10n/wms_l10n.dart';
 
 import 'fake_master_data_repository.dart';
 
-final _productWithoutCost = ProductDto(
+final _product = ProductDto(
   id: 1,
   sku: 'CHS-0042',
   name: 'Chicken Strips',
+  productType: ProductType.food,
   categoryId: 1,
   baseUomId: 1,
   baseUomCode: 'KG',
   vatRate: Decimal.parse('18'),
   minStock: Quantity.parse('10'),
-);
-
-final _productWithCost = _productWithoutCost.copyWith(
-  avgUnitCost: Money.parse('12.5'),
 );
 
 Widget host({required ProductDto product, required Set<String> permissions}) =>
@@ -52,37 +49,32 @@ Widget host({required ProductDto product, required Set<String> permissions}) =>
     );
 
 void main() {
-  testWidgets('cost column is absent without master.product.view_cost', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      host(product: _productWithoutCost, permissions: const {}),
-    );
-    await tester.pumpAndSettle();
-
-    expect(find.text('CHS-0042'), findsOneWidget);
-    expect(find.text('Orta maya'), findsNothing);
-    expect(find.textContaining('12,50'), findsNothing);
-    expect(find.textContaining('***'), findsNothing);
-  });
-
-  testWidgets('cost column appears with the permission', (tester) async {
+  // The list used to carry an "Orta maya" column behind `master.product.view_cost`. It could never
+  // show a figure: master data sends no product cost, and the fixture that made the old test pass
+  // set the field by hand. The column is gone; the product type took its place.
+  testWidgets('no cost column, whatever the permissions', (tester) async {
     await tester.pumpWidget(
       host(
-        product: _productWithCost,
+        product: _product,
         permissions: const {Permissions.productViewCost},
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Orta maya'), findsOneWidget);
-    expect(find.text('12,50'), findsOneWidget);
+    expect(find.text('CHS-0042'), findsOneWidget);
+    expect(find.text('Orta maya'), findsNothing);
+  });
+
+  testWidgets('the product type is shown', (tester) async {
+    await tester.pumpWidget(host(product: _product, permissions: const {}));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Növ'), findsOneWidget);
+    expect(find.text('FOOD'), findsOneWidget);
   });
 
   testWidgets('quantities are formatted with comma decimals', (tester) async {
-    await tester.pumpWidget(
-      host(product: _productWithoutCost, permissions: const {}),
-    );
+    await tester.pumpWidget(host(product: _product, permissions: const {}));
     await tester.pumpAndSettle();
     expect(find.text('10,000'), findsOneWidget);
   });

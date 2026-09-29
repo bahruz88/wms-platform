@@ -385,7 +385,7 @@ $BatchRefDtoCopyWith<$Res>? get batch {
 /// @nodoc
 mixin _$BatchDto {
 
- int get id; ProductRefDto get product; String get batchNo; DateTime get receivedAt; BatchStatus get status; Quantity get qtyOnHand; int get rowVersion;@NullableDateOnlyConverter() DateTime? get productionDate;@NullableDateOnlyConverter() DateTime? get expiryDate; int? get supplierId; int? get daysToExpiry;
+ int get id; ProductRefDto get product; String get batchNo; DateTime get receivedAt; BatchStatus get status; Quantity? get qtyOnHand; Quantity? get totalQtyOnHand; int get rowVersion;@NullableDateOnlyConverter() DateTime? get productionDate;@NullableDateOnlyConverter() DateTime? get expiryDate; int? get supplierId; String? get supplierName; int? get daysToExpiry; List<Object?> get byLocation;
 /// Create a copy of BatchDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -399,20 +399,20 @@ $BatchDtoCopyWith<BatchDto> get copyWith => _$BatchDtoCopyWithImpl<BatchDto>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as BatchDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BatchDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.batchNo, _this.batchNo) || other.batchNo == _this.batchNo)&&(identical(other.receivedAt, _this.receivedAt) || other.receivedAt == _this.receivedAt)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.qtyOnHand, _this.qtyOnHand) || other.qtyOnHand == _this.qtyOnHand)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&(identical(other.productionDate, _this.productionDate) || other.productionDate == _this.productionDate)&&(identical(other.expiryDate, _this.expiryDate) || other.expiryDate == _this.expiryDate)&&(identical(other.supplierId, _this.supplierId) || other.supplierId == _this.supplierId)&&(identical(other.daysToExpiry, _this.daysToExpiry) || other.daysToExpiry == _this.daysToExpiry));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BatchDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.batchNo, _this.batchNo) || other.batchNo == _this.batchNo)&&(identical(other.receivedAt, _this.receivedAt) || other.receivedAt == _this.receivedAt)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.qtyOnHand, _this.qtyOnHand) || other.qtyOnHand == _this.qtyOnHand)&&(identical(other.totalQtyOnHand, _this.totalQtyOnHand) || other.totalQtyOnHand == _this.totalQtyOnHand)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&(identical(other.productionDate, _this.productionDate) || other.productionDate == _this.productionDate)&&(identical(other.expiryDate, _this.expiryDate) || other.expiryDate == _this.expiryDate)&&(identical(other.supplierId, _this.supplierId) || other.supplierId == _this.supplierId)&&(identical(other.supplierName, _this.supplierName) || other.supplierName == _this.supplierName)&&(identical(other.daysToExpiry, _this.daysToExpiry) || other.daysToExpiry == _this.daysToExpiry)&&const DeepCollectionEquality().equals(other.byLocation, _this.byLocation));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as BatchDto;
-  return Object.hash(runtimeType,_this.id,_this.product,_this.batchNo,_this.receivedAt,_this.status,_this.qtyOnHand,_this.rowVersion,_this.productionDate,_this.expiryDate,_this.supplierId,_this.daysToExpiry);
+  return Object.hash(runtimeType,_this.id,_this.product,_this.batchNo,_this.receivedAt,_this.status,_this.qtyOnHand,_this.totalQtyOnHand,_this.rowVersion,_this.productionDate,_this.expiryDate,_this.supplierId,_this.supplierName,_this.daysToExpiry,const DeepCollectionEquality().hash(_this.byLocation));
 }
 
 @override
 String toString() {
   final _this = this as BatchDto;
-  return 'BatchDto(id: ${_this.id}, product: ${_this.product}, batchNo: ${_this.batchNo}, receivedAt: ${_this.receivedAt}, status: ${_this.status}, qtyOnHand: ${_this.qtyOnHand}, rowVersion: ${_this.rowVersion}, productionDate: ${_this.productionDate}, expiryDate: ${_this.expiryDate}, supplierId: ${_this.supplierId}, daysToExpiry: ${_this.daysToExpiry})';
+  return 'BatchDto(id: ${_this.id}, product: ${_this.product}, batchNo: ${_this.batchNo}, receivedAt: ${_this.receivedAt}, status: ${_this.status}, qtyOnHand: ${_this.qtyOnHand}, totalQtyOnHand: ${_this.totalQtyOnHand}, rowVersion: ${_this.rowVersion}, productionDate: ${_this.productionDate}, expiryDate: ${_this.expiryDate}, supplierId: ${_this.supplierId}, supplierName: ${_this.supplierName}, daysToExpiry: ${_this.daysToExpiry}, byLocation: ${_this.byLocation})';
 }
 
 
@@ -423,7 +423,7 @@ abstract mixin class $BatchDtoCopyWith<$Res>  {
   factory $BatchDtoCopyWith(BatchDto value, $Res Function(BatchDto) _then) = _$BatchDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, ProductRefDto product, String batchNo, DateTime receivedAt, BatchStatus status, Quantity qtyOnHand, int rowVersion,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, int? supplierId, int? daysToExpiry
+ int id, ProductRefDto product, String batchNo, DateTime receivedAt, BatchStatus status, Quantity? qtyOnHand, Quantity? totalQtyOnHand, int rowVersion,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, int? supplierId, String? supplierName, int? daysToExpiry, List<Object?> byLocation
 });
 
 
@@ -440,20 +440,23 @@ class _$BatchDtoCopyWithImpl<$Res>
 
 /// Create a copy of BatchDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? product = null,Object? batchNo = null,Object? receivedAt = null,Object? status = null,Object? qtyOnHand = null,Object? rowVersion = null,Object? productionDate = freezed,Object? expiryDate = freezed,Object? supplierId = freezed,Object? daysToExpiry = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? product = null,Object? batchNo = null,Object? receivedAt = null,Object? status = null,Object? qtyOnHand = freezed,Object? totalQtyOnHand = freezed,Object? rowVersion = null,Object? productionDate = freezed,Object? expiryDate = freezed,Object? supplierId = freezed,Object? supplierName = freezed,Object? daysToExpiry = freezed,Object? byLocation = null,}) {
   return _then(BatchDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
 as ProductRefDto,batchNo: null == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
 as String,receivedAt: null == receivedAt ? _self.receivedAt : receivedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as BatchStatus,qtyOnHand: null == qtyOnHand ? _self.qtyOnHand : qtyOnHand // ignore: cast_nullable_to_non_nullable
-as Quantity,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as BatchStatus,qtyOnHand: freezed == qtyOnHand ? _self.qtyOnHand : qtyOnHand // ignore: cast_nullable_to_non_nullable
+as Quantity?,totalQtyOnHand: freezed == totalQtyOnHand ? _self.totalQtyOnHand : totalQtyOnHand // ignore: cast_nullable_to_non_nullable
+as Quantity?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
 as int,productionDate: freezed == productionDate ? _self.productionDate : productionDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,expiryDate: freezed == expiryDate ? _self.expiryDate : expiryDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,supplierId: freezed == supplierId ? _self.supplierId : supplierId // ignore: cast_nullable_to_non_nullable
-as int?,daysToExpiry: freezed == daysToExpiry ? _self.daysToExpiry : daysToExpiry // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,supplierName: freezed == supplierName ? _self.supplierName : supplierName // ignore: cast_nullable_to_non_nullable
+as String?,daysToExpiry: freezed == daysToExpiry ? _self.daysToExpiry : daysToExpiry // ignore: cast_nullable_to_non_nullable
+as int?,byLocation: null == byLocation ? _self.byLocation : byLocation // ignore: cast_nullable_to_non_nullable
+as List<Object?>,
   ));
 }
 /// Create a copy of BatchDto
@@ -547,10 +550,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  ProductRefDto product,  String batchNo,  DateTime receivedAt,  BatchStatus status,  Quantity qtyOnHand,  int rowVersion, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId,  int? daysToExpiry)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  ProductRefDto product,  String batchNo,  DateTime receivedAt,  BatchStatus status,  Quantity? qtyOnHand,  Quantity? totalQtyOnHand,  int rowVersion, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId,  String? supplierName,  int? daysToExpiry,  List<Object?> byLocation)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BatchDto() when $default != null:
-return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.status,_that.qtyOnHand,_that.rowVersion,_that.productionDate,_that.expiryDate,_that.supplierId,_that.daysToExpiry);case _:
+return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.status,_that.qtyOnHand,_that.totalQtyOnHand,_that.rowVersion,_that.productionDate,_that.expiryDate,_that.supplierId,_that.supplierName,_that.daysToExpiry,_that.byLocation);case _:
   return orElse();
 
 }
@@ -568,10 +571,10 @@ return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.stat
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  ProductRefDto product,  String batchNo,  DateTime receivedAt,  BatchStatus status,  Quantity qtyOnHand,  int rowVersion, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId,  int? daysToExpiry)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  ProductRefDto product,  String batchNo,  DateTime receivedAt,  BatchStatus status,  Quantity? qtyOnHand,  Quantity? totalQtyOnHand,  int rowVersion, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId,  String? supplierName,  int? daysToExpiry,  List<Object?> byLocation)  $default,) {final _that = this;
 switch (_that) {
 case _BatchDto():
-return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.status,_that.qtyOnHand,_that.rowVersion,_that.productionDate,_that.expiryDate,_that.supplierId,_that.daysToExpiry);case _:
+return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.status,_that.qtyOnHand,_that.totalQtyOnHand,_that.rowVersion,_that.productionDate,_that.expiryDate,_that.supplierId,_that.supplierName,_that.daysToExpiry,_that.byLocation);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -588,10 +591,10 @@ return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.stat
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  ProductRefDto product,  String batchNo,  DateTime receivedAt,  BatchStatus status,  Quantity qtyOnHand,  int rowVersion, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId,  int? daysToExpiry)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  ProductRefDto product,  String batchNo,  DateTime receivedAt,  BatchStatus status,  Quantity? qtyOnHand,  Quantity? totalQtyOnHand,  int rowVersion, @NullableDateOnlyConverter()  DateTime? productionDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? supplierId,  String? supplierName,  int? daysToExpiry,  List<Object?> byLocation)?  $default,) {final _that = this;
 switch (_that) {
 case _BatchDto() when $default != null:
-return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.status,_that.qtyOnHand,_that.rowVersion,_that.productionDate,_that.expiryDate,_that.supplierId,_that.daysToExpiry);case _:
+return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.status,_that.qtyOnHand,_that.totalQtyOnHand,_that.rowVersion,_that.productionDate,_that.expiryDate,_that.supplierId,_that.supplierName,_that.daysToExpiry,_that.byLocation);case _:
   return null;
 
 }
@@ -603,7 +606,7 @@ return $default(_that.id,_that.product,_that.batchNo,_that.receivedAt,_that.stat
 @JsonSerializable()
 
 class _BatchDto implements BatchDto {
-  const _BatchDto({required this.id, required this.product, required this.batchNo, required this.receivedAt, required this.status, required this.qtyOnHand, this.rowVersion = 1, @NullableDateOnlyConverter() this.productionDate, @NullableDateOnlyConverter() this.expiryDate, this.supplierId, this.daysToExpiry});
+  const _BatchDto({required this.id, required this.product, required this.batchNo, required this.receivedAt, required this.status, this.qtyOnHand, this.totalQtyOnHand, this.rowVersion = 1, @NullableDateOnlyConverter() this.productionDate, @NullableDateOnlyConverter() this.expiryDate, this.supplierId, this.supplierName, this.daysToExpiry,  List<Object?> byLocation = const <Object?>[]}): _byLocation = byLocation;
   factory _BatchDto.fromJson(Map<String, dynamic> json) => _$BatchDtoFromJson(json);
 
 @override final  int id;
@@ -611,12 +614,21 @@ class _BatchDto implements BatchDto {
 @override final  String batchNo;
 @override final  DateTime receivedAt;
 @override final  BatchStatus status;
-@override final  Quantity qtyOnHand;
+@override final  Quantity? qtyOnHand;
+@override final  Quantity? totalQtyOnHand;
 @override@JsonKey() final  int rowVersion;
 @override@NullableDateOnlyConverter() final  DateTime? productionDate;
 @override@NullableDateOnlyConverter() final  DateTime? expiryDate;
 @override final  int? supplierId;
+@override final  String? supplierName;
 @override final  int? daysToExpiry;
+ final  List<Object?> _byLocation;
+@override@JsonKey() List<Object?> get byLocation {
+  if (_byLocation is EqualUnmodifiableListView) return _byLocation;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_byLocation);
+}
+
 
 /// Create a copy of BatchDto
 /// with the given fields replaced by the non-null parameter values.
@@ -631,18 +643,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _BatchDto&&(identical(other.id, id) || other.id == id)&&(identical(other.product, product) || other.product == product)&&(identical(other.batchNo, batchNo) || other.batchNo == batchNo)&&(identical(other.receivedAt, receivedAt) || other.receivedAt == receivedAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.qtyOnHand, qtyOnHand) || other.qtyOnHand == qtyOnHand)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.productionDate, productionDate) || other.productionDate == productionDate)&&(identical(other.expiryDate, expiryDate) || other.expiryDate == expiryDate)&&(identical(other.supplierId, supplierId) || other.supplierId == supplierId)&&(identical(other.daysToExpiry, daysToExpiry) || other.daysToExpiry == daysToExpiry));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _BatchDto&&(identical(other.id, id) || other.id == id)&&(identical(other.product, product) || other.product == product)&&(identical(other.batchNo, batchNo) || other.batchNo == batchNo)&&(identical(other.receivedAt, receivedAt) || other.receivedAt == receivedAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.qtyOnHand, qtyOnHand) || other.qtyOnHand == qtyOnHand)&&(identical(other.totalQtyOnHand, totalQtyOnHand) || other.totalQtyOnHand == totalQtyOnHand)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.productionDate, productionDate) || other.productionDate == productionDate)&&(identical(other.expiryDate, expiryDate) || other.expiryDate == expiryDate)&&(identical(other.supplierId, supplierId) || other.supplierId == supplierId)&&(identical(other.supplierName, supplierName) || other.supplierName == supplierName)&&(identical(other.daysToExpiry, daysToExpiry) || other.daysToExpiry == daysToExpiry)&&const DeepCollectionEquality().equals(other.byLocation, _byLocation));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,product,batchNo,receivedAt,status,qtyOnHand,rowVersion,productionDate,expiryDate,supplierId,daysToExpiry);
+    return Object.hash(runtimeType,id,product,batchNo,receivedAt,status,qtyOnHand,totalQtyOnHand,rowVersion,productionDate,expiryDate,supplierId,supplierName,daysToExpiry,const DeepCollectionEquality().hash(_byLocation));
 }
 
 @override
 String toString() {
-    return 'BatchDto(id: $id, product: $product, batchNo: $batchNo, receivedAt: $receivedAt, status: $status, qtyOnHand: $qtyOnHand, rowVersion: $rowVersion, productionDate: $productionDate, expiryDate: $expiryDate, supplierId: $supplierId, daysToExpiry: $daysToExpiry)';
+    return 'BatchDto(id: $id, product: $product, batchNo: $batchNo, receivedAt: $receivedAt, status: $status, qtyOnHand: $qtyOnHand, totalQtyOnHand: $totalQtyOnHand, rowVersion: $rowVersion, productionDate: $productionDate, expiryDate: $expiryDate, supplierId: $supplierId, supplierName: $supplierName, daysToExpiry: $daysToExpiry, byLocation: $byLocation)';
 }
 
 
@@ -653,7 +665,7 @@ abstract mixin class _$BatchDtoCopyWith<$Res> implements $BatchDtoCopyWith<$Res>
   factory _$BatchDtoCopyWith(_BatchDto value, $Res Function(_BatchDto) _then) = __$BatchDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, ProductRefDto product, String batchNo, DateTime receivedAt, BatchStatus status, Quantity qtyOnHand, int rowVersion,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, int? supplierId, int? daysToExpiry
+ int id, ProductRefDto product, String batchNo, DateTime receivedAt, BatchStatus status, Quantity? qtyOnHand, Quantity? totalQtyOnHand, int rowVersion,@NullableDateOnlyConverter() DateTime? productionDate,@NullableDateOnlyConverter() DateTime? expiryDate, int? supplierId, String? supplierName, int? daysToExpiry, List<Object?> byLocation
 });
 
 
@@ -670,20 +682,23 @@ class __$BatchDtoCopyWithImpl<$Res>
 
 /// Create a copy of BatchDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? product = null,Object? batchNo = null,Object? receivedAt = null,Object? status = null,Object? qtyOnHand = null,Object? rowVersion = null,Object? productionDate = freezed,Object? expiryDate = freezed,Object? supplierId = freezed,Object? daysToExpiry = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? product = null,Object? batchNo = null,Object? receivedAt = null,Object? status = null,Object? qtyOnHand = freezed,Object? totalQtyOnHand = freezed,Object? rowVersion = null,Object? productionDate = freezed,Object? expiryDate = freezed,Object? supplierId = freezed,Object? supplierName = freezed,Object? daysToExpiry = freezed,Object? byLocation = null,}) {
   return _then(_BatchDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
 as ProductRefDto,batchNo: null == batchNo ? _self.batchNo : batchNo // ignore: cast_nullable_to_non_nullable
 as String,receivedAt: null == receivedAt ? _self.receivedAt : receivedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as BatchStatus,qtyOnHand: null == qtyOnHand ? _self.qtyOnHand : qtyOnHand // ignore: cast_nullable_to_non_nullable
-as Quantity,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as BatchStatus,qtyOnHand: freezed == qtyOnHand ? _self.qtyOnHand : qtyOnHand // ignore: cast_nullable_to_non_nullable
+as Quantity?,totalQtyOnHand: freezed == totalQtyOnHand ? _self.totalQtyOnHand : totalQtyOnHand // ignore: cast_nullable_to_non_nullable
+as Quantity?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
 as int,productionDate: freezed == productionDate ? _self.productionDate : productionDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,expiryDate: freezed == expiryDate ? _self.expiryDate : expiryDate // ignore: cast_nullable_to_non_nullable
 as DateTime?,supplierId: freezed == supplierId ? _self.supplierId : supplierId // ignore: cast_nullable_to_non_nullable
-as int?,daysToExpiry: freezed == daysToExpiry ? _self.daysToExpiry : daysToExpiry // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,supplierName: freezed == supplierName ? _self.supplierName : supplierName // ignore: cast_nullable_to_non_nullable
+as String?,daysToExpiry: freezed == daysToExpiry ? _self.daysToExpiry : daysToExpiry // ignore: cast_nullable_to_non_nullable
+as int?,byLocation: null == byLocation ? _self._byLocation : byLocation // ignore: cast_nullable_to_non_nullable
+as List<Object?>,
   ));
 }
 

@@ -25,10 +25,12 @@ class FakeIdentityRepository implements IdentityRepository {
   @override
   Future<Result<CurrentUserDto>> me() async => _ok(
     const CurrentUserDto(
-      id: 1,
-      tenantId: 1,
-      username: 'admin',
-      fullName: 'Administrator',
+      user: UserSummaryDto(
+        id: 1,
+        username: 'admin',
+        fullName: 'Administrator',
+      ),
+      tenant: TenantDto(id: 1, code: 'subway-az', name: 'Subway Azərbaycan'),
     ),
   );
 

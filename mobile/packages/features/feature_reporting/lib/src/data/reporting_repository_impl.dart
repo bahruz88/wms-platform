@@ -17,14 +17,43 @@ class ReportingRepositoryImpl implements ReportingRepository {
       Result.guard(_api.listReports);
 
   @override
-  Future<Result<ExportJobDto>> requestExport(
-    String reportCode, {
+  Future<Result<ReportDefinitionDto>> report(String code) =>
+      Result.guard(() => _api.getReport(code));
+
+  @override
+  Future<Result<ReportResultPageDto>> runReport(
+    String code, {
     Map<String, Object?> parameters = const {},
+    PageRequest page = const PageRequest(),
+    String? sort,
   }) => Result.guard(
-    () => _api.requestExport(reportCode, parameters: parameters),
+    () => _api.runReport(code, parameters: parameters, page: page, sort: sort),
   );
 
   @override
-  Future<Result<ExportJobDto>> exportJob(String id) =>
+  Future<Result<ExportJobDto>> requestExport(
+    String reportCode, {
+    String format = 'XLSX',
+    Map<String, Object?> parameters = const {},
+  }) => Result.guard(
+    () => _api.requestExport(
+      reportCode,
+      format: format,
+      parameters: parameters,
+    ),
+  );
+
+  @override
+  Future<Result<Page<ExportJobDto>>> exportJobs({
+    String? status,
+    PageRequest page = const PageRequest(),
+  }) => Result.guard(() => _api.listExports(status: status, page: page));
+
+  @override
+  Future<Result<ExportJobDto>> exportJob(int id) =>
       Result.guard(() => _api.getExport(id));
+
+  @override
+  Future<Result<void>> cancelExport(int id) =>
+      Result.guard(() => _api.cancelExport(id));
 }

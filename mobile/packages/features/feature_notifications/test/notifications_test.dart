@@ -32,8 +32,8 @@ class _FakeNotificationsRepository implements NotificationsRepository {
   }
 
   @override
-  Future<Result<int>> unreadCount() async =>
-      Result.ok(items.where((n) => !n.isRead).length);
+  Future<Result<UnreadCountDto>> unreadCount() async =>
+      Result.ok(UnreadCountDto(total: items.where((n) => !n.isRead).length));
 
   @override
   Future<Result<void>> markRead(int id) async {
@@ -50,6 +50,18 @@ class _FakeNotificationsRepository implements NotificationsRepository {
     items = [for (final n in items) n.copyWith(isRead: true)];
     return const Result.ok(null);
   }
+
+  @override
+  Future<Result<void>> registerDevice({
+    required String deviceId,
+    required String platform,
+    required String pushToken,
+    String? appVersion,
+  }) async => const Result.ok(null);
+
+  @override
+  Future<Result<void>> unregisterDevice(String deviceId) async =>
+      const Result.ok(null);
 }
 
 final _items = [
@@ -123,7 +135,8 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
-    expect(await container.read(unreadCountProvider.future), 0);
+    // The failing repository falls back to an empty counter, so the badge shows nothing.
+    expect((await container.read(unreadCountProvider.future)).total, 0);
   });
 }
 
@@ -135,7 +148,7 @@ class _FailingRepository implements NotificationsRepository {
   }) async => const Result.err(NetworkFailure());
 
   @override
-  Future<Result<int>> unreadCount() async => const Result.err(NetworkFailure());
+  Future<Result<UnreadCountDto>> unreadCount() async => const Result.err(NetworkFailure());
 
   @override
   Future<Result<void>> markRead(int id) async =>
@@ -144,4 +157,16 @@ class _FailingRepository implements NotificationsRepository {
   @override
   Future<Result<void>> markAllRead() async =>
       const Result.err(NetworkFailure());
+
+  @override
+  Future<Result<void>> registerDevice({
+    required String deviceId,
+    required String platform,
+    required String pushToken,
+    String? appVersion,
+  }) async => const Result.ok(null);
+
+  @override
+  Future<Result<void>> unregisterDevice(String deviceId) async =>
+      const Result.ok(null);
 }

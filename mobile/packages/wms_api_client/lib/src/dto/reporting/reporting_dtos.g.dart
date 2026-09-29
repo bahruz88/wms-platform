@@ -46,18 +46,22 @@ Map<String, dynamic> _$DashboardAlertDtoToJson(_DashboardAlertDto instance) =>
 
 _SeriesPointDto _$SeriesPointDtoFromJson(Map<String, dynamic> json) =>
     _SeriesPointDto(
-      label: json['label'] as String,
-      value: json['value'] as String,
+      date: const DateOnlyConverter().fromJson(json['date'] as String),
+      value: Decimal.fromJson(json['value'] as String),
     );
 
 Map<String, dynamic> _$SeriesPointDtoToJson(_SeriesPointDto instance) =>
-    <String, dynamic>{'label': instance.label, 'value': instance.value};
+    <String, dynamic>{
+      'date': const DateOnlyConverter().toJson(instance.date),
+      'value': instance.value.toJson(),
+    };
 
 _DashboardSeriesDto _$DashboardSeriesDtoFromJson(Map<String, dynamic> json) =>
     _DashboardSeriesDto(
       key: json['key'] as String,
       label: json['label'] as String,
       isCost: json['isCost'] as bool? ?? false,
+      unit: json['unit'] as String?,
       points:
           (json['points'] as List<dynamic>?)
               ?.map((e) => SeriesPointDto.fromJson(e as Map<String, dynamic>))
@@ -70,6 +74,7 @@ Map<String, dynamic> _$DashboardSeriesDtoToJson(_DashboardSeriesDto instance) =>
       'key': instance.key,
       'label': instance.label,
       'isCost': instance.isCost,
+      'unit': instance.unit,
       'points': instance.points.map((e) => e.toJson()).toList(),
     };
 
@@ -112,7 +117,11 @@ _ReportDefinitionDto _$ReportDefinitionDtoFromJson(Map<String, dynamic> json) =>
       category: json['category'] as String,
       description: json['description'] as String?,
       parameters: json['parameters'] as List<dynamic>? ?? const <Object?>[],
-      columns: json['columns'] as List<dynamic>? ?? const <Object?>[],
+      columns:
+          (json['columns'] as List<dynamic>?)
+              ?.map((e) => ReportColumnDto.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <ReportColumnDto>[],
       supportedFormats:
           (json['supportedFormats'] as List<dynamic>?)
               ?.map((e) => e as String)
@@ -130,7 +139,7 @@ Map<String, dynamic> _$ReportDefinitionDtoToJson(
   'category': instance.category,
   'description': instance.description,
   'parameters': instance.parameters,
-  'columns': instance.columns,
+  'columns': instance.columns.map((e) => e.toJson()).toList(),
   'supportedFormats': instance.supportedFormats,
   'requiresCostPermission': instance.requiresCostPermission,
   'maxSyncRows': instance.maxSyncRows,
@@ -177,3 +186,62 @@ Map<String, dynamic> _$ExportJobDtoToJson(_ExportJobDto instance) =>
       'expiresAt': instance.expiresAt?.toIso8601String(),
       'statusUrl': instance.statusUrl,
     };
+
+_ReportColumnDto _$ReportColumnDtoFromJson(Map<String, dynamic> json) =>
+    _ReportColumnDto(
+      key: json['key'] as String,
+      label: json['label'] as String,
+      type: json['type'] as String,
+      isCost: json['isCost'] as bool? ?? false,
+      align: json['align'] as String? ?? 'LEFT',
+      width: (json['width'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$ReportColumnDtoToJson(_ReportColumnDto instance) =>
+    <String, dynamic>{
+      'key': instance.key,
+      'label': instance.label,
+      'type': instance.type,
+      'isCost': instance.isCost,
+      'align': instance.align,
+      'width': instance.width,
+    };
+
+_ReportResultPageDto _$ReportResultPageDtoFromJson(Map<String, dynamic> json) =>
+    _ReportResultPageDto(
+      code: json['code'] as String,
+      generatedAt: DateTime.parse(json['generatedAt'] as String),
+      columns:
+          (json['columns'] as List<dynamic>?)
+              ?.map((e) => ReportColumnDto.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const <ReportColumnDto>[],
+      rawRows: (json['rows'] as List<dynamic>?)
+          ?.map((e) => e as List<dynamic>)
+          .toList(),
+      totals: (json['totals'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, e as String),
+      ),
+      dataAsOf: json['dataAsOf'] == null
+          ? null
+          : DateTime.parse(json['dataAsOf'] as String),
+      page: (json['page'] as num?)?.toInt() ?? 0,
+      size: (json['size'] as num?)?.toInt() ?? 0,
+      totalItems: (json['totalItems'] as num?)?.toInt() ?? 0,
+      totalPages: (json['totalPages'] as num?)?.toInt() ?? 0,
+    );
+
+Map<String, dynamic> _$ReportResultPageDtoToJson(
+  _ReportResultPageDto instance,
+) => <String, dynamic>{
+  'code': instance.code,
+  'generatedAt': instance.generatedAt.toIso8601String(),
+  'columns': instance.columns.map((e) => e.toJson()).toList(),
+  'rows': instance.rawRows,
+  'totals': instance.totals,
+  'dataAsOf': instance.dataAsOf?.toIso8601String(),
+  'page': instance.page,
+  'size': instance.size,
+  'totalItems': instance.totalItems,
+  'totalPages': instance.totalPages,
+};

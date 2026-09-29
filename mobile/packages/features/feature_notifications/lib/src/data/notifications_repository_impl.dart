@@ -15,8 +15,7 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
   }) => Result.guard(() => _api.list(unreadOnly: unreadOnly, page: page));
 
   @override
-  Future<Result<int>> unreadCount() =>
-      Result.guard(() async => (await _api.unreadCount()).total);
+  Future<Result<UnreadCountDto>> unreadCount() => Result.guard(_api.unreadCount);
 
   @override
   Future<Result<void>> markRead(int id) =>
@@ -24,4 +23,23 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
 
   @override
   Future<Result<void>> markAllRead() => Result.guard(_api.markAllRead);
+
+  @override
+  Future<Result<void>> registerDevice({
+    required String deviceId,
+    required String platform,
+    required String pushToken,
+    String? appVersion,
+  }) => Result.guard(
+    () => _api.registerDevice(
+      deviceId: deviceId,
+      platform: platform,
+      pushToken: pushToken,
+      appVersion: appVersion,
+    ),
+  );
+
+  @override
+  Future<Result<void>> unregisterDevice(String deviceId) =>
+      Result.guard(() => _api.unregisterDevice(deviceId));
 }

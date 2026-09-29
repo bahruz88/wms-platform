@@ -3,6 +3,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:wms_core/wms_core.dart';
 
 import '../../json/date_only_converter.dart';
+// `AuditFieldsDto` is defined once, with the identity DTOs.
+import '../identity/identity_dtos.dart';
 
 part 'master_data_dtos.freezed.dart';
 part 'master_data_dtos.g.dart';
@@ -57,20 +59,24 @@ abstract class ProductUomDto with _$ProductUomDto {
 
 /// `master_product`.
 ///
-/// Cost fields ([avgUnitCost], [lastPurchasePrice]) are **absent** from the
-/// JSON for users without `master.product.view_cost` (spec §16); they are
-/// therefore nullable and the UI must hide them when `null`.
+/// One DTO for both forms: the list answers with `ProductSummary` (no category, VAT, UoM rows or
+/// audit), the detail with the whole thing, so everything only the detail carries is nullable.
+///
+/// It carries no cost. Master data never exposed one — average cost and last purchase price are
+/// reporting figures, and the fields this DTO used to declare for them were never sent.
 @freezed
 abstract class ProductDto with _$ProductDto {
   const factory ProductDto({
     required int id,
     required String sku,
     required String name,
-    required int categoryId,
     required int baseUomId,
-    required Decimal vatRate,
+    required ProductType productType,
+    // Only the detail carries these; the list answers with `ProductSummary`.
+    int? categoryId,
+    String? categoryPath,
+    Decimal? vatRate,
     String? barcode,
-    String? categoryName,
     String? brand,
     String? baseUomCode,
     int? defaultSupplierId,
@@ -81,13 +87,10 @@ abstract class ProductDto with _$ProductDto {
     @Default(false) bool requiresExpiry,
     @Default(IssueStrategy.fefo) IssueStrategy issueStrategy,
     int? shelfLifeDays,
-    String? imageKey,
+    int? imageAttachmentId,
     @Default(true) bool isActive,
-    @Default(1) int rowVersion,
     @Default(<ProductUomDto>[]) List<ProductUomDto> uoms,
-    Money? avgUnitCost,
-    Money? lastPurchasePrice,
-    String? currency,
+    AuditFieldsDto? audit,
   }) = _ProductDto;
 
   const ProductDto._();
@@ -95,8 +98,12 @@ abstract class ProductDto with _$ProductDto {
   factory ProductDto.fromJson(Map<String, Object?> json) =>
       _$ProductDtoFromJson(json);
 
-  /// `true` when the server included cost information.
-  bool get hasCostInfo => avgUnitCost != null || lastPurchasePrice != null;
+  /// Optimistic concurrency token. Master data carries it inside `audit`, not at the top level, and
+  /// the list form omits `audit` altogether — so a list row cannot be used to submit an update.
+  int? get rowVersion => audit?.rowVersion;
+
+  /// A category name to show. The contract sends the full path (`Ət / Toyuq`), not a bare name.
+  String get categoryLabel => categoryPath ?? (categoryId == null ? '—' : '#$categoryId');
 }
 
 /// `master_supplier`.

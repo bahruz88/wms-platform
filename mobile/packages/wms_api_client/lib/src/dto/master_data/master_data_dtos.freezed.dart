@@ -874,7 +874,7 @@ as DateTime?,
 /// @nodoc
 mixin _$ProductDto {
 
- int get id; String get sku; String get name; int get categoryId; int get baseUomId; Decimal get vatRate; String? get barcode; String? get categoryName; String? get brand; String? get baseUomCode; int? get defaultSupplierId; Quantity? get minStock; Quantity? get maxStock; Quantity? get reorderPoint; bool get requiresBatch; bool get requiresExpiry; IssueStrategy get issueStrategy; int? get shelfLifeDays; String? get imageKey; bool get isActive; int get rowVersion; List<ProductUomDto> get uoms; Money? get avgUnitCost; Money? get lastPurchasePrice; String? get currency;
+ int get id; String get sku; String get name; int get baseUomId; ProductType get productType; int? get categoryId; String? get categoryPath; Decimal? get vatRate; String? get barcode; String? get brand; String? get baseUomCode; int? get defaultSupplierId; Quantity? get minStock; Quantity? get maxStock; Quantity? get reorderPoint; bool get requiresBatch; bool get requiresExpiry; IssueStrategy get issueStrategy; int? get shelfLifeDays; int? get imageAttachmentId; bool get isActive; List<ProductUomDto> get uoms; AuditFieldsDto? get audit;
 /// Create a copy of ProductDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -888,20 +888,20 @@ $ProductDtoCopyWith<ProductDto> get copyWith => _$ProductDtoCopyWithImpl<Product
 @override
 bool operator ==(Object other) {
   final _this = this as ProductDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.sku, _this.sku) || other.sku == _this.sku)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.baseUomId, _this.baseUomId) || other.baseUomId == _this.baseUomId)&&(identical(other.vatRate, _this.vatRate) || other.vatRate == _this.vatRate)&&(identical(other.barcode, _this.barcode) || other.barcode == _this.barcode)&&(identical(other.categoryName, _this.categoryName) || other.categoryName == _this.categoryName)&&(identical(other.brand, _this.brand) || other.brand == _this.brand)&&(identical(other.baseUomCode, _this.baseUomCode) || other.baseUomCode == _this.baseUomCode)&&(identical(other.defaultSupplierId, _this.defaultSupplierId) || other.defaultSupplierId == _this.defaultSupplierId)&&(identical(other.minStock, _this.minStock) || other.minStock == _this.minStock)&&(identical(other.maxStock, _this.maxStock) || other.maxStock == _this.maxStock)&&(identical(other.reorderPoint, _this.reorderPoint) || other.reorderPoint == _this.reorderPoint)&&(identical(other.requiresBatch, _this.requiresBatch) || other.requiresBatch == _this.requiresBatch)&&(identical(other.requiresExpiry, _this.requiresExpiry) || other.requiresExpiry == _this.requiresExpiry)&&(identical(other.issueStrategy, _this.issueStrategy) || other.issueStrategy == _this.issueStrategy)&&(identical(other.shelfLifeDays, _this.shelfLifeDays) || other.shelfLifeDays == _this.shelfLifeDays)&&(identical(other.imageKey, _this.imageKey) || other.imageKey == _this.imageKey)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&const DeepCollectionEquality().equals(other.uoms, _this.uoms)&&(identical(other.avgUnitCost, _this.avgUnitCost) || other.avgUnitCost == _this.avgUnitCost)&&(identical(other.lastPurchasePrice, _this.lastPurchasePrice) || other.lastPurchasePrice == _this.lastPurchasePrice)&&(identical(other.currency, _this.currency) || other.currency == _this.currency));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.sku, _this.sku) || other.sku == _this.sku)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.baseUomId, _this.baseUomId) || other.baseUomId == _this.baseUomId)&&(identical(other.productType, _this.productType) || other.productType == _this.productType)&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.categoryPath, _this.categoryPath) || other.categoryPath == _this.categoryPath)&&(identical(other.vatRate, _this.vatRate) || other.vatRate == _this.vatRate)&&(identical(other.barcode, _this.barcode) || other.barcode == _this.barcode)&&(identical(other.brand, _this.brand) || other.brand == _this.brand)&&(identical(other.baseUomCode, _this.baseUomCode) || other.baseUomCode == _this.baseUomCode)&&(identical(other.defaultSupplierId, _this.defaultSupplierId) || other.defaultSupplierId == _this.defaultSupplierId)&&(identical(other.minStock, _this.minStock) || other.minStock == _this.minStock)&&(identical(other.maxStock, _this.maxStock) || other.maxStock == _this.maxStock)&&(identical(other.reorderPoint, _this.reorderPoint) || other.reorderPoint == _this.reorderPoint)&&(identical(other.requiresBatch, _this.requiresBatch) || other.requiresBatch == _this.requiresBatch)&&(identical(other.requiresExpiry, _this.requiresExpiry) || other.requiresExpiry == _this.requiresExpiry)&&(identical(other.issueStrategy, _this.issueStrategy) || other.issueStrategy == _this.issueStrategy)&&(identical(other.shelfLifeDays, _this.shelfLifeDays) || other.shelfLifeDays == _this.shelfLifeDays)&&(identical(other.imageAttachmentId, _this.imageAttachmentId) || other.imageAttachmentId == _this.imageAttachmentId)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&const DeepCollectionEquality().equals(other.uoms, _this.uoms)&&(identical(other.audit, _this.audit) || other.audit == _this.audit));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ProductDto;
-  return Object.hashAll([runtimeType,_this.id,_this.sku,_this.name,_this.categoryId,_this.baseUomId,_this.vatRate,_this.barcode,_this.categoryName,_this.brand,_this.baseUomCode,_this.defaultSupplierId,_this.minStock,_this.maxStock,_this.reorderPoint,_this.requiresBatch,_this.requiresExpiry,_this.issueStrategy,_this.shelfLifeDays,_this.imageKey,_this.isActive,_this.rowVersion,const DeepCollectionEquality().hash(_this.uoms),_this.avgUnitCost,_this.lastPurchasePrice,_this.currency]);
+  return Object.hashAll([runtimeType,_this.id,_this.sku,_this.name,_this.baseUomId,_this.productType,_this.categoryId,_this.categoryPath,_this.vatRate,_this.barcode,_this.brand,_this.baseUomCode,_this.defaultSupplierId,_this.minStock,_this.maxStock,_this.reorderPoint,_this.requiresBatch,_this.requiresExpiry,_this.issueStrategy,_this.shelfLifeDays,_this.imageAttachmentId,_this.isActive,const DeepCollectionEquality().hash(_this.uoms),_this.audit]);
 }
 
 @override
 String toString() {
   final _this = this as ProductDto;
-  return 'ProductDto(id: ${_this.id}, sku: ${_this.sku}, name: ${_this.name}, categoryId: ${_this.categoryId}, baseUomId: ${_this.baseUomId}, vatRate: ${_this.vatRate}, barcode: ${_this.barcode}, categoryName: ${_this.categoryName}, brand: ${_this.brand}, baseUomCode: ${_this.baseUomCode}, defaultSupplierId: ${_this.defaultSupplierId}, minStock: ${_this.minStock}, maxStock: ${_this.maxStock}, reorderPoint: ${_this.reorderPoint}, requiresBatch: ${_this.requiresBatch}, requiresExpiry: ${_this.requiresExpiry}, issueStrategy: ${_this.issueStrategy}, shelfLifeDays: ${_this.shelfLifeDays}, imageKey: ${_this.imageKey}, isActive: ${_this.isActive}, rowVersion: ${_this.rowVersion}, uoms: ${_this.uoms}, avgUnitCost: ${_this.avgUnitCost}, lastPurchasePrice: ${_this.lastPurchasePrice}, currency: ${_this.currency})';
+  return 'ProductDto(id: ${_this.id}, sku: ${_this.sku}, name: ${_this.name}, baseUomId: ${_this.baseUomId}, productType: ${_this.productType}, categoryId: ${_this.categoryId}, categoryPath: ${_this.categoryPath}, vatRate: ${_this.vatRate}, barcode: ${_this.barcode}, brand: ${_this.brand}, baseUomCode: ${_this.baseUomCode}, defaultSupplierId: ${_this.defaultSupplierId}, minStock: ${_this.minStock}, maxStock: ${_this.maxStock}, reorderPoint: ${_this.reorderPoint}, requiresBatch: ${_this.requiresBatch}, requiresExpiry: ${_this.requiresExpiry}, issueStrategy: ${_this.issueStrategy}, shelfLifeDays: ${_this.shelfLifeDays}, imageAttachmentId: ${_this.imageAttachmentId}, isActive: ${_this.isActive}, uoms: ${_this.uoms}, audit: ${_this.audit})';
 }
 
 
@@ -912,11 +912,11 @@ abstract mixin class $ProductDtoCopyWith<$Res>  {
   factory $ProductDtoCopyWith(ProductDto value, $Res Function(ProductDto) _then) = _$ProductDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String sku, String name, int categoryId, int baseUomId, Decimal vatRate, String? barcode, String? categoryName, String? brand, String? baseUomCode, int? defaultSupplierId, Quantity? minStock, Quantity? maxStock, Quantity? reorderPoint, bool requiresBatch, bool requiresExpiry, IssueStrategy issueStrategy, int? shelfLifeDays, String? imageKey, bool isActive, int rowVersion, List<ProductUomDto> uoms, Money? avgUnitCost, Money? lastPurchasePrice, String? currency
+ int id, String sku, String name, int baseUomId, ProductType productType, int? categoryId, String? categoryPath, Decimal? vatRate, String? barcode, String? brand, String? baseUomCode, int? defaultSupplierId, Quantity? minStock, Quantity? maxStock, Quantity? reorderPoint, bool requiresBatch, bool requiresExpiry, IssueStrategy issueStrategy, int? shelfLifeDays, int? imageAttachmentId, bool isActive, List<ProductUomDto> uoms, AuditFieldsDto? audit
 });
 
 
-
+$AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -929,16 +929,17 @@ class _$ProductDtoCopyWithImpl<$Res>
 
 /// Create a copy of ProductDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sku = null,Object? name = null,Object? categoryId = null,Object? baseUomId = null,Object? vatRate = null,Object? barcode = freezed,Object? categoryName = freezed,Object? brand = freezed,Object? baseUomCode = freezed,Object? defaultSupplierId = freezed,Object? minStock = freezed,Object? maxStock = freezed,Object? reorderPoint = freezed,Object? requiresBatch = null,Object? requiresExpiry = null,Object? issueStrategy = null,Object? shelfLifeDays = freezed,Object? imageKey = freezed,Object? isActive = null,Object? rowVersion = null,Object? uoms = null,Object? avgUnitCost = freezed,Object? lastPurchasePrice = freezed,Object? currency = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sku = null,Object? name = null,Object? baseUomId = null,Object? productType = null,Object? categoryId = freezed,Object? categoryPath = freezed,Object? vatRate = freezed,Object? barcode = freezed,Object? brand = freezed,Object? baseUomCode = freezed,Object? defaultSupplierId = freezed,Object? minStock = freezed,Object? maxStock = freezed,Object? reorderPoint = freezed,Object? requiresBatch = null,Object? requiresExpiry = null,Object? issueStrategy = null,Object? shelfLifeDays = freezed,Object? imageAttachmentId = freezed,Object? isActive = null,Object? uoms = null,Object? audit = freezed,}) {
   return _then(ProductDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,sku: null == sku ? _self.sku : sku // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as int,baseUomId: null == baseUomId ? _self.baseUomId : baseUomId // ignore: cast_nullable_to_non_nullable
-as int,vatRate: null == vatRate ? _self.vatRate : vatRate // ignore: cast_nullable_to_non_nullable
-as Decimal,barcode: freezed == barcode ? _self.barcode : barcode // ignore: cast_nullable_to_non_nullable
-as String?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
+as String,baseUomId: null == baseUomId ? _self.baseUomId : baseUomId // ignore: cast_nullable_to_non_nullable
+as int,productType: null == productType ? _self.productType : productType // ignore: cast_nullable_to_non_nullable
+as ProductType,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as int?,categoryPath: freezed == categoryPath ? _self.categoryPath : categoryPath // ignore: cast_nullable_to_non_nullable
+as String?,vatRate: freezed == vatRate ? _self.vatRate : vatRate // ignore: cast_nullable_to_non_nullable
+as Decimal?,barcode: freezed == barcode ? _self.barcode : barcode // ignore: cast_nullable_to_non_nullable
 as String?,brand: freezed == brand ? _self.brand : brand // ignore: cast_nullable_to_non_nullable
 as String?,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
 as String?,defaultSupplierId: freezed == defaultSupplierId ? _self.defaultSupplierId : defaultSupplierId // ignore: cast_nullable_to_non_nullable
@@ -949,17 +950,26 @@ as Quantity?,requiresBatch: null == requiresBatch ? _self.requiresBatch : requir
 as bool,requiresExpiry: null == requiresExpiry ? _self.requiresExpiry : requiresExpiry // ignore: cast_nullable_to_non_nullable
 as bool,issueStrategy: null == issueStrategy ? _self.issueStrategy : issueStrategy // ignore: cast_nullable_to_non_nullable
 as IssueStrategy,shelfLifeDays: freezed == shelfLifeDays ? _self.shelfLifeDays : shelfLifeDays // ignore: cast_nullable_to_non_nullable
-as int?,imageKey: freezed == imageKey ? _self.imageKey : imageKey // ignore: cast_nullable_to_non_nullable
-as String?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
-as int,uoms: null == uoms ? _self.uoms : uoms // ignore: cast_nullable_to_non_nullable
-as List<ProductUomDto>,avgUnitCost: freezed == avgUnitCost ? _self.avgUnitCost : avgUnitCost // ignore: cast_nullable_to_non_nullable
-as Money?,lastPurchasePrice: freezed == lastPurchasePrice ? _self.lastPurchasePrice : lastPurchasePrice // ignore: cast_nullable_to_non_nullable
-as Money?,currency: freezed == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
-as String?,
+as int?,imageAttachmentId: freezed == imageAttachmentId ? _self.imageAttachmentId : imageAttachmentId // ignore: cast_nullable_to_non_nullable
+as int?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,uoms: null == uoms ? _self.uoms : uoms // ignore: cast_nullable_to_non_nullable
+as List<ProductUomDto>,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,
   ));
 }
+/// Create a copy of ProductDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
@@ -1041,10 +1051,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String sku,  String name,  int categoryId,  int baseUomId,  Decimal vatRate,  String? barcode,  String? categoryName,  String? brand,  String? baseUomCode,  int? defaultSupplierId,  Quantity? minStock,  Quantity? maxStock,  Quantity? reorderPoint,  bool requiresBatch,  bool requiresExpiry,  IssueStrategy issueStrategy,  int? shelfLifeDays,  String? imageKey,  bool isActive,  int rowVersion,  List<ProductUomDto> uoms,  Money? avgUnitCost,  Money? lastPurchasePrice,  String? currency)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String sku,  String name,  int baseUomId,  ProductType productType,  int? categoryId,  String? categoryPath,  Decimal? vatRate,  String? barcode,  String? brand,  String? baseUomCode,  int? defaultSupplierId,  Quantity? minStock,  Quantity? maxStock,  Quantity? reorderPoint,  bool requiresBatch,  bool requiresExpiry,  IssueStrategy issueStrategy,  int? shelfLifeDays,  int? imageAttachmentId,  bool isActive,  List<ProductUomDto> uoms,  AuditFieldsDto? audit)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProductDto() when $default != null:
-return $default(_that.id,_that.sku,_that.name,_that.categoryId,_that.baseUomId,_that.vatRate,_that.barcode,_that.categoryName,_that.brand,_that.baseUomCode,_that.defaultSupplierId,_that.minStock,_that.maxStock,_that.reorderPoint,_that.requiresBatch,_that.requiresExpiry,_that.issueStrategy,_that.shelfLifeDays,_that.imageKey,_that.isActive,_that.rowVersion,_that.uoms,_that.avgUnitCost,_that.lastPurchasePrice,_that.currency);case _:
+return $default(_that.id,_that.sku,_that.name,_that.baseUomId,_that.productType,_that.categoryId,_that.categoryPath,_that.vatRate,_that.barcode,_that.brand,_that.baseUomCode,_that.defaultSupplierId,_that.minStock,_that.maxStock,_that.reorderPoint,_that.requiresBatch,_that.requiresExpiry,_that.issueStrategy,_that.shelfLifeDays,_that.imageAttachmentId,_that.isActive,_that.uoms,_that.audit);case _:
   return orElse();
 
 }
@@ -1062,10 +1072,10 @@ return $default(_that.id,_that.sku,_that.name,_that.categoryId,_that.baseUomId,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String sku,  String name,  int categoryId,  int baseUomId,  Decimal vatRate,  String? barcode,  String? categoryName,  String? brand,  String? baseUomCode,  int? defaultSupplierId,  Quantity? minStock,  Quantity? maxStock,  Quantity? reorderPoint,  bool requiresBatch,  bool requiresExpiry,  IssueStrategy issueStrategy,  int? shelfLifeDays,  String? imageKey,  bool isActive,  int rowVersion,  List<ProductUomDto> uoms,  Money? avgUnitCost,  Money? lastPurchasePrice,  String? currency)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String sku,  String name,  int baseUomId,  ProductType productType,  int? categoryId,  String? categoryPath,  Decimal? vatRate,  String? barcode,  String? brand,  String? baseUomCode,  int? defaultSupplierId,  Quantity? minStock,  Quantity? maxStock,  Quantity? reorderPoint,  bool requiresBatch,  bool requiresExpiry,  IssueStrategy issueStrategy,  int? shelfLifeDays,  int? imageAttachmentId,  bool isActive,  List<ProductUomDto> uoms,  AuditFieldsDto? audit)  $default,) {final _that = this;
 switch (_that) {
 case _ProductDto():
-return $default(_that.id,_that.sku,_that.name,_that.categoryId,_that.baseUomId,_that.vatRate,_that.barcode,_that.categoryName,_that.brand,_that.baseUomCode,_that.defaultSupplierId,_that.minStock,_that.maxStock,_that.reorderPoint,_that.requiresBatch,_that.requiresExpiry,_that.issueStrategy,_that.shelfLifeDays,_that.imageKey,_that.isActive,_that.rowVersion,_that.uoms,_that.avgUnitCost,_that.lastPurchasePrice,_that.currency);case _:
+return $default(_that.id,_that.sku,_that.name,_that.baseUomId,_that.productType,_that.categoryId,_that.categoryPath,_that.vatRate,_that.barcode,_that.brand,_that.baseUomCode,_that.defaultSupplierId,_that.minStock,_that.maxStock,_that.reorderPoint,_that.requiresBatch,_that.requiresExpiry,_that.issueStrategy,_that.shelfLifeDays,_that.imageAttachmentId,_that.isActive,_that.uoms,_that.audit);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1082,10 +1092,10 @@ return $default(_that.id,_that.sku,_that.name,_that.categoryId,_that.baseUomId,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String sku,  String name,  int categoryId,  int baseUomId,  Decimal vatRate,  String? barcode,  String? categoryName,  String? brand,  String? baseUomCode,  int? defaultSupplierId,  Quantity? minStock,  Quantity? maxStock,  Quantity? reorderPoint,  bool requiresBatch,  bool requiresExpiry,  IssueStrategy issueStrategy,  int? shelfLifeDays,  String? imageKey,  bool isActive,  int rowVersion,  List<ProductUomDto> uoms,  Money? avgUnitCost,  Money? lastPurchasePrice,  String? currency)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String sku,  String name,  int baseUomId,  ProductType productType,  int? categoryId,  String? categoryPath,  Decimal? vatRate,  String? barcode,  String? brand,  String? baseUomCode,  int? defaultSupplierId,  Quantity? minStock,  Quantity? maxStock,  Quantity? reorderPoint,  bool requiresBatch,  bool requiresExpiry,  IssueStrategy issueStrategy,  int? shelfLifeDays,  int? imageAttachmentId,  bool isActive,  List<ProductUomDto> uoms,  AuditFieldsDto? audit)?  $default,) {final _that = this;
 switch (_that) {
 case _ProductDto() when $default != null:
-return $default(_that.id,_that.sku,_that.name,_that.categoryId,_that.baseUomId,_that.vatRate,_that.barcode,_that.categoryName,_that.brand,_that.baseUomCode,_that.defaultSupplierId,_that.minStock,_that.maxStock,_that.reorderPoint,_that.requiresBatch,_that.requiresExpiry,_that.issueStrategy,_that.shelfLifeDays,_that.imageKey,_that.isActive,_that.rowVersion,_that.uoms,_that.avgUnitCost,_that.lastPurchasePrice,_that.currency);case _:
+return $default(_that.id,_that.sku,_that.name,_that.baseUomId,_that.productType,_that.categoryId,_that.categoryPath,_that.vatRate,_that.barcode,_that.brand,_that.baseUomCode,_that.defaultSupplierId,_that.minStock,_that.maxStock,_that.reorderPoint,_that.requiresBatch,_that.requiresExpiry,_that.issueStrategy,_that.shelfLifeDays,_that.imageAttachmentId,_that.isActive,_that.uoms,_that.audit);case _:
   return null;
 
 }
@@ -1097,17 +1107,18 @@ return $default(_that.id,_that.sku,_that.name,_that.categoryId,_that.baseUomId,_
 @JsonSerializable()
 
 class _ProductDto extends ProductDto {
-  const _ProductDto({required this.id, required this.sku, required this.name, required this.categoryId, required this.baseUomId, required this.vatRate, this.barcode, this.categoryName, this.brand, this.baseUomCode, this.defaultSupplierId, this.minStock, this.maxStock, this.reorderPoint, this.requiresBatch = false, this.requiresExpiry = false, this.issueStrategy = IssueStrategy.fefo, this.shelfLifeDays, this.imageKey, this.isActive = true, this.rowVersion = 1,  List<ProductUomDto> uoms = const <ProductUomDto>[], this.avgUnitCost, this.lastPurchasePrice, this.currency}): _uoms = uoms,super._();
+  const _ProductDto({required this.id, required this.sku, required this.name, required this.baseUomId, required this.productType, this.categoryId, this.categoryPath, this.vatRate, this.barcode, this.brand, this.baseUomCode, this.defaultSupplierId, this.minStock, this.maxStock, this.reorderPoint, this.requiresBatch = false, this.requiresExpiry = false, this.issueStrategy = IssueStrategy.fefo, this.shelfLifeDays, this.imageAttachmentId, this.isActive = true,  List<ProductUomDto> uoms = const <ProductUomDto>[], this.audit}): _uoms = uoms,super._();
   factory _ProductDto.fromJson(Map<String, dynamic> json) => _$ProductDtoFromJson(json);
 
 @override final  int id;
 @override final  String sku;
 @override final  String name;
-@override final  int categoryId;
 @override final  int baseUomId;
-@override final  Decimal vatRate;
+@override final  ProductType productType;
+@override final  int? categoryId;
+@override final  String? categoryPath;
+@override final  Decimal? vatRate;
 @override final  String? barcode;
-@override final  String? categoryName;
 @override final  String? brand;
 @override final  String? baseUomCode;
 @override final  int? defaultSupplierId;
@@ -1118,9 +1129,8 @@ class _ProductDto extends ProductDto {
 @override@JsonKey() final  bool requiresExpiry;
 @override@JsonKey() final  IssueStrategy issueStrategy;
 @override final  int? shelfLifeDays;
-@override final  String? imageKey;
+@override final  int? imageAttachmentId;
 @override@JsonKey() final  bool isActive;
-@override@JsonKey() final  int rowVersion;
  final  List<ProductUomDto> _uoms;
 @override@JsonKey() List<ProductUomDto> get uoms {
   if (_uoms is EqualUnmodifiableListView) return _uoms;
@@ -1128,9 +1138,7 @@ class _ProductDto extends ProductDto {
   return EqualUnmodifiableListView(_uoms);
 }
 
-@override final  Money? avgUnitCost;
-@override final  Money? lastPurchasePrice;
-@override final  String? currency;
+@override final  AuditFieldsDto? audit;
 
 /// Create a copy of ProductDto
 /// with the given fields replaced by the non-null parameter values.
@@ -1145,18 +1153,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductDto&&(identical(other.id, id) || other.id == id)&&(identical(other.sku, sku) || other.sku == sku)&&(identical(other.name, name) || other.name == name)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.baseUomId, baseUomId) || other.baseUomId == baseUomId)&&(identical(other.vatRate, vatRate) || other.vatRate == vatRate)&&(identical(other.barcode, barcode) || other.barcode == barcode)&&(identical(other.categoryName, categoryName) || other.categoryName == categoryName)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.baseUomCode, baseUomCode) || other.baseUomCode == baseUomCode)&&(identical(other.defaultSupplierId, defaultSupplierId) || other.defaultSupplierId == defaultSupplierId)&&(identical(other.minStock, minStock) || other.minStock == minStock)&&(identical(other.maxStock, maxStock) || other.maxStock == maxStock)&&(identical(other.reorderPoint, reorderPoint) || other.reorderPoint == reorderPoint)&&(identical(other.requiresBatch, requiresBatch) || other.requiresBatch == requiresBatch)&&(identical(other.requiresExpiry, requiresExpiry) || other.requiresExpiry == requiresExpiry)&&(identical(other.issueStrategy, issueStrategy) || other.issueStrategy == issueStrategy)&&(identical(other.shelfLifeDays, shelfLifeDays) || other.shelfLifeDays == shelfLifeDays)&&(identical(other.imageKey, imageKey) || other.imageKey == imageKey)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&const DeepCollectionEquality().equals(other.uoms, _uoms)&&(identical(other.avgUnitCost, avgUnitCost) || other.avgUnitCost == avgUnitCost)&&(identical(other.lastPurchasePrice, lastPurchasePrice) || other.lastPurchasePrice == lastPurchasePrice)&&(identical(other.currency, currency) || other.currency == currency));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductDto&&(identical(other.id, id) || other.id == id)&&(identical(other.sku, sku) || other.sku == sku)&&(identical(other.name, name) || other.name == name)&&(identical(other.baseUomId, baseUomId) || other.baseUomId == baseUomId)&&(identical(other.productType, productType) || other.productType == productType)&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.categoryPath, categoryPath) || other.categoryPath == categoryPath)&&(identical(other.vatRate, vatRate) || other.vatRate == vatRate)&&(identical(other.barcode, barcode) || other.barcode == barcode)&&(identical(other.brand, brand) || other.brand == brand)&&(identical(other.baseUomCode, baseUomCode) || other.baseUomCode == baseUomCode)&&(identical(other.defaultSupplierId, defaultSupplierId) || other.defaultSupplierId == defaultSupplierId)&&(identical(other.minStock, minStock) || other.minStock == minStock)&&(identical(other.maxStock, maxStock) || other.maxStock == maxStock)&&(identical(other.reorderPoint, reorderPoint) || other.reorderPoint == reorderPoint)&&(identical(other.requiresBatch, requiresBatch) || other.requiresBatch == requiresBatch)&&(identical(other.requiresExpiry, requiresExpiry) || other.requiresExpiry == requiresExpiry)&&(identical(other.issueStrategy, issueStrategy) || other.issueStrategy == issueStrategy)&&(identical(other.shelfLifeDays, shelfLifeDays) || other.shelfLifeDays == shelfLifeDays)&&(identical(other.imageAttachmentId, imageAttachmentId) || other.imageAttachmentId == imageAttachmentId)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&const DeepCollectionEquality().equals(other.uoms, _uoms)&&(identical(other.audit, audit) || other.audit == audit));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hashAll([runtimeType,id,sku,name,categoryId,baseUomId,vatRate,barcode,categoryName,brand,baseUomCode,defaultSupplierId,minStock,maxStock,reorderPoint,requiresBatch,requiresExpiry,issueStrategy,shelfLifeDays,imageKey,isActive,rowVersion,const DeepCollectionEquality().hash(_uoms),avgUnitCost,lastPurchasePrice,currency]);
+    return Object.hashAll([runtimeType,id,sku,name,baseUomId,productType,categoryId,categoryPath,vatRate,barcode,brand,baseUomCode,defaultSupplierId,minStock,maxStock,reorderPoint,requiresBatch,requiresExpiry,issueStrategy,shelfLifeDays,imageAttachmentId,isActive,const DeepCollectionEquality().hash(_uoms),audit]);
 }
 
 @override
 String toString() {
-    return 'ProductDto(id: $id, sku: $sku, name: $name, categoryId: $categoryId, baseUomId: $baseUomId, vatRate: $vatRate, barcode: $barcode, categoryName: $categoryName, brand: $brand, baseUomCode: $baseUomCode, defaultSupplierId: $defaultSupplierId, minStock: $minStock, maxStock: $maxStock, reorderPoint: $reorderPoint, requiresBatch: $requiresBatch, requiresExpiry: $requiresExpiry, issueStrategy: $issueStrategy, shelfLifeDays: $shelfLifeDays, imageKey: $imageKey, isActive: $isActive, rowVersion: $rowVersion, uoms: $uoms, avgUnitCost: $avgUnitCost, lastPurchasePrice: $lastPurchasePrice, currency: $currency)';
+    return 'ProductDto(id: $id, sku: $sku, name: $name, baseUomId: $baseUomId, productType: $productType, categoryId: $categoryId, categoryPath: $categoryPath, vatRate: $vatRate, barcode: $barcode, brand: $brand, baseUomCode: $baseUomCode, defaultSupplierId: $defaultSupplierId, minStock: $minStock, maxStock: $maxStock, reorderPoint: $reorderPoint, requiresBatch: $requiresBatch, requiresExpiry: $requiresExpiry, issueStrategy: $issueStrategy, shelfLifeDays: $shelfLifeDays, imageAttachmentId: $imageAttachmentId, isActive: $isActive, uoms: $uoms, audit: $audit)';
 }
 
 
@@ -1167,11 +1175,11 @@ abstract mixin class _$ProductDtoCopyWith<$Res> implements $ProductDtoCopyWith<$
   factory _$ProductDtoCopyWith(_ProductDto value, $Res Function(_ProductDto) _then) = __$ProductDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String sku, String name, int categoryId, int baseUomId, Decimal vatRate, String? barcode, String? categoryName, String? brand, String? baseUomCode, int? defaultSupplierId, Quantity? minStock, Quantity? maxStock, Quantity? reorderPoint, bool requiresBatch, bool requiresExpiry, IssueStrategy issueStrategy, int? shelfLifeDays, String? imageKey, bool isActive, int rowVersion, List<ProductUomDto> uoms, Money? avgUnitCost, Money? lastPurchasePrice, String? currency
+ int id, String sku, String name, int baseUomId, ProductType productType, int? categoryId, String? categoryPath, Decimal? vatRate, String? barcode, String? brand, String? baseUomCode, int? defaultSupplierId, Quantity? minStock, Quantity? maxStock, Quantity? reorderPoint, bool requiresBatch, bool requiresExpiry, IssueStrategy issueStrategy, int? shelfLifeDays, int? imageAttachmentId, bool isActive, List<ProductUomDto> uoms, AuditFieldsDto? audit
 });
 
 
-
+@override $AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -1184,16 +1192,17 @@ class __$ProductDtoCopyWithImpl<$Res>
 
 /// Create a copy of ProductDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sku = null,Object? name = null,Object? categoryId = null,Object? baseUomId = null,Object? vatRate = null,Object? barcode = freezed,Object? categoryName = freezed,Object? brand = freezed,Object? baseUomCode = freezed,Object? defaultSupplierId = freezed,Object? minStock = freezed,Object? maxStock = freezed,Object? reorderPoint = freezed,Object? requiresBatch = null,Object? requiresExpiry = null,Object? issueStrategy = null,Object? shelfLifeDays = freezed,Object? imageKey = freezed,Object? isActive = null,Object? rowVersion = null,Object? uoms = null,Object? avgUnitCost = freezed,Object? lastPurchasePrice = freezed,Object? currency = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sku = null,Object? name = null,Object? baseUomId = null,Object? productType = null,Object? categoryId = freezed,Object? categoryPath = freezed,Object? vatRate = freezed,Object? barcode = freezed,Object? brand = freezed,Object? baseUomCode = freezed,Object? defaultSupplierId = freezed,Object? minStock = freezed,Object? maxStock = freezed,Object? reorderPoint = freezed,Object? requiresBatch = null,Object? requiresExpiry = null,Object? issueStrategy = null,Object? shelfLifeDays = freezed,Object? imageAttachmentId = freezed,Object? isActive = null,Object? uoms = null,Object? audit = freezed,}) {
   return _then(_ProductDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,sku: null == sku ? _self.sku : sku // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,categoryId: null == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
-as int,baseUomId: null == baseUomId ? _self.baseUomId : baseUomId // ignore: cast_nullable_to_non_nullable
-as int,vatRate: null == vatRate ? _self.vatRate : vatRate // ignore: cast_nullable_to_non_nullable
-as Decimal,barcode: freezed == barcode ? _self.barcode : barcode // ignore: cast_nullable_to_non_nullable
-as String?,categoryName: freezed == categoryName ? _self.categoryName : categoryName // ignore: cast_nullable_to_non_nullable
+as String,baseUomId: null == baseUomId ? _self.baseUomId : baseUomId // ignore: cast_nullable_to_non_nullable
+as int,productType: null == productType ? _self.productType : productType // ignore: cast_nullable_to_non_nullable
+as ProductType,categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as int?,categoryPath: freezed == categoryPath ? _self.categoryPath : categoryPath // ignore: cast_nullable_to_non_nullable
+as String?,vatRate: freezed == vatRate ? _self.vatRate : vatRate // ignore: cast_nullable_to_non_nullable
+as Decimal?,barcode: freezed == barcode ? _self.barcode : barcode // ignore: cast_nullable_to_non_nullable
 as String?,brand: freezed == brand ? _self.brand : brand // ignore: cast_nullable_to_non_nullable
 as String?,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
 as String?,defaultSupplierId: freezed == defaultSupplierId ? _self.defaultSupplierId : defaultSupplierId // ignore: cast_nullable_to_non_nullable
@@ -1204,18 +1213,27 @@ as Quantity?,requiresBatch: null == requiresBatch ? _self.requiresBatch : requir
 as bool,requiresExpiry: null == requiresExpiry ? _self.requiresExpiry : requiresExpiry // ignore: cast_nullable_to_non_nullable
 as bool,issueStrategy: null == issueStrategy ? _self.issueStrategy : issueStrategy // ignore: cast_nullable_to_non_nullable
 as IssueStrategy,shelfLifeDays: freezed == shelfLifeDays ? _self.shelfLifeDays : shelfLifeDays // ignore: cast_nullable_to_non_nullable
-as int?,imageKey: freezed == imageKey ? _self.imageKey : imageKey // ignore: cast_nullable_to_non_nullable
-as String?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
-as int,uoms: null == uoms ? _self._uoms : uoms // ignore: cast_nullable_to_non_nullable
-as List<ProductUomDto>,avgUnitCost: freezed == avgUnitCost ? _self.avgUnitCost : avgUnitCost // ignore: cast_nullable_to_non_nullable
-as Money?,lastPurchasePrice: freezed == lastPurchasePrice ? _self.lastPurchasePrice : lastPurchasePrice // ignore: cast_nullable_to_non_nullable
-as Money?,currency: freezed == currency ? _self.currency : currency // ignore: cast_nullable_to_non_nullable
-as String?,
+as int?,imageAttachmentId: freezed == imageAttachmentId ? _self.imageAttachmentId : imageAttachmentId // ignore: cast_nullable_to_non_nullable
+as int?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,uoms: null == uoms ? _self._uoms : uoms // ignore: cast_nullable_to_non_nullable
+as List<ProductUomDto>,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,
   ));
 }
 
+/// Create a copy of ProductDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 

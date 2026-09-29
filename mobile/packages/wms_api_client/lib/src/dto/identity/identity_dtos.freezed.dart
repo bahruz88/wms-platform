@@ -14,9 +14,579 @@ part of 'identity_dtos.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
+mixin _$UserSummaryDto {
+
+ int get id; String get username; String get fullName; String? get email; bool get isActive;
+/// Create a copy of UserSummaryDto
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$UserSummaryDtoCopyWith<UserSummaryDto> get copyWith => _$UserSummaryDtoCopyWithImpl<UserSummaryDto>(this as UserSummaryDto, _$identity);
+
+  /// Serializes this UserSummaryDto to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as UserSummaryDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserSummaryDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.username, _this.username) || other.username == _this.username)&&(identical(other.fullName, _this.fullName) || other.fullName == _this.fullName)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as UserSummaryDto;
+  return Object.hash(runtimeType,_this.id,_this.username,_this.fullName,_this.email,_this.isActive);
+}
+
+@override
+String toString() {
+  final _this = this as UserSummaryDto;
+  return 'UserSummaryDto(id: ${_this.id}, username: ${_this.username}, fullName: ${_this.fullName}, email: ${_this.email}, isActive: ${_this.isActive})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $UserSummaryDtoCopyWith<$Res>  {
+  factory $UserSummaryDtoCopyWith(UserSummaryDto value, $Res Function(UserSummaryDto) _then) = _$UserSummaryDtoCopyWithImpl;
+@useResult
+$Res call({
+ int id, String username, String fullName, String? email, bool isActive
+});
+
+
+
+
+}
+/// @nodoc
+class _$UserSummaryDtoCopyWithImpl<$Res>
+    implements $UserSummaryDtoCopyWith<$Res> {
+  _$UserSummaryDtoCopyWithImpl(this._self, this._then);
+
+  final UserSummaryDto _self;
+  final $Res Function(UserSummaryDto) _then;
+
+/// Create a copy of UserSummaryDto
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? username = null,Object? fullName = null,Object? email = freezed,Object? isActive = null,}) {
+  return _then(UserSummaryDto(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
+as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
+as String,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
+as String?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [UserSummaryDto].
+extension UserSummaryDtoPatterns on UserSummaryDto {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _UserSummaryDto value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _UserSummaryDto() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _UserSummaryDto value)  $default,){
+final _that = this;
+switch (_that) {
+case _UserSummaryDto():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _UserSummaryDto value)?  $default,){
+final _that = this;
+switch (_that) {
+case _UserSummaryDto() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String username,  String fullName,  String? email,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _UserSummaryDto() when $default != null:
+return $default(_that.id,_that.username,_that.fullName,_that.email,_that.isActive);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String username,  String fullName,  String? email,  bool isActive)  $default,) {final _that = this;
+switch (_that) {
+case _UserSummaryDto():
+return $default(_that.id,_that.username,_that.fullName,_that.email,_that.isActive);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String username,  String fullName,  String? email,  bool isActive)?  $default,) {final _that = this;
+switch (_that) {
+case _UserSummaryDto() when $default != null:
+return $default(_that.id,_that.username,_that.fullName,_that.email,_that.isActive);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _UserSummaryDto extends UserSummaryDto {
+  const _UserSummaryDto({required this.id, required this.username, required this.fullName, this.email, this.isActive = true}): super._();
+  factory _UserSummaryDto.fromJson(Map<String, dynamic> json) => _$UserSummaryDtoFromJson(json);
+
+@override final  int id;
+@override final  String username;
+@override final  String fullName;
+@override final  String? email;
+@override@JsonKey() final  bool isActive;
+
+/// Create a copy of UserSummaryDto
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$UserSummaryDtoCopyWith<_UserSummaryDto> get copyWith => __$UserSummaryDtoCopyWithImpl<_UserSummaryDto>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$UserSummaryDtoToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserSummaryDto&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.email, email) || other.email == email)&&(identical(other.isActive, isActive) || other.isActive == isActive));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,username,fullName,email,isActive);
+}
+
+@override
+String toString() {
+    return 'UserSummaryDto(id: $id, username: $username, fullName: $fullName, email: $email, isActive: $isActive)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$UserSummaryDtoCopyWith<$Res> implements $UserSummaryDtoCopyWith<$Res> {
+  factory _$UserSummaryDtoCopyWith(_UserSummaryDto value, $Res Function(_UserSummaryDto) _then) = __$UserSummaryDtoCopyWithImpl;
+@override @useResult
+$Res call({
+ int id, String username, String fullName, String? email, bool isActive
+});
+
+
+
+
+}
+/// @nodoc
+class __$UserSummaryDtoCopyWithImpl<$Res>
+    implements _$UserSummaryDtoCopyWith<$Res> {
+  __$UserSummaryDtoCopyWithImpl(this._self, this._then);
+
+  final _UserSummaryDto _self;
+  final $Res Function(_UserSummaryDto) _then;
+
+/// Create a copy of UserSummaryDto
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? username = null,Object? fullName = null,Object? email = freezed,Object? isActive = null,}) {
+  return _then(_UserSummaryDto(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
+as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
+as String,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
+as String?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
+mixin _$TenantDto {
+
+ int get id; String get code; String get name; String get defaultCurrency; String? get timezone; String? get locale; bool get isActive;
+/// Create a copy of TenantDto
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$TenantDtoCopyWith<TenantDto> get copyWith => _$TenantDtoCopyWithImpl<TenantDto>(this as TenantDto, _$identity);
+
+  /// Serializes this TenantDto to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as TenantDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TenantDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.defaultCurrency, _this.defaultCurrency) || other.defaultCurrency == _this.defaultCurrency)&&(identical(other.timezone, _this.timezone) || other.timezone == _this.timezone)&&(identical(other.locale, _this.locale) || other.locale == _this.locale)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as TenantDto;
+  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.defaultCurrency,_this.timezone,_this.locale,_this.isActive);
+}
+
+@override
+String toString() {
+  final _this = this as TenantDto;
+  return 'TenantDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, defaultCurrency: ${_this.defaultCurrency}, timezone: ${_this.timezone}, locale: ${_this.locale}, isActive: ${_this.isActive})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $TenantDtoCopyWith<$Res>  {
+  factory $TenantDtoCopyWith(TenantDto value, $Res Function(TenantDto) _then) = _$TenantDtoCopyWithImpl;
+@useResult
+$Res call({
+ int id, String code, String name, String defaultCurrency, String? timezone, String? locale, bool isActive
+});
+
+
+
+
+}
+/// @nodoc
+class _$TenantDtoCopyWithImpl<$Res>
+    implements $TenantDtoCopyWith<$Res> {
+  _$TenantDtoCopyWithImpl(this._self, this._then);
+
+  final TenantDto _self;
+  final $Res Function(TenantDto) _then;
+
+/// Create a copy of TenantDto
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? defaultCurrency = null,Object? timezone = freezed,Object? locale = freezed,Object? isActive = null,}) {
+  return _then(TenantDto(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,defaultCurrency: null == defaultCurrency ? _self.defaultCurrency : defaultCurrency // ignore: cast_nullable_to_non_nullable
+as String,timezone: freezed == timezone ? _self.timezone : timezone // ignore: cast_nullable_to_non_nullable
+as String?,locale: freezed == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
+as String?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [TenantDto].
+extension TenantDtoPatterns on TenantDto {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _TenantDto value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _TenantDto() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _TenantDto value)  $default,){
+final _that = this;
+switch (_that) {
+case _TenantDto():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _TenantDto value)?  $default,){
+final _that = this;
+switch (_that) {
+case _TenantDto() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  String defaultCurrency,  String? timezone,  String? locale,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _TenantDto() when $default != null:
+return $default(_that.id,_that.code,_that.name,_that.defaultCurrency,_that.timezone,_that.locale,_that.isActive);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  String defaultCurrency,  String? timezone,  String? locale,  bool isActive)  $default,) {final _that = this;
+switch (_that) {
+case _TenantDto():
+return $default(_that.id,_that.code,_that.name,_that.defaultCurrency,_that.timezone,_that.locale,_that.isActive);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  String defaultCurrency,  String? timezone,  String? locale,  bool isActive)?  $default,) {final _that = this;
+switch (_that) {
+case _TenantDto() when $default != null:
+return $default(_that.id,_that.code,_that.name,_that.defaultCurrency,_that.timezone,_that.locale,_that.isActive);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _TenantDto extends TenantDto {
+  const _TenantDto({required this.id, required this.code, required this.name, this.defaultCurrency = 'AZN', this.timezone, this.locale, this.isActive = true}): super._();
+  factory _TenantDto.fromJson(Map<String, dynamic> json) => _$TenantDtoFromJson(json);
+
+@override final  int id;
+@override final  String code;
+@override final  String name;
+@override@JsonKey() final  String defaultCurrency;
+@override final  String? timezone;
+@override final  String? locale;
+@override@JsonKey() final  bool isActive;
+
+/// Create a copy of TenantDto
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$TenantDtoCopyWith<_TenantDto> get copyWith => __$TenantDtoCopyWithImpl<_TenantDto>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$TenantDtoToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TenantDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.defaultCurrency, defaultCurrency) || other.defaultCurrency == defaultCurrency)&&(identical(other.timezone, timezone) || other.timezone == timezone)&&(identical(other.locale, locale) || other.locale == locale)&&(identical(other.isActive, isActive) || other.isActive == isActive));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,code,name,defaultCurrency,timezone,locale,isActive);
+}
+
+@override
+String toString() {
+    return 'TenantDto(id: $id, code: $code, name: $name, defaultCurrency: $defaultCurrency, timezone: $timezone, locale: $locale, isActive: $isActive)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$TenantDtoCopyWith<$Res> implements $TenantDtoCopyWith<$Res> {
+  factory _$TenantDtoCopyWith(_TenantDto value, $Res Function(_TenantDto) _then) = __$TenantDtoCopyWithImpl;
+@override @useResult
+$Res call({
+ int id, String code, String name, String defaultCurrency, String? timezone, String? locale, bool isActive
+});
+
+
+
+
+}
+/// @nodoc
+class __$TenantDtoCopyWithImpl<$Res>
+    implements _$TenantDtoCopyWith<$Res> {
+  __$TenantDtoCopyWithImpl(this._self, this._then);
+
+  final _TenantDto _self;
+  final $Res Function(_TenantDto) _then;
+
+/// Create a copy of TenantDto
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? defaultCurrency = null,Object? timezone = freezed,Object? locale = freezed,Object? isActive = null,}) {
+  return _then(_TenantDto(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,defaultCurrency: null == defaultCurrency ? _self.defaultCurrency : defaultCurrency // ignore: cast_nullable_to_non_nullable
+as String,timezone: freezed == timezone ? _self.timezone : timezone // ignore: cast_nullable_to_non_nullable
+as String?,locale: freezed == locale ? _self.locale : locale // ignore: cast_nullable_to_non_nullable
+as String?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$CurrentUserDto {
 
- int get id; int get tenantId; String get username; String get fullName; String? get externalId; String? get email; String? get phone; List<String> get roles; List<String> get permissions; List<int> get locationIds;
+ UserSummaryDto get user; TenantDto get tenant; List<String> get roles; List<String> get permissions; List<int> get locationIds; bool get canViewCost; List<Object?> get activeDelegations;
 /// Create a copy of CurrentUserDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +600,20 @@ $CurrentUserDtoCopyWith<CurrentUserDto> get copyWith => _$CurrentUserDtoCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as CurrentUserDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CurrentUserDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.tenantId, _this.tenantId) || other.tenantId == _this.tenantId)&&(identical(other.username, _this.username) || other.username == _this.username)&&(identical(other.fullName, _this.fullName) || other.fullName == _this.fullName)&&(identical(other.externalId, _this.externalId) || other.externalId == _this.externalId)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.phone, _this.phone) || other.phone == _this.phone)&&const DeepCollectionEquality().equals(other.roles, _this.roles)&&const DeepCollectionEquality().equals(other.permissions, _this.permissions)&&const DeepCollectionEquality().equals(other.locationIds, _this.locationIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CurrentUserDto&&(identical(other.user, _this.user) || other.user == _this.user)&&(identical(other.tenant, _this.tenant) || other.tenant == _this.tenant)&&const DeepCollectionEquality().equals(other.roles, _this.roles)&&const DeepCollectionEquality().equals(other.permissions, _this.permissions)&&const DeepCollectionEquality().equals(other.locationIds, _this.locationIds)&&(identical(other.canViewCost, _this.canViewCost) || other.canViewCost == _this.canViewCost)&&const DeepCollectionEquality().equals(other.activeDelegations, _this.activeDelegations));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as CurrentUserDto;
-  return Object.hash(runtimeType,_this.id,_this.tenantId,_this.username,_this.fullName,_this.externalId,_this.email,_this.phone,const DeepCollectionEquality().hash(_this.roles),const DeepCollectionEquality().hash(_this.permissions),const DeepCollectionEquality().hash(_this.locationIds));
+  return Object.hash(runtimeType,_this.user,_this.tenant,const DeepCollectionEquality().hash(_this.roles),const DeepCollectionEquality().hash(_this.permissions),const DeepCollectionEquality().hash(_this.locationIds),_this.canViewCost,const DeepCollectionEquality().hash(_this.activeDelegations));
 }
 
 @override
 String toString() {
   final _this = this as CurrentUserDto;
-  return 'CurrentUserDto(id: ${_this.id}, tenantId: ${_this.tenantId}, username: ${_this.username}, fullName: ${_this.fullName}, externalId: ${_this.externalId}, email: ${_this.email}, phone: ${_this.phone}, roles: ${_this.roles}, permissions: ${_this.permissions}, locationIds: ${_this.locationIds})';
+  return 'CurrentUserDto(user: ${_this.user}, tenant: ${_this.tenant}, roles: ${_this.roles}, permissions: ${_this.permissions}, locationIds: ${_this.locationIds}, canViewCost: ${_this.canViewCost}, activeDelegations: ${_this.activeDelegations})';
 }
 
 
@@ -54,11 +624,11 @@ abstract mixin class $CurrentUserDtoCopyWith<$Res>  {
   factory $CurrentUserDtoCopyWith(CurrentUserDto value, $Res Function(CurrentUserDto) _then) = _$CurrentUserDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, int tenantId, String username, String fullName, String? externalId, String? email, String? phone, List<String> roles, List<String> permissions, List<int> locationIds
+ UserSummaryDto user, TenantDto tenant, List<String> roles, List<String> permissions, List<int> locationIds, bool canViewCost, List<Object?> activeDelegations
 });
 
 
-
+$UserSummaryDtoCopyWith<$Res> get user;$TenantDtoCopyWith<$Res> get tenant;
 
 }
 /// @nodoc
@@ -71,22 +641,37 @@ class _$CurrentUserDtoCopyWithImpl<$Res>
 
 /// Create a copy of CurrentUserDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? tenantId = null,Object? username = null,Object? fullName = null,Object? externalId = freezed,Object? email = freezed,Object? phone = freezed,Object? roles = null,Object? permissions = null,Object? locationIds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? user = null,Object? tenant = null,Object? roles = null,Object? permissions = null,Object? locationIds = null,Object? canViewCost = null,Object? activeDelegations = null,}) {
   return _then(CurrentUserDto(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,tenantId: null == tenantId ? _self.tenantId : tenantId // ignore: cast_nullable_to_non_nullable
-as int,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
-as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
-as String,externalId: freezed == externalId ? _self.externalId : externalId // ignore: cast_nullable_to_non_nullable
-as String?,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
-as String?,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
-as String?,roles: null == roles ? _self.roles : roles // ignore: cast_nullable_to_non_nullable
+user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
+as UserSummaryDto,tenant: null == tenant ? _self.tenant : tenant // ignore: cast_nullable_to_non_nullable
+as TenantDto,roles: null == roles ? _self.roles : roles // ignore: cast_nullable_to_non_nullable
 as List<String>,permissions: null == permissions ? _self.permissions : permissions // ignore: cast_nullable_to_non_nullable
 as List<String>,locationIds: null == locationIds ? _self.locationIds : locationIds // ignore: cast_nullable_to_non_nullable
-as List<int>,
+as List<int>,canViewCost: null == canViewCost ? _self.canViewCost : canViewCost // ignore: cast_nullable_to_non_nullable
+as bool,activeDelegations: null == activeDelegations ? _self.activeDelegations : activeDelegations // ignore: cast_nullable_to_non_nullable
+as List<Object?>,
   ));
 }
-
+/// Create a copy of CurrentUserDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$UserSummaryDtoCopyWith<$Res> get user {
+  
+  return $UserSummaryDtoCopyWith<$Res>(_self.user, (value) {
+    return _then(_self.copyWith(user: value));
+  });
+}/// Create a copy of CurrentUserDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TenantDtoCopyWith<$Res> get tenant {
+  
+  return $TenantDtoCopyWith<$Res>(_self.tenant, (value) {
+    return _then(_self.copyWith(tenant: value));
+  });
+}
 }
 
 
@@ -168,10 +753,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int tenantId,  String username,  String fullName,  String? externalId,  String? email,  String? phone,  List<String> roles,  List<String> permissions,  List<int> locationIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( UserSummaryDto user,  TenantDto tenant,  List<String> roles,  List<String> permissions,  List<int> locationIds,  bool canViewCost,  List<Object?> activeDelegations)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CurrentUserDto() when $default != null:
-return $default(_that.id,_that.tenantId,_that.username,_that.fullName,_that.externalId,_that.email,_that.phone,_that.roles,_that.permissions,_that.locationIds);case _:
+return $default(_that.user,_that.tenant,_that.roles,_that.permissions,_that.locationIds,_that.canViewCost,_that.activeDelegations);case _:
   return orElse();
 
 }
@@ -189,10 +774,10 @@ return $default(_that.id,_that.tenantId,_that.username,_that.fullName,_that.exte
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int tenantId,  String username,  String fullName,  String? externalId,  String? email,  String? phone,  List<String> roles,  List<String> permissions,  List<int> locationIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( UserSummaryDto user,  TenantDto tenant,  List<String> roles,  List<String> permissions,  List<int> locationIds,  bool canViewCost,  List<Object?> activeDelegations)  $default,) {final _that = this;
 switch (_that) {
 case _CurrentUserDto():
-return $default(_that.id,_that.tenantId,_that.username,_that.fullName,_that.externalId,_that.email,_that.phone,_that.roles,_that.permissions,_that.locationIds);case _:
+return $default(_that.user,_that.tenant,_that.roles,_that.permissions,_that.locationIds,_that.canViewCost,_that.activeDelegations);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -209,10 +794,10 @@ return $default(_that.id,_that.tenantId,_that.username,_that.fullName,_that.exte
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int tenantId,  String username,  String fullName,  String? externalId,  String? email,  String? phone,  List<String> roles,  List<String> permissions,  List<int> locationIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( UserSummaryDto user,  TenantDto tenant,  List<String> roles,  List<String> permissions,  List<int> locationIds,  bool canViewCost,  List<Object?> activeDelegations)?  $default,) {final _that = this;
 switch (_that) {
 case _CurrentUserDto() when $default != null:
-return $default(_that.id,_that.tenantId,_that.username,_that.fullName,_that.externalId,_that.email,_that.phone,_that.roles,_that.permissions,_that.locationIds);case _:
+return $default(_that.user,_that.tenant,_that.roles,_that.permissions,_that.locationIds,_that.canViewCost,_that.activeDelegations);case _:
   return null;
 
 }
@@ -224,16 +809,11 @@ return $default(_that.id,_that.tenantId,_that.username,_that.fullName,_that.exte
 @JsonSerializable()
 
 class _CurrentUserDto extends CurrentUserDto {
-  const _CurrentUserDto({required this.id, required this.tenantId, required this.username, required this.fullName, this.externalId, this.email, this.phone,  List<String> roles = const <String>[],  List<String> permissions = const <String>[],  List<int> locationIds = const <int>[]}): _roles = roles,_permissions = permissions,_locationIds = locationIds,super._();
+  const _CurrentUserDto({required this.user, required this.tenant,  List<String> roles = const <String>[],  List<String> permissions = const <String>[],  List<int> locationIds = const <int>[], this.canViewCost = false,  List<Object?> activeDelegations = const <Object?>[]}): _roles = roles,_permissions = permissions,_locationIds = locationIds,_activeDelegations = activeDelegations,super._();
   factory _CurrentUserDto.fromJson(Map<String, dynamic> json) => _$CurrentUserDtoFromJson(json);
 
-@override final  int id;
-@override final  int tenantId;
-@override final  String username;
-@override final  String fullName;
-@override final  String? externalId;
-@override final  String? email;
-@override final  String? phone;
+@override final  UserSummaryDto user;
+@override final  TenantDto tenant;
  final  List<String> _roles;
 @override@JsonKey() List<String> get roles {
   if (_roles is EqualUnmodifiableListView) return _roles;
@@ -255,6 +835,14 @@ class _CurrentUserDto extends CurrentUserDto {
   return EqualUnmodifiableListView(_locationIds);
 }
 
+@override@JsonKey() final  bool canViewCost;
+ final  List<Object?> _activeDelegations;
+@override@JsonKey() List<Object?> get activeDelegations {
+  if (_activeDelegations is EqualUnmodifiableListView) return _activeDelegations;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_activeDelegations);
+}
+
 
 /// Create a copy of CurrentUserDto
 /// with the given fields replaced by the non-null parameter values.
@@ -269,18 +857,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CurrentUserDto&&(identical(other.id, id) || other.id == id)&&(identical(other.tenantId, tenantId) || other.tenantId == tenantId)&&(identical(other.username, username) || other.username == username)&&(identical(other.fullName, fullName) || other.fullName == fullName)&&(identical(other.externalId, externalId) || other.externalId == externalId)&&(identical(other.email, email) || other.email == email)&&(identical(other.phone, phone) || other.phone == phone)&&const DeepCollectionEquality().equals(other.roles, _roles)&&const DeepCollectionEquality().equals(other.permissions, _permissions)&&const DeepCollectionEquality().equals(other.locationIds, _locationIds));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CurrentUserDto&&(identical(other.user, user) || other.user == user)&&(identical(other.tenant, tenant) || other.tenant == tenant)&&const DeepCollectionEquality().equals(other.roles, _roles)&&const DeepCollectionEquality().equals(other.permissions, _permissions)&&const DeepCollectionEquality().equals(other.locationIds, _locationIds)&&(identical(other.canViewCost, canViewCost) || other.canViewCost == canViewCost)&&const DeepCollectionEquality().equals(other.activeDelegations, _activeDelegations));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,tenantId,username,fullName,externalId,email,phone,const DeepCollectionEquality().hash(_roles),const DeepCollectionEquality().hash(_permissions),const DeepCollectionEquality().hash(_locationIds));
+    return Object.hash(runtimeType,user,tenant,const DeepCollectionEquality().hash(_roles),const DeepCollectionEquality().hash(_permissions),const DeepCollectionEquality().hash(_locationIds),canViewCost,const DeepCollectionEquality().hash(_activeDelegations));
 }
 
 @override
 String toString() {
-    return 'CurrentUserDto(id: $id, tenantId: $tenantId, username: $username, fullName: $fullName, externalId: $externalId, email: $email, phone: $phone, roles: $roles, permissions: $permissions, locationIds: $locationIds)';
+    return 'CurrentUserDto(user: $user, tenant: $tenant, roles: $roles, permissions: $permissions, locationIds: $locationIds, canViewCost: $canViewCost, activeDelegations: $activeDelegations)';
 }
 
 
@@ -291,11 +879,11 @@ abstract mixin class _$CurrentUserDtoCopyWith<$Res> implements $CurrentUserDtoCo
   factory _$CurrentUserDtoCopyWith(_CurrentUserDto value, $Res Function(_CurrentUserDto) _then) = __$CurrentUserDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int tenantId, String username, String fullName, String? externalId, String? email, String? phone, List<String> roles, List<String> permissions, List<int> locationIds
+ UserSummaryDto user, TenantDto tenant, List<String> roles, List<String> permissions, List<int> locationIds, bool canViewCost, List<Object?> activeDelegations
 });
 
 
-
+@override $UserSummaryDtoCopyWith<$Res> get user;@override $TenantDtoCopyWith<$Res> get tenant;
 
 }
 /// @nodoc
@@ -308,23 +896,38 @@ class __$CurrentUserDtoCopyWithImpl<$Res>
 
 /// Create a copy of CurrentUserDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? tenantId = null,Object? username = null,Object? fullName = null,Object? externalId = freezed,Object? email = freezed,Object? phone = freezed,Object? roles = null,Object? permissions = null,Object? locationIds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? user = null,Object? tenant = null,Object? roles = null,Object? permissions = null,Object? locationIds = null,Object? canViewCost = null,Object? activeDelegations = null,}) {
   return _then(_CurrentUserDto(
-id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,tenantId: null == tenantId ? _self.tenantId : tenantId // ignore: cast_nullable_to_non_nullable
-as int,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
-as String,fullName: null == fullName ? _self.fullName : fullName // ignore: cast_nullable_to_non_nullable
-as String,externalId: freezed == externalId ? _self.externalId : externalId // ignore: cast_nullable_to_non_nullable
-as String?,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
-as String?,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
-as String?,roles: null == roles ? _self._roles : roles // ignore: cast_nullable_to_non_nullable
+user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
+as UserSummaryDto,tenant: null == tenant ? _self.tenant : tenant // ignore: cast_nullable_to_non_nullable
+as TenantDto,roles: null == roles ? _self._roles : roles // ignore: cast_nullable_to_non_nullable
 as List<String>,permissions: null == permissions ? _self._permissions : permissions // ignore: cast_nullable_to_non_nullable
 as List<String>,locationIds: null == locationIds ? _self._locationIds : locationIds // ignore: cast_nullable_to_non_nullable
-as List<int>,
+as List<int>,canViewCost: null == canViewCost ? _self.canViewCost : canViewCost // ignore: cast_nullable_to_non_nullable
+as bool,activeDelegations: null == activeDelegations ? _self._activeDelegations : activeDelegations // ignore: cast_nullable_to_non_nullable
+as List<Object?>,
   ));
 }
 
-
+/// Create a copy of CurrentUserDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$UserSummaryDtoCopyWith<$Res> get user {
+  
+  return $UserSummaryDtoCopyWith<$Res>(_self.user, (value) {
+    return _then(_self.copyWith(user: value));
+  });
+}/// Create a copy of CurrentUserDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TenantDtoCopyWith<$Res> get tenant {
+  
+  return $TenantDtoCopyWith<$Res>(_self.tenant, (value) {
+    return _then(_self.copyWith(tenant: value));
+  });
+}
 }
 
 
