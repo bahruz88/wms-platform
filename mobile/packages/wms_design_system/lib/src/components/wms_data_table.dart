@@ -25,6 +25,7 @@ class WmsColumn<R> {
     this.align,
     this.numeric = false,
     this.permission,
+    this.primary = false,
   }) : assert(cell != null || render != null, 'provide cell or render');
 
   final String key;
@@ -42,6 +43,12 @@ class WmsColumn<R> {
   final WmsColumnAlign? align;
   final bool numeric;
   final String? permission;
+
+  /// On a narrow screen the table stacks each row into a card, and this column
+  /// becomes its heading instead of another label/value line. Defaults to the
+  /// first visible column when no column claims it — usually the document
+  /// number, which is what someone scans a list for.
+  final bool primary;
 
   WmsColumnAlign get effectiveAlign =>
       align ?? (numeric ? WmsColumnAlign.right : WmsColumnAlign.left);
@@ -66,6 +73,7 @@ class WmsDataTable<R> extends StatelessWidget {
     this.minWidth,
     this.selectedKey,
     this.onRowTap,
+    this.stackBelow = 560,
     super.key,
   });
 
@@ -91,6 +99,17 @@ class WmsDataTable<R> extends StatelessWidget {
   final double? minWidth;
   final Object? selectedKey;
   final void Function(R row, int index)? onRowTap;
+
+  /// Width below which each row is stacked into a card instead of a table row.
+  ///
+  /// A phone is about 400 logical pixels wide and these tables carry five to
+  /// seven columns. Sharing that width between them gives each roughly 60
+  /// pixels, which is narrower than one word: on a real device the goods
+  /// receipt list printed its document numbers one character per line and drew
+  /// the date on top of them. Horizontal scrolling is not the answer either —
+  /// the reader loses the column they were reading. Set it to 0 to force the
+  /// table at any width.
+  final double stackBelow;
 
   /// Columns after permission gating.
   List<WmsColumn<R>> get visibleColumns => columns
@@ -237,6 +256,9 @@ class WmsDataTable<R> extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: LayoutBuilder(
           builder: (context, constraints) {
+            if (constraints.maxWidth < stackBelow) {
+              return _stacked(context, c, visible, cellPadding);
+            }
             final needed = minWidth ?? 0;
             if (needed <= constraints.maxWidth) return table;
             return SingleChildScrollView(
@@ -246,6 +268,184 @@ class WmsDataTable<R> extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+
+  /// One card per row: the heading column on its own line, the rest as
+  /// label/value pairs. The header row is dropped — a label sits beside every
+  /// value, so repeating it above would say the same thing twice.
+  Widget _stacked(
+    BuildContext context,
+    WmsColors c,
+    List<WmsColumn<R>> visible,
+    EdgeInsets cellPadding,
+  ) {
+    if (rows.isEmpty) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (caption != null)
+            Padding(
+              padding: WmsSpacing.denseCell,
+              child: Text(
+                caption!,
+                style: WmsTypography.title.copyWith(color: c.ink),
+              ),
+            ),
+          WmsEmptyState(
+            reason: emptyReason,
+            nextStep: emptyNextStep,
+            action: emptyAction,
+          ),
+        ],
+      );
+    }
+
+    final heading = visible.firstWhere(
+      (col) => col.primary,
+      orElse: () => visible.first,
+    );
+    final rest = visible.where((col) => col != heading).toList();
+
+    Widget cardFor(R row, int index) {
+      final key = rowKey?.call(row, index) ?? index;
+      final selected = selectedKey != null && selectedKey == key;
+      final card = Padding(
+        padding: WmsSpacing.cardPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DefaultTextStyle.merge(
+              style: WmsTypography.bodyStrong.copyWith(color: c.ink),
+              child: heading.render != null
+                  ? Align(
+                      alignment: Alignment.centerLeft,
+                      child: heading.render!(row, index),
+                    )
+                  : Text(heading.cell!(row)),
+            ),
+            for (final col in rest) ...[
+              const SizedBox(height: WmsSpacing.space2),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 132,
+                    child: Text(
+                      col.header,
+                      style: WmsTypography.label.copyWith(color: c.inkMuted),
+                    ),
+                  ),
+                  const SizedBox(width: WmsSpacing.space3),
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: col.render != null
+                          ? col.render!(row, index)
+                          : Text(
+                              // A label with nothing beside it reads as a
+                              // missing value rather than an empty one; the
+                              // table shows a dash in that cell and so does
+                              // this.
+                              col.cell!(row).isEmpty ? '—' : col.cell!(row),
+                              style:
+                                  (col.numeric
+                                          ? WmsTypography.figure
+                                          : WmsTypography.body)
+                                      .copyWith(color: c.ink),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      );
+      return DecoratedBox(
+        key: ValueKey(key),
+        decoration: BoxDecoration(
+          color: selected ? c.accentSoft : null,
+          border: index == rows.length - 1
+              ? null
+              : Border(bottom: BorderSide(color: c.border)),
+        ),
+        child: onRowTap == null
+            ? card
+            : InkWell(onTap: () => onRowTap!(row, index), child: card),
+      );
+    }
+
+    Widget list = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [for (var i = 0; i < rows.length; i++) cardFor(rows[i], i)],
+    );
+    if (maxHeight != null) {
+      list = ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight!),
+        child: SingleChildScrollView(child: list),
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (caption != null)
+          Padding(
+            padding: WmsSpacing.denseCell,
+            child: Text(
+              caption!,
+              style: WmsTypography.title.copyWith(color: c.ink),
+            ),
+          ),
+        list,
+        if (footer != null)
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: c.surfaceSunken,
+              border: Border(top: BorderSide(color: c.borderControl)),
+            ),
+            child: Padding(
+              padding: cellPadding,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final col in visible)
+                    if ((footer![col.key] ?? '').isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: WmsSpacing.space1,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                col.header,
+                                style: WmsTypography.label.copyWith(
+                                  color: c.inkMuted,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              footer![col.key]!,
+                              style: WmsTypography.figure.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: c.ink,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 

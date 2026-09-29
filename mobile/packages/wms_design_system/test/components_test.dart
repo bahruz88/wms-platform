@@ -293,6 +293,75 @@ void main() {
       );
     });
 
+    testWidgets('stacks each row into a card at phone width', (tester) async {
+      // A goods receipt list on a real phone printed its document numbers one
+      // character per line and drew the date on top of them: five columns
+      // sharing 400 logical pixels cannot be read. Below the breakpoint the
+      // table stacks instead, so every value sits beside its own label.
+      tester.view.physicalSize = const Size(400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        host(
+          WmsDataTable(
+            columns: columns(),
+            rows: rows,
+            permissions: const {Permissions.productViewCost},
+          ),
+        ),
+      );
+
+      // The header row is gone; the labels moved next to their values, one per
+      // row, so each appears as many times as there are rows.
+      expect(find.text('Miqdar'), findsNWidgets(rows.length));
+      expect(find.text('CHS-0042'), findsOneWidget);
+      expect(find.text('12,50'), findsOneWidget);
+      // Permission gating still holds when stacked.
+      await tester.pumpWidget(
+        host(WmsDataTable(columns: columns(), rows: rows)),
+      );
+      expect(find.text('Maya'), findsNothing);
+      expect(find.textContaining('12,50'), findsNothing);
+    });
+
+    testWidgets('a wide layout keeps the table, with one header row', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        host(WmsDataTable(columns: columns(), rows: rows)),
+      );
+
+      expect(find.text('Miqdar'), findsOneWidget);
+    });
+
+    testWidgets('the stacked card is tappable like the row it replaces', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      String? tapped;
+
+      await tester.pumpWidget(
+        host(
+          WmsDataTable(
+            columns: columns(),
+            rows: rows,
+            onRowTap: (row, _) => tapped = row.sku,
+          ),
+        ),
+      );
+      await tester.tap(find.text('BRD-0001'));
+      await tester.pump();
+
+      expect(tapped, 'BRD-0001');
+    });
+
     testWidgets('empty state states the reason and the next step', (
       tester,
     ) async {

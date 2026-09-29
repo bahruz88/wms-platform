@@ -12,9 +12,9 @@ class FakeKeycloak {
   FakeKeycloak(this._server) {
     _server.listen((request) async {
       final body = await utf8.decoder.bind(request).join();
-      requests.add(_Request(request.uri.path, Uri.splitQueryString(body)));
+      requests.add(Request(request.uri.path, Uri.splitQueryString(body)));
       final reply = replies.isEmpty
-          ? _Reply(200, jsonEncode({'access_token': _token()}))
+          ? Reply(200, jsonEncode({'access_token': _token()}))
           : replies.removeAt(0);
       request.response
         ..statusCode = reply.status
@@ -28,26 +28,26 @@ class FakeKeycloak {
       FakeKeycloak(await HttpServer.bind(InternetAddress.loopbackIPv4, 0));
 
   final HttpServer _server;
-  final List<_Request> requests = [];
-  final List<_Reply> replies = [];
+  final List<Request> requests = [];
+  final List<Reply> replies = [];
 
   String get issuer => 'http://127.0.0.1:${_server.port}/realms/wms';
 
   void reply(int status, Object? body) =>
-      replies.add(_Reply(status, jsonEncode(body)));
+      replies.add(Reply(status, jsonEncode(body)));
 
   Future<void> close() => _server.close(force: true);
 }
 
-class _Request {
-  const _Request(this.path, this.form);
+class Request {
+  const Request(this.path, this.form);
 
   final String path;
   final Map<String, String> form;
 }
 
-class _Reply {
-  const _Reply(this.status, this.body);
+class Reply {
+  const Reply(this.status, this.body);
 
   final int status;
   final String body;
