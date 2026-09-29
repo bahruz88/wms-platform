@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button, Icons } from '@ds/index';
 import { useApiQuery } from '@api/hooks';
@@ -14,13 +14,15 @@ import {
   type Language,
 } from '@/i18n';
 import { useTheme, type ThemePreference } from './theme';
-import { navItemMatches, visibleNavGroups } from './navigation';
+import { visibleNavGroups } from './navigation';
+import { SideNav } from './SideNav';
 
 /**
  * Application shell — docs/design-system/screens/README.md «Layout qaydaları».
  *
  * 248px sidebar on `surface` with a right border; the groups are labelled at 12px / 600 in
- * `ink-subtle`; the active entry is `accent-soft` with `accent` text; the user block is pinned to
+ * `ink-subtle` and fold their entries away on a click (`SideNav`); the active entry is
+ * `accent-soft` with `accent` text; the user block is pinned to
  * the bottom with a 32px round monogram on `accent-soft`, the name and the role code. Tenant,
  * theme, language and sign-out hang off that block, so the header belongs entirely to the screen
  * — which is what lets it be 72px on a list and 84px on a document.
@@ -89,7 +91,10 @@ export function AppShell() {
     },
   );
 
-  const groups = visibleNavGroups(session?.permissions ?? []);
+  // Memoised so the sidebar's «open the active group» effect runs on a route change, not on
+  // every render of the shell.
+  const permissions = session?.permissions;
+  const groups = useMemo(() => visibleNavGroups(permissions ?? []), [permissions]);
 
   /*
    * The unread count beside the inbox entry.
@@ -128,39 +133,7 @@ export function AppShell() {
         </div>
 
         <nav className="wms-side__nav" aria-label={t('app.mainNav')}>
-          {groups.map((group, groupIndex) => (
-            <div key={group.labelKey ?? `group-${groupIndex}`}>
-              {group.labelKey ? (
-                <div className="wms-side__group-label">{t(group.labelKey)}</div>
-              ) : null}
-              {group.items.map((item) => {
-                const active = navItemMatches(item, pathname);
-                return (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    // The accessible name is the label alone. Without this the unread count joins
-                    // the link's text, so a screen reader announces «Bildirişlər 5» and any test
-                    // that lists the navigation sees a different entry once the badge appears.
-                    aria-label={t(item.labelKey)}
-                    aria-current={active ? 'page' : undefined}
-                    className={active ? 'wms-side__link wms-side__link--active' : 'wms-side__link'}
-                  >
-                    {t(item.labelKey)}
-                    {item.badge === 'unreadNotifications' && unreadTotal > 0 ? (
-                      <span
-                        className="wms-side__badge"
-                        title={t('app.unreadCount', { count: unreadTotal })}
-                        aria-hidden="true"
-                      >
-                        {unreadTotal > 99 ? '99+' : unreadTotal}
-                      </span>
-                    ) : null}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
+          <SideNav groups={groups} pathname={pathname} unreadCount={unreadTotal} />
           {groups.length === 0 ? <div className="wms-side__note">{t('app.noScreens')}</div> : null}
         </nav>
 

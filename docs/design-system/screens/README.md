@@ -16,7 +16,11 @@ Beş artboard, hər biri 1440×960, `docs/design-system/` tokenləri və kompone
 ## Layout qaydaları (hər beş ekrandan çıxarılıb)
 
 - Kənar panel **248px**, `surface` fonu, sağda `border`. Qrup başlıqları `ink-subtle`,
-  12px, 600 çəki. Aktiv bənd `accent-soft` fonu + `accent` mətn.
+  12px, 600 çəki — hər biri açılıb-bağlanan düymədir (`aria-expanded`), sağ ucunda 14px
+  chevron: açıqda aşağı, bağlıda sağa baxır. Bağlı qruplar brauzerdə yadda qalır
+  (`wms.nav.collapsed`); cari ekranın qrupu marşrut dəyişəndə özü açılır. Bağlı başlıq cari
+  ekranı gizlədirsə `accent` rəngə keçir, «Bildirişlər» oxunmamış sayını da öz üzərinə götürür.
+  «Panel» bloku başlıqsızdır və heç vaxt bağlanmır. Aktiv bənd `accent-soft` fonu + `accent` mətn.
   Ən altda istifadəçi bloku: 32px dairəvi initial, ad, rol kodu.
 - Başlıq zolağı: siyahı ekranlarında **72px**, sənəd ekranlarında **84px**.
   Sənəd ekranında breadcrumb, sonra sənəd nömrəsi (`wms-num`, 20px/600) +

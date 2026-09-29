@@ -124,13 +124,77 @@ a:hover {
   padding-bottom: 8px;
 }
 
-.wms-side__group-label {
+/*
+ * Group header: the artboards' 12px / 600 `ink-subtle` label, now a disclosure button. The 10px
+ * margin plus 4px padding keep the text exactly where the plain label sat (14px below the block
+ * above), so a fold changes nothing but the entries beneath it. The chevron points down when the
+ * group is open and turns to the right when it is folded; a folded header goes `accent` when the
+ * current screen is inside it, so the user always knows where they are.
+ */
+.wms-side__group {
+  display: flex;
+  flex-direction: column;
+}
+
+.wms-side__group-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 10px 0 0;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-subtle);
+  font: inherit;
   font-size: 12px;
   line-height: 16px;
   font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--ink-subtle);
-  padding: 14px 10px 4px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wms-side__group-btn:hover {
+  background: var(--row-hover);
+  color: var(--ink);
+}
+
+.wms-side__group-btn--active {
+  color: var(--accent);
+}
+
+.wms-side__group-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wms-side__group-chevron {
+  display: inline-flex;
+  flex: none;
+  transition: transform 120ms ease;
+}
+
+.wms-side__group-btn--collapsed .wms-side__group-chevron {
+  transform: rotate(-90deg);
+}
+
+/* The unread count on a folded header is the inbox badge at the header's own line height. */
+.wms-side__group-btn .wms-side__badge {
+  margin-left: 0;
+  min-width: 18px;
+  font-size: 10px;
+  line-height: 16px;
+}
+
+/* `hidden` must win over any display the entry list gets, or a folded group would still show. */
+.wms-side__group-items[hidden] {
+  display: none;
 }
 
 .wms-side__link {
