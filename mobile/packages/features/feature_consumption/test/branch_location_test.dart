@@ -15,7 +15,7 @@ ProviderContainer containerFor(Session? session) {
   final repository = FakeAuthRepository(
     session:
         session ??
-        Session(
+        const Session(
           accessToken: 'token',
           userId: 'user-1',
           username: 'admin',

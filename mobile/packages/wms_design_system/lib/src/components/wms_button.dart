@@ -4,6 +4,7 @@ import '../tokens/wms_colors.dart';
 import '../tokens/wms_opacity.dart';
 import '../tokens/wms_radius.dart';
 import '../tokens/wms_spacing.dart';
+import '../tokens/wms_touch.dart';
 import '../tokens/wms_typography.dart';
 import 'wms_focus_ring.dart';
 import 'wms_spinner.dart';
@@ -97,8 +98,18 @@ class _WmsButtonState extends State<WmsButton> {
       c,
       hovered: _hovered && !disabled,
     );
-    final minHeight = widget.size == WmsButtonSize.md ? 34.0 : 28.0;
-    final padding = widget.size == WmsButtonSize.md
+    // A phone gets a real touch target; a pointer keeps the dense enterprise
+    // height the document screens are laid out around.
+    final touch = WmsTouch.isTouch(context);
+    final minHeight = touch
+        ? WmsTouch.target
+        : (widget.size == WmsButtonSize.md ? 34.0 : 28.0);
+    final padding = touch
+        ? const EdgeInsets.symmetric(
+            vertical: WmsSpacing.space3,
+            horizontal: WmsSpacing.space4,
+          )
+        : widget.size == WmsButtonSize.md
         ? const EdgeInsets.symmetric(
             vertical: WmsSpacing.space2,
             horizontal: WmsSpacing.space3,
@@ -109,7 +120,7 @@ class _WmsButtonState extends State<WmsButton> {
           );
     final textStyle = WmsTypography.bodyStrong.copyWith(
       color: foreground,
-      fontSize: widget.size == WmsButtonSize.md ? 14 : 13,
+      fontSize: touch ? 15 : (widget.size == WmsButtonSize.md ? 14 : 13),
     );
 
     final label = Row(

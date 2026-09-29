@@ -583,4 +583,16 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get labelPassword => 'Parol';
+
+  @override
+  String get navTasks => 'Tapşırıq';
+
+  @override
+  String get navOperations => 'Əməliyyat';
+
+  @override
+  String get navStock => 'Qalıq';
+
+  @override
+  String get navAlerts => 'Bildiriş';
 }

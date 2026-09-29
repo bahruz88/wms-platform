@@ -32,7 +32,7 @@ class CountListScreen extends ConsumerWidget {
             emptyReason: 'Sayım sənədi yoxdur.',
             emptyNextStep: 'Yeni sayım yaradın və lokasiyanı dondurun.',
             onRowTap: (row, _) =>
-                context.go(InventoryRoutes.countDetail(row.id)),
+                context.push(InventoryRoutes.countDetail(row.id)),
             columns: [
               WmsColumn(
                 key: 'docNo',

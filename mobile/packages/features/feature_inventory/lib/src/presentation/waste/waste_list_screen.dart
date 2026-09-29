@@ -34,7 +34,7 @@ class WasteListScreen extends ConsumerWidget {
               iconLeft: Icons.add,
               enabled: canCreate,
               disabledReason: l10n.labelNoPermission,
-              onPressed: () => context.go(InventoryRoutes.wasteCreateFullPath),
+              onPressed: () => context.push(InventoryRoutes.wasteCreateFullPath),
             ),
           ),
         ],

@@ -130,8 +130,24 @@ class _WasteFormScreenState extends ConsumerState<WasteFormScreen> {
       attachmentUploadProvider(AttachmentEntityType.waste),
     );
 
-    return Scaffold(
-      appBar: AppBar(title: Text('${l10n.docWaste} · ${l10n.actionCreate}')),
+    return WmsDocScaffold(
+      title: l10n.docWaste,
+      // Where the write-off is being recorded. Not the document number: there is
+      // none until the document exists, and once it does the success alert in
+      // the body is the one place that says so.
+      subtitle: locations.value
+          ?.where((location) => location.id == _locationId)
+          .map((location) => location.name)
+          .firstOrNull,
+      actions: [
+        WmsButton.primary(
+          label: l10n.actionCreate,
+          enabled: _isValid(reasons, upload),
+          disabledReason: _invalidReason(reasons, upload),
+          loading: _submitting,
+          onPressed: _submit,
+        ),
+      ],
       body: WmsLoadingOverlay(
         loading: _submitting,
         child: ListView(
@@ -311,17 +327,6 @@ class _WasteFormScreenState extends ConsumerState<WasteFormScreen> {
                   ],
                 ),
               ),
-            const SizedBox(height: WmsSpacing.space5),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: WmsButton.primary(
-                label: l10n.actionCreate,
-                enabled: _isValid(reasons, upload),
-                disabledReason: _invalidReason(reasons, upload),
-                loading: _submitting,
-                onPressed: _submit,
-              ),
-            ),
           ],
         ),
       ),

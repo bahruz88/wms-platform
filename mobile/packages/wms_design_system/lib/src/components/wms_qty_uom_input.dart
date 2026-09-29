@@ -8,6 +8,7 @@ import '../tokens/wms_colors.dart';
 import '../tokens/wms_opacity.dart';
 import '../tokens/wms_radius.dart';
 import '../tokens/wms_spacing.dart';
+import '../tokens/wms_touch.dart';
 import '../tokens/wms_typography.dart';
 import 'wms_field.dart';
 import 'wms_focus_ring.dart';
@@ -201,7 +202,9 @@ class _WmsQtyUomInputState extends State<WmsQtyUomInput> {
                   hintText: widget.placeholder,
                   hintStyle: numStyle.copyWith(color: c.inkSubtle),
                   contentPadding: WmsSpacing.control,
-                  constraints: const BoxConstraints(minHeight: 34),
+                  constraints: BoxConstraints(
+                    minHeight: WmsTouch.height(context, dense: 34),
+                  ),
                 ),
               ),
             ),

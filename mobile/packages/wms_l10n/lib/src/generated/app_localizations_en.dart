@@ -585,4 +585,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelPassword => 'Password';
+
+  @override
+  String get navTasks => 'Tasks';
+
+  @override
+  String get navOperations => 'Operations';
+
+  @override
+  String get navStock => 'Stock';
+
+  @override
+  String get navAlerts => 'Alerts';
 }

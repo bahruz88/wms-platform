@@ -87,7 +87,7 @@ class IssueListScreen extends ConsumerWidget {
                         enabled: canConfirm,
                         disabledReason: l10n.labelNoPermission,
                         onPressed: () =>
-                            context.go(InventoryRoutes.issueConfirm(row.id)),
+                            context.push(InventoryRoutes.issueConfirm(row.id)),
                       )
                     : const SizedBox.shrink(),
               ),

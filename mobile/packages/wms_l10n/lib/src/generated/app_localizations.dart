@@ -1179,6 +1179,30 @@ abstract class AppLocalizations {
   /// In az, this message translates to:
   /// **'Parol'**
   String get labelPassword;
+
+  /// No description provided for @navTasks.
+  ///
+  /// In az, this message translates to:
+  /// **'Tapşırıq'**
+  String get navTasks;
+
+  /// No description provided for @navOperations.
+  ///
+  /// In az, this message translates to:
+  /// **'Əməliyyat'**
+  String get navOperations;
+
+  /// No description provided for @navStock.
+  ///
+  /// In az, this message translates to:
+  /// **'Qalıq'**
+  String get navStock;
+
+  /// No description provided for @navAlerts.
+  ///
+  /// In az, this message translates to:
+  /// **'Bildiriş'**
+  String get navAlerts;
 }
 
 class _AppLocalizationsDelegate

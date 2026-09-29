@@ -199,5 +199,21 @@
   "labelPassword": "Password",
   "@labelPassword": {
     "description": "Login form: the password field."
+  },
+  "navTasks": "Tasks",
+  "@navTasks": {
+    "description": "Bottom navigation: the work waiting for this person."
+  },
+  "navOperations": "Operations",
+  "@navOperations": {
+    "description": "Bottom navigation: the documents they create and post."
+  },
+  "navStock": "Stock",
+  "@navStock": {
+    "description": "Bottom navigation: what is on hand."
+  },
+  "navAlerts": "Alerts",
+  "@navAlerts": {
+    "description": "Bottom navigation: the short form. The screen itself is titled with navNotifications."
   }
 }

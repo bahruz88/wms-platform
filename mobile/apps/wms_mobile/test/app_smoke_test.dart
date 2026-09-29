@@ -59,12 +59,38 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.text('Anbar'), findsWidgets);
-    expect(find.text('Sənədlər'), findsOneWidget);
-    expect(find.text('Bildirişlər'), findsOneWidget);
-    expect(find.text('Profil'), findsOneWidget);
+    // The four the screen designs lay out, in their order.
+    expect(find.text('Tapşırıq'), findsWidgets);
+    expect(find.text('Əməliyyat'), findsOneWidget);
+    expect(find.text('Qalıq'), findsOneWidget);
+    expect(find.text('Bildiriş'), findsOneWidget);
+    // The profile is reached from the person's own name in the task header, and
+    // the branch workplace only appears for an account that can enter sales.
+    expect(find.text('Profil'), findsNothing);
+    expect(find.text('Filial'), findsNothing);
     // Warehouse keepers must never see cost data (spec §7.1, §16).
     expect(find.text('Dəyər'), findsNothing);
+  });
+
+  testWidgets('a branch account also gets the branch workplace', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(420, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final repository = FakeAuthRepository(
+      session: testSession(
+        permissions: {Permissions.balanceView, Permissions.salesImport},
+      ),
+    );
+    addTearDown(repository.dispose);
+    await repository.login();
+
+    await tester.pumpWidget(host(repository));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Filial'), findsOneWidget);
   });
 
   test('flavour configuration', () {

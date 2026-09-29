@@ -88,12 +88,29 @@ class _CountScreenState extends ConsumerState<CountScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final c = WmsColors.of(context);
     final count = ref.watch(countDetailProvider(widget.countId));
     final reasons = ref.watch(reasonCodeListProvider(ReasonGroup.adjustment));
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.docCount)),
+    final loaded = count.value;
+    return WmsDocScaffold(
+      title: l10n.docCount,
+      subtitle: loaded == null
+          ? null
+          : '${loaded.docNo} · ${loaded.location.name}',
+      status: loaded?.status.wire,
+      actions: loaded == null
+          ? null
+          : [
+              WmsButton.primary(
+                label: l10n.actionSave,
+                enabled: _canSave(loaded),
+                disabledReason: loaded.status.canEnterCounts
+                    ? l10n.validationReasonCodeRequired
+                    : 'Sayım statusu daxiletməyə icazə vermir',
+                loading: _submitting,
+                onPressed: () => _save(loaded),
+              ),
+            ],
       body: WmsLoadingOverlay(
         loading: _submitting,
         child: AsyncView<CountDto>(
@@ -102,22 +119,6 @@ class _CountScreenState extends ConsumerState<CountScreen> {
           builder: (data) => ListView(
             padding: const EdgeInsets.all(WmsSpacing.space4),
             children: [
-              Row(
-                children: [
-                  Text(
-                    data.docNo,
-                    style: WmsTypography.titleLg.copyWith(color: c.ink),
-                  ),
-                  const SizedBox(width: WmsSpacing.space3),
-                  WmsDocStatusBadge(status: data.status.wire),
-                ],
-              ),
-              const SizedBox(height: WmsSpacing.space2),
-              Text(
-                '${data.location.name} · ${data.countType.wire}',
-                style: WmsTypography.body.copyWith(color: c.inkMuted),
-              ),
-              const SizedBox(height: WmsSpacing.space4),
               if (data.status.blocksLocation)
                 const WmsAlert(
                   tone: WmsAlertTone.warning,
@@ -169,19 +170,6 @@ class _CountScreenState extends ConsumerState<CountScreen> {
                     }
                   }),
                 ),
-              const SizedBox(height: WmsSpacing.space5),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: WmsButton.primary(
-                  label: l10n.actionSave,
-                  enabled: _canSave(data),
-                  disabledReason: data.status.canEnterCounts
-                      ? l10n.validationReasonCodeRequired
-                      : 'Sayım statusu daxiletməyə icazə vermir',
-                  loading: _submitting,
-                  onPressed: () => _save(data),
-                ),
-              ),
             ],
           ),
         ),

@@ -62,12 +62,33 @@ class _IssueConfirmScreenState extends ConsumerState<IssueConfirmScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final c = WmsColors.of(context);
     final issue = ref.watch(issueDetailProvider(widget.issueId));
     final reasons = ref.watch(reasonCodeListProvider(ReasonGroup.transfer));
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.actionConfirmReceipt)),
+    // The document's own number and status belong in the header, not in the
+    // scrolling body: a keeper works several of these in a row and needs to see
+    // which one is open without scrolling back to the top.
+    final loaded = issue.value;
+    return WmsDocScaffold(
+      title: l10n.actionConfirmReceipt,
+      subtitle: loaded == null
+          ? null
+          : '${loaded.docNo} · ${loaded.fromLocation.name} → '
+                '${loaded.toLocation.name}',
+      status: loaded?.status.wire,
+      actions: loaded == null
+          ? null
+          : [
+              WmsButton.primary(
+                label: l10n.actionConfirmReceipt,
+                enabled: loaded.status.canConfirm && !_done,
+                disabledReason: _done
+                    ? 'Sənəd artıq təsdiqlənib'
+                    : 'Sənəd DISPATCHED statusunda deyil',
+                loading: _submitting,
+                onPressed: () => _confirm(loaded),
+              ),
+            ],
       body: WmsLoadingOverlay(
         loading: _submitting,
         child: AsyncView<IssueDto>(
@@ -76,23 +97,6 @@ class _IssueConfirmScreenState extends ConsumerState<IssueConfirmScreen> {
           builder: (data) => ListView(
             padding: const EdgeInsets.all(WmsSpacing.space4),
             children: [
-              Row(
-                children: [
-                  Text(
-                    data.docNo,
-                    style: WmsTypography.titleLg.copyWith(color: c.ink),
-                  ),
-                  const SizedBox(width: WmsSpacing.space3),
-                  WmsDocStatusBadge(status: data.status.wire),
-                ],
-              ),
-              const SizedBox(height: WmsSpacing.space2),
-              Text(
-                '${data.fromLocation.name} → '
-                '${data.toLocation.name}',
-                style: WmsTypography.body.copyWith(color: c.inkMuted),
-              ),
-              const SizedBox(height: WmsSpacing.space4),
               if (_done)
                 WmsAlert(
                   tone: WmsAlertTone.success,
@@ -137,19 +141,6 @@ class _IssueConfirmScreenState extends ConsumerState<IssueConfirmScreen> {
                   }),
                   onNoteChanged: (value) => _notes[line.lineNo] = value,
                 ),
-              const SizedBox(height: WmsSpacing.space5),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: WmsButton.primary(
-                  label: l10n.actionConfirmReceipt,
-                  enabled: data.status.canConfirm && !_done,
-                  disabledReason: _done
-                      ? 'Sənəd artıq təsdiqlənib'
-                      : 'Sənəd DISPATCHED statusunda deyil',
-                  loading: _submitting,
-                  onPressed: () => _confirm(data),
-                ),
-              ),
             ],
           ),
         ),

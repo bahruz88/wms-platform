@@ -4,6 +4,7 @@ import '../tokens/wms_colors.dart';
 import '../tokens/wms_opacity.dart';
 import '../tokens/wms_radius.dart';
 import '../tokens/wms_spacing.dart';
+import '../tokens/wms_touch.dart';
 import '../tokens/wms_typography.dart';
 import 'wms_field.dart';
 
@@ -82,7 +83,9 @@ class WmsSelect<T> extends StatelessWidget {
         filled: true,
         fillColor: c.surface,
         contentPadding: WmsSpacing.control,
-        constraints: const BoxConstraints(minHeight: 34),
+        constraints: BoxConstraints(
+          minHeight: WmsTouch.height(context, dense: 34),
+        ),
         border: border(c.borderControl),
         enabledBorder: border(hasError ? c.danger : c.borderControl),
         disabledBorder: border(c.borderControl),

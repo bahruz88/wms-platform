@@ -5,6 +5,7 @@ import '../tokens/wms_colors.dart';
 import '../tokens/wms_opacity.dart';
 import '../tokens/wms_radius.dart';
 import '../tokens/wms_spacing.dart';
+import '../tokens/wms_touch.dart';
 import '../tokens/wms_typography.dart';
 import 'wms_field.dart';
 
@@ -71,11 +72,18 @@ class WmsTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = WmsColors.of(context);
     final hasError = error != null && error!.isNotEmpty;
+    // 16 px on a phone: anything smaller and both platforms zoom the page when
+    // the field takes focus, which throws the rest of the form off screen.
+    final touch = WmsTouch.isTouch(context);
     final style =
         (mono
                 ? WmsTypography.docNo.copyWith(fontSize: 14, height: 20 / 14)
                 : WmsTypography.body)
-            .copyWith(color: c.ink);
+            .copyWith(
+              color: c.ink,
+              fontSize: touch ? WmsTouch.controlFontSize : null,
+              height: touch ? 22 / 16 : null,
+            );
     OutlineInputBorder border(Color color, [double width = 1]) =>
         OutlineInputBorder(
           borderRadius: WmsRadius.mdAll,
@@ -111,8 +119,15 @@ class WmsTextField extends StatelessWidget {
         hintText: placeholder,
         hintStyle: style.copyWith(color: c.inkSubtle),
         counterText: '',
-        contentPadding: WmsSpacing.control,
-        constraints: const BoxConstraints(minHeight: 34),
+        contentPadding: touch
+            ? const EdgeInsets.symmetric(
+                vertical: WmsSpacing.space3,
+                horizontal: WmsSpacing.space3,
+              )
+            : WmsSpacing.control,
+        constraints: BoxConstraints(
+          minHeight: WmsTouch.height(context, dense: 34),
+        ),
         border: border(c.borderControl),
         enabledBorder: border(hasError ? c.danger : c.borderControl),
         disabledBorder: border(c.borderControl),

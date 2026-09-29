@@ -584,4 +584,16 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get labelPassword => 'Пароль';
+
+  @override
+  String get navTasks => 'Задачи';
+
+  @override
+  String get navOperations => 'Операции';
+
+  @override
+  String get navStock => 'Остаток';
+
+  @override
+  String get navAlerts => 'Уведомл.';
 }

@@ -37,7 +37,7 @@ class GoodsReceiptListScreen extends ConsumerWidget {
               enabled: canCreate,
               disabledReason: l10n.labelNoPermission,
               onPressed: () =>
-                  context.go(InventoryRoutes.receiptCreateFullPath),
+                  context.push(InventoryRoutes.receiptCreateFullPath),
             ),
           ),
         ],
