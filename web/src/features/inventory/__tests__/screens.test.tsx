@@ -636,7 +636,14 @@ describe('batch status dialog', () => {
           product: { id: 1, sku: 'BSB-0114', name: 'Bread Stick Black' },
           expiryDate: '2027-02-18',
           daysToExpiry: 120,
-          qtyOnHand: '1284.0000',
+          // A batch sums itself across locations and sends the breakdown beside the total. The
+          // fixture used to say `qtyOnHand`, which the server does not send — so the test agreed
+          // with the screen's wrong column key instead of with the wire.
+          totalQtyOnHand: '1284.0000',
+          byLocation: [
+            { location: { id: 1, code: 'WH-01', name: 'Mərkəzi anbar' }, qtyOnHand: '1000.0000' },
+            { location: { id: 2, code: 'BR-ELM', name: 'Elmlər filialı' }, qtyOnHand: '284.0000' },
+          ],
           status: 'ACTIVE',
           receivedAt: '2026-09-01',
           rowVersion: 1,
@@ -656,7 +663,14 @@ describe('batch status dialog', () => {
           product: { id: 1, sku: 'BSB-0114', name: 'Bread Stick Black' },
           expiryDate: '2027-02-18',
           daysToExpiry: 120,
-          qtyOnHand: '1284.0000',
+          // A batch sums itself across locations and sends the breakdown beside the total. The
+          // fixture used to say `qtyOnHand`, which the server does not send — so the test agreed
+          // with the screen's wrong column key instead of with the wire.
+          totalQtyOnHand: '1284.0000',
+          byLocation: [
+            { location: { id: 1, code: 'WH-01', name: 'Mərkəzi anbar' }, qtyOnHand: '1000.0000' },
+            { location: { id: 2, code: 'BR-ELM', name: 'Elmlər filialı' }, qtyOnHand: '284.0000' },
+          ],
           status: 'ACTIVE',
           receivedAt: '2026-09-01',
           rowVersion: 1,

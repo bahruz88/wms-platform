@@ -1,7 +1,27 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- The INTERNET permission is required for development. Specifically,
-         the Flutter tool needs it to communicate with the running application
-         to allow setting breakpoints, to provide hot reload, etc.
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
+    <!--
+      Debug-only overrides. Gradle merges `src/debug` into debug builds and never into a release, so
+      nothing here can reach a shipped APK.
+
+      The dev stack is plain HTTP — the gateway on :5001 and Keycloak on :8180 — and Android has
+      blocked cleartext by default since API 28. Without this the app starts and every call fails
+      with a transport error that looks like the server being down.
     -->
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <application
+        android:usesCleartextTraffic="true"
+        tools:targetApi="28" />
+
+    <!--
+      `flutter_appauth` opens the login page in a browser. The main manifest declares the `https`
+      intent only, which is right for production; in dev the Keycloak page is `http`, and without
+      this query the package visibility rules hide every browser and the login never opens.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <category android:name="android.intent.category.BROWSABLE"/>
+            <data android:scheme="http"/>
+        </intent>
+    </queries>
 </manifest>

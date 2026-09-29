@@ -51,18 +51,33 @@ Map<String, dynamic> _$BalanceDtoToJson(_BalanceDto instance) =>
       'updatedAt': instance.updatedAt?.toIso8601String(),
     };
 
+_BatchLocationQtyDto _$BatchLocationQtyDtoFromJson(Map<String, dynamic> json) =>
+    _BatchLocationQtyDto(
+      location: LocationRefDto.fromJson(
+        json['location'] as Map<String, dynamic>,
+      ),
+      qtyOnHand: Quantity.fromJson(json['qtyOnHand'] as String),
+    );
+
+Map<String, dynamic> _$BatchLocationQtyDtoToJson(
+  _BatchLocationQtyDto instance,
+) => <String, dynamic>{
+  'location': instance.location.toJson(),
+  'qtyOnHand': instance.qtyOnHand.toJson(),
+};
+
 _BatchDto _$BatchDtoFromJson(Map<String, dynamic> json) => _BatchDto(
   id: (json['id'] as num).toInt(),
   product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
   batchNo: json['batchNo'] as String,
   receivedAt: DateTime.parse(json['receivedAt'] as String),
   status: $enumDecode(_$BatchStatusEnumMap, json['status']),
-  qtyOnHand: json['qtyOnHand'] == null
-      ? null
-      : Quantity.fromJson(json['qtyOnHand'] as String),
-  totalQtyOnHand: json['totalQtyOnHand'] == null
-      ? null
-      : Quantity.fromJson(json['totalQtyOnHand'] as String),
+  totalQtyOnHand: Quantity.fromJson(json['totalQtyOnHand'] as String),
+  byLocation:
+      (json['byLocation'] as List<dynamic>?)
+          ?.map((e) => BatchLocationQtyDto.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <BatchLocationQtyDto>[],
   rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
   productionDate: const NullableDateOnlyConverter().fromJson(
     json['productionDate'] as String?,
@@ -73,7 +88,6 @@ _BatchDto _$BatchDtoFromJson(Map<String, dynamic> json) => _BatchDto(
   supplierId: (json['supplierId'] as num?)?.toInt(),
   supplierName: json['supplierName'] as String?,
   daysToExpiry: (json['daysToExpiry'] as num?)?.toInt(),
-  byLocation: json['byLocation'] as List<dynamic>? ?? const <Object?>[],
 );
 
 Map<String, dynamic> _$BatchDtoToJson(_BatchDto instance) => <String, dynamic>{
@@ -82,8 +96,8 @@ Map<String, dynamic> _$BatchDtoToJson(_BatchDto instance) => <String, dynamic>{
   'batchNo': instance.batchNo,
   'receivedAt': instance.receivedAt.toIso8601String(),
   'status': _$BatchStatusEnumMap[instance.status]!,
-  'qtyOnHand': instance.qtyOnHand?.toJson(),
-  'totalQtyOnHand': instance.totalQtyOnHand?.toJson(),
+  'totalQtyOnHand': instance.totalQtyOnHand.toJson(),
+  'byLocation': instance.byLocation.map((e) => e.toJson()).toList(),
   'rowVersion': instance.rowVersion,
   'productionDate': const NullableDateOnlyConverter().toJson(
     instance.productionDate,
@@ -92,7 +106,6 @@ Map<String, dynamic> _$BatchDtoToJson(_BatchDto instance) => <String, dynamic>{
   'supplierId': instance.supplierId,
   'supplierName': instance.supplierName,
   'daysToExpiry': instance.daysToExpiry,
-  'byLocation': instance.byLocation,
 };
 
 const _$BatchStatusEnumMap = {

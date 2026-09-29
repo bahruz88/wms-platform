@@ -55,12 +55,25 @@ abstract class BalanceDto with _$BalanceDto {
   bool get hasCostInfo => avgUnitCost != null || totalValue != null;
 }
 
+/// One line of a batch's per-location breakdown.
+@freezed
+abstract class BatchLocationQtyDto with _$BatchLocationQtyDto {
+  const factory BatchLocationQtyDto({
+    required LocationRefDto location,
+    required Quantity qtyOnHand,
+  }) = _BatchLocationQtyDto;
+
+  factory BatchLocationQtyDto.fromJson(Map<String, Object?> json) =>
+      _$BatchLocationQtyDtoFromJson(json);
+}
+
 /// `Batch` — `inv_batch` with the product embedded and the stock it still holds.
 ///
-/// One DTO serves both the list and the detail, so everything only the detail carries is nullable.
-/// The quantity has two names on the wire: the list sends `totalQtyOnHand` with a `byLocation`
-/// breakdown, the contract calls them `qtyOnHand` and `balances`. Both spellings are read and
-/// `onHand` hides the difference from the screens.
+/// The quantity is a sum across every location the caller may see, with the breakdown beside it.
+/// The DTO read two spellings for a while because the contract said `qtyOnHand`/`balances` where the
+/// server sends `totalQtyOnHand`/`byLocation`; the contract has since been corrected to the server's
+/// shape, which is the leaner one — a full `Balance` row inside a batch repeats the product, the
+/// batch and the reservation.
 @freezed
 abstract class BatchDto with _$BatchDto {
   const factory BatchDto({
@@ -69,15 +82,14 @@ abstract class BatchDto with _$BatchDto {
     required String batchNo,
     required DateTime receivedAt,
     required BatchStatus status,
-    Quantity? qtyOnHand,
-    Quantity? totalQtyOnHand,
+    required Quantity totalQtyOnHand,
+    @Default(<BatchLocationQtyDto>[]) List<BatchLocationQtyDto> byLocation,
     @Default(1) int rowVersion,
     @NullableDateOnlyConverter() DateTime? productionDate,
     @NullableDateOnlyConverter() DateTime? expiryDate,
     int? supplierId,
     String? supplierName,
     int? daysToExpiry,
-    @Default(<Object?>[]) List<Object?> byLocation,
   }) = _BatchDto;
 
   factory BatchDto.fromJson(Map<String, Object?> json) =>

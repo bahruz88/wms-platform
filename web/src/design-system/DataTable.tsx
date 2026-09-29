@@ -12,18 +12,35 @@ import { format } from './format';
  * Real `table` markup with `th` + `scope`; sorting, filtering and paging live outside the
  * component because the server returns `{ items, page, size, total }`.
  */
-export interface Column<R = unknown> {
-  key: string;
+interface ColumnBase {
   header: ReactNode;
   width?: string;
   align?: 'left' | 'center' | 'right';
   /** Right-aligned, mono + tabular figures. */
   numeric?: boolean;
   decimals?: number;
-  render?: (row: R, index: number) => ReactNode;
   /** When set, the column is rendered only if this code is in `permissions`. */
   permission?: string;
 }
+
+/**
+ * A column that prints `row[key]` as it is. `key` must name a real field, because a key that does
+ * not exist renders an empty cell and nothing complains: the batch list carried a `qtyOnHand`
+ * column for months while the server sends `totalQtyOnHand`, and neither the compiler nor a test
+ * noticed.
+ */
+interface ValueColumn<R> extends ColumnBase {
+  key: Extract<keyof R, string>;
+  render?: never;
+}
+
+/** A column that builds its own cell, so its `key` is only an identity for React and sorting. */
+interface RenderColumn<R> extends ColumnBase {
+  key: string;
+  render: (row: R, index: number) => ReactNode;
+}
+
+export type Column<R = unknown> = ValueColumn<R> | RenderColumn<R>;
 
 export interface DataTableProps<R = unknown> {
   columns: Column<R>[];

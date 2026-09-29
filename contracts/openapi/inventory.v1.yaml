@@ -2575,7 +2575,7 @@ components:
     # ================================================================ Batch
     Batch:
       type: object
-      required: [id, product, batchNo, receivedAt, status, qtyOnHand, rowVersion]
+      required: [id, product, batchNo, receivedAt, status, totalQtyOnHand, byLocation, rowVersion]
       properties:
         id:
           $ref: '#/components/schemas/Id'
@@ -2596,6 +2596,9 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Id'
             - type: 'null'
+        supplierName:
+          type: [string, 'null']
+          description: Partiyanı gətirən təchizatçının adı — ayrıca sorğu olmasın.
         receivedAt:
           $ref: '#/components/schemas/DateTimeUtc'
           description: FIFO sırası üçün.
@@ -2604,14 +2607,22 @@ components:
         daysToExpiry:
           type: [integer, 'null']
           format: int32
-        qtyOnHand:
+        totalQtyOnHand:
           $ref: '#/components/schemas/Decimal'
           description: Bütün (görünən) lokasiyalar üzrə cəm, base UoM.
-        balances:
+        byLocation:
           type: array
           items:
-            $ref: '#/components/schemas/Balance'
-          description: Yalnız `getBatch`-də dolu.
+            type: object
+            required: [location, qtyOnHand]
+            properties:
+              location:
+                $ref: '#/components/schemas/LocationRef'
+              qtyOnHand:
+                $ref: '#/components/schemas/Decimal'
+          description: |
+            Partiyanın lokasiyalar üzrə bölgüsü. Tam `Balance` sətri deyil: partiyanın içində məhsul,
+            partiya və rezerv təkrar olardı, ona görə yalnız lokasiya və qalıq verilir.
         rowVersion:
           $ref: '#/components/schemas/RowVersion'
 

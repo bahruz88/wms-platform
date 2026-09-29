@@ -139,7 +139,31 @@ export function BatchesScreen() {
           formatNumber(row.daysToExpiry, 0)
         ),
     },
-    { key: 'qtyOnHand', header: 'Qalıq (base)', width: '150px', numeric: true, decimals: 4 },
+    {
+      // `totalQtyOnHand`, not `qtyOnHand`: the batch sums itself across locations. The old key does
+      // not exist on the row, and a Column key is a plain string, so the column rendered empty with
+      // nothing failing.
+      key: 'totalQtyOnHand',
+      header: 'Qalıq (base)',
+      width: '150px',
+      numeric: true,
+      decimals: 4,
+    },
+    {
+      key: 'byLocation',
+      header: 'Lokasiyalar',
+      width: '220px',
+      render: (row) =>
+        row.byLocation.length === 0 ? (
+          <span className="wms-muted">—</span>
+        ) : (
+          <span className="wms-small">
+            {row.byLocation
+              .map((b) => `${b.location.code}: ${formatNumber(b.qtyOnHand, 3)}`)
+              .join(' · ')}
+          </span>
+        ),
+    },
     {
       key: 'status',
       header: 'Status',

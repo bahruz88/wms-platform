@@ -73,23 +73,18 @@ ALIASES = {
 INLINE = {
     # `SalesImportParseResult.parseErrors[]` is declared inline.
     "SalesParseErrorDto",
+    # `Batch.byLocation[]` is declared inline.
+    "BatchLocationQtyDto",
 }
 
 # Where the running server and the contract disagree. These are contract defects, not DTO defects,
 # so they are excluded from both directions: a field only the server sends would read as the DTO
 # inventing one, and a field only the contract declares as the DTO ignoring one. Keyed by
 # `module/DartClass`.
-DIVERGENCES = {
-    "inventory/BatchDto": {
-        # `GET /inventory/batches` sends `totalQtyOnHand` with a `byLocation` breakdown and a
-        # `supplierName`; the contract declares `qtyOnHand` and `balances` instead. The DTO reads
-        # what the server sends.
-        "totalQtyOnHand",
-        "byLocation",
-        "supplierName",
-        "balances",
-        "qtyOnHand",
-    },
+DIVERGENCES: dict[str, set[str]] = {
+    # Empty on purpose. The one entry that lived here — `inv_batch` answering with `totalQtyOnHand`
+    # and `byLocation` where the contract said `qtyOnHand` and `balances` — was a contract defect,
+    # and the contract was corrected rather than kept as a permanent exception.
 }
 
 # Fields a DTO drops on purpose, with the reason. Anything not listed here is an oversight.
