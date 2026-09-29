@@ -2118,7 +2118,7 @@ as List<String>,
 /// @nodoc
 mixin _$PermissionDto {
 
- int get id; String get code; String get module; String? get description;
+ int get id; String get code; String get module; String? get description; bool get isCritical;
 /// Create a copy of PermissionDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2132,20 +2132,20 @@ $PermissionDtoCopyWith<PermissionDto> get copyWith => _$PermissionDtoCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as PermissionDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PermissionDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.module, _this.module) || other.module == _this.module)&&(identical(other.description, _this.description) || other.description == _this.description));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PermissionDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.module, _this.module) || other.module == _this.module)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.isCritical, _this.isCritical) || other.isCritical == _this.isCritical));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as PermissionDto;
-  return Object.hash(runtimeType,_this.id,_this.code,_this.module,_this.description);
+  return Object.hash(runtimeType,_this.id,_this.code,_this.module,_this.description,_this.isCritical);
 }
 
 @override
 String toString() {
   final _this = this as PermissionDto;
-  return 'PermissionDto(id: ${_this.id}, code: ${_this.code}, module: ${_this.module}, description: ${_this.description})';
+  return 'PermissionDto(id: ${_this.id}, code: ${_this.code}, module: ${_this.module}, description: ${_this.description}, isCritical: ${_this.isCritical})';
 }
 
 
@@ -2156,7 +2156,7 @@ abstract mixin class $PermissionDtoCopyWith<$Res>  {
   factory $PermissionDtoCopyWith(PermissionDto value, $Res Function(PermissionDto) _then) = _$PermissionDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String code, String module, String? description
+ int id, String code, String module, String? description, bool isCritical
 });
 
 
@@ -2173,13 +2173,14 @@ class _$PermissionDtoCopyWithImpl<$Res>
 
 /// Create a copy of PermissionDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? module = null,Object? description = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? module = null,Object? description = freezed,Object? isCritical = null,}) {
   return _then(PermissionDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,module: null == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,isCritical: null == isCritical ? _self.isCritical : isCritical // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -2264,10 +2265,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String module,  String? description)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String module,  String? description,  bool isCritical)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PermissionDto() when $default != null:
-return $default(_that.id,_that.code,_that.module,_that.description);case _:
+return $default(_that.id,_that.code,_that.module,_that.description,_that.isCritical);case _:
   return orElse();
 
 }
@@ -2285,10 +2286,10 @@ return $default(_that.id,_that.code,_that.module,_that.description);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String module,  String? description)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String module,  String? description,  bool isCritical)  $default,) {final _that = this;
 switch (_that) {
 case _PermissionDto():
-return $default(_that.id,_that.code,_that.module,_that.description);case _:
+return $default(_that.id,_that.code,_that.module,_that.description,_that.isCritical);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2305,10 +2306,10 @@ return $default(_that.id,_that.code,_that.module,_that.description);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String module,  String? description)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String module,  String? description,  bool isCritical)?  $default,) {final _that = this;
 switch (_that) {
 case _PermissionDto() when $default != null:
-return $default(_that.id,_that.code,_that.module,_that.description);case _:
+return $default(_that.id,_that.code,_that.module,_that.description,_that.isCritical);case _:
   return null;
 
 }
@@ -2320,13 +2321,14 @@ return $default(_that.id,_that.code,_that.module,_that.description);case _:
 @JsonSerializable()
 
 class _PermissionDto implements PermissionDto {
-  const _PermissionDto({required this.id, required this.code, required this.module, this.description});
+  const _PermissionDto({required this.id, required this.code, required this.module, this.description, this.isCritical = false});
   factory _PermissionDto.fromJson(Map<String, dynamic> json) => _$PermissionDtoFromJson(json);
 
 @override final  int id;
 @override final  String code;
 @override final  String module;
 @override final  String? description;
+@override@JsonKey() final  bool isCritical;
 
 /// Create a copy of PermissionDto
 /// with the given fields replaced by the non-null parameter values.
@@ -2341,18 +2343,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PermissionDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.module, module) || other.module == module)&&(identical(other.description, description) || other.description == description));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PermissionDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.module, module) || other.module == module)&&(identical(other.description, description) || other.description == description)&&(identical(other.isCritical, isCritical) || other.isCritical == isCritical));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,code,module,description);
+    return Object.hash(runtimeType,id,code,module,description,isCritical);
 }
 
 @override
 String toString() {
-    return 'PermissionDto(id: $id, code: $code, module: $module, description: $description)';
+    return 'PermissionDto(id: $id, code: $code, module: $module, description: $description, isCritical: $isCritical)';
 }
 
 
@@ -2363,7 +2365,7 @@ abstract mixin class _$PermissionDtoCopyWith<$Res> implements $PermissionDtoCopy
   factory _$PermissionDtoCopyWith(_PermissionDto value, $Res Function(_PermissionDto) _then) = __$PermissionDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String code, String module, String? description
+ int id, String code, String module, String? description, bool isCritical
 });
 
 
@@ -2380,13 +2382,14 @@ class __$PermissionDtoCopyWithImpl<$Res>
 
 /// Create a copy of PermissionDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? module = null,Object? description = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? module = null,Object? description = freezed,Object? isCritical = null,}) {
   return _then(_PermissionDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,module: null == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
 as String,description: freezed == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,isCritical: null == isCritical ? _self.isCritical : isCritical // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

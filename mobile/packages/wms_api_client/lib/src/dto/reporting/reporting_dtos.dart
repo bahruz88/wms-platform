@@ -16,8 +16,13 @@ abstract class KpiDto with _$KpiDto {
     required String label,
     required String value,
     String? unit,
-    String? trend,
-    String? previousValue,
+    // The server compares with the previous period itself and sends the percentage, not a `trend`
+    // word and a `previousValue` — the two fields this DTO used to declare were never sent, so no
+    // card ever showed a trend.
+    Decimal? trendPct,
+    @Default('NORMAL') String severity,
+    /// In-app path to drill through to, e.g. `/inventory/batches?expiryBefore=…`.
+    String? link,
     @Default(false) bool isCost,
   }) = _KpiDto;
 
@@ -27,6 +32,19 @@ abstract class KpiDto with _$KpiDto {
 
   /// The figure as a number, for arithmetic. Returns null when the server withheld it.
   Money? get amount => value.isEmpty ? null : Money.parse(value);
+
+  bool get isCritical => severity == 'CRITICAL';
+  bool get isWarning => severity == 'WARNING';
+
+  /// `true` when the figure moved up against the previous period, `false` when it moved down, and
+  /// null when there is nothing to compare against.
+  bool? get isUp => trendPct == null
+      ? null
+      : trendPct! > Decimal.zero
+          ? true
+          : trendPct! < Decimal.zero
+              ? false
+              : null;
 
   /// How many decimals the server sent, so the screen neither rounds a price to whole manats nor
   /// prints a count as «42,0000». The precision is the server's decision, not the card's.
@@ -129,6 +147,8 @@ abstract class ReportDefinitionDto with _$ReportDefinitionDto {
     @Default(<ReportColumnDto>[]) List<ReportColumnDto> columns,
     @Default(<String>[]) List<String> supportedFormats,
     @Default(false) bool requiresCostPermission,
+    /// The report's number in TOR §29, for tracing a figure back to what was asked for.
+    String? torRef,
     int? maxSyncRows,
   }) = _ReportDefinitionDto;
 
@@ -153,6 +173,8 @@ abstract class ExportJobDto with _$ExportJobDto {
     int? sizeBytes,
     String? downloadUrl,
     DateTime? downloadUrlExpiresAt,
+    // Why a FAILED job failed. Without it a failed export showed no reason at all.
+    String? errorMessage,
     DateTime? completedAt,
     DateTime? expiresAt,
     String? statusUrl,
@@ -203,10 +225,10 @@ abstract class ReportResultPageDto with _$ReportResultPageDto {
     @JsonKey(name: 'rows') List<List<Object?>>? rawRows,
     Map<String, String>? totals,
     DateTime? dataAsOf,
+    // `PageMeta` of common.v1.yaml: three fields, and `total` is the row count, not a page count.
     @Default(0) int page,
     @Default(0) int size,
-    @Default(0) int totalItems,
-    @Default(0) int totalPages,
+    @Default(0) int total,
   }) = _ReportResultPageDto;
 
   const ReportResultPageDto._();

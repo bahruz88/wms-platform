@@ -36,26 +36,42 @@ _ProductCategoryDto _$ProductCategoryDtoFromJson(Map<String, dynamic> json) =>
       productType: $enumDecode(_$ProductTypeEnumMap, json['productType']),
       path: json['path'] as String,
       parentId: (json['parentId'] as num?)?.toInt(),
+      defaultIssueStrategy: $enumDecodeNullable(
+        _$IssueStrategyEnumMap,
+        json['defaultIssueStrategy'],
+      ),
+      isActive: json['isActive'] as bool? ?? true,
+      rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
     );
 
-Map<String, dynamic> _$ProductCategoryDtoToJson(_ProductCategoryDto instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'code': instance.code,
-      'name': instance.name,
-      'productType': _$ProductTypeEnumMap[instance.productType]!,
-      'path': instance.path,
-      'parentId': instance.parentId,
-    };
+Map<String, dynamic> _$ProductCategoryDtoToJson(
+  _ProductCategoryDto instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'code': instance.code,
+  'name': instance.name,
+  'productType': _$ProductTypeEnumMap[instance.productType]!,
+  'path': instance.path,
+  'parentId': instance.parentId,
+  'defaultIssueStrategy': _$IssueStrategyEnumMap[instance.defaultIssueStrategy],
+  'isActive': instance.isActive,
+  'rowVersion': instance.rowVersion,
+};
 
 const _$ProductTypeEnumMap = {
   ProductType.food: 'FOOD',
   ProductType.nonFood: 'NON_FOOD',
 };
 
+const _$IssueStrategyEnumMap = {
+  IssueStrategy.fefo: 'FEFO',
+  IssueStrategy.fifo: 'FIFO',
+};
+
 _ProductUomDto _$ProductUomDtoFromJson(Map<String, dynamic> json) =>
     _ProductUomDto(
       id: (json['id'] as num).toInt(),
+      productId: (json['productId'] as num).toInt(),
       uomId: (json['uomId'] as num).toInt(),
       factorToBase: Decimal.fromJson(json['factorToBase'] as String),
       validFrom: const DateOnlyConverter().fromJson(
@@ -72,6 +88,7 @@ _ProductUomDto _$ProductUomDtoFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$ProductUomDtoToJson(_ProductUomDto instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'productId': instance.productId,
       'uomId': instance.uomId,
       'factorToBase': instance.factorToBase.toJson(),
       'validFrom': const DateOnlyConverter().toJson(instance.validFrom),
@@ -150,9 +167,34 @@ Map<String, dynamic> _$ProductDtoToJson(_ProductDto instance) =>
       'audit': instance.audit?.toJson(),
     };
 
-const _$IssueStrategyEnumMap = {
-  IssueStrategy.fefo: 'FEFO',
-  IssueStrategy.fifo: 'FIFO',
+_SupplierCertificateDto _$SupplierCertificateDtoFromJson(
+  Map<String, dynamic> json,
+) => _SupplierCertificateDto(
+  id: (json['id'] as num).toInt(),
+  supplierId: (json['supplierId'] as num).toInt(),
+  certType: json['certType'] as String,
+  certNumber: json['certNumber'] as String?,
+  issuedDate: const NullableDateOnlyConverter().fromJson(
+    json['issuedDate'] as String?,
+  ),
+  expiryDate: const NullableDateOnlyConverter().fromJson(
+    json['expiryDate'] as String?,
+  ),
+  attachmentId: (json['attachmentId'] as num?)?.toInt(),
+  isExpired: json['isExpired'] as bool? ?? false,
+);
+
+Map<String, dynamic> _$SupplierCertificateDtoToJson(
+  _SupplierCertificateDto instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'supplierId': instance.supplierId,
+  'certType': instance.certType,
+  'certNumber': instance.certNumber,
+  'issuedDate': const NullableDateOnlyConverter().toJson(instance.issuedDate),
+  'expiryDate': const NullableDateOnlyConverter().toJson(instance.expiryDate),
+  'attachmentId': instance.attachmentId,
+  'isExpired': instance.isExpired,
 };
 
 _SupplierDto _$SupplierDtoFromJson(Map<String, dynamic> json) => _SupplierDto(
@@ -165,12 +207,22 @@ _SupplierDto _$SupplierDtoFromJson(Map<String, dynamic> json) => _SupplierDto(
   phone: json['phone'] as String?,
   email: json['email'] as String?,
   address: json['address'] as String?,
+  bankDetails: json['bankDetails'] as String?,
   paymentTerms: json['paymentTerms'] as String?,
   deliveryTerms: json['deliveryTerms'] as String?,
   incoterms: json['incoterms'] as String?,
   isApprovedFoodSupplier: json['isApprovedFoodSupplier'] as bool? ?? false,
   isActive: json['isActive'] as bool? ?? true,
-  rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
+  certificates:
+      (json['certificates'] as List<dynamic>?)
+          ?.map(
+            (e) => SupplierCertificateDto.fromJson(e as Map<String, dynamic>),
+          )
+          .toList() ??
+      const <SupplierCertificateDto>[],
+  audit: json['audit'] == null
+      ? null
+      : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$SupplierDtoToJson(_SupplierDto instance) =>
@@ -184,12 +236,14 @@ Map<String, dynamic> _$SupplierDtoToJson(_SupplierDto instance) =>
       'phone': instance.phone,
       'email': instance.email,
       'address': instance.address,
+      'bankDetails': instance.bankDetails,
       'paymentTerms': instance.paymentTerms,
       'deliveryTerms': instance.deliveryTerms,
       'incoterms': instance.incoterms,
       'isApprovedFoodSupplier': instance.isApprovedFoodSupplier,
       'isActive': instance.isActive,
-      'rowVersion': instance.rowVersion,
+      'certificates': instance.certificates.map((e) => e.toJson()).toList(),
+      'audit': instance.audit?.toJson(),
     };
 
 _LocationDto _$LocationDtoFromJson(Map<String, dynamic> json) => _LocationDto(
@@ -202,6 +256,7 @@ _LocationDto _$LocationDtoFromJson(Map<String, dynamic> json) => _LocationDto(
   allowsFood: json['allowsFood'] as bool? ?? true,
   allowsNonFood: json['allowsNonFood'] as bool? ?? true,
   isActive: json['isActive'] as bool? ?? true,
+  rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
 );
 
 Map<String, dynamic> _$LocationDtoToJson(_LocationDto instance) =>
@@ -215,6 +270,7 @@ Map<String, dynamic> _$LocationDtoToJson(_LocationDto instance) =>
       'allowsFood': instance.allowsFood,
       'allowsNonFood': instance.allowsNonFood,
       'isActive': instance.isActive,
+      'rowVersion': instance.rowVersion,
     };
 
 const _$LocationTypeEnumMap = {
@@ -239,6 +295,7 @@ _ReasonCodeDto _$ReasonCodeDtoFromJson(Map<String, dynamic> json) =>
       requiresApproval: json['requiresApproval'] as bool? ?? true,
       requiresPhoto: json['requiresPhoto'] as bool? ?? false,
       isActive: json['isActive'] as bool? ?? true,
+      rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
     );
 
 Map<String, dynamic> _$ReasonCodeDtoToJson(_ReasonCodeDto instance) =>
@@ -250,6 +307,7 @@ Map<String, dynamic> _$ReasonCodeDtoToJson(_ReasonCodeDto instance) =>
       'requiresApproval': instance.requiresApproval,
       'requiresPhoto': instance.requiresPhoto,
       'isActive': instance.isActive,
+      'rowVersion': instance.rowVersion,
     };
 
 const _$ReasonGroupEnumMap = {

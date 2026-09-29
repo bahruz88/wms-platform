@@ -15,6 +15,7 @@ export 'src/enums/location_type.dart';
 export 'src/enums/po_status.dart';
 export 'src/enums/product_type.dart';
 export 'src/enums/reason_group.dart';
+export 'src/enums/simple_doc_status.dart';
 export 'src/env/app_env.dart';
 export 'src/errors/app_exception.dart';
 export 'src/errors/problem_details.dart';

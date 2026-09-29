@@ -99,7 +99,11 @@ abstract class GoodsReceiptLineDto with _$GoodsReceiptLineDto {
     required Quantity rejectedQty,
     int? id,
     int? poLineId,
+    int? batchId,
     Quantity? orderedQty,
+    // What actually entered stock, in the product's base unit, and how far it missed the order.
+    Quantity? acceptedQtyBase,
+    Quantity? varianceQty,
     String? uomCode,
     String? batchNo,
     @NullableDateOnlyConverter() DateTime? productionDate,
@@ -149,6 +153,10 @@ abstract class GoodsReceiptDto with _$GoodsReceiptDto {
     String? packagingNote,
     int? movementGroupId,
     DateTime? postedAt,
+    // A list row shows the line count and the variance flag without holding the lines.
+    @Default(false) bool hasVariance,
+    @Default(0) int lineCount,
+    @Default(<int>[]) List<int> attachmentIds,
     AuditFieldsDto? audit,
     @Default(1) int rowVersion,
     @Default(<GoodsReceiptLineDto>[]) List<GoodsReceiptLineDto> lines,
@@ -230,6 +238,9 @@ abstract class StockRequestDto with _$StockRequestDto {
     required StockRequestStatus status,
     @NullableDateOnlyConverter() DateTime? requiredDate,
     String? note,
+    @Default(0) int lineCount,
+    // The issues raised against this request, so the requester can follow what was sent.
+    @Default(<int>[]) List<int> issueIds,
     AuditFieldsDto? audit,
     @Default(1) int rowVersion,
     @Default(<StockRequestLineDto>[]) List<StockRequestLineDto> lines,
@@ -312,13 +323,18 @@ abstract class IssueDto with _$IssueDto {
     required LocationRefDto toLocation,
     required IssueStatus status,
     int? requestId,
+    // The stock request this fulfils, by document number, so the screen need not fetch it to say so.
+    String? requestDocNo,
+    String? note,
     int? dispatchGroupId,
     int? receiptGroupId,
     DateTime? dispatchedAt,
     DateTime? receivedAt,
     int? receivedBy,
+    @Default(0) int lineCount,
     @Default(1) int rowVersion,
     @Default(<IssueLineDto>[]) List<IssueLineDto> lines,
+    AuditFieldsDto? audit,
   }) = _IssueDto;
 
   factory IssueDto.fromJson(Map<String, Object?> json) =>
@@ -371,6 +387,7 @@ abstract class CreateIssueRequest with _$CreateIssueRequest {
     required int toLocationId,
     required List<CreateIssueLine> lines,
     int? requestId,
+    String? note,
   }) = _CreateIssueRequest;
 
   factory CreateIssueRequest.fromJson(Map<String, Object?> json) =>
@@ -398,7 +415,8 @@ abstract class ConfirmIssueRequest with _$ConfirmIssueRequest {
   const factory ConfirmIssueRequest({
     required List<ConfirmIssueLine> lines,
     required int rowVersion,
-    String? note,
+    // The document-level note is not read by the server; a discrepancy note belongs on the line.
+    @Default(<int>[]) List<int> attachmentIds,
   }) = _ConfirmIssueRequest;
 
   factory ConfirmIssueRequest.fromJson(Map<String, Object?> json) =>
@@ -420,6 +438,13 @@ abstract class CountLineDto with _$CountLineDto {
     Quantity? countedQty,
     Quantity? varianceQty,
     Decimal? variancePct,
+    Money? varianceValue,
+    // The server applies the tenant's `count_variance_threshold_pct` itself. The screen used to
+    // recompute it from a setting it fetched separately, which is a second source of truth for the
+    // same rule.
+    @Default(false) bool exceedsThreshold,
+    DateTime? countedAt,
+    int? countedBy,
     int? reasonCodeId,
     String? note,
   }) = _CountLineDto;
@@ -451,8 +476,16 @@ abstract class CountDto with _$CountDto {
     int? approvedBy,
     DateTime? approvedAt,
     int? adjustGroupId,
+    // The counters, so a list row can say how far a sheet has got without holding its lines.
+    @Default(false) bool requiresApproval,
+    @Default(0) int lineCount,
+    @Default(0) int countedLineCount,
+    @Default(0) int varianceLineCount,
+    Money? totalVarianceValue,
+    String? note,
     @Default(1) int rowVersion,
     @Default(<CountLineDto>[]) List<CountLineDto> lines,
+    AuditFieldsDto? audit,
   }) = _CountDto;
 
   factory CountDto.fromJson(Map<String, Object?> json) =>
@@ -465,6 +498,11 @@ abstract class CreateCountRequest with _$CreateCountRequest {
   const factory CreateCountRequest({
     required int locationId,
     required CountType countType,
+    // A PARTIAL or SPOT count is scoped to categories or products. Without these the client could
+    // only ever ask for a full count of the whole location.
+    @Default(<int>[]) List<int> categoryIds,
+    @Default(<int>[]) List<int> productIds,
+    String? note,
   }) = _CreateCountRequest;
 
   factory CreateCountRequest.fromJson(Map<String, Object?> json) =>
@@ -516,7 +554,9 @@ abstract class WasteLineDto with _$WasteLineDto {
     Quantity? qtyBase,
     String? note,
     Money? unitCost,
-    Money? lineValue,
+    // `totalValue`, not `lineValue`: the name this DTO used is not sent, so every line's value read
+    // as null and the column stayed empty.
+    Money? totalValue,
   }) = _WasteLineDto;
 
   factory WasteLineDto.fromJson(Map<String, Object?> json) =>
@@ -537,10 +577,15 @@ abstract class WasteDto with _$WasteDto {
     String? note,
     int? approvedBy,
     DateTime? approvedAt,
+    // Why an approver refused it. Without it a rejected write-off showed no reason.
+    String? approvalComment,
     int? movementGroupId,
+    @Default(0) int lineCount,
+    Money? totalValue,
     @Default(<int>[]) List<int> attachmentIds,
     @Default(1) int rowVersion,
     @Default(<WasteLineDto>[]) List<WasteLineDto> lines,
+    AuditFieldsDto? audit,
   }) = _WasteDto;
 
   factory WasteDto.fromJson(Map<String, Object?> json) =>
@@ -592,6 +637,8 @@ abstract class SampleLineDto with _$SampleLineDto {
     int? id,
     Quantity? qtyBase,
     String? note,
+    Money? unitCost,
+    Money? totalValue,
   }) = _SampleLineDto;
 
   factory SampleLineDto.fromJson(Map<String, Object?> json) =>
@@ -606,10 +653,18 @@ abstract class SampleDto with _$SampleDto {
     required String docNo,
     @DateOnlyConverter() required DateTime docDate,
     required LocationRefDto location,
+    // A sample has no status column: the server derives DRAFT/POSTED/CANCELLED from whether a
+    // movement group was written, so it never reaches the approval states a write-off can.
+    required SimpleDocStatus status,
     @Default('AQTA') String authority,
     String? purpose,
+    int? reasonCodeId,
     int? movementGroupId,
+    @Default(0) int lineCount,
+    @Default(<int>[]) List<int> attachmentIds,
+    @Default(1) int rowVersion,
     @Default(<SampleLineDto>[]) List<SampleLineDto> lines,
+    AuditFieldsDto? audit,
   }) = _SampleDto;
 
   factory SampleDto.fromJson(Map<String, Object?> json) =>
@@ -638,6 +693,9 @@ abstract class CreateSampleRequest with _$CreateSampleRequest {
     required List<CreateSampleLine> lines,
     @Default('AQTA') String authority,
     String? purpose,
+    int? reasonCodeId,
+    // The sampling protocol or act, which is the whole point of recording a sample.
+    @Default(<int>[]) List<int> attachmentIds,
   }) = _CreateSampleRequest;
 
   factory CreateSampleRequest.fromJson(Map<String, Object?> json) =>

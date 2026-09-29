@@ -178,6 +178,7 @@ _PermissionDto _$PermissionDtoFromJson(Map<String, dynamic> json) =>
       code: json['code'] as String,
       module: json['module'] as String,
       description: json['description'] as String?,
+      isCritical: json['isCritical'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$PermissionDtoToJson(_PermissionDto instance) =>
@@ -186,4 +187,5 @@ Map<String, dynamic> _$PermissionDtoToJson(_PermissionDto instance) =>
       'code': instance.code,
       'module': instance.module,
       'description': instance.description,
+      'isCritical': instance.isCritical,
     };

@@ -18,7 +18,7 @@ mixin _$MenuItemDto {
 
  int get id; String get code; String get name; bool get isSubRecipe; bool get isActive; String? get posCode; String? get category;/// Recipe version valid today. `null` — no recipe, so a sale of this item
 /// produces no depletion and lands in `unmappedCount`.
- int? get activeRecipeId; int get rowVersion;
+ int? get activeRecipeId; int get rowVersion; AuditFieldsDto? get audit;
 /// Create a copy of MenuItemDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -32,20 +32,20 @@ $MenuItemDtoCopyWith<MenuItemDto> get copyWith => _$MenuItemDtoCopyWithImpl<Menu
 @override
 bool operator ==(Object other) {
   final _this = this as MenuItemDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MenuItemDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.isSubRecipe, _this.isSubRecipe) || other.isSubRecipe == _this.isSubRecipe)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&(identical(other.posCode, _this.posCode) || other.posCode == _this.posCode)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.activeRecipeId, _this.activeRecipeId) || other.activeRecipeId == _this.activeRecipeId)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MenuItemDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.isSubRecipe, _this.isSubRecipe) || other.isSubRecipe == _this.isSubRecipe)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&(identical(other.posCode, _this.posCode) || other.posCode == _this.posCode)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.activeRecipeId, _this.activeRecipeId) || other.activeRecipeId == _this.activeRecipeId)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&(identical(other.audit, _this.audit) || other.audit == _this.audit));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as MenuItemDto;
-  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.isSubRecipe,_this.isActive,_this.posCode,_this.category,_this.activeRecipeId,_this.rowVersion);
+  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.isSubRecipe,_this.isActive,_this.posCode,_this.category,_this.activeRecipeId,_this.rowVersion,_this.audit);
 }
 
 @override
 String toString() {
   final _this = this as MenuItemDto;
-  return 'MenuItemDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, isSubRecipe: ${_this.isSubRecipe}, isActive: ${_this.isActive}, posCode: ${_this.posCode}, category: ${_this.category}, activeRecipeId: ${_this.activeRecipeId}, rowVersion: ${_this.rowVersion})';
+  return 'MenuItemDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, isSubRecipe: ${_this.isSubRecipe}, isActive: ${_this.isActive}, posCode: ${_this.posCode}, category: ${_this.category}, activeRecipeId: ${_this.activeRecipeId}, rowVersion: ${_this.rowVersion}, audit: ${_this.audit})';
 }
 
 
@@ -56,11 +56,11 @@ abstract mixin class $MenuItemDtoCopyWith<$Res>  {
   factory $MenuItemDtoCopyWith(MenuItemDto value, $Res Function(MenuItemDto) _then) = _$MenuItemDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String code, String name, bool isSubRecipe, bool isActive, String? posCode, String? category, int? activeRecipeId, int rowVersion
+ int id, String code, String name, bool isSubRecipe, bool isActive, String? posCode, String? category, int? activeRecipeId, int rowVersion, AuditFieldsDto? audit
 });
 
 
-
+$AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -73,7 +73,7 @@ class _$MenuItemDtoCopyWithImpl<$Res>
 
 /// Create a copy of MenuItemDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? isSubRecipe = null,Object? isActive = null,Object? posCode = freezed,Object? category = freezed,Object? activeRecipeId = freezed,Object? rowVersion = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? isSubRecipe = null,Object? isActive = null,Object? posCode = freezed,Object? category = freezed,Object? activeRecipeId = freezed,Object? rowVersion = null,Object? audit = freezed,}) {
   return _then(MenuItemDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -84,10 +84,23 @@ as bool,posCode: freezed == posCode ? _self.posCode : posCode // ignore: cast_nu
 as String?,category: freezed == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String?,activeRecipeId: freezed == activeRecipeId ? _self.activeRecipeId : activeRecipeId // ignore: cast_nullable_to_non_nullable
 as int?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
-as int,
+as int,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,
   ));
 }
+/// Create a copy of MenuItemDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
@@ -169,10 +182,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion,  AuditFieldsDto? audit)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MenuItemDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion);case _:
+return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion,_that.audit);case _:
   return orElse();
 
 }
@@ -190,10 +203,10 @@ return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion,  AuditFieldsDto? audit)  $default,) {final _that = this;
 switch (_that) {
 case _MenuItemDto():
-return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion);case _:
+return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion,_that.audit);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -210,10 +223,10 @@ return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion,  AuditFieldsDto? audit)?  $default,) {final _that = this;
 switch (_that) {
 case _MenuItemDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion);case _:
+return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion,_that.audit);case _:
   return null;
 
 }
@@ -225,7 +238,7 @@ return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,
 @JsonSerializable()
 
 class _MenuItemDto extends MenuItemDto {
-  const _MenuItemDto({required this.id, required this.code, required this.name, this.isSubRecipe = false, this.isActive = true, this.posCode, this.category, this.activeRecipeId, this.rowVersion = 1}): super._();
+  const _MenuItemDto({required this.id, required this.code, required this.name, this.isSubRecipe = false, this.isActive = true, this.posCode, this.category, this.activeRecipeId, this.rowVersion = 1, this.audit}): super._();
   factory _MenuItemDto.fromJson(Map<String, dynamic> json) => _$MenuItemDtoFromJson(json);
 
 @override final  int id;
@@ -239,6 +252,7 @@ class _MenuItemDto extends MenuItemDto {
 /// produces no depletion and lands in `unmappedCount`.
 @override final  int? activeRecipeId;
 @override@JsonKey() final  int rowVersion;
+@override final  AuditFieldsDto? audit;
 
 /// Create a copy of MenuItemDto
 /// with the given fields replaced by the non-null parameter values.
@@ -253,18 +267,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MenuItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.isSubRecipe, isSubRecipe) || other.isSubRecipe == isSubRecipe)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.posCode, posCode) || other.posCode == posCode)&&(identical(other.category, category) || other.category == category)&&(identical(other.activeRecipeId, activeRecipeId) || other.activeRecipeId == activeRecipeId)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MenuItemDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.isSubRecipe, isSubRecipe) || other.isSubRecipe == isSubRecipe)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.posCode, posCode) || other.posCode == posCode)&&(identical(other.category, category) || other.category == category)&&(identical(other.activeRecipeId, activeRecipeId) || other.activeRecipeId == activeRecipeId)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.audit, audit) || other.audit == audit));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,code,name,isSubRecipe,isActive,posCode,category,activeRecipeId,rowVersion);
+    return Object.hash(runtimeType,id,code,name,isSubRecipe,isActive,posCode,category,activeRecipeId,rowVersion,audit);
 }
 
 @override
 String toString() {
-    return 'MenuItemDto(id: $id, code: $code, name: $name, isSubRecipe: $isSubRecipe, isActive: $isActive, posCode: $posCode, category: $category, activeRecipeId: $activeRecipeId, rowVersion: $rowVersion)';
+    return 'MenuItemDto(id: $id, code: $code, name: $name, isSubRecipe: $isSubRecipe, isActive: $isActive, posCode: $posCode, category: $category, activeRecipeId: $activeRecipeId, rowVersion: $rowVersion, audit: $audit)';
 }
 
 
@@ -275,11 +289,11 @@ abstract mixin class _$MenuItemDtoCopyWith<$Res> implements $MenuItemDtoCopyWith
   factory _$MenuItemDtoCopyWith(_MenuItemDto value, $Res Function(_MenuItemDto) _then) = __$MenuItemDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String code, String name, bool isSubRecipe, bool isActive, String? posCode, String? category, int? activeRecipeId, int rowVersion
+ int id, String code, String name, bool isSubRecipe, bool isActive, String? posCode, String? category, int? activeRecipeId, int rowVersion, AuditFieldsDto? audit
 });
 
 
-
+@override $AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -292,7 +306,7 @@ class __$MenuItemDtoCopyWithImpl<$Res>
 
 /// Create a copy of MenuItemDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? isSubRecipe = null,Object? isActive = null,Object? posCode = freezed,Object? category = freezed,Object? activeRecipeId = freezed,Object? rowVersion = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? isSubRecipe = null,Object? isActive = null,Object? posCode = freezed,Object? category = freezed,Object? activeRecipeId = freezed,Object? rowVersion = null,Object? audit = freezed,}) {
   return _then(_MenuItemDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -303,11 +317,24 @@ as bool,posCode: freezed == posCode ? _self.posCode : posCode // ignore: cast_nu
 as String?,category: freezed == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
 as String?,activeRecipeId: freezed == activeRecipeId ? _self.activeRecipeId : activeRecipeId // ignore: cast_nullable_to_non_nullable
 as int?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
-as int,
+as int,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,
   ));
 }
 
+/// Create a copy of MenuItemDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
@@ -315,7 +342,7 @@ as int,
 mixin _$MenuItemDetailDto {
 
  int get id; String get code; String get name; bool get isSubRecipe; bool get isActive; String? get posCode; String? get category; int? get activeRecipeId; int get rowVersion; int get recipeVersionCount;/// Recipes this sub-recipe is a component of.
- List<RecipeSummaryDto> get usedInRecipes;
+ List<RecipeSummaryDto> get usedInRecipes; AuditFieldsDto? get audit;
 /// Create a copy of MenuItemDetailDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -329,20 +356,20 @@ $MenuItemDetailDtoCopyWith<MenuItemDetailDto> get copyWith => _$MenuItemDetailDt
 @override
 bool operator ==(Object other) {
   final _this = this as MenuItemDetailDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MenuItemDetailDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.isSubRecipe, _this.isSubRecipe) || other.isSubRecipe == _this.isSubRecipe)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&(identical(other.posCode, _this.posCode) || other.posCode == _this.posCode)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.activeRecipeId, _this.activeRecipeId) || other.activeRecipeId == _this.activeRecipeId)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&(identical(other.recipeVersionCount, _this.recipeVersionCount) || other.recipeVersionCount == _this.recipeVersionCount)&&const DeepCollectionEquality().equals(other.usedInRecipes, _this.usedInRecipes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MenuItemDetailDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.isSubRecipe, _this.isSubRecipe) || other.isSubRecipe == _this.isSubRecipe)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&(identical(other.posCode, _this.posCode) || other.posCode == _this.posCode)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.activeRecipeId, _this.activeRecipeId) || other.activeRecipeId == _this.activeRecipeId)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&(identical(other.recipeVersionCount, _this.recipeVersionCount) || other.recipeVersionCount == _this.recipeVersionCount)&&const DeepCollectionEquality().equals(other.usedInRecipes, _this.usedInRecipes)&&(identical(other.audit, _this.audit) || other.audit == _this.audit));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as MenuItemDetailDto;
-  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.isSubRecipe,_this.isActive,_this.posCode,_this.category,_this.activeRecipeId,_this.rowVersion,_this.recipeVersionCount,const DeepCollectionEquality().hash(_this.usedInRecipes));
+  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.isSubRecipe,_this.isActive,_this.posCode,_this.category,_this.activeRecipeId,_this.rowVersion,_this.recipeVersionCount,const DeepCollectionEquality().hash(_this.usedInRecipes),_this.audit);
 }
 
 @override
 String toString() {
   final _this = this as MenuItemDetailDto;
-  return 'MenuItemDetailDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, isSubRecipe: ${_this.isSubRecipe}, isActive: ${_this.isActive}, posCode: ${_this.posCode}, category: ${_this.category}, activeRecipeId: ${_this.activeRecipeId}, rowVersion: ${_this.rowVersion}, recipeVersionCount: ${_this.recipeVersionCount}, usedInRecipes: ${_this.usedInRecipes})';
+  return 'MenuItemDetailDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, isSubRecipe: ${_this.isSubRecipe}, isActive: ${_this.isActive}, posCode: ${_this.posCode}, category: ${_this.category}, activeRecipeId: ${_this.activeRecipeId}, rowVersion: ${_this.rowVersion}, recipeVersionCount: ${_this.recipeVersionCount}, usedInRecipes: ${_this.usedInRecipes}, audit: ${_this.audit})';
 }
 
 
@@ -353,11 +380,11 @@ abstract mixin class $MenuItemDetailDtoCopyWith<$Res>  {
   factory $MenuItemDetailDtoCopyWith(MenuItemDetailDto value, $Res Function(MenuItemDetailDto) _then) = _$MenuItemDetailDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String code, String name, bool isSubRecipe, bool isActive, String? posCode, String? category, int? activeRecipeId, int rowVersion, int recipeVersionCount, List<RecipeSummaryDto> usedInRecipes
+ int id, String code, String name, bool isSubRecipe, bool isActive, String? posCode, String? category, int? activeRecipeId, int rowVersion, int recipeVersionCount, List<RecipeSummaryDto> usedInRecipes, AuditFieldsDto? audit
 });
 
 
-
+$AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -370,7 +397,7 @@ class _$MenuItemDetailDtoCopyWithImpl<$Res>
 
 /// Create a copy of MenuItemDetailDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? isSubRecipe = null,Object? isActive = null,Object? posCode = freezed,Object? category = freezed,Object? activeRecipeId = freezed,Object? rowVersion = null,Object? recipeVersionCount = null,Object? usedInRecipes = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? isSubRecipe = null,Object? isActive = null,Object? posCode = freezed,Object? category = freezed,Object? activeRecipeId = freezed,Object? rowVersion = null,Object? recipeVersionCount = null,Object? usedInRecipes = null,Object? audit = freezed,}) {
   return _then(MenuItemDetailDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -383,10 +410,23 @@ as String?,activeRecipeId: freezed == activeRecipeId ? _self.activeRecipeId : ac
 as int?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
 as int,recipeVersionCount: null == recipeVersionCount ? _self.recipeVersionCount : recipeVersionCount // ignore: cast_nullable_to_non_nullable
 as int,usedInRecipes: null == usedInRecipes ? _self.usedInRecipes : usedInRecipes // ignore: cast_nullable_to_non_nullable
-as List<RecipeSummaryDto>,
+as List<RecipeSummaryDto>,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,
   ));
 }
+/// Create a copy of MenuItemDetailDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
@@ -468,10 +508,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion,  int recipeVersionCount,  List<RecipeSummaryDto> usedInRecipes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion,  int recipeVersionCount,  List<RecipeSummaryDto> usedInRecipes,  AuditFieldsDto? audit)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MenuItemDetailDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion,_that.recipeVersionCount,_that.usedInRecipes);case _:
+return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion,_that.recipeVersionCount,_that.usedInRecipes,_that.audit);case _:
   return orElse();
 
 }
@@ -489,10 +529,10 @@ return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion,  int recipeVersionCount,  List<RecipeSummaryDto> usedInRecipes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion,  int recipeVersionCount,  List<RecipeSummaryDto> usedInRecipes,  AuditFieldsDto? audit)  $default,) {final _that = this;
 switch (_that) {
 case _MenuItemDetailDto():
-return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion,_that.recipeVersionCount,_that.usedInRecipes);case _:
+return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion,_that.recipeVersionCount,_that.usedInRecipes,_that.audit);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -509,10 +549,10 @@ return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion,  int recipeVersionCount,  List<RecipeSummaryDto> usedInRecipes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  bool isSubRecipe,  bool isActive,  String? posCode,  String? category,  int? activeRecipeId,  int rowVersion,  int recipeVersionCount,  List<RecipeSummaryDto> usedInRecipes,  AuditFieldsDto? audit)?  $default,) {final _that = this;
 switch (_that) {
 case _MenuItemDetailDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion,_that.recipeVersionCount,_that.usedInRecipes);case _:
+return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,_that.posCode,_that.category,_that.activeRecipeId,_that.rowVersion,_that.recipeVersionCount,_that.usedInRecipes,_that.audit);case _:
   return null;
 
 }
@@ -524,7 +564,7 @@ return $default(_that.id,_that.code,_that.name,_that.isSubRecipe,_that.isActive,
 @JsonSerializable()
 
 class _MenuItemDetailDto extends MenuItemDetailDto {
-  const _MenuItemDetailDto({required this.id, required this.code, required this.name, this.isSubRecipe = false, this.isActive = true, this.posCode, this.category, this.activeRecipeId, this.rowVersion = 1, this.recipeVersionCount = 0,  List<RecipeSummaryDto> usedInRecipes = const <RecipeSummaryDto>[]}): _usedInRecipes = usedInRecipes,super._();
+  const _MenuItemDetailDto({required this.id, required this.code, required this.name, this.isSubRecipe = false, this.isActive = true, this.posCode, this.category, this.activeRecipeId, this.rowVersion = 1, this.recipeVersionCount = 0,  List<RecipeSummaryDto> usedInRecipes = const <RecipeSummaryDto>[], this.audit}): _usedInRecipes = usedInRecipes,super._();
   factory _MenuItemDetailDto.fromJson(Map<String, dynamic> json) => _$MenuItemDetailDtoFromJson(json);
 
 @override final  int id;
@@ -546,6 +586,7 @@ class _MenuItemDetailDto extends MenuItemDetailDto {
   return EqualUnmodifiableListView(_usedInRecipes);
 }
 
+@override final  AuditFieldsDto? audit;
 
 /// Create a copy of MenuItemDetailDto
 /// with the given fields replaced by the non-null parameter values.
@@ -560,18 +601,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MenuItemDetailDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.isSubRecipe, isSubRecipe) || other.isSubRecipe == isSubRecipe)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.posCode, posCode) || other.posCode == posCode)&&(identical(other.category, category) || other.category == category)&&(identical(other.activeRecipeId, activeRecipeId) || other.activeRecipeId == activeRecipeId)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.recipeVersionCount, recipeVersionCount) || other.recipeVersionCount == recipeVersionCount)&&const DeepCollectionEquality().equals(other.usedInRecipes, _usedInRecipes));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MenuItemDetailDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.isSubRecipe, isSubRecipe) || other.isSubRecipe == isSubRecipe)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.posCode, posCode) || other.posCode == posCode)&&(identical(other.category, category) || other.category == category)&&(identical(other.activeRecipeId, activeRecipeId) || other.activeRecipeId == activeRecipeId)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.recipeVersionCount, recipeVersionCount) || other.recipeVersionCount == recipeVersionCount)&&const DeepCollectionEquality().equals(other.usedInRecipes, _usedInRecipes)&&(identical(other.audit, audit) || other.audit == audit));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,code,name,isSubRecipe,isActive,posCode,category,activeRecipeId,rowVersion,recipeVersionCount,const DeepCollectionEquality().hash(_usedInRecipes));
+    return Object.hash(runtimeType,id,code,name,isSubRecipe,isActive,posCode,category,activeRecipeId,rowVersion,recipeVersionCount,const DeepCollectionEquality().hash(_usedInRecipes),audit);
 }
 
 @override
 String toString() {
-    return 'MenuItemDetailDto(id: $id, code: $code, name: $name, isSubRecipe: $isSubRecipe, isActive: $isActive, posCode: $posCode, category: $category, activeRecipeId: $activeRecipeId, rowVersion: $rowVersion, recipeVersionCount: $recipeVersionCount, usedInRecipes: $usedInRecipes)';
+    return 'MenuItemDetailDto(id: $id, code: $code, name: $name, isSubRecipe: $isSubRecipe, isActive: $isActive, posCode: $posCode, category: $category, activeRecipeId: $activeRecipeId, rowVersion: $rowVersion, recipeVersionCount: $recipeVersionCount, usedInRecipes: $usedInRecipes, audit: $audit)';
 }
 
 
@@ -582,11 +623,11 @@ abstract mixin class _$MenuItemDetailDtoCopyWith<$Res> implements $MenuItemDetai
   factory _$MenuItemDetailDtoCopyWith(_MenuItemDetailDto value, $Res Function(_MenuItemDetailDto) _then) = __$MenuItemDetailDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String code, String name, bool isSubRecipe, bool isActive, String? posCode, String? category, int? activeRecipeId, int rowVersion, int recipeVersionCount, List<RecipeSummaryDto> usedInRecipes
+ int id, String code, String name, bool isSubRecipe, bool isActive, String? posCode, String? category, int? activeRecipeId, int rowVersion, int recipeVersionCount, List<RecipeSummaryDto> usedInRecipes, AuditFieldsDto? audit
 });
 
 
-
+@override $AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -599,7 +640,7 @@ class __$MenuItemDetailDtoCopyWithImpl<$Res>
 
 /// Create a copy of MenuItemDetailDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? isSubRecipe = null,Object? isActive = null,Object? posCode = freezed,Object? category = freezed,Object? activeRecipeId = freezed,Object? rowVersion = null,Object? recipeVersionCount = null,Object? usedInRecipes = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? isSubRecipe = null,Object? isActive = null,Object? posCode = freezed,Object? category = freezed,Object? activeRecipeId = freezed,Object? rowVersion = null,Object? recipeVersionCount = null,Object? usedInRecipes = null,Object? audit = freezed,}) {
   return _then(_MenuItemDetailDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -612,11 +653,24 @@ as String?,activeRecipeId: freezed == activeRecipeId ? _self.activeRecipeId : ac
 as int?,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
 as int,recipeVersionCount: null == recipeVersionCount ? _self.recipeVersionCount : recipeVersionCount // ignore: cast_nullable_to_non_nullable
 as int,usedInRecipes: null == usedInRecipes ? _self._usedInRecipes : usedInRecipes // ignore: cast_nullable_to_non_nullable
-as List<RecipeSummaryDto>,
+as List<RecipeSummaryDto>,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,
   ));
 }
 
+/// Create a copy of MenuItemDetailDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
@@ -2102,7 +2156,7 @@ as int,
 /// @nodoc
 mixin _$RecipeDto {
 
- int get id; int get menuItemId; int get versionNo; RecipeStatus get status;@DateOnlyConverter() DateTime get validFrom; Quantity get yieldPortions; int get rowVersion; String? get menuItemName;@NullableDateOnlyConverter() DateTime? get validTo; int get lineCount; String? get note; List<RecipeLineDto> get lines;
+ int get id; int get menuItemId; int get versionNo; RecipeStatus get status;@DateOnlyConverter() DateTime get validFrom; Quantity get yieldPortions; int get rowVersion; String? get menuItemName;@NullableDateOnlyConverter() DateTime? get validTo; int get lineCount; String? get note; List<RecipeLineDto> get lines; AuditFieldsDto? get audit;
 /// Create a copy of RecipeDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2116,20 +2170,20 @@ $RecipeDtoCopyWith<RecipeDto> get copyWith => _$RecipeDtoCopyWithImpl<RecipeDto>
 @override
 bool operator ==(Object other) {
   final _this = this as RecipeDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecipeDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.menuItemId, _this.menuItemId) || other.menuItemId == _this.menuItemId)&&(identical(other.versionNo, _this.versionNo) || other.versionNo == _this.versionNo)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.validFrom, _this.validFrom) || other.validFrom == _this.validFrom)&&(identical(other.yieldPortions, _this.yieldPortions) || other.yieldPortions == _this.yieldPortions)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&(identical(other.menuItemName, _this.menuItemName) || other.menuItemName == _this.menuItemName)&&(identical(other.validTo, _this.validTo) || other.validTo == _this.validTo)&&(identical(other.lineCount, _this.lineCount) || other.lineCount == _this.lineCount)&&(identical(other.note, _this.note) || other.note == _this.note)&&const DeepCollectionEquality().equals(other.lines, _this.lines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecipeDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.menuItemId, _this.menuItemId) || other.menuItemId == _this.menuItemId)&&(identical(other.versionNo, _this.versionNo) || other.versionNo == _this.versionNo)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.validFrom, _this.validFrom) || other.validFrom == _this.validFrom)&&(identical(other.yieldPortions, _this.yieldPortions) || other.yieldPortions == _this.yieldPortions)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion)&&(identical(other.menuItemName, _this.menuItemName) || other.menuItemName == _this.menuItemName)&&(identical(other.validTo, _this.validTo) || other.validTo == _this.validTo)&&(identical(other.lineCount, _this.lineCount) || other.lineCount == _this.lineCount)&&(identical(other.note, _this.note) || other.note == _this.note)&&const DeepCollectionEquality().equals(other.lines, _this.lines)&&(identical(other.audit, _this.audit) || other.audit == _this.audit));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as RecipeDto;
-  return Object.hash(runtimeType,_this.id,_this.menuItemId,_this.versionNo,_this.status,_this.validFrom,_this.yieldPortions,_this.rowVersion,_this.menuItemName,_this.validTo,_this.lineCount,_this.note,const DeepCollectionEquality().hash(_this.lines));
+  return Object.hash(runtimeType,_this.id,_this.menuItemId,_this.versionNo,_this.status,_this.validFrom,_this.yieldPortions,_this.rowVersion,_this.menuItemName,_this.validTo,_this.lineCount,_this.note,const DeepCollectionEquality().hash(_this.lines),_this.audit);
 }
 
 @override
 String toString() {
   final _this = this as RecipeDto;
-  return 'RecipeDto(id: ${_this.id}, menuItemId: ${_this.menuItemId}, versionNo: ${_this.versionNo}, status: ${_this.status}, validFrom: ${_this.validFrom}, yieldPortions: ${_this.yieldPortions}, rowVersion: ${_this.rowVersion}, menuItemName: ${_this.menuItemName}, validTo: ${_this.validTo}, lineCount: ${_this.lineCount}, note: ${_this.note}, lines: ${_this.lines})';
+  return 'RecipeDto(id: ${_this.id}, menuItemId: ${_this.menuItemId}, versionNo: ${_this.versionNo}, status: ${_this.status}, validFrom: ${_this.validFrom}, yieldPortions: ${_this.yieldPortions}, rowVersion: ${_this.rowVersion}, menuItemName: ${_this.menuItemName}, validTo: ${_this.validTo}, lineCount: ${_this.lineCount}, note: ${_this.note}, lines: ${_this.lines}, audit: ${_this.audit})';
 }
 
 
@@ -2140,11 +2194,11 @@ abstract mixin class $RecipeDtoCopyWith<$Res>  {
   factory $RecipeDtoCopyWith(RecipeDto value, $Res Function(RecipeDto) _then) = _$RecipeDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, int menuItemId, int versionNo, RecipeStatus status,@DateOnlyConverter() DateTime validFrom, Quantity yieldPortions, int rowVersion, String? menuItemName,@NullableDateOnlyConverter() DateTime? validTo, int lineCount, String? note, List<RecipeLineDto> lines
+ int id, int menuItemId, int versionNo, RecipeStatus status,@DateOnlyConverter() DateTime validFrom, Quantity yieldPortions, int rowVersion, String? menuItemName,@NullableDateOnlyConverter() DateTime? validTo, int lineCount, String? note, List<RecipeLineDto> lines, AuditFieldsDto? audit
 });
 
 
-
+$AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -2157,7 +2211,7 @@ class _$RecipeDtoCopyWithImpl<$Res>
 
 /// Create a copy of RecipeDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? menuItemId = null,Object? versionNo = null,Object? status = null,Object? validFrom = null,Object? yieldPortions = null,Object? rowVersion = null,Object? menuItemName = freezed,Object? validTo = freezed,Object? lineCount = null,Object? note = freezed,Object? lines = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? menuItemId = null,Object? versionNo = null,Object? status = null,Object? validFrom = null,Object? yieldPortions = null,Object? rowVersion = null,Object? menuItemName = freezed,Object? validTo = freezed,Object? lineCount = null,Object? note = freezed,Object? lines = null,Object? audit = freezed,}) {
   return _then(RecipeDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,menuItemId: null == menuItemId ? _self.menuItemId : menuItemId // ignore: cast_nullable_to_non_nullable
@@ -2171,10 +2225,23 @@ as String?,validTo: freezed == validTo ? _self.validTo : validTo // ignore: cast
 as DateTime?,lineCount: null == lineCount ? _self.lineCount : lineCount // ignore: cast_nullable_to_non_nullable
 as int,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,lines: null == lines ? _self.lines : lines // ignore: cast_nullable_to_non_nullable
-as List<RecipeLineDto>,
+as List<RecipeLineDto>,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,
   ));
 }
+/// Create a copy of RecipeDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
@@ -2256,10 +2323,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int menuItemId,  int versionNo,  RecipeStatus status, @DateOnlyConverter()  DateTime validFrom,  Quantity yieldPortions,  int rowVersion,  String? menuItemName, @NullableDateOnlyConverter()  DateTime? validTo,  int lineCount,  String? note,  List<RecipeLineDto> lines)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int menuItemId,  int versionNo,  RecipeStatus status, @DateOnlyConverter()  DateTime validFrom,  Quantity yieldPortions,  int rowVersion,  String? menuItemName, @NullableDateOnlyConverter()  DateTime? validTo,  int lineCount,  String? note,  List<RecipeLineDto> lines,  AuditFieldsDto? audit)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RecipeDto() when $default != null:
-return $default(_that.id,_that.menuItemId,_that.versionNo,_that.status,_that.validFrom,_that.yieldPortions,_that.rowVersion,_that.menuItemName,_that.validTo,_that.lineCount,_that.note,_that.lines);case _:
+return $default(_that.id,_that.menuItemId,_that.versionNo,_that.status,_that.validFrom,_that.yieldPortions,_that.rowVersion,_that.menuItemName,_that.validTo,_that.lineCount,_that.note,_that.lines,_that.audit);case _:
   return orElse();
 
 }
@@ -2277,10 +2344,10 @@ return $default(_that.id,_that.menuItemId,_that.versionNo,_that.status,_that.val
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int menuItemId,  int versionNo,  RecipeStatus status, @DateOnlyConverter()  DateTime validFrom,  Quantity yieldPortions,  int rowVersion,  String? menuItemName, @NullableDateOnlyConverter()  DateTime? validTo,  int lineCount,  String? note,  List<RecipeLineDto> lines)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int menuItemId,  int versionNo,  RecipeStatus status, @DateOnlyConverter()  DateTime validFrom,  Quantity yieldPortions,  int rowVersion,  String? menuItemName, @NullableDateOnlyConverter()  DateTime? validTo,  int lineCount,  String? note,  List<RecipeLineDto> lines,  AuditFieldsDto? audit)  $default,) {final _that = this;
 switch (_that) {
 case _RecipeDto():
-return $default(_that.id,_that.menuItemId,_that.versionNo,_that.status,_that.validFrom,_that.yieldPortions,_that.rowVersion,_that.menuItemName,_that.validTo,_that.lineCount,_that.note,_that.lines);case _:
+return $default(_that.id,_that.menuItemId,_that.versionNo,_that.status,_that.validFrom,_that.yieldPortions,_that.rowVersion,_that.menuItemName,_that.validTo,_that.lineCount,_that.note,_that.lines,_that.audit);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2297,10 +2364,10 @@ return $default(_that.id,_that.menuItemId,_that.versionNo,_that.status,_that.val
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int menuItemId,  int versionNo,  RecipeStatus status, @DateOnlyConverter()  DateTime validFrom,  Quantity yieldPortions,  int rowVersion,  String? menuItemName, @NullableDateOnlyConverter()  DateTime? validTo,  int lineCount,  String? note,  List<RecipeLineDto> lines)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int menuItemId,  int versionNo,  RecipeStatus status, @DateOnlyConverter()  DateTime validFrom,  Quantity yieldPortions,  int rowVersion,  String? menuItemName, @NullableDateOnlyConverter()  DateTime? validTo,  int lineCount,  String? note,  List<RecipeLineDto> lines,  AuditFieldsDto? audit)?  $default,) {final _that = this;
 switch (_that) {
 case _RecipeDto() when $default != null:
-return $default(_that.id,_that.menuItemId,_that.versionNo,_that.status,_that.validFrom,_that.yieldPortions,_that.rowVersion,_that.menuItemName,_that.validTo,_that.lineCount,_that.note,_that.lines);case _:
+return $default(_that.id,_that.menuItemId,_that.versionNo,_that.status,_that.validFrom,_that.yieldPortions,_that.rowVersion,_that.menuItemName,_that.validTo,_that.lineCount,_that.note,_that.lines,_that.audit);case _:
   return null;
 
 }
@@ -2312,7 +2379,7 @@ return $default(_that.id,_that.menuItemId,_that.versionNo,_that.status,_that.val
 @JsonSerializable()
 
 class _RecipeDto extends RecipeDto {
-  const _RecipeDto({required this.id, required this.menuItemId, required this.versionNo, required this.status, @DateOnlyConverter() required this.validFrom, required this.yieldPortions, required this.rowVersion, this.menuItemName, @NullableDateOnlyConverter() this.validTo, this.lineCount = 0, this.note,  List<RecipeLineDto> lines = const <RecipeLineDto>[]}): _lines = lines,super._();
+  const _RecipeDto({required this.id, required this.menuItemId, required this.versionNo, required this.status, @DateOnlyConverter() required this.validFrom, required this.yieldPortions, required this.rowVersion, this.menuItemName, @NullableDateOnlyConverter() this.validTo, this.lineCount = 0, this.note,  List<RecipeLineDto> lines = const <RecipeLineDto>[], this.audit}): _lines = lines,super._();
   factory _RecipeDto.fromJson(Map<String, dynamic> json) => _$RecipeDtoFromJson(json);
 
 @override final  int id;
@@ -2333,6 +2400,7 @@ class _RecipeDto extends RecipeDto {
   return EqualUnmodifiableListView(_lines);
 }
 
+@override final  AuditFieldsDto? audit;
 
 /// Create a copy of RecipeDto
 /// with the given fields replaced by the non-null parameter values.
@@ -2347,18 +2415,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecipeDto&&(identical(other.id, id) || other.id == id)&&(identical(other.menuItemId, menuItemId) || other.menuItemId == menuItemId)&&(identical(other.versionNo, versionNo) || other.versionNo == versionNo)&&(identical(other.status, status) || other.status == status)&&(identical(other.validFrom, validFrom) || other.validFrom == validFrom)&&(identical(other.yieldPortions, yieldPortions) || other.yieldPortions == yieldPortions)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.menuItemName, menuItemName) || other.menuItemName == menuItemName)&&(identical(other.validTo, validTo) || other.validTo == validTo)&&(identical(other.lineCount, lineCount) || other.lineCount == lineCount)&&(identical(other.note, note) || other.note == note)&&const DeepCollectionEquality().equals(other.lines, _lines));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecipeDto&&(identical(other.id, id) || other.id == id)&&(identical(other.menuItemId, menuItemId) || other.menuItemId == menuItemId)&&(identical(other.versionNo, versionNo) || other.versionNo == versionNo)&&(identical(other.status, status) || other.status == status)&&(identical(other.validFrom, validFrom) || other.validFrom == validFrom)&&(identical(other.yieldPortions, yieldPortions) || other.yieldPortions == yieldPortions)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion)&&(identical(other.menuItemName, menuItemName) || other.menuItemName == menuItemName)&&(identical(other.validTo, validTo) || other.validTo == validTo)&&(identical(other.lineCount, lineCount) || other.lineCount == lineCount)&&(identical(other.note, note) || other.note == note)&&const DeepCollectionEquality().equals(other.lines, _lines)&&(identical(other.audit, audit) || other.audit == audit));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,menuItemId,versionNo,status,validFrom,yieldPortions,rowVersion,menuItemName,validTo,lineCount,note,const DeepCollectionEquality().hash(_lines));
+    return Object.hash(runtimeType,id,menuItemId,versionNo,status,validFrom,yieldPortions,rowVersion,menuItemName,validTo,lineCount,note,const DeepCollectionEquality().hash(_lines),audit);
 }
 
 @override
 String toString() {
-    return 'RecipeDto(id: $id, menuItemId: $menuItemId, versionNo: $versionNo, status: $status, validFrom: $validFrom, yieldPortions: $yieldPortions, rowVersion: $rowVersion, menuItemName: $menuItemName, validTo: $validTo, lineCount: $lineCount, note: $note, lines: $lines)';
+    return 'RecipeDto(id: $id, menuItemId: $menuItemId, versionNo: $versionNo, status: $status, validFrom: $validFrom, yieldPortions: $yieldPortions, rowVersion: $rowVersion, menuItemName: $menuItemName, validTo: $validTo, lineCount: $lineCount, note: $note, lines: $lines, audit: $audit)';
 }
 
 
@@ -2369,11 +2437,11 @@ abstract mixin class _$RecipeDtoCopyWith<$Res> implements $RecipeDtoCopyWith<$Re
   factory _$RecipeDtoCopyWith(_RecipeDto value, $Res Function(_RecipeDto) _then) = __$RecipeDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int menuItemId, int versionNo, RecipeStatus status,@DateOnlyConverter() DateTime validFrom, Quantity yieldPortions, int rowVersion, String? menuItemName,@NullableDateOnlyConverter() DateTime? validTo, int lineCount, String? note, List<RecipeLineDto> lines
+ int id, int menuItemId, int versionNo, RecipeStatus status,@DateOnlyConverter() DateTime validFrom, Quantity yieldPortions, int rowVersion, String? menuItemName,@NullableDateOnlyConverter() DateTime? validTo, int lineCount, String? note, List<RecipeLineDto> lines, AuditFieldsDto? audit
 });
 
 
-
+@override $AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -2386,7 +2454,7 @@ class __$RecipeDtoCopyWithImpl<$Res>
 
 /// Create a copy of RecipeDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? menuItemId = null,Object? versionNo = null,Object? status = null,Object? validFrom = null,Object? yieldPortions = null,Object? rowVersion = null,Object? menuItemName = freezed,Object? validTo = freezed,Object? lineCount = null,Object? note = freezed,Object? lines = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? menuItemId = null,Object? versionNo = null,Object? status = null,Object? validFrom = null,Object? yieldPortions = null,Object? rowVersion = null,Object? menuItemName = freezed,Object? validTo = freezed,Object? lineCount = null,Object? note = freezed,Object? lines = null,Object? audit = freezed,}) {
   return _then(_RecipeDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,menuItemId: null == menuItemId ? _self.menuItemId : menuItemId // ignore: cast_nullable_to_non_nullable
@@ -2400,11 +2468,24 @@ as String?,validTo: freezed == validTo ? _self.validTo : validTo // ignore: cast
 as DateTime?,lineCount: null == lineCount ? _self.lineCount : lineCount // ignore: cast_nullable_to_non_nullable
 as int,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,lines: null == lines ? _self._lines : lines // ignore: cast_nullable_to_non_nullable
-as List<RecipeLineDto>,
+as List<RecipeLineDto>,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,
   ));
 }
 
+/// Create a copy of RecipeDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 

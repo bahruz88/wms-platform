@@ -4,6 +4,8 @@ import 'package:wms_core/wms_core.dart';
 
 import '../../json/date_only_converter.dart';
 import '../common/ref_dtos.dart';
+// `AuditFieldsDto` is defined once, with the identity DTOs.
+import '../identity/identity_dtos.dart';
 
 part 'procurement_dtos.freezed.dart';
 part 'procurement_dtos.g.dart';
@@ -15,12 +17,16 @@ part 'procurement_dtos.g.dart';
 @freezed
 abstract class RequisitionLineDto with _$RequisitionLineDto {
   const factory RequisitionLineDto({
+    required int id,
     required int lineNo,
     required ProductRefDto product,
     required Quantity qty,
     required int uomId,
+    required String uomCode,
     required Quantity convertedQty,
-    String? uomCode,
+    // Stock the requesting location already holds. It is the context a buyer decides on, and the
+    // server computes it precisely so the client does not have to guess.
+    Quantity? currentStockQty,
     String? note,
   }) = _RequisitionLineDto;
 
@@ -45,9 +51,19 @@ abstract class RequisitionDto with _$RequisitionDto {
     @Default(Priority.normal) Priority priority,
     @NullableDateOnlyConverter() DateTime? requiredDate,
     String? note,
-    DateTime? createdAt,
+    // Why an approver sent it back. A rejected requisition used to show the status and nothing else,
+    // so the requester had to ask someone what was wrong with it.
+    String? rejectComment,
+    @Default(0) int lineCount,
+    @Default(<int>[]) List<int> rfqIds,
+    @Default(<int>[]) List<int> purchaseOrderIds,
+    @Default(<int>[]) List<int> attachmentIds,
+    // Who raised it, as a ref — the approver sees a name without a second call.
+    UserRefDto? createdBy,
     @Default(1) int rowVersion,
     @Default(<RequisitionLineDto>[]) List<RequisitionLineDto> lines,
+    // `createdAt` is not sent at the top level; it lives in `audit`.
+    AuditFieldsDto? audit,
   }) = _RequisitionDto;
 
   factory RequisitionDto.fromJson(Map<String, Object?> json) =>
@@ -88,6 +104,24 @@ abstract class CreateRequisitionRequest with _$CreateRequisitionRequest {
 // RFQ / quotation
 // ---------------------------------------------------------------------------
 
+/// `RfqLine` — one product the RFQ asks a price for.
+@freezed
+abstract class RfqLineDto with _$RfqLineDto {
+  const factory RfqLineDto({
+    required int id,
+    required int lineNo,
+    required ProductRefDto product,
+    required Quantity qty,
+    required int uomId,
+    required String uomCode,
+    int? requisitionLineId,
+    String? note,
+  }) = _RfqLineDto;
+
+  factory RfqLineDto.fromJson(Map<String, Object?> json) =>
+      _$RfqLineDtoFromJson(json);
+}
+
 /// `proc_rfq`.
 @freezed
 abstract class RfqDto with _$RfqDto {
@@ -98,8 +132,18 @@ abstract class RfqDto with _$RfqDto {
     required RfqStatus status,
     @NullableDateOnlyConverter() DateTime? dueDate,
     @Default(<int>[]) List<int> requisitionIds,
-    @Default(<int>[]) List<int> supplierIds,
+    // Refs, not ids: `supplierIds` was never sent, so the screen could not name a single supplier it
+    // had gone out to. `supplierCount` is what the list form carries instead of the whole array.
+    @Default(<SupplierRefDto>[]) List<SupplierRefDto> suppliers,
+    @Default(0) int supplierCount,
     @Default(0) int quotationCount,
+    @Default(<RfqLineDto>[]) List<RfqLineDto> lines,
+    // Closing an RFQ needs a chosen quotation; without this the screen could not tell whether one
+    // had been selected and offered a close that the server refuses.
+    int? selectedQuotationId,
+    String? note,
+    @Default(1) int rowVersion,
+    AuditFieldsDto? audit,
   }) = _RfqDto;
 
   factory RfqDto.fromJson(Map<String, Object?> json) => _$RfqDtoFromJson(json);
@@ -108,12 +152,19 @@ abstract class RfqDto with _$RfqDto {
 @freezed
 abstract class QuotationLineDto with _$QuotationLineDto {
   const factory QuotationLineDto({
+    required int id,
+    required int lineNo,
     required ProductRefDto product,
     required Quantity qty,
     required int uomId,
+    required String uomCode,
     required Money unitPrice,
     required Money lineTotal,
-    String? uomCode,
+    // Normalised to AZN per base unit, which is the only way two quotations in different currencies
+    // and units can be compared — the comparison screen had no figure to sort on without it.
+    Money? unitPriceBase,
+    int? rfqLineId,
+    String? note,
   }) = _QuotationLineDto;
 
   factory QuotationLineDto.fromJson(Map<String, Object?> json) =>
@@ -189,11 +240,14 @@ abstract class PurchaseOrderLineDto with _$PurchaseOrderLineDto {
 @freezed
 abstract class ApprovalStepDto with _$ApprovalStepDto {
   const factory ApprovalStepDto({
+    required int id,
     required int stepNo,
+    required String approverRoleCode,
     required ApprovalStatus decision,
-    int? approverUserId,
-    String? approverName,
-    int? delegatedFromUserId,
+    // Refs, not flat names: `approverName`/`approverUserId`/`delegatedFromUserId` were never sent,
+    // so the approval chain rendered without a single approver name on it.
+    UserRefDto? approverUser,
+    UserRefDto? delegatedFromUser,
     DateTime? decidedAt,
     String? comment,
   }) = _ApprovalStepDto;

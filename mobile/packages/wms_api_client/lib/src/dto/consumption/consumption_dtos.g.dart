@@ -16,6 +16,9 @@ _MenuItemDto _$MenuItemDtoFromJson(Map<String, dynamic> json) => _MenuItemDto(
   category: json['category'] as String?,
   activeRecipeId: (json['activeRecipeId'] as num?)?.toInt(),
   rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
+  audit: json['audit'] == null
+      ? null
+      : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$MenuItemDtoToJson(_MenuItemDto instance) =>
@@ -29,6 +32,7 @@ Map<String, dynamic> _$MenuItemDtoToJson(_MenuItemDto instance) =>
       'category': instance.category,
       'activeRecipeId': instance.activeRecipeId,
       'rowVersion': instance.rowVersion,
+      'audit': instance.audit?.toJson(),
     };
 
 _MenuItemDetailDto _$MenuItemDetailDtoFromJson(Map<String, dynamic> json) =>
@@ -48,6 +52,9 @@ _MenuItemDetailDto _$MenuItemDetailDtoFromJson(Map<String, dynamic> json) =>
               ?.map((e) => RecipeSummaryDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const <RecipeSummaryDto>[],
+      audit: json['audit'] == null
+          ? null
+          : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$MenuItemDetailDtoToJson(_MenuItemDetailDto instance) =>
@@ -63,6 +70,7 @@ Map<String, dynamic> _$MenuItemDetailDtoToJson(_MenuItemDetailDto instance) =>
       'rowVersion': instance.rowVersion,
       'recipeVersionCount': instance.recipeVersionCount,
       'usedInRecipes': instance.usedInRecipes.map((e) => e.toJson()).toList(),
+      'audit': instance.audit?.toJson(),
     };
 
 _CreateMenuItemRequest _$CreateMenuItemRequestFromJson(
@@ -237,6 +245,9 @@ _RecipeDto _$RecipeDtoFromJson(Map<String, dynamic> json) => _RecipeDto(
           ?.map((e) => RecipeLineDto.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <RecipeLineDto>[],
+  audit: json['audit'] == null
+      ? null
+      : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$RecipeDtoToJson(_RecipeDto instance) =>
@@ -253,6 +264,7 @@ Map<String, dynamic> _$RecipeDtoToJson(_RecipeDto instance) =>
       'lineCount': instance.lineCount,
       'note': instance.note,
       'lines': instance.lines.map((e) => e.toJson()).toList(),
+      'audit': instance.audit?.toJson(),
     };
 
 _CreateRecipeVersionRequest _$CreateRecipeVersionRequestFromJson(

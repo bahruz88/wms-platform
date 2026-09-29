@@ -14,6 +14,9 @@ import 'package:wms_core/wms_core.dart';
 
 import '../../json/date_only_converter.dart';
 
+// `AuditFieldsDto` is defined once, with the identity DTOs.
+import '../identity/identity_dtos.dart';
+
 part 'consumption_dtos.freezed.dart';
 part 'consumption_dtos.g.dart';
 
@@ -41,6 +44,8 @@ abstract class MenuItemDto with _$MenuItemDto {
     /// produces no depletion and lands in `unmappedCount`.
     int? activeRecipeId,
     @Default(1) int rowVersion,
+    // Carries the row version the update endpoints demand.
+    AuditFieldsDto? audit,
   }) = _MenuItemDto;
 
   const MenuItemDto._();
@@ -69,6 +74,8 @@ abstract class MenuItemDetailDto with _$MenuItemDetailDto {
 
     /// Recipes this sub-recipe is a component of.
     @Default(<RecipeSummaryDto>[]) List<RecipeSummaryDto> usedInRecipes,
+    // Carries the row version the update endpoints demand.
+    AuditFieldsDto? audit,
   }) = _MenuItemDetailDto;
 
   const MenuItemDetailDto._();
@@ -247,6 +254,8 @@ abstract class RecipeDto with _$RecipeDto {
     @Default(0) int lineCount,
     String? note,
     @Default(<RecipeLineDto>[]) List<RecipeLineDto> lines,
+    // Carries the row version the update endpoints demand.
+    AuditFieldsDto? audit,
   }) = _RecipeDto;
 
   const RecipeDto._();

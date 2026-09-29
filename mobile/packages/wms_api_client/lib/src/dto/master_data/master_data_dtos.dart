@@ -33,6 +33,9 @@ abstract class ProductCategoryDto with _$ProductCategoryDto {
     required ProductType productType,
     required String path,
     int? parentId,
+    IssueStrategy? defaultIssueStrategy,
+    @Default(true) bool isActive,
+    @Default(1) int rowVersion,
   }) = _ProductCategoryDto;
 
   factory ProductCategoryDto.fromJson(Map<String, Object?> json) =>
@@ -44,6 +47,7 @@ abstract class ProductCategoryDto with _$ProductCategoryDto {
 abstract class ProductUomDto with _$ProductUomDto {
   const factory ProductUomDto({
     required int id,
+    required int productId,
     required int uomId,
     required Decimal factorToBase,
     @DateOnlyConverter() required DateTime validFrom,
@@ -106,6 +110,34 @@ abstract class ProductDto with _$ProductDto {
   String get categoryLabel => categoryPath ?? (categoryId == null ? '—' : '#$categoryId');
 }
 
+/// `SupplierCertificate` — one document behind a supplier's approval (AQTA, HACCP, ISO).
+@freezed
+abstract class SupplierCertificateDto with _$SupplierCertificateDto {
+  const factory SupplierCertificateDto({
+    required int id,
+    required int supplierId,
+    required String certType,
+    String? certNumber,
+    @NullableDateOnlyConverter() DateTime? issuedDate,
+    @NullableDateOnlyConverter() DateTime? expiryDate,
+    int? attachmentId,
+    @Default(false) bool isExpired,
+  }) = _SupplierCertificateDto;
+
+  const SupplierCertificateDto._();
+
+  factory SupplierCertificateDto.fromJson(Map<String, Object?> json) =>
+      _$SupplierCertificateDtoFromJson(json);
+
+  /// Days until it lapses; negative once it has. Null when the certificate never expires.
+  int? daysToExpiry() {
+    final until = expiryDate;
+    if (until == null) return null;
+    final today = DateTime.now().toUtc();
+    return until.difference(DateTime.utc(today.year, today.month, today.day)).inDays;
+  }
+}
+
 /// `master_supplier`.
 @freezed
 abstract class SupplierDto with _$SupplierDto {
@@ -119,16 +151,29 @@ abstract class SupplierDto with _$SupplierDto {
     String? phone,
     String? email,
     String? address,
+    String? bankDetails,
     String? paymentTerms,
     String? deliveryTerms,
     String? incoterms,
     @Default(false) bool isApprovedFoodSupplier,
     @Default(true) bool isActive,
-    @Default(1) int rowVersion,
+    // AQTA and the rest: a food supplier's approval rests on these, and the screen showed none of
+    // them because the DTO did not read them.
+    @Default(<SupplierCertificateDto>[]) List<SupplierCertificateDto> certificates,
+    // The row version lives in `audit`, not at the top level — see the `rowVersion` getter below.
+    AuditFieldsDto? audit,
   }) = _SupplierDto;
+
+  const SupplierDto._();
 
   factory SupplierDto.fromJson(Map<String, Object?> json) =>
       _$SupplierDtoFromJson(json);
+
+  /// Optimistic concurrency token, which master data carries inside `audit`.
+  int? get rowVersion => audit?.rowVersion;
+
+  /// A certificate that has lapsed blocks a food purchase order (SPEC §9.4).
+  bool get hasExpiredCertificate => certificates.any((c) => c.isExpired);
 }
 
 /// `master_location` - physical and virtual.
@@ -144,6 +189,7 @@ abstract class LocationDto with _$LocationDto {
     @Default(true) bool allowsFood,
     @Default(true) bool allowsNonFood,
     @Default(true) bool isActive,
+    @Default(1) int rowVersion,
   }) = _LocationDto;
 
   factory LocationDto.fromJson(Map<String, Object?> json) =>
@@ -161,6 +207,7 @@ abstract class ReasonCodeDto with _$ReasonCodeDto {
     @Default(true) bool requiresApproval,
     @Default(false) bool requiresPhoto,
     @Default(true) bool isActive,
+    @Default(1) int rowVersion,
   }) = _ReasonCodeDto;
 
   factory ReasonCodeDto.fromJson(Map<String, Object?> json) =>

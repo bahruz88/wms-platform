@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$KpiDto {
 
- String get key; String get label; String get value; String? get unit; String? get trend; String? get previousValue; bool get isCost;
+ String get key; String get label; String get value; String? get unit; Decimal? get trendPct; String get severity;/// In-app path to drill through to, e.g. `/inventory/batches?expiryBefore=…`.
+ String? get link; bool get isCost;
 /// Create a copy of KpiDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -30,20 +31,20 @@ $KpiDtoCopyWith<KpiDto> get copyWith => _$KpiDtoCopyWithImpl<KpiDto>(this as Kpi
 @override
 bool operator ==(Object other) {
   final _this = this as KpiDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is KpiDto&&(identical(other.key, _this.key) || other.key == _this.key)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.value, _this.value) || other.value == _this.value)&&(identical(other.unit, _this.unit) || other.unit == _this.unit)&&(identical(other.trend, _this.trend) || other.trend == _this.trend)&&(identical(other.previousValue, _this.previousValue) || other.previousValue == _this.previousValue)&&(identical(other.isCost, _this.isCost) || other.isCost == _this.isCost));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is KpiDto&&(identical(other.key, _this.key) || other.key == _this.key)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.value, _this.value) || other.value == _this.value)&&(identical(other.unit, _this.unit) || other.unit == _this.unit)&&(identical(other.trendPct, _this.trendPct) || other.trendPct == _this.trendPct)&&(identical(other.severity, _this.severity) || other.severity == _this.severity)&&(identical(other.link, _this.link) || other.link == _this.link)&&(identical(other.isCost, _this.isCost) || other.isCost == _this.isCost));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as KpiDto;
-  return Object.hash(runtimeType,_this.key,_this.label,_this.value,_this.unit,_this.trend,_this.previousValue,_this.isCost);
+  return Object.hash(runtimeType,_this.key,_this.label,_this.value,_this.unit,_this.trendPct,_this.severity,_this.link,_this.isCost);
 }
 
 @override
 String toString() {
   final _this = this as KpiDto;
-  return 'KpiDto(key: ${_this.key}, label: ${_this.label}, value: ${_this.value}, unit: ${_this.unit}, trend: ${_this.trend}, previousValue: ${_this.previousValue}, isCost: ${_this.isCost})';
+  return 'KpiDto(key: ${_this.key}, label: ${_this.label}, value: ${_this.value}, unit: ${_this.unit}, trendPct: ${_this.trendPct}, severity: ${_this.severity}, link: ${_this.link}, isCost: ${_this.isCost})';
 }
 
 
@@ -54,7 +55,7 @@ abstract mixin class $KpiDtoCopyWith<$Res>  {
   factory $KpiDtoCopyWith(KpiDto value, $Res Function(KpiDto) _then) = _$KpiDtoCopyWithImpl;
 @useResult
 $Res call({
- String key, String label, String value, String? unit, String? trend, String? previousValue, bool isCost
+ String key, String label, String value, String? unit, Decimal? trendPct, String severity, String? link, bool isCost
 });
 
 
@@ -71,14 +72,15 @@ class _$KpiDtoCopyWithImpl<$Res>
 
 /// Create a copy of KpiDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? label = null,Object? value = null,Object? unit = freezed,Object? trend = freezed,Object? previousValue = freezed,Object? isCost = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? key = null,Object? label = null,Object? value = null,Object? unit = freezed,Object? trendPct = freezed,Object? severity = null,Object? link = freezed,Object? isCost = null,}) {
   return _then(KpiDto(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as String,unit: freezed == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
-as String?,trend: freezed == trend ? _self.trend : trend // ignore: cast_nullable_to_non_nullable
-as String?,previousValue: freezed == previousValue ? _self.previousValue : previousValue // ignore: cast_nullable_to_non_nullable
+as String?,trendPct: freezed == trendPct ? _self.trendPct : trendPct // ignore: cast_nullable_to_non_nullable
+as Decimal?,severity: null == severity ? _self.severity : severity // ignore: cast_nullable_to_non_nullable
+as String,link: freezed == link ? _self.link : link // ignore: cast_nullable_to_non_nullable
 as String?,isCost: null == isCost ? _self.isCost : isCost // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
@@ -165,10 +167,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String key,  String label,  String value,  String? unit,  String? trend,  String? previousValue,  bool isCost)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String key,  String label,  String value,  String? unit,  Decimal? trendPct,  String severity,  String? link,  bool isCost)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _KpiDto() when $default != null:
-return $default(_that.key,_that.label,_that.value,_that.unit,_that.trend,_that.previousValue,_that.isCost);case _:
+return $default(_that.key,_that.label,_that.value,_that.unit,_that.trendPct,_that.severity,_that.link,_that.isCost);case _:
   return orElse();
 
 }
@@ -186,10 +188,10 @@ return $default(_that.key,_that.label,_that.value,_that.unit,_that.trend,_that.p
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String key,  String label,  String value,  String? unit,  String? trend,  String? previousValue,  bool isCost)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String key,  String label,  String value,  String? unit,  Decimal? trendPct,  String severity,  String? link,  bool isCost)  $default,) {final _that = this;
 switch (_that) {
 case _KpiDto():
-return $default(_that.key,_that.label,_that.value,_that.unit,_that.trend,_that.previousValue,_that.isCost);case _:
+return $default(_that.key,_that.label,_that.value,_that.unit,_that.trendPct,_that.severity,_that.link,_that.isCost);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -206,10 +208,10 @@ return $default(_that.key,_that.label,_that.value,_that.unit,_that.trend,_that.p
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String key,  String label,  String value,  String? unit,  String? trend,  String? previousValue,  bool isCost)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String key,  String label,  String value,  String? unit,  Decimal? trendPct,  String severity,  String? link,  bool isCost)?  $default,) {final _that = this;
 switch (_that) {
 case _KpiDto() when $default != null:
-return $default(_that.key,_that.label,_that.value,_that.unit,_that.trend,_that.previousValue,_that.isCost);case _:
+return $default(_that.key,_that.label,_that.value,_that.unit,_that.trendPct,_that.severity,_that.link,_that.isCost);case _:
   return null;
 
 }
@@ -221,15 +223,17 @@ return $default(_that.key,_that.label,_that.value,_that.unit,_that.trend,_that.p
 @JsonSerializable()
 
 class _KpiDto extends KpiDto {
-  const _KpiDto({required this.key, required this.label, required this.value, this.unit, this.trend, this.previousValue, this.isCost = false}): super._();
+  const _KpiDto({required this.key, required this.label, required this.value, this.unit, this.trendPct, this.severity = 'NORMAL', this.link, this.isCost = false}): super._();
   factory _KpiDto.fromJson(Map<String, dynamic> json) => _$KpiDtoFromJson(json);
 
 @override final  String key;
 @override final  String label;
 @override final  String value;
 @override final  String? unit;
-@override final  String? trend;
-@override final  String? previousValue;
+@override final  Decimal? trendPct;
+@override@JsonKey() final  String severity;
+/// In-app path to drill through to, e.g. `/inventory/batches?expiryBefore=…`.
+@override final  String? link;
 @override@JsonKey() final  bool isCost;
 
 /// Create a copy of KpiDto
@@ -245,18 +249,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _KpiDto&&(identical(other.key, key) || other.key == key)&&(identical(other.label, label) || other.label == label)&&(identical(other.value, value) || other.value == value)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.trend, trend) || other.trend == trend)&&(identical(other.previousValue, previousValue) || other.previousValue == previousValue)&&(identical(other.isCost, isCost) || other.isCost == isCost));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _KpiDto&&(identical(other.key, key) || other.key == key)&&(identical(other.label, label) || other.label == label)&&(identical(other.value, value) || other.value == value)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.trendPct, trendPct) || other.trendPct == trendPct)&&(identical(other.severity, severity) || other.severity == severity)&&(identical(other.link, link) || other.link == link)&&(identical(other.isCost, isCost) || other.isCost == isCost));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,key,label,value,unit,trend,previousValue,isCost);
+    return Object.hash(runtimeType,key,label,value,unit,trendPct,severity,link,isCost);
 }
 
 @override
 String toString() {
-    return 'KpiDto(key: $key, label: $label, value: $value, unit: $unit, trend: $trend, previousValue: $previousValue, isCost: $isCost)';
+    return 'KpiDto(key: $key, label: $label, value: $value, unit: $unit, trendPct: $trendPct, severity: $severity, link: $link, isCost: $isCost)';
 }
 
 
@@ -267,7 +271,7 @@ abstract mixin class _$KpiDtoCopyWith<$Res> implements $KpiDtoCopyWith<$Res> {
   factory _$KpiDtoCopyWith(_KpiDto value, $Res Function(_KpiDto) _then) = __$KpiDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String key, String label, String value, String? unit, String? trend, String? previousValue, bool isCost
+ String key, String label, String value, String? unit, Decimal? trendPct, String severity, String? link, bool isCost
 });
 
 
@@ -284,14 +288,15 @@ class __$KpiDtoCopyWithImpl<$Res>
 
 /// Create a copy of KpiDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? label = null,Object? value = null,Object? unit = freezed,Object? trend = freezed,Object? previousValue = freezed,Object? isCost = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? key = null,Object? label = null,Object? value = null,Object? unit = freezed,Object? trendPct = freezed,Object? severity = null,Object? link = freezed,Object? isCost = null,}) {
   return _then(_KpiDto(
 key: null == key ? _self.key : key // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
 as String,unit: freezed == unit ? _self.unit : unit // ignore: cast_nullable_to_non_nullable
-as String?,trend: freezed == trend ? _self.trend : trend // ignore: cast_nullable_to_non_nullable
-as String?,previousValue: freezed == previousValue ? _self.previousValue : previousValue // ignore: cast_nullable_to_non_nullable
+as String?,trendPct: freezed == trendPct ? _self.trendPct : trendPct // ignore: cast_nullable_to_non_nullable
+as Decimal?,severity: null == severity ? _self.severity : severity // ignore: cast_nullable_to_non_nullable
+as String,link: freezed == link ? _self.link : link // ignore: cast_nullable_to_non_nullable
 as String?,isCost: null == isCost ? _self.isCost : isCost // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
@@ -1455,7 +1460,8 @@ as Map<String, Object?>?,
 /// @nodoc
 mixin _$ReportDefinitionDto {
 
- String get code; String get name; String get category; String? get description; List<Object?> get parameters; List<ReportColumnDto> get columns; List<String> get supportedFormats; bool get requiresCostPermission; int? get maxSyncRows;
+ String get code; String get name; String get category; String? get description; List<Object?> get parameters; List<ReportColumnDto> get columns; List<String> get supportedFormats; bool get requiresCostPermission;/// The report's number in TOR §29, for tracing a figure back to what was asked for.
+ String? get torRef; int? get maxSyncRows;
 /// Create a copy of ReportDefinitionDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1469,20 +1475,20 @@ $ReportDefinitionDtoCopyWith<ReportDefinitionDto> get copyWith => _$ReportDefini
 @override
 bool operator ==(Object other) {
   final _this = this as ReportDefinitionDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportDefinitionDto&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.description, _this.description) || other.description == _this.description)&&const DeepCollectionEquality().equals(other.parameters, _this.parameters)&&const DeepCollectionEquality().equals(other.columns, _this.columns)&&const DeepCollectionEquality().equals(other.supportedFormats, _this.supportedFormats)&&(identical(other.requiresCostPermission, _this.requiresCostPermission) || other.requiresCostPermission == _this.requiresCostPermission)&&(identical(other.maxSyncRows, _this.maxSyncRows) || other.maxSyncRows == _this.maxSyncRows));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportDefinitionDto&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.category, _this.category) || other.category == _this.category)&&(identical(other.description, _this.description) || other.description == _this.description)&&const DeepCollectionEquality().equals(other.parameters, _this.parameters)&&const DeepCollectionEquality().equals(other.columns, _this.columns)&&const DeepCollectionEquality().equals(other.supportedFormats, _this.supportedFormats)&&(identical(other.requiresCostPermission, _this.requiresCostPermission) || other.requiresCostPermission == _this.requiresCostPermission)&&(identical(other.torRef, _this.torRef) || other.torRef == _this.torRef)&&(identical(other.maxSyncRows, _this.maxSyncRows) || other.maxSyncRows == _this.maxSyncRows));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ReportDefinitionDto;
-  return Object.hash(runtimeType,_this.code,_this.name,_this.category,_this.description,const DeepCollectionEquality().hash(_this.parameters),const DeepCollectionEquality().hash(_this.columns),const DeepCollectionEquality().hash(_this.supportedFormats),_this.requiresCostPermission,_this.maxSyncRows);
+  return Object.hash(runtimeType,_this.code,_this.name,_this.category,_this.description,const DeepCollectionEquality().hash(_this.parameters),const DeepCollectionEquality().hash(_this.columns),const DeepCollectionEquality().hash(_this.supportedFormats),_this.requiresCostPermission,_this.torRef,_this.maxSyncRows);
 }
 
 @override
 String toString() {
   final _this = this as ReportDefinitionDto;
-  return 'ReportDefinitionDto(code: ${_this.code}, name: ${_this.name}, category: ${_this.category}, description: ${_this.description}, parameters: ${_this.parameters}, columns: ${_this.columns}, supportedFormats: ${_this.supportedFormats}, requiresCostPermission: ${_this.requiresCostPermission}, maxSyncRows: ${_this.maxSyncRows})';
+  return 'ReportDefinitionDto(code: ${_this.code}, name: ${_this.name}, category: ${_this.category}, description: ${_this.description}, parameters: ${_this.parameters}, columns: ${_this.columns}, supportedFormats: ${_this.supportedFormats}, requiresCostPermission: ${_this.requiresCostPermission}, torRef: ${_this.torRef}, maxSyncRows: ${_this.maxSyncRows})';
 }
 
 
@@ -1493,7 +1499,7 @@ abstract mixin class $ReportDefinitionDtoCopyWith<$Res>  {
   factory $ReportDefinitionDtoCopyWith(ReportDefinitionDto value, $Res Function(ReportDefinitionDto) _then) = _$ReportDefinitionDtoCopyWithImpl;
 @useResult
 $Res call({
- String code, String name, String category, String? description, List<Object?> parameters, List<ReportColumnDto> columns, List<String> supportedFormats, bool requiresCostPermission, int? maxSyncRows
+ String code, String name, String category, String? description, List<Object?> parameters, List<ReportColumnDto> columns, List<String> supportedFormats, bool requiresCostPermission, String? torRef, int? maxSyncRows
 });
 
 
@@ -1510,7 +1516,7 @@ class _$ReportDefinitionDtoCopyWithImpl<$Res>
 
 /// Create a copy of ReportDefinitionDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? name = null,Object? category = null,Object? description = freezed,Object? parameters = null,Object? columns = null,Object? supportedFormats = null,Object? requiresCostPermission = null,Object? maxSyncRows = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? name = null,Object? category = null,Object? description = freezed,Object? parameters = null,Object? columns = null,Object? supportedFormats = null,Object? requiresCostPermission = null,Object? torRef = freezed,Object? maxSyncRows = freezed,}) {
   return _then(ReportDefinitionDto(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -1520,7 +1526,8 @@ as String?,parameters: null == parameters ? _self.parameters : parameters // ign
 as List<Object?>,columns: null == columns ? _self.columns : columns // ignore: cast_nullable_to_non_nullable
 as List<ReportColumnDto>,supportedFormats: null == supportedFormats ? _self.supportedFormats : supportedFormats // ignore: cast_nullable_to_non_nullable
 as List<String>,requiresCostPermission: null == requiresCostPermission ? _self.requiresCostPermission : requiresCostPermission // ignore: cast_nullable_to_non_nullable
-as bool,maxSyncRows: freezed == maxSyncRows ? _self.maxSyncRows : maxSyncRows // ignore: cast_nullable_to_non_nullable
+as bool,torRef: freezed == torRef ? _self.torRef : torRef // ignore: cast_nullable_to_non_nullable
+as String?,maxSyncRows: freezed == maxSyncRows ? _self.maxSyncRows : maxSyncRows // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
 }
@@ -1606,10 +1613,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<ReportColumnDto> columns,  List<String> supportedFormats,  bool requiresCostPermission,  int? maxSyncRows)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<ReportColumnDto> columns,  List<String> supportedFormats,  bool requiresCostPermission,  String? torRef,  int? maxSyncRows)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReportDefinitionDto() when $default != null:
-return $default(_that.code,_that.name,_that.category,_that.description,_that.parameters,_that.columns,_that.supportedFormats,_that.requiresCostPermission,_that.maxSyncRows);case _:
+return $default(_that.code,_that.name,_that.category,_that.description,_that.parameters,_that.columns,_that.supportedFormats,_that.requiresCostPermission,_that.torRef,_that.maxSyncRows);case _:
   return orElse();
 
 }
@@ -1627,10 +1634,10 @@ return $default(_that.code,_that.name,_that.category,_that.description,_that.par
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<ReportColumnDto> columns,  List<String> supportedFormats,  bool requiresCostPermission,  int? maxSyncRows)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<ReportColumnDto> columns,  List<String> supportedFormats,  bool requiresCostPermission,  String? torRef,  int? maxSyncRows)  $default,) {final _that = this;
 switch (_that) {
 case _ReportDefinitionDto():
-return $default(_that.code,_that.name,_that.category,_that.description,_that.parameters,_that.columns,_that.supportedFormats,_that.requiresCostPermission,_that.maxSyncRows);case _:
+return $default(_that.code,_that.name,_that.category,_that.description,_that.parameters,_that.columns,_that.supportedFormats,_that.requiresCostPermission,_that.torRef,_that.maxSyncRows);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1647,10 +1654,10 @@ return $default(_that.code,_that.name,_that.category,_that.description,_that.par
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<ReportColumnDto> columns,  List<String> supportedFormats,  bool requiresCostPermission,  int? maxSyncRows)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  String name,  String category,  String? description,  List<Object?> parameters,  List<ReportColumnDto> columns,  List<String> supportedFormats,  bool requiresCostPermission,  String? torRef,  int? maxSyncRows)?  $default,) {final _that = this;
 switch (_that) {
 case _ReportDefinitionDto() when $default != null:
-return $default(_that.code,_that.name,_that.category,_that.description,_that.parameters,_that.columns,_that.supportedFormats,_that.requiresCostPermission,_that.maxSyncRows);case _:
+return $default(_that.code,_that.name,_that.category,_that.description,_that.parameters,_that.columns,_that.supportedFormats,_that.requiresCostPermission,_that.torRef,_that.maxSyncRows);case _:
   return null;
 
 }
@@ -1662,7 +1669,7 @@ return $default(_that.code,_that.name,_that.category,_that.description,_that.par
 @JsonSerializable()
 
 class _ReportDefinitionDto extends ReportDefinitionDto {
-  const _ReportDefinitionDto({required this.code, required this.name, required this.category, this.description,  List<Object?> parameters = const <Object?>[],  List<ReportColumnDto> columns = const <ReportColumnDto>[],  List<String> supportedFormats = const <String>[], this.requiresCostPermission = false, this.maxSyncRows}): _parameters = parameters,_columns = columns,_supportedFormats = supportedFormats,super._();
+  const _ReportDefinitionDto({required this.code, required this.name, required this.category, this.description,  List<Object?> parameters = const <Object?>[],  List<ReportColumnDto> columns = const <ReportColumnDto>[],  List<String> supportedFormats = const <String>[], this.requiresCostPermission = false, this.torRef, this.maxSyncRows}): _parameters = parameters,_columns = columns,_supportedFormats = supportedFormats,super._();
   factory _ReportDefinitionDto.fromJson(Map<String, dynamic> json) => _$ReportDefinitionDtoFromJson(json);
 
 @override final  String code;
@@ -1691,6 +1698,8 @@ class _ReportDefinitionDto extends ReportDefinitionDto {
 }
 
 @override@JsonKey() final  bool requiresCostPermission;
+/// The report's number in TOR §29, for tracing a figure back to what was asked for.
+@override final  String? torRef;
 @override final  int? maxSyncRows;
 
 /// Create a copy of ReportDefinitionDto
@@ -1706,18 +1715,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportDefinitionDto&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.category, category) || other.category == category)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.parameters, _parameters)&&const DeepCollectionEquality().equals(other.columns, _columns)&&const DeepCollectionEquality().equals(other.supportedFormats, _supportedFormats)&&(identical(other.requiresCostPermission, requiresCostPermission) || other.requiresCostPermission == requiresCostPermission)&&(identical(other.maxSyncRows, maxSyncRows) || other.maxSyncRows == maxSyncRows));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportDefinitionDto&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.category, category) || other.category == category)&&(identical(other.description, description) || other.description == description)&&const DeepCollectionEquality().equals(other.parameters, _parameters)&&const DeepCollectionEquality().equals(other.columns, _columns)&&const DeepCollectionEquality().equals(other.supportedFormats, _supportedFormats)&&(identical(other.requiresCostPermission, requiresCostPermission) || other.requiresCostPermission == requiresCostPermission)&&(identical(other.torRef, torRef) || other.torRef == torRef)&&(identical(other.maxSyncRows, maxSyncRows) || other.maxSyncRows == maxSyncRows));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,code,name,category,description,const DeepCollectionEquality().hash(_parameters),const DeepCollectionEquality().hash(_columns),const DeepCollectionEquality().hash(_supportedFormats),requiresCostPermission,maxSyncRows);
+    return Object.hash(runtimeType,code,name,category,description,const DeepCollectionEquality().hash(_parameters),const DeepCollectionEquality().hash(_columns),const DeepCollectionEquality().hash(_supportedFormats),requiresCostPermission,torRef,maxSyncRows);
 }
 
 @override
 String toString() {
-    return 'ReportDefinitionDto(code: $code, name: $name, category: $category, description: $description, parameters: $parameters, columns: $columns, supportedFormats: $supportedFormats, requiresCostPermission: $requiresCostPermission, maxSyncRows: $maxSyncRows)';
+    return 'ReportDefinitionDto(code: $code, name: $name, category: $category, description: $description, parameters: $parameters, columns: $columns, supportedFormats: $supportedFormats, requiresCostPermission: $requiresCostPermission, torRef: $torRef, maxSyncRows: $maxSyncRows)';
 }
 
 
@@ -1728,7 +1737,7 @@ abstract mixin class _$ReportDefinitionDtoCopyWith<$Res> implements $ReportDefin
   factory _$ReportDefinitionDtoCopyWith(_ReportDefinitionDto value, $Res Function(_ReportDefinitionDto) _then) = __$ReportDefinitionDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String code, String name, String category, String? description, List<Object?> parameters, List<ReportColumnDto> columns, List<String> supportedFormats, bool requiresCostPermission, int? maxSyncRows
+ String code, String name, String category, String? description, List<Object?> parameters, List<ReportColumnDto> columns, List<String> supportedFormats, bool requiresCostPermission, String? torRef, int? maxSyncRows
 });
 
 
@@ -1745,7 +1754,7 @@ class __$ReportDefinitionDtoCopyWithImpl<$Res>
 
 /// Create a copy of ReportDefinitionDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? name = null,Object? category = null,Object? description = freezed,Object? parameters = null,Object? columns = null,Object? supportedFormats = null,Object? requiresCostPermission = null,Object? maxSyncRows = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? name = null,Object? category = null,Object? description = freezed,Object? parameters = null,Object? columns = null,Object? supportedFormats = null,Object? requiresCostPermission = null,Object? torRef = freezed,Object? maxSyncRows = freezed,}) {
   return _then(_ReportDefinitionDto(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -1755,7 +1764,8 @@ as String?,parameters: null == parameters ? _self._parameters : parameters // ig
 as List<Object?>,columns: null == columns ? _self._columns : columns // ignore: cast_nullable_to_non_nullable
 as List<ReportColumnDto>,supportedFormats: null == supportedFormats ? _self._supportedFormats : supportedFormats // ignore: cast_nullable_to_non_nullable
 as List<String>,requiresCostPermission: null == requiresCostPermission ? _self.requiresCostPermission : requiresCostPermission // ignore: cast_nullable_to_non_nullable
-as bool,maxSyncRows: freezed == maxSyncRows ? _self.maxSyncRows : maxSyncRows // ignore: cast_nullable_to_non_nullable
+as bool,torRef: freezed == torRef ? _self.torRef : torRef // ignore: cast_nullable_to_non_nullable
+as String?,maxSyncRows: freezed == maxSyncRows ? _self.maxSyncRows : maxSyncRows // ignore: cast_nullable_to_non_nullable
 as int?,
   ));
 }
@@ -1767,7 +1777,7 @@ as int?,
 /// @nodoc
 mixin _$ExportJobDto {
 
- int get id; String get reportCode; String get status; String get format; DateTime get requestedAt; int get progressPct; int? get rowCount; String? get fileName; int? get sizeBytes; String? get downloadUrl; DateTime? get downloadUrlExpiresAt; DateTime? get completedAt; DateTime? get expiresAt; String? get statusUrl;
+ int get id; String get reportCode; String get status; String get format; DateTime get requestedAt; int get progressPct; int? get rowCount; String? get fileName; int? get sizeBytes; String? get downloadUrl; DateTime? get downloadUrlExpiresAt; String? get errorMessage; DateTime? get completedAt; DateTime? get expiresAt; String? get statusUrl;
 /// Create a copy of ExportJobDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1781,20 +1791,20 @@ $ExportJobDtoCopyWith<ExportJobDto> get copyWith => _$ExportJobDtoCopyWithImpl<E
 @override
 bool operator ==(Object other) {
   final _this = this as ExportJobDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExportJobDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.reportCode, _this.reportCode) || other.reportCode == _this.reportCode)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.format, _this.format) || other.format == _this.format)&&(identical(other.requestedAt, _this.requestedAt) || other.requestedAt == _this.requestedAt)&&(identical(other.progressPct, _this.progressPct) || other.progressPct == _this.progressPct)&&(identical(other.rowCount, _this.rowCount) || other.rowCount == _this.rowCount)&&(identical(other.fileName, _this.fileName) || other.fileName == _this.fileName)&&(identical(other.sizeBytes, _this.sizeBytes) || other.sizeBytes == _this.sizeBytes)&&(identical(other.downloadUrl, _this.downloadUrl) || other.downloadUrl == _this.downloadUrl)&&(identical(other.downloadUrlExpiresAt, _this.downloadUrlExpiresAt) || other.downloadUrlExpiresAt == _this.downloadUrlExpiresAt)&&(identical(other.completedAt, _this.completedAt) || other.completedAt == _this.completedAt)&&(identical(other.expiresAt, _this.expiresAt) || other.expiresAt == _this.expiresAt)&&(identical(other.statusUrl, _this.statusUrl) || other.statusUrl == _this.statusUrl));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ExportJobDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.reportCode, _this.reportCode) || other.reportCode == _this.reportCode)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.format, _this.format) || other.format == _this.format)&&(identical(other.requestedAt, _this.requestedAt) || other.requestedAt == _this.requestedAt)&&(identical(other.progressPct, _this.progressPct) || other.progressPct == _this.progressPct)&&(identical(other.rowCount, _this.rowCount) || other.rowCount == _this.rowCount)&&(identical(other.fileName, _this.fileName) || other.fileName == _this.fileName)&&(identical(other.sizeBytes, _this.sizeBytes) || other.sizeBytes == _this.sizeBytes)&&(identical(other.downloadUrl, _this.downloadUrl) || other.downloadUrl == _this.downloadUrl)&&(identical(other.downloadUrlExpiresAt, _this.downloadUrlExpiresAt) || other.downloadUrlExpiresAt == _this.downloadUrlExpiresAt)&&(identical(other.errorMessage, _this.errorMessage) || other.errorMessage == _this.errorMessage)&&(identical(other.completedAt, _this.completedAt) || other.completedAt == _this.completedAt)&&(identical(other.expiresAt, _this.expiresAt) || other.expiresAt == _this.expiresAt)&&(identical(other.statusUrl, _this.statusUrl) || other.statusUrl == _this.statusUrl));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ExportJobDto;
-  return Object.hash(runtimeType,_this.id,_this.reportCode,_this.status,_this.format,_this.requestedAt,_this.progressPct,_this.rowCount,_this.fileName,_this.sizeBytes,_this.downloadUrl,_this.downloadUrlExpiresAt,_this.completedAt,_this.expiresAt,_this.statusUrl);
+  return Object.hash(runtimeType,_this.id,_this.reportCode,_this.status,_this.format,_this.requestedAt,_this.progressPct,_this.rowCount,_this.fileName,_this.sizeBytes,_this.downloadUrl,_this.downloadUrlExpiresAt,_this.errorMessage,_this.completedAt,_this.expiresAt,_this.statusUrl);
 }
 
 @override
 String toString() {
   final _this = this as ExportJobDto;
-  return 'ExportJobDto(id: ${_this.id}, reportCode: ${_this.reportCode}, status: ${_this.status}, format: ${_this.format}, requestedAt: ${_this.requestedAt}, progressPct: ${_this.progressPct}, rowCount: ${_this.rowCount}, fileName: ${_this.fileName}, sizeBytes: ${_this.sizeBytes}, downloadUrl: ${_this.downloadUrl}, downloadUrlExpiresAt: ${_this.downloadUrlExpiresAt}, completedAt: ${_this.completedAt}, expiresAt: ${_this.expiresAt}, statusUrl: ${_this.statusUrl})';
+  return 'ExportJobDto(id: ${_this.id}, reportCode: ${_this.reportCode}, status: ${_this.status}, format: ${_this.format}, requestedAt: ${_this.requestedAt}, progressPct: ${_this.progressPct}, rowCount: ${_this.rowCount}, fileName: ${_this.fileName}, sizeBytes: ${_this.sizeBytes}, downloadUrl: ${_this.downloadUrl}, downloadUrlExpiresAt: ${_this.downloadUrlExpiresAt}, errorMessage: ${_this.errorMessage}, completedAt: ${_this.completedAt}, expiresAt: ${_this.expiresAt}, statusUrl: ${_this.statusUrl})';
 }
 
 
@@ -1805,7 +1815,7 @@ abstract mixin class $ExportJobDtoCopyWith<$Res>  {
   factory $ExportJobDtoCopyWith(ExportJobDto value, $Res Function(ExportJobDto) _then) = _$ExportJobDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String reportCode, String status, String format, DateTime requestedAt, int progressPct, int? rowCount, String? fileName, int? sizeBytes, String? downloadUrl, DateTime? downloadUrlExpiresAt, DateTime? completedAt, DateTime? expiresAt, String? statusUrl
+ int id, String reportCode, String status, String format, DateTime requestedAt, int progressPct, int? rowCount, String? fileName, int? sizeBytes, String? downloadUrl, DateTime? downloadUrlExpiresAt, String? errorMessage, DateTime? completedAt, DateTime? expiresAt, String? statusUrl
 });
 
 
@@ -1822,7 +1832,7 @@ class _$ExportJobDtoCopyWithImpl<$Res>
 
 /// Create a copy of ExportJobDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? reportCode = null,Object? status = null,Object? format = null,Object? requestedAt = null,Object? progressPct = null,Object? rowCount = freezed,Object? fileName = freezed,Object? sizeBytes = freezed,Object? downloadUrl = freezed,Object? downloadUrlExpiresAt = freezed,Object? completedAt = freezed,Object? expiresAt = freezed,Object? statusUrl = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? reportCode = null,Object? status = null,Object? format = null,Object? requestedAt = null,Object? progressPct = null,Object? rowCount = freezed,Object? fileName = freezed,Object? sizeBytes = freezed,Object? downloadUrl = freezed,Object? downloadUrlExpiresAt = freezed,Object? errorMessage = freezed,Object? completedAt = freezed,Object? expiresAt = freezed,Object? statusUrl = freezed,}) {
   return _then(ExportJobDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,reportCode: null == reportCode ? _self.reportCode : reportCode // ignore: cast_nullable_to_non_nullable
@@ -1835,7 +1845,8 @@ as int?,fileName: freezed == fileName ? _self.fileName : fileName // ignore: cas
 as String?,sizeBytes: freezed == sizeBytes ? _self.sizeBytes : sizeBytes // ignore: cast_nullable_to_non_nullable
 as int?,downloadUrl: freezed == downloadUrl ? _self.downloadUrl : downloadUrl // ignore: cast_nullable_to_non_nullable
 as String?,downloadUrlExpiresAt: freezed == downloadUrlExpiresAt ? _self.downloadUrlExpiresAt : downloadUrlExpiresAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,completedAt: freezed == completedAt ? _self.completedAt : completedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,completedAt: freezed == completedAt ? _self.completedAt : completedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,statusUrl: freezed == statusUrl ? _self.statusUrl : statusUrl // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -1923,10 +1934,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String reportCode,  String status,  String format,  DateTime requestedAt,  int progressPct,  int? rowCount,  String? fileName,  int? sizeBytes,  String? downloadUrl,  DateTime? downloadUrlExpiresAt,  DateTime? completedAt,  DateTime? expiresAt,  String? statusUrl)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String reportCode,  String status,  String format,  DateTime requestedAt,  int progressPct,  int? rowCount,  String? fileName,  int? sizeBytes,  String? downloadUrl,  DateTime? downloadUrlExpiresAt,  String? errorMessage,  DateTime? completedAt,  DateTime? expiresAt,  String? statusUrl)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ExportJobDto() when $default != null:
-return $default(_that.id,_that.reportCode,_that.status,_that.format,_that.requestedAt,_that.progressPct,_that.rowCount,_that.fileName,_that.sizeBytes,_that.downloadUrl,_that.downloadUrlExpiresAt,_that.completedAt,_that.expiresAt,_that.statusUrl);case _:
+return $default(_that.id,_that.reportCode,_that.status,_that.format,_that.requestedAt,_that.progressPct,_that.rowCount,_that.fileName,_that.sizeBytes,_that.downloadUrl,_that.downloadUrlExpiresAt,_that.errorMessage,_that.completedAt,_that.expiresAt,_that.statusUrl);case _:
   return orElse();
 
 }
@@ -1944,10 +1955,10 @@ return $default(_that.id,_that.reportCode,_that.status,_that.format,_that.reques
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String reportCode,  String status,  String format,  DateTime requestedAt,  int progressPct,  int? rowCount,  String? fileName,  int? sizeBytes,  String? downloadUrl,  DateTime? downloadUrlExpiresAt,  DateTime? completedAt,  DateTime? expiresAt,  String? statusUrl)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String reportCode,  String status,  String format,  DateTime requestedAt,  int progressPct,  int? rowCount,  String? fileName,  int? sizeBytes,  String? downloadUrl,  DateTime? downloadUrlExpiresAt,  String? errorMessage,  DateTime? completedAt,  DateTime? expiresAt,  String? statusUrl)  $default,) {final _that = this;
 switch (_that) {
 case _ExportJobDto():
-return $default(_that.id,_that.reportCode,_that.status,_that.format,_that.requestedAt,_that.progressPct,_that.rowCount,_that.fileName,_that.sizeBytes,_that.downloadUrl,_that.downloadUrlExpiresAt,_that.completedAt,_that.expiresAt,_that.statusUrl);case _:
+return $default(_that.id,_that.reportCode,_that.status,_that.format,_that.requestedAt,_that.progressPct,_that.rowCount,_that.fileName,_that.sizeBytes,_that.downloadUrl,_that.downloadUrlExpiresAt,_that.errorMessage,_that.completedAt,_that.expiresAt,_that.statusUrl);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1964,10 +1975,10 @@ return $default(_that.id,_that.reportCode,_that.status,_that.format,_that.reques
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String reportCode,  String status,  String format,  DateTime requestedAt,  int progressPct,  int? rowCount,  String? fileName,  int? sizeBytes,  String? downloadUrl,  DateTime? downloadUrlExpiresAt,  DateTime? completedAt,  DateTime? expiresAt,  String? statusUrl)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String reportCode,  String status,  String format,  DateTime requestedAt,  int progressPct,  int? rowCount,  String? fileName,  int? sizeBytes,  String? downloadUrl,  DateTime? downloadUrlExpiresAt,  String? errorMessage,  DateTime? completedAt,  DateTime? expiresAt,  String? statusUrl)?  $default,) {final _that = this;
 switch (_that) {
 case _ExportJobDto() when $default != null:
-return $default(_that.id,_that.reportCode,_that.status,_that.format,_that.requestedAt,_that.progressPct,_that.rowCount,_that.fileName,_that.sizeBytes,_that.downloadUrl,_that.downloadUrlExpiresAt,_that.completedAt,_that.expiresAt,_that.statusUrl);case _:
+return $default(_that.id,_that.reportCode,_that.status,_that.format,_that.requestedAt,_that.progressPct,_that.rowCount,_that.fileName,_that.sizeBytes,_that.downloadUrl,_that.downloadUrlExpiresAt,_that.errorMessage,_that.completedAt,_that.expiresAt,_that.statusUrl);case _:
   return null;
 
 }
@@ -1979,7 +1990,7 @@ return $default(_that.id,_that.reportCode,_that.status,_that.format,_that.reques
 @JsonSerializable()
 
 class _ExportJobDto extends ExportJobDto {
-  const _ExportJobDto({required this.id, required this.reportCode, required this.status, required this.format, required this.requestedAt, this.progressPct = 0, this.rowCount, this.fileName, this.sizeBytes, this.downloadUrl, this.downloadUrlExpiresAt, this.completedAt, this.expiresAt, this.statusUrl}): super._();
+  const _ExportJobDto({required this.id, required this.reportCode, required this.status, required this.format, required this.requestedAt, this.progressPct = 0, this.rowCount, this.fileName, this.sizeBytes, this.downloadUrl, this.downloadUrlExpiresAt, this.errorMessage, this.completedAt, this.expiresAt, this.statusUrl}): super._();
   factory _ExportJobDto.fromJson(Map<String, dynamic> json) => _$ExportJobDtoFromJson(json);
 
 @override final  int id;
@@ -1993,6 +2004,7 @@ class _ExportJobDto extends ExportJobDto {
 @override final  int? sizeBytes;
 @override final  String? downloadUrl;
 @override final  DateTime? downloadUrlExpiresAt;
+@override final  String? errorMessage;
 @override final  DateTime? completedAt;
 @override final  DateTime? expiresAt;
 @override final  String? statusUrl;
@@ -2010,18 +2022,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExportJobDto&&(identical(other.id, id) || other.id == id)&&(identical(other.reportCode, reportCode) || other.reportCode == reportCode)&&(identical(other.status, status) || other.status == status)&&(identical(other.format, format) || other.format == format)&&(identical(other.requestedAt, requestedAt) || other.requestedAt == requestedAt)&&(identical(other.progressPct, progressPct) || other.progressPct == progressPct)&&(identical(other.rowCount, rowCount) || other.rowCount == rowCount)&&(identical(other.fileName, fileName) || other.fileName == fileName)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.downloadUrl, downloadUrl) || other.downloadUrl == downloadUrl)&&(identical(other.downloadUrlExpiresAt, downloadUrlExpiresAt) || other.downloadUrlExpiresAt == downloadUrlExpiresAt)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.statusUrl, statusUrl) || other.statusUrl == statusUrl));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ExportJobDto&&(identical(other.id, id) || other.id == id)&&(identical(other.reportCode, reportCode) || other.reportCode == reportCode)&&(identical(other.status, status) || other.status == status)&&(identical(other.format, format) || other.format == format)&&(identical(other.requestedAt, requestedAt) || other.requestedAt == requestedAt)&&(identical(other.progressPct, progressPct) || other.progressPct == progressPct)&&(identical(other.rowCount, rowCount) || other.rowCount == rowCount)&&(identical(other.fileName, fileName) || other.fileName == fileName)&&(identical(other.sizeBytes, sizeBytes) || other.sizeBytes == sizeBytes)&&(identical(other.downloadUrl, downloadUrl) || other.downloadUrl == downloadUrl)&&(identical(other.downloadUrlExpiresAt, downloadUrlExpiresAt) || other.downloadUrlExpiresAt == downloadUrlExpiresAt)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.statusUrl, statusUrl) || other.statusUrl == statusUrl));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,reportCode,status,format,requestedAt,progressPct,rowCount,fileName,sizeBytes,downloadUrl,downloadUrlExpiresAt,completedAt,expiresAt,statusUrl);
+    return Object.hash(runtimeType,id,reportCode,status,format,requestedAt,progressPct,rowCount,fileName,sizeBytes,downloadUrl,downloadUrlExpiresAt,errorMessage,completedAt,expiresAt,statusUrl);
 }
 
 @override
 String toString() {
-    return 'ExportJobDto(id: $id, reportCode: $reportCode, status: $status, format: $format, requestedAt: $requestedAt, progressPct: $progressPct, rowCount: $rowCount, fileName: $fileName, sizeBytes: $sizeBytes, downloadUrl: $downloadUrl, downloadUrlExpiresAt: $downloadUrlExpiresAt, completedAt: $completedAt, expiresAt: $expiresAt, statusUrl: $statusUrl)';
+    return 'ExportJobDto(id: $id, reportCode: $reportCode, status: $status, format: $format, requestedAt: $requestedAt, progressPct: $progressPct, rowCount: $rowCount, fileName: $fileName, sizeBytes: $sizeBytes, downloadUrl: $downloadUrl, downloadUrlExpiresAt: $downloadUrlExpiresAt, errorMessage: $errorMessage, completedAt: $completedAt, expiresAt: $expiresAt, statusUrl: $statusUrl)';
 }
 
 
@@ -2032,7 +2044,7 @@ abstract mixin class _$ExportJobDtoCopyWith<$Res> implements $ExportJobDtoCopyWi
   factory _$ExportJobDtoCopyWith(_ExportJobDto value, $Res Function(_ExportJobDto) _then) = __$ExportJobDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String reportCode, String status, String format, DateTime requestedAt, int progressPct, int? rowCount, String? fileName, int? sizeBytes, String? downloadUrl, DateTime? downloadUrlExpiresAt, DateTime? completedAt, DateTime? expiresAt, String? statusUrl
+ int id, String reportCode, String status, String format, DateTime requestedAt, int progressPct, int? rowCount, String? fileName, int? sizeBytes, String? downloadUrl, DateTime? downloadUrlExpiresAt, String? errorMessage, DateTime? completedAt, DateTime? expiresAt, String? statusUrl
 });
 
 
@@ -2049,7 +2061,7 @@ class __$ExportJobDtoCopyWithImpl<$Res>
 
 /// Create a copy of ExportJobDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? reportCode = null,Object? status = null,Object? format = null,Object? requestedAt = null,Object? progressPct = null,Object? rowCount = freezed,Object? fileName = freezed,Object? sizeBytes = freezed,Object? downloadUrl = freezed,Object? downloadUrlExpiresAt = freezed,Object? completedAt = freezed,Object? expiresAt = freezed,Object? statusUrl = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? reportCode = null,Object? status = null,Object? format = null,Object? requestedAt = null,Object? progressPct = null,Object? rowCount = freezed,Object? fileName = freezed,Object? sizeBytes = freezed,Object? downloadUrl = freezed,Object? downloadUrlExpiresAt = freezed,Object? errorMessage = freezed,Object? completedAt = freezed,Object? expiresAt = freezed,Object? statusUrl = freezed,}) {
   return _then(_ExportJobDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,reportCode: null == reportCode ? _self.reportCode : reportCode // ignore: cast_nullable_to_non_nullable
@@ -2062,7 +2074,8 @@ as int?,fileName: freezed == fileName ? _self.fileName : fileName // ignore: cas
 as String?,sizeBytes: freezed == sizeBytes ? _self.sizeBytes : sizeBytes // ignore: cast_nullable_to_non_nullable
 as int?,downloadUrl: freezed == downloadUrl ? _self.downloadUrl : downloadUrl // ignore: cast_nullable_to_non_nullable
 as String?,downloadUrlExpiresAt: freezed == downloadUrlExpiresAt ? _self.downloadUrlExpiresAt : downloadUrlExpiresAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,completedAt: freezed == completedAt ? _self.completedAt : completedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,completedAt: freezed == completedAt ? _self.completedAt : completedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,statusUrl: freezed == statusUrl ? _self.statusUrl : statusUrl // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -2361,7 +2374,7 @@ as int?,
 /// @nodoc
 mixin _$ReportResultPageDto {
 
- String get code; DateTime get generatedAt; List<ReportColumnDto> get columns;@JsonKey(name: 'rows') List<List<Object?>>? get rawRows; Map<String, String>? get totals; DateTime? get dataAsOf; int get page; int get size; int get totalItems; int get totalPages;
+ String get code; DateTime get generatedAt; List<ReportColumnDto> get columns;@JsonKey(name: 'rows') List<List<Object?>>? get rawRows; Map<String, String>? get totals; DateTime? get dataAsOf; int get page; int get size; int get total;
 /// Create a copy of ReportResultPageDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -2375,20 +2388,20 @@ $ReportResultPageDtoCopyWith<ReportResultPageDto> get copyWith => _$ReportResult
 @override
 bool operator ==(Object other) {
   final _this = this as ReportResultPageDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportResultPageDto&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.generatedAt, _this.generatedAt) || other.generatedAt == _this.generatedAt)&&const DeepCollectionEquality().equals(other.columns, _this.columns)&&const DeepCollectionEquality().equals(other.rawRows, _this.rawRows)&&const DeepCollectionEquality().equals(other.totals, _this.totals)&&(identical(other.dataAsOf, _this.dataAsOf) || other.dataAsOf == _this.dataAsOf)&&(identical(other.page, _this.page) || other.page == _this.page)&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.totalItems, _this.totalItems) || other.totalItems == _this.totalItems)&&(identical(other.totalPages, _this.totalPages) || other.totalPages == _this.totalPages));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReportResultPageDto&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.generatedAt, _this.generatedAt) || other.generatedAt == _this.generatedAt)&&const DeepCollectionEquality().equals(other.columns, _this.columns)&&const DeepCollectionEquality().equals(other.rawRows, _this.rawRows)&&const DeepCollectionEquality().equals(other.totals, _this.totals)&&(identical(other.dataAsOf, _this.dataAsOf) || other.dataAsOf == _this.dataAsOf)&&(identical(other.page, _this.page) || other.page == _this.page)&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.total, _this.total) || other.total == _this.total));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ReportResultPageDto;
-  return Object.hash(runtimeType,_this.code,_this.generatedAt,const DeepCollectionEquality().hash(_this.columns),const DeepCollectionEquality().hash(_this.rawRows),const DeepCollectionEquality().hash(_this.totals),_this.dataAsOf,_this.page,_this.size,_this.totalItems,_this.totalPages);
+  return Object.hash(runtimeType,_this.code,_this.generatedAt,const DeepCollectionEquality().hash(_this.columns),const DeepCollectionEquality().hash(_this.rawRows),const DeepCollectionEquality().hash(_this.totals),_this.dataAsOf,_this.page,_this.size,_this.total);
 }
 
 @override
 String toString() {
   final _this = this as ReportResultPageDto;
-  return 'ReportResultPageDto(code: ${_this.code}, generatedAt: ${_this.generatedAt}, columns: ${_this.columns}, rawRows: ${_this.rawRows}, totals: ${_this.totals}, dataAsOf: ${_this.dataAsOf}, page: ${_this.page}, size: ${_this.size}, totalItems: ${_this.totalItems}, totalPages: ${_this.totalPages})';
+  return 'ReportResultPageDto(code: ${_this.code}, generatedAt: ${_this.generatedAt}, columns: ${_this.columns}, rawRows: ${_this.rawRows}, totals: ${_this.totals}, dataAsOf: ${_this.dataAsOf}, page: ${_this.page}, size: ${_this.size}, total: ${_this.total})';
 }
 
 
@@ -2399,7 +2412,7 @@ abstract mixin class $ReportResultPageDtoCopyWith<$Res>  {
   factory $ReportResultPageDtoCopyWith(ReportResultPageDto value, $Res Function(ReportResultPageDto) _then) = _$ReportResultPageDtoCopyWithImpl;
 @useResult
 $Res call({
- String code, DateTime generatedAt, List<ReportColumnDto> columns,@JsonKey(name: 'rows') List<List<Object?>>? rawRows, Map<String, String>? totals, DateTime? dataAsOf, int page, int size, int totalItems, int totalPages
+ String code, DateTime generatedAt, List<ReportColumnDto> columns,@JsonKey(name: 'rows') List<List<Object?>>? rawRows, Map<String, String>? totals, DateTime? dataAsOf, int page, int size, int total
 });
 
 
@@ -2416,7 +2429,7 @@ class _$ReportResultPageDtoCopyWithImpl<$Res>
 
 /// Create a copy of ReportResultPageDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? generatedAt = null,Object? columns = null,Object? rawRows = freezed,Object? totals = freezed,Object? dataAsOf = freezed,Object? page = null,Object? size = null,Object? totalItems = null,Object? totalPages = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? code = null,Object? generatedAt = null,Object? columns = null,Object? rawRows = freezed,Object? totals = freezed,Object? dataAsOf = freezed,Object? page = null,Object? size = null,Object? total = null,}) {
   return _then(ReportResultPageDto(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable
@@ -2426,8 +2439,7 @@ as List<List<Object?>>?,totals: freezed == totals ? _self.totals : totals // ign
 as Map<String, String>?,dataAsOf: freezed == dataAsOf ? _self.dataAsOf : dataAsOf // ignore: cast_nullable_to_non_nullable
 as DateTime?,page: null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
 as int,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
-as int,totalItems: null == totalItems ? _self.totalItems : totalItems // ignore: cast_nullable_to_non_nullable
-as int,totalPages: null == totalPages ? _self.totalPages : totalPages // ignore: cast_nullable_to_non_nullable
+as int,total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }
@@ -2513,10 +2525,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  DateTime generatedAt,  List<ReportColumnDto> columns, @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals,  DateTime? dataAsOf,  int page,  int size,  int totalItems,  int totalPages)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String code,  DateTime generatedAt,  List<ReportColumnDto> columns, @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals,  DateTime? dataAsOf,  int page,  int size,  int total)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReportResultPageDto() when $default != null:
-return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.totals,_that.dataAsOf,_that.page,_that.size,_that.totalItems,_that.totalPages);case _:
+return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.totals,_that.dataAsOf,_that.page,_that.size,_that.total);case _:
   return orElse();
 
 }
@@ -2534,10 +2546,10 @@ return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  DateTime generatedAt,  List<ReportColumnDto> columns, @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals,  DateTime? dataAsOf,  int page,  int size,  int totalItems,  int totalPages)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String code,  DateTime generatedAt,  List<ReportColumnDto> columns, @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals,  DateTime? dataAsOf,  int page,  int size,  int total)  $default,) {final _that = this;
 switch (_that) {
 case _ReportResultPageDto():
-return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.totals,_that.dataAsOf,_that.page,_that.size,_that.totalItems,_that.totalPages);case _:
+return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.totals,_that.dataAsOf,_that.page,_that.size,_that.total);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2554,10 +2566,10 @@ return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  DateTime generatedAt,  List<ReportColumnDto> columns, @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals,  DateTime? dataAsOf,  int page,  int size,  int totalItems,  int totalPages)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String code,  DateTime generatedAt,  List<ReportColumnDto> columns, @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals,  DateTime? dataAsOf,  int page,  int size,  int total)?  $default,) {final _that = this;
 switch (_that) {
 case _ReportResultPageDto() when $default != null:
-return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.totals,_that.dataAsOf,_that.page,_that.size,_that.totalItems,_that.totalPages);case _:
+return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.totals,_that.dataAsOf,_that.page,_that.size,_that.total);case _:
   return null;
 
 }
@@ -2569,7 +2581,7 @@ return $default(_that.code,_that.generatedAt,_that.columns,_that.rawRows,_that.t
 @JsonSerializable()
 
 class _ReportResultPageDto extends ReportResultPageDto {
-  const _ReportResultPageDto({required this.code, required this.generatedAt,  List<ReportColumnDto> columns = const <ReportColumnDto>[], @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals, this.dataAsOf, this.page = 0, this.size = 0, this.totalItems = 0, this.totalPages = 0}): _columns = columns,_rawRows = rawRows,_totals = totals,super._();
+  const _ReportResultPageDto({required this.code, required this.generatedAt,  List<ReportColumnDto> columns = const <ReportColumnDto>[], @JsonKey(name: 'rows')  List<List<Object?>>? rawRows,  Map<String, String>? totals, this.dataAsOf, this.page = 0, this.size = 0, this.total = 0}): _columns = columns,_rawRows = rawRows,_totals = totals,super._();
   factory _ReportResultPageDto.fromJson(Map<String, dynamic> json) => _$ReportResultPageDtoFromJson(json);
 
 @override final  String code;
@@ -2602,8 +2614,7 @@ class _ReportResultPageDto extends ReportResultPageDto {
 @override final  DateTime? dataAsOf;
 @override@JsonKey() final  int page;
 @override@JsonKey() final  int size;
-@override@JsonKey() final  int totalItems;
-@override@JsonKey() final  int totalPages;
+@override@JsonKey() final  int total;
 
 /// Create a copy of ReportResultPageDto
 /// with the given fields replaced by the non-null parameter values.
@@ -2618,18 +2629,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportResultPageDto&&(identical(other.code, code) || other.code == code)&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other.columns, _columns)&&const DeepCollectionEquality().equals(other.rawRows, _rawRows)&&const DeepCollectionEquality().equals(other.totals, _totals)&&(identical(other.dataAsOf, dataAsOf) || other.dataAsOf == dataAsOf)&&(identical(other.page, page) || other.page == page)&&(identical(other.size, size) || other.size == size)&&(identical(other.totalItems, totalItems) || other.totalItems == totalItems)&&(identical(other.totalPages, totalPages) || other.totalPages == totalPages));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReportResultPageDto&&(identical(other.code, code) || other.code == code)&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other.columns, _columns)&&const DeepCollectionEquality().equals(other.rawRows, _rawRows)&&const DeepCollectionEquality().equals(other.totals, _totals)&&(identical(other.dataAsOf, dataAsOf) || other.dataAsOf == dataAsOf)&&(identical(other.page, page) || other.page == page)&&(identical(other.size, size) || other.size == size)&&(identical(other.total, total) || other.total == total));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,code,generatedAt,const DeepCollectionEquality().hash(_columns),const DeepCollectionEquality().hash(_rawRows),const DeepCollectionEquality().hash(_totals),dataAsOf,page,size,totalItems,totalPages);
+    return Object.hash(runtimeType,code,generatedAt,const DeepCollectionEquality().hash(_columns),const DeepCollectionEquality().hash(_rawRows),const DeepCollectionEquality().hash(_totals),dataAsOf,page,size,total);
 }
 
 @override
 String toString() {
-    return 'ReportResultPageDto(code: $code, generatedAt: $generatedAt, columns: $columns, rawRows: $rawRows, totals: $totals, dataAsOf: $dataAsOf, page: $page, size: $size, totalItems: $totalItems, totalPages: $totalPages)';
+    return 'ReportResultPageDto(code: $code, generatedAt: $generatedAt, columns: $columns, rawRows: $rawRows, totals: $totals, dataAsOf: $dataAsOf, page: $page, size: $size, total: $total)';
 }
 
 
@@ -2640,7 +2651,7 @@ abstract mixin class _$ReportResultPageDtoCopyWith<$Res> implements $ReportResul
   factory _$ReportResultPageDtoCopyWith(_ReportResultPageDto value, $Res Function(_ReportResultPageDto) _then) = __$ReportResultPageDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String code, DateTime generatedAt, List<ReportColumnDto> columns,@JsonKey(name: 'rows') List<List<Object?>>? rawRows, Map<String, String>? totals, DateTime? dataAsOf, int page, int size, int totalItems, int totalPages
+ String code, DateTime generatedAt, List<ReportColumnDto> columns,@JsonKey(name: 'rows') List<List<Object?>>? rawRows, Map<String, String>? totals, DateTime? dataAsOf, int page, int size, int total
 });
 
 
@@ -2657,7 +2668,7 @@ class __$ReportResultPageDtoCopyWithImpl<$Res>
 
 /// Create a copy of ReportResultPageDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? generatedAt = null,Object? columns = null,Object? rawRows = freezed,Object? totals = freezed,Object? dataAsOf = freezed,Object? page = null,Object? size = null,Object? totalItems = null,Object? totalPages = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? code = null,Object? generatedAt = null,Object? columns = null,Object? rawRows = freezed,Object? totals = freezed,Object? dataAsOf = freezed,Object? page = null,Object? size = null,Object? total = null,}) {
   return _then(_ReportResultPageDto(
 code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
 as String,generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable
@@ -2667,8 +2678,7 @@ as List<List<Object?>>?,totals: freezed == totals ? _self._totals : totals // ig
 as Map<String, String>?,dataAsOf: freezed == dataAsOf ? _self.dataAsOf : dataAsOf // ignore: cast_nullable_to_non_nullable
 as DateTime?,page: null == page ? _self.page : page // ignore: cast_nullable_to_non_nullable
 as int,size: null == size ? _self.size : size // ignore: cast_nullable_to_non_nullable
-as int,totalItems: null == totalItems ? _self.totalItems : totalItems // ignore: cast_nullable_to_non_nullable
-as int,totalPages: null == totalPages ? _self.totalPages : totalPages // ignore: cast_nullable_to_non_nullable
+as int,total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
 as int,
   ));
 }

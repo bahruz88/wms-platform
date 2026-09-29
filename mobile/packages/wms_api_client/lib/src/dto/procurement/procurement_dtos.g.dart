@@ -8,23 +8,29 @@ part of 'procurement_dtos.dart';
 
 _RequisitionLineDto _$RequisitionLineDtoFromJson(Map<String, dynamic> json) =>
     _RequisitionLineDto(
+      id: (json['id'] as num).toInt(),
       lineNo: (json['lineNo'] as num).toInt(),
       product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
       qty: Quantity.fromJson(json['qty'] as String),
       uomId: (json['uomId'] as num).toInt(),
+      uomCode: json['uomCode'] as String,
       convertedQty: Quantity.fromJson(json['convertedQty'] as String),
-      uomCode: json['uomCode'] as String?,
+      currentStockQty: json['currentStockQty'] == null
+          ? null
+          : Quantity.fromJson(json['currentStockQty'] as String),
       note: json['note'] as String?,
     );
 
 Map<String, dynamic> _$RequisitionLineDtoToJson(_RequisitionLineDto instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'lineNo': instance.lineNo,
       'product': instance.product.toJson(),
       'qty': instance.qty.toJson(),
       'uomId': instance.uomId,
-      'convertedQty': instance.convertedQty.toJson(),
       'uomCode': instance.uomCode,
+      'convertedQty': instance.convertedQty.toJson(),
+      'currentStockQty': instance.currentStockQty?.toJson(),
       'note': instance.note,
     };
 
@@ -45,9 +51,26 @@ _RequisitionDto _$RequisitionDtoFromJson(Map<String, dynamic> json) =>
         json['requiredDate'] as String?,
       ),
       note: json['note'] as String?,
-      createdAt: json['createdAt'] == null
+      rejectComment: json['rejectComment'] as String?,
+      lineCount: (json['lineCount'] as num?)?.toInt() ?? 0,
+      rfqIds:
+          (json['rfqIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const <int>[],
+      purchaseOrderIds:
+          (json['purchaseOrderIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const <int>[],
+      attachmentIds:
+          (json['attachmentIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const <int>[],
+      createdBy: json['createdBy'] == null
           ? null
-          : DateTime.parse(json['createdAt'] as String),
+          : UserRefDto.fromJson(json['createdBy'] as Map<String, dynamic>),
       rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
       lines:
           (json['lines'] as List<dynamic>?)
@@ -56,6 +79,9 @@ _RequisitionDto _$RequisitionDtoFromJson(Map<String, dynamic> json) =>
               )
               .toList() ??
           const <RequisitionLineDto>[],
+      audit: json['audit'] == null
+          ? null
+          : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$RequisitionDtoToJson(_RequisitionDto instance) =>
@@ -71,9 +97,15 @@ Map<String, dynamic> _$RequisitionDtoToJson(_RequisitionDto instance) =>
         instance.requiredDate,
       ),
       'note': instance.note,
-      'createdAt': instance.createdAt?.toIso8601String(),
+      'rejectComment': instance.rejectComment,
+      'lineCount': instance.lineCount,
+      'rfqIds': instance.rfqIds,
+      'purchaseOrderIds': instance.purchaseOrderIds,
+      'attachmentIds': instance.attachmentIds,
+      'createdBy': instance.createdBy?.toJson(),
       'rowVersion': instance.rowVersion,
       'lines': instance.lines.map((e) => e.toJson()).toList(),
+      'audit': instance.audit?.toJson(),
     };
 
 const _$ProductTypeEnumMap = {
@@ -148,6 +180,29 @@ Map<String, dynamic> _$CreateRequisitionRequestToJson(
   'note': instance.note,
 };
 
+_RfqLineDto _$RfqLineDtoFromJson(Map<String, dynamic> json) => _RfqLineDto(
+  id: (json['id'] as num).toInt(),
+  lineNo: (json['lineNo'] as num).toInt(),
+  product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
+  qty: Quantity.fromJson(json['qty'] as String),
+  uomId: (json['uomId'] as num).toInt(),
+  uomCode: json['uomCode'] as String,
+  requisitionLineId: (json['requisitionLineId'] as num?)?.toInt(),
+  note: json['note'] as String?,
+);
+
+Map<String, dynamic> _$RfqLineDtoToJson(_RfqLineDto instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'lineNo': instance.lineNo,
+      'product': instance.product.toJson(),
+      'qty': instance.qty.toJson(),
+      'uomId': instance.uomId,
+      'uomCode': instance.uomCode,
+      'requisitionLineId': instance.requisitionLineId,
+      'note': instance.note,
+    };
+
 _RfqDto _$RfqDtoFromJson(Map<String, dynamic> json) => _RfqDto(
   id: (json['id'] as num).toInt(),
   docNo: json['docNo'] as String,
@@ -161,12 +216,24 @@ _RfqDto _$RfqDtoFromJson(Map<String, dynamic> json) => _RfqDto(
           ?.map((e) => (e as num).toInt())
           .toList() ??
       const <int>[],
-  supplierIds:
-      (json['supplierIds'] as List<dynamic>?)
-          ?.map((e) => (e as num).toInt())
+  suppliers:
+      (json['suppliers'] as List<dynamic>?)
+          ?.map((e) => SupplierRefDto.fromJson(e as Map<String, dynamic>))
           .toList() ??
-      const <int>[],
+      const <SupplierRefDto>[],
+  supplierCount: (json['supplierCount'] as num?)?.toInt() ?? 0,
   quotationCount: (json['quotationCount'] as num?)?.toInt() ?? 0,
+  lines:
+      (json['lines'] as List<dynamic>?)
+          ?.map((e) => RfqLineDto.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const <RfqLineDto>[],
+  selectedQuotationId: (json['selectedQuotationId'] as num?)?.toInt(),
+  note: json['note'] as String?,
+  rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
+  audit: json['audit'] == null
+      ? null
+      : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$RfqDtoToJson(_RfqDto instance) => <String, dynamic>{
@@ -176,8 +243,14 @@ Map<String, dynamic> _$RfqDtoToJson(_RfqDto instance) => <String, dynamic>{
   'status': _$RfqStatusEnumMap[instance.status]!,
   'dueDate': const NullableDateOnlyConverter().toJson(instance.dueDate),
   'requisitionIds': instance.requisitionIds,
-  'supplierIds': instance.supplierIds,
+  'suppliers': instance.suppliers.map((e) => e.toJson()).toList(),
+  'supplierCount': instance.supplierCount,
   'quotationCount': instance.quotationCount,
+  'lines': instance.lines.map((e) => e.toJson()).toList(),
+  'selectedQuotationId': instance.selectedQuotationId,
+  'note': instance.note,
+  'rowVersion': instance.rowVersion,
+  'audit': instance.audit?.toJson(),
 };
 
 const _$RfqStatusEnumMap = {
@@ -189,22 +262,34 @@ const _$RfqStatusEnumMap = {
 
 _QuotationLineDto _$QuotationLineDtoFromJson(Map<String, dynamic> json) =>
     _QuotationLineDto(
+      id: (json['id'] as num).toInt(),
+      lineNo: (json['lineNo'] as num).toInt(),
       product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
       qty: Quantity.fromJson(json['qty'] as String),
       uomId: (json['uomId'] as num).toInt(),
+      uomCode: json['uomCode'] as String,
       unitPrice: Money.fromJson(json['unitPrice'] as String),
       lineTotal: Money.fromJson(json['lineTotal'] as String),
-      uomCode: json['uomCode'] as String?,
+      unitPriceBase: json['unitPriceBase'] == null
+          ? null
+          : Money.fromJson(json['unitPriceBase'] as String),
+      rfqLineId: (json['rfqLineId'] as num?)?.toInt(),
+      note: json['note'] as String?,
     );
 
 Map<String, dynamic> _$QuotationLineDtoToJson(_QuotationLineDto instance) =>
     <String, dynamic>{
+      'id': instance.id,
+      'lineNo': instance.lineNo,
       'product': instance.product.toJson(),
       'qty': instance.qty.toJson(),
       'uomId': instance.uomId,
+      'uomCode': instance.uomCode,
       'unitPrice': instance.unitPrice.toJson(),
       'lineTotal': instance.lineTotal.toJson(),
-      'uomCode': instance.uomCode,
+      'unitPriceBase': instance.unitPriceBase?.toJson(),
+      'rfqLineId': instance.rfqLineId,
+      'note': instance.note,
     };
 
 _QuotationDto _$QuotationDtoFromJson(
@@ -303,11 +388,18 @@ Map<String, dynamic> _$PurchaseOrderLineDtoToJson(
 
 _ApprovalStepDto _$ApprovalStepDtoFromJson(Map<String, dynamic> json) =>
     _ApprovalStepDto(
+      id: (json['id'] as num).toInt(),
       stepNo: (json['stepNo'] as num).toInt(),
+      approverRoleCode: json['approverRoleCode'] as String,
       decision: $enumDecode(_$ApprovalStatusEnumMap, json['decision']),
-      approverUserId: (json['approverUserId'] as num?)?.toInt(),
-      approverName: json['approverName'] as String?,
-      delegatedFromUserId: (json['delegatedFromUserId'] as num?)?.toInt(),
+      approverUser: json['approverUser'] == null
+          ? null
+          : UserRefDto.fromJson(json['approverUser'] as Map<String, dynamic>),
+      delegatedFromUser: json['delegatedFromUser'] == null
+          ? null
+          : UserRefDto.fromJson(
+              json['delegatedFromUser'] as Map<String, dynamic>,
+            ),
       decidedAt: json['decidedAt'] == null
           ? null
           : DateTime.parse(json['decidedAt'] as String),
@@ -316,11 +408,12 @@ _ApprovalStepDto _$ApprovalStepDtoFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$ApprovalStepDtoToJson(_ApprovalStepDto instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'stepNo': instance.stepNo,
+      'approverRoleCode': instance.approverRoleCode,
       'decision': _$ApprovalStatusEnumMap[instance.decision]!,
-      'approverUserId': instance.approverUserId,
-      'approverName': instance.approverName,
-      'delegatedFromUserId': instance.delegatedFromUserId,
+      'approverUser': instance.approverUser?.toJson(),
+      'delegatedFromUser': instance.delegatedFromUser?.toJson(),
       'decidedAt': instance.decidedAt?.toIso8601String(),
       'comment': instance.comment,
     };

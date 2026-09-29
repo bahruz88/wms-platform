@@ -298,7 +298,7 @@ as int,
 /// @nodoc
 mixin _$ProductCategoryDto {
 
- int get id; String get code; String get name; ProductType get productType; String get path; int? get parentId;
+ int get id; String get code; String get name; ProductType get productType; String get path; int? get parentId; IssueStrategy? get defaultIssueStrategy; bool get isActive; int get rowVersion;
 /// Create a copy of ProductCategoryDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -312,20 +312,20 @@ $ProductCategoryDtoCopyWith<ProductCategoryDto> get copyWith => _$ProductCategor
 @override
 bool operator ==(Object other) {
   final _this = this as ProductCategoryDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductCategoryDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.productType, _this.productType) || other.productType == _this.productType)&&(identical(other.path, _this.path) || other.path == _this.path)&&(identical(other.parentId, _this.parentId) || other.parentId == _this.parentId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductCategoryDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.productType, _this.productType) || other.productType == _this.productType)&&(identical(other.path, _this.path) || other.path == _this.path)&&(identical(other.parentId, _this.parentId) || other.parentId == _this.parentId)&&(identical(other.defaultIssueStrategy, _this.defaultIssueStrategy) || other.defaultIssueStrategy == _this.defaultIssueStrategy)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ProductCategoryDto;
-  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.productType,_this.path,_this.parentId);
+  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.productType,_this.path,_this.parentId,_this.defaultIssueStrategy,_this.isActive,_this.rowVersion);
 }
 
 @override
 String toString() {
   final _this = this as ProductCategoryDto;
-  return 'ProductCategoryDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, productType: ${_this.productType}, path: ${_this.path}, parentId: ${_this.parentId})';
+  return 'ProductCategoryDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, productType: ${_this.productType}, path: ${_this.path}, parentId: ${_this.parentId}, defaultIssueStrategy: ${_this.defaultIssueStrategy}, isActive: ${_this.isActive}, rowVersion: ${_this.rowVersion})';
 }
 
 
@@ -336,7 +336,7 @@ abstract mixin class $ProductCategoryDtoCopyWith<$Res>  {
   factory $ProductCategoryDtoCopyWith(ProductCategoryDto value, $Res Function(ProductCategoryDto) _then) = _$ProductCategoryDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String code, String name, ProductType productType, String path, int? parentId
+ int id, String code, String name, ProductType productType, String path, int? parentId, IssueStrategy? defaultIssueStrategy, bool isActive, int rowVersion
 });
 
 
@@ -353,7 +353,7 @@ class _$ProductCategoryDtoCopyWithImpl<$Res>
 
 /// Create a copy of ProductCategoryDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? productType = null,Object? path = null,Object? parentId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? productType = null,Object? path = null,Object? parentId = freezed,Object? defaultIssueStrategy = freezed,Object? isActive = null,Object? rowVersion = null,}) {
   return _then(ProductCategoryDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -361,7 +361,10 @@ as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non
 as String,productType: null == productType ? _self.productType : productType // ignore: cast_nullable_to_non_nullable
 as ProductType,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as String,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,defaultIssueStrategy: freezed == defaultIssueStrategy ? _self.defaultIssueStrategy : defaultIssueStrategy // ignore: cast_nullable_to_non_nullable
+as IssueStrategy?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -446,10 +449,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  ProductType productType,  String path,  int? parentId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  ProductType productType,  String path,  int? parentId,  IssueStrategy? defaultIssueStrategy,  bool isActive,  int rowVersion)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProductCategoryDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.productType,_that.path,_that.parentId);case _:
+return $default(_that.id,_that.code,_that.name,_that.productType,_that.path,_that.parentId,_that.defaultIssueStrategy,_that.isActive,_that.rowVersion);case _:
   return orElse();
 
 }
@@ -467,10 +470,10 @@ return $default(_that.id,_that.code,_that.name,_that.productType,_that.path,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  ProductType productType,  String path,  int? parentId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  ProductType productType,  String path,  int? parentId,  IssueStrategy? defaultIssueStrategy,  bool isActive,  int rowVersion)  $default,) {final _that = this;
 switch (_that) {
 case _ProductCategoryDto():
-return $default(_that.id,_that.code,_that.name,_that.productType,_that.path,_that.parentId);case _:
+return $default(_that.id,_that.code,_that.name,_that.productType,_that.path,_that.parentId,_that.defaultIssueStrategy,_that.isActive,_that.rowVersion);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -487,10 +490,10 @@ return $default(_that.id,_that.code,_that.name,_that.productType,_that.path,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  ProductType productType,  String path,  int? parentId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  ProductType productType,  String path,  int? parentId,  IssueStrategy? defaultIssueStrategy,  bool isActive,  int rowVersion)?  $default,) {final _that = this;
 switch (_that) {
 case _ProductCategoryDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.productType,_that.path,_that.parentId);case _:
+return $default(_that.id,_that.code,_that.name,_that.productType,_that.path,_that.parentId,_that.defaultIssueStrategy,_that.isActive,_that.rowVersion);case _:
   return null;
 
 }
@@ -502,7 +505,7 @@ return $default(_that.id,_that.code,_that.name,_that.productType,_that.path,_tha
 @JsonSerializable()
 
 class _ProductCategoryDto implements ProductCategoryDto {
-  const _ProductCategoryDto({required this.id, required this.code, required this.name, required this.productType, required this.path, this.parentId});
+  const _ProductCategoryDto({required this.id, required this.code, required this.name, required this.productType, required this.path, this.parentId, this.defaultIssueStrategy, this.isActive = true, this.rowVersion = 1});
   factory _ProductCategoryDto.fromJson(Map<String, dynamic> json) => _$ProductCategoryDtoFromJson(json);
 
 @override final  int id;
@@ -511,6 +514,9 @@ class _ProductCategoryDto implements ProductCategoryDto {
 @override final  ProductType productType;
 @override final  String path;
 @override final  int? parentId;
+@override final  IssueStrategy? defaultIssueStrategy;
+@override@JsonKey() final  bool isActive;
+@override@JsonKey() final  int rowVersion;
 
 /// Create a copy of ProductCategoryDto
 /// with the given fields replaced by the non-null parameter values.
@@ -525,18 +531,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductCategoryDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.productType, productType) || other.productType == productType)&&(identical(other.path, path) || other.path == path)&&(identical(other.parentId, parentId) || other.parentId == parentId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductCategoryDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.productType, productType) || other.productType == productType)&&(identical(other.path, path) || other.path == path)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.defaultIssueStrategy, defaultIssueStrategy) || other.defaultIssueStrategy == defaultIssueStrategy)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,code,name,productType,path,parentId);
+    return Object.hash(runtimeType,id,code,name,productType,path,parentId,defaultIssueStrategy,isActive,rowVersion);
 }
 
 @override
 String toString() {
-    return 'ProductCategoryDto(id: $id, code: $code, name: $name, productType: $productType, path: $path, parentId: $parentId)';
+    return 'ProductCategoryDto(id: $id, code: $code, name: $name, productType: $productType, path: $path, parentId: $parentId, defaultIssueStrategy: $defaultIssueStrategy, isActive: $isActive, rowVersion: $rowVersion)';
 }
 
 
@@ -547,7 +553,7 @@ abstract mixin class _$ProductCategoryDtoCopyWith<$Res> implements $ProductCateg
   factory _$ProductCategoryDtoCopyWith(_ProductCategoryDto value, $Res Function(_ProductCategoryDto) _then) = __$ProductCategoryDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String code, String name, ProductType productType, String path, int? parentId
+ int id, String code, String name, ProductType productType, String path, int? parentId, IssueStrategy? defaultIssueStrategy, bool isActive, int rowVersion
 });
 
 
@@ -564,7 +570,7 @@ class __$ProductCategoryDtoCopyWithImpl<$Res>
 
 /// Create a copy of ProductCategoryDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? productType = null,Object? path = null,Object? parentId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? productType = null,Object? path = null,Object? parentId = freezed,Object? defaultIssueStrategy = freezed,Object? isActive = null,Object? rowVersion = null,}) {
   return _then(_ProductCategoryDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -572,7 +578,10 @@ as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non
 as String,productType: null == productType ? _self.productType : productType // ignore: cast_nullable_to_non_nullable
 as ProductType,path: null == path ? _self.path : path // ignore: cast_nullable_to_non_nullable
 as String,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,defaultIssueStrategy: freezed == defaultIssueStrategy ? _self.defaultIssueStrategy : defaultIssueStrategy // ignore: cast_nullable_to_non_nullable
+as IssueStrategy?,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
+as bool,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -583,7 +592,7 @@ as int?,
 /// @nodoc
 mixin _$ProductUomDto {
 
- int get id; int get uomId; Decimal get factorToBase;@DateOnlyConverter() DateTime get validFrom; String? get uomCode; bool get isPurchaseDefault; bool get isIssueDefault;@NullableDateOnlyConverter() DateTime? get validTo;
+ int get id; int get productId; int get uomId; Decimal get factorToBase;@DateOnlyConverter() DateTime get validFrom; String? get uomCode; bool get isPurchaseDefault; bool get isIssueDefault;@NullableDateOnlyConverter() DateTime? get validTo;
 /// Create a copy of ProductUomDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -597,20 +606,20 @@ $ProductUomDtoCopyWith<ProductUomDto> get copyWith => _$ProductUomDtoCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as ProductUomDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductUomDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.factorToBase, _this.factorToBase) || other.factorToBase == _this.factorToBase)&&(identical(other.validFrom, _this.validFrom) || other.validFrom == _this.validFrom)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.isPurchaseDefault, _this.isPurchaseDefault) || other.isPurchaseDefault == _this.isPurchaseDefault)&&(identical(other.isIssueDefault, _this.isIssueDefault) || other.isIssueDefault == _this.isIssueDefault)&&(identical(other.validTo, _this.validTo) || other.validTo == _this.validTo));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ProductUomDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.factorToBase, _this.factorToBase) || other.factorToBase == _this.factorToBase)&&(identical(other.validFrom, _this.validFrom) || other.validFrom == _this.validFrom)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.isPurchaseDefault, _this.isPurchaseDefault) || other.isPurchaseDefault == _this.isPurchaseDefault)&&(identical(other.isIssueDefault, _this.isIssueDefault) || other.isIssueDefault == _this.isIssueDefault)&&(identical(other.validTo, _this.validTo) || other.validTo == _this.validTo));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ProductUomDto;
-  return Object.hash(runtimeType,_this.id,_this.uomId,_this.factorToBase,_this.validFrom,_this.uomCode,_this.isPurchaseDefault,_this.isIssueDefault,_this.validTo);
+  return Object.hash(runtimeType,_this.id,_this.productId,_this.uomId,_this.factorToBase,_this.validFrom,_this.uomCode,_this.isPurchaseDefault,_this.isIssueDefault,_this.validTo);
 }
 
 @override
 String toString() {
   final _this = this as ProductUomDto;
-  return 'ProductUomDto(id: ${_this.id}, uomId: ${_this.uomId}, factorToBase: ${_this.factorToBase}, validFrom: ${_this.validFrom}, uomCode: ${_this.uomCode}, isPurchaseDefault: ${_this.isPurchaseDefault}, isIssueDefault: ${_this.isIssueDefault}, validTo: ${_this.validTo})';
+  return 'ProductUomDto(id: ${_this.id}, productId: ${_this.productId}, uomId: ${_this.uomId}, factorToBase: ${_this.factorToBase}, validFrom: ${_this.validFrom}, uomCode: ${_this.uomCode}, isPurchaseDefault: ${_this.isPurchaseDefault}, isIssueDefault: ${_this.isIssueDefault}, validTo: ${_this.validTo})';
 }
 
 
@@ -621,7 +630,7 @@ abstract mixin class $ProductUomDtoCopyWith<$Res>  {
   factory $ProductUomDtoCopyWith(ProductUomDto value, $Res Function(ProductUomDto) _then) = _$ProductUomDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, int uomId, Decimal factorToBase,@DateOnlyConverter() DateTime validFrom, String? uomCode, bool isPurchaseDefault, bool isIssueDefault,@NullableDateOnlyConverter() DateTime? validTo
+ int id, int productId, int uomId, Decimal factorToBase,@DateOnlyConverter() DateTime validFrom, String? uomCode, bool isPurchaseDefault, bool isIssueDefault,@NullableDateOnlyConverter() DateTime? validTo
 });
 
 
@@ -638,9 +647,10 @@ class _$ProductUomDtoCopyWithImpl<$Res>
 
 /// Create a copy of ProductUomDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? uomId = null,Object? factorToBase = null,Object? validFrom = null,Object? uomCode = freezed,Object? isPurchaseDefault = null,Object? isIssueDefault = null,Object? validTo = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? productId = null,Object? uomId = null,Object? factorToBase = null,Object? validFrom = null,Object? uomCode = freezed,Object? isPurchaseDefault = null,Object? isIssueDefault = null,Object? validTo = freezed,}) {
   return _then(ProductUomDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as int,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
 as int,factorToBase: null == factorToBase ? _self.factorToBase : factorToBase // ignore: cast_nullable_to_non_nullable
 as Decimal,validFrom: null == validFrom ? _self.validFrom : validFrom // ignore: cast_nullable_to_non_nullable
@@ -733,10 +743,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int uomId,  Decimal factorToBase, @DateOnlyConverter()  DateTime validFrom,  String? uomCode,  bool isPurchaseDefault,  bool isIssueDefault, @NullableDateOnlyConverter()  DateTime? validTo)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int productId,  int uomId,  Decimal factorToBase, @DateOnlyConverter()  DateTime validFrom,  String? uomCode,  bool isPurchaseDefault,  bool isIssueDefault, @NullableDateOnlyConverter()  DateTime? validTo)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProductUomDto() when $default != null:
-return $default(_that.id,_that.uomId,_that.factorToBase,_that.validFrom,_that.uomCode,_that.isPurchaseDefault,_that.isIssueDefault,_that.validTo);case _:
+return $default(_that.id,_that.productId,_that.uomId,_that.factorToBase,_that.validFrom,_that.uomCode,_that.isPurchaseDefault,_that.isIssueDefault,_that.validTo);case _:
   return orElse();
 
 }
@@ -754,10 +764,10 @@ return $default(_that.id,_that.uomId,_that.factorToBase,_that.validFrom,_that.uo
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int uomId,  Decimal factorToBase, @DateOnlyConverter()  DateTime validFrom,  String? uomCode,  bool isPurchaseDefault,  bool isIssueDefault, @NullableDateOnlyConverter()  DateTime? validTo)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int productId,  int uomId,  Decimal factorToBase, @DateOnlyConverter()  DateTime validFrom,  String? uomCode,  bool isPurchaseDefault,  bool isIssueDefault, @NullableDateOnlyConverter()  DateTime? validTo)  $default,) {final _that = this;
 switch (_that) {
 case _ProductUomDto():
-return $default(_that.id,_that.uomId,_that.factorToBase,_that.validFrom,_that.uomCode,_that.isPurchaseDefault,_that.isIssueDefault,_that.validTo);case _:
+return $default(_that.id,_that.productId,_that.uomId,_that.factorToBase,_that.validFrom,_that.uomCode,_that.isPurchaseDefault,_that.isIssueDefault,_that.validTo);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -774,10 +784,10 @@ return $default(_that.id,_that.uomId,_that.factorToBase,_that.validFrom,_that.uo
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int uomId,  Decimal factorToBase, @DateOnlyConverter()  DateTime validFrom,  String? uomCode,  bool isPurchaseDefault,  bool isIssueDefault, @NullableDateOnlyConverter()  DateTime? validTo)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int productId,  int uomId,  Decimal factorToBase, @DateOnlyConverter()  DateTime validFrom,  String? uomCode,  bool isPurchaseDefault,  bool isIssueDefault, @NullableDateOnlyConverter()  DateTime? validTo)?  $default,) {final _that = this;
 switch (_that) {
 case _ProductUomDto() when $default != null:
-return $default(_that.id,_that.uomId,_that.factorToBase,_that.validFrom,_that.uomCode,_that.isPurchaseDefault,_that.isIssueDefault,_that.validTo);case _:
+return $default(_that.id,_that.productId,_that.uomId,_that.factorToBase,_that.validFrom,_that.uomCode,_that.isPurchaseDefault,_that.isIssueDefault,_that.validTo);case _:
   return null;
 
 }
@@ -789,10 +799,11 @@ return $default(_that.id,_that.uomId,_that.factorToBase,_that.validFrom,_that.uo
 @JsonSerializable()
 
 class _ProductUomDto implements ProductUomDto {
-  const _ProductUomDto({required this.id, required this.uomId, required this.factorToBase, @DateOnlyConverter() required this.validFrom, this.uomCode, this.isPurchaseDefault = false, this.isIssueDefault = false, @NullableDateOnlyConverter() this.validTo});
+  const _ProductUomDto({required this.id, required this.productId, required this.uomId, required this.factorToBase, @DateOnlyConverter() required this.validFrom, this.uomCode, this.isPurchaseDefault = false, this.isIssueDefault = false, @NullableDateOnlyConverter() this.validTo});
   factory _ProductUomDto.fromJson(Map<String, dynamic> json) => _$ProductUomDtoFromJson(json);
 
 @override final  int id;
+@override final  int productId;
 @override final  int uomId;
 @override final  Decimal factorToBase;
 @override@DateOnlyConverter() final  DateTime validFrom;
@@ -814,18 +825,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductUomDto&&(identical(other.id, id) || other.id == id)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.factorToBase, factorToBase) || other.factorToBase == factorToBase)&&(identical(other.validFrom, validFrom) || other.validFrom == validFrom)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.isPurchaseDefault, isPurchaseDefault) || other.isPurchaseDefault == isPurchaseDefault)&&(identical(other.isIssueDefault, isIssueDefault) || other.isIssueDefault == isIssueDefault)&&(identical(other.validTo, validTo) || other.validTo == validTo));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ProductUomDto&&(identical(other.id, id) || other.id == id)&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.factorToBase, factorToBase) || other.factorToBase == factorToBase)&&(identical(other.validFrom, validFrom) || other.validFrom == validFrom)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.isPurchaseDefault, isPurchaseDefault) || other.isPurchaseDefault == isPurchaseDefault)&&(identical(other.isIssueDefault, isIssueDefault) || other.isIssueDefault == isIssueDefault)&&(identical(other.validTo, validTo) || other.validTo == validTo));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,uomId,factorToBase,validFrom,uomCode,isPurchaseDefault,isIssueDefault,validTo);
+    return Object.hash(runtimeType,id,productId,uomId,factorToBase,validFrom,uomCode,isPurchaseDefault,isIssueDefault,validTo);
 }
 
 @override
 String toString() {
-    return 'ProductUomDto(id: $id, uomId: $uomId, factorToBase: $factorToBase, validFrom: $validFrom, uomCode: $uomCode, isPurchaseDefault: $isPurchaseDefault, isIssueDefault: $isIssueDefault, validTo: $validTo)';
+    return 'ProductUomDto(id: $id, productId: $productId, uomId: $uomId, factorToBase: $factorToBase, validFrom: $validFrom, uomCode: $uomCode, isPurchaseDefault: $isPurchaseDefault, isIssueDefault: $isIssueDefault, validTo: $validTo)';
 }
 
 
@@ -836,7 +847,7 @@ abstract mixin class _$ProductUomDtoCopyWith<$Res> implements $ProductUomDtoCopy
   factory _$ProductUomDtoCopyWith(_ProductUomDto value, $Res Function(_ProductUomDto) _then) = __$ProductUomDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, int uomId, Decimal factorToBase,@DateOnlyConverter() DateTime validFrom, String? uomCode, bool isPurchaseDefault, bool isIssueDefault,@NullableDateOnlyConverter() DateTime? validTo
+ int id, int productId, int uomId, Decimal factorToBase,@DateOnlyConverter() DateTime validFrom, String? uomCode, bool isPurchaseDefault, bool isIssueDefault,@NullableDateOnlyConverter() DateTime? validTo
 });
 
 
@@ -853,9 +864,10 @@ class __$ProductUomDtoCopyWithImpl<$Res>
 
 /// Create a copy of ProductUomDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? uomId = null,Object? factorToBase = null,Object? validFrom = null,Object? uomCode = freezed,Object? isPurchaseDefault = null,Object? isIssueDefault = null,Object? validTo = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? productId = null,Object? uomId = null,Object? factorToBase = null,Object? validFrom = null,Object? uomCode = freezed,Object? isPurchaseDefault = null,Object? isIssueDefault = null,Object? validTo = freezed,}) {
   return _then(_ProductUomDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as int,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
 as int,factorToBase: null == factorToBase ? _self.factorToBase : factorToBase // ignore: cast_nullable_to_non_nullable
 as Decimal,validFrom: null == validFrom ? _self.validFrom : validFrom // ignore: cast_nullable_to_non_nullable
@@ -1238,9 +1250,300 @@ $AuditFieldsDtoCopyWith<$Res>? get audit {
 
 
 /// @nodoc
+mixin _$SupplierCertificateDto {
+
+ int get id; int get supplierId; String get certType; String? get certNumber;@NullableDateOnlyConverter() DateTime? get issuedDate;@NullableDateOnlyConverter() DateTime? get expiryDate; int? get attachmentId; bool get isExpired;
+/// Create a copy of SupplierCertificateDto
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$SupplierCertificateDtoCopyWith<SupplierCertificateDto> get copyWith => _$SupplierCertificateDtoCopyWithImpl<SupplierCertificateDto>(this as SupplierCertificateDto, _$identity);
+
+  /// Serializes this SupplierCertificateDto to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as SupplierCertificateDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupplierCertificateDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.supplierId, _this.supplierId) || other.supplierId == _this.supplierId)&&(identical(other.certType, _this.certType) || other.certType == _this.certType)&&(identical(other.certNumber, _this.certNumber) || other.certNumber == _this.certNumber)&&(identical(other.issuedDate, _this.issuedDate) || other.issuedDate == _this.issuedDate)&&(identical(other.expiryDate, _this.expiryDate) || other.expiryDate == _this.expiryDate)&&(identical(other.attachmentId, _this.attachmentId) || other.attachmentId == _this.attachmentId)&&(identical(other.isExpired, _this.isExpired) || other.isExpired == _this.isExpired));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as SupplierCertificateDto;
+  return Object.hash(runtimeType,_this.id,_this.supplierId,_this.certType,_this.certNumber,_this.issuedDate,_this.expiryDate,_this.attachmentId,_this.isExpired);
+}
+
+@override
+String toString() {
+  final _this = this as SupplierCertificateDto;
+  return 'SupplierCertificateDto(id: ${_this.id}, supplierId: ${_this.supplierId}, certType: ${_this.certType}, certNumber: ${_this.certNumber}, issuedDate: ${_this.issuedDate}, expiryDate: ${_this.expiryDate}, attachmentId: ${_this.attachmentId}, isExpired: ${_this.isExpired})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $SupplierCertificateDtoCopyWith<$Res>  {
+  factory $SupplierCertificateDtoCopyWith(SupplierCertificateDto value, $Res Function(SupplierCertificateDto) _then) = _$SupplierCertificateDtoCopyWithImpl;
+@useResult
+$Res call({
+ int id, int supplierId, String certType, String? certNumber,@NullableDateOnlyConverter() DateTime? issuedDate,@NullableDateOnlyConverter() DateTime? expiryDate, int? attachmentId, bool isExpired
+});
+
+
+
+
+}
+/// @nodoc
+class _$SupplierCertificateDtoCopyWithImpl<$Res>
+    implements $SupplierCertificateDtoCopyWith<$Res> {
+  _$SupplierCertificateDtoCopyWithImpl(this._self, this._then);
+
+  final SupplierCertificateDto _self;
+  final $Res Function(SupplierCertificateDto) _then;
+
+/// Create a copy of SupplierCertificateDto
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? supplierId = null,Object? certType = null,Object? certNumber = freezed,Object? issuedDate = freezed,Object? expiryDate = freezed,Object? attachmentId = freezed,Object? isExpired = null,}) {
+  return _then(SupplierCertificateDto(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,supplierId: null == supplierId ? _self.supplierId : supplierId // ignore: cast_nullable_to_non_nullable
+as int,certType: null == certType ? _self.certType : certType // ignore: cast_nullable_to_non_nullable
+as String,certNumber: freezed == certNumber ? _self.certNumber : certNumber // ignore: cast_nullable_to_non_nullable
+as String?,issuedDate: freezed == issuedDate ? _self.issuedDate : issuedDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,expiryDate: freezed == expiryDate ? _self.expiryDate : expiryDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,attachmentId: freezed == attachmentId ? _self.attachmentId : attachmentId // ignore: cast_nullable_to_non_nullable
+as int?,isExpired: null == isExpired ? _self.isExpired : isExpired // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [SupplierCertificateDto].
+extension SupplierCertificateDtoPatterns on SupplierCertificateDto {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _SupplierCertificateDto value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _SupplierCertificateDto() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _SupplierCertificateDto value)  $default,){
+final _that = this;
+switch (_that) {
+case _SupplierCertificateDto():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _SupplierCertificateDto value)?  $default,){
+final _that = this;
+switch (_that) {
+case _SupplierCertificateDto() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int supplierId,  String certType,  String? certNumber, @NullableDateOnlyConverter()  DateTime? issuedDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? attachmentId,  bool isExpired)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _SupplierCertificateDto() when $default != null:
+return $default(_that.id,_that.supplierId,_that.certType,_that.certNumber,_that.issuedDate,_that.expiryDate,_that.attachmentId,_that.isExpired);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int supplierId,  String certType,  String? certNumber, @NullableDateOnlyConverter()  DateTime? issuedDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? attachmentId,  bool isExpired)  $default,) {final _that = this;
+switch (_that) {
+case _SupplierCertificateDto():
+return $default(_that.id,_that.supplierId,_that.certType,_that.certNumber,_that.issuedDate,_that.expiryDate,_that.attachmentId,_that.isExpired);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int supplierId,  String certType,  String? certNumber, @NullableDateOnlyConverter()  DateTime? issuedDate, @NullableDateOnlyConverter()  DateTime? expiryDate,  int? attachmentId,  bool isExpired)?  $default,) {final _that = this;
+switch (_that) {
+case _SupplierCertificateDto() when $default != null:
+return $default(_that.id,_that.supplierId,_that.certType,_that.certNumber,_that.issuedDate,_that.expiryDate,_that.attachmentId,_that.isExpired);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _SupplierCertificateDto extends SupplierCertificateDto {
+  const _SupplierCertificateDto({required this.id, required this.supplierId, required this.certType, this.certNumber, @NullableDateOnlyConverter() this.issuedDate, @NullableDateOnlyConverter() this.expiryDate, this.attachmentId, this.isExpired = false}): super._();
+  factory _SupplierCertificateDto.fromJson(Map<String, dynamic> json) => _$SupplierCertificateDtoFromJson(json);
+
+@override final  int id;
+@override final  int supplierId;
+@override final  String certType;
+@override final  String? certNumber;
+@override@NullableDateOnlyConverter() final  DateTime? issuedDate;
+@override@NullableDateOnlyConverter() final  DateTime? expiryDate;
+@override final  int? attachmentId;
+@override@JsonKey() final  bool isExpired;
+
+/// Create a copy of SupplierCertificateDto
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SupplierCertificateDtoCopyWith<_SupplierCertificateDto> get copyWith => __$SupplierCertificateDtoCopyWithImpl<_SupplierCertificateDto>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$SupplierCertificateDtoToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SupplierCertificateDto&&(identical(other.id, id) || other.id == id)&&(identical(other.supplierId, supplierId) || other.supplierId == supplierId)&&(identical(other.certType, certType) || other.certType == certType)&&(identical(other.certNumber, certNumber) || other.certNumber == certNumber)&&(identical(other.issuedDate, issuedDate) || other.issuedDate == issuedDate)&&(identical(other.expiryDate, expiryDate) || other.expiryDate == expiryDate)&&(identical(other.attachmentId, attachmentId) || other.attachmentId == attachmentId)&&(identical(other.isExpired, isExpired) || other.isExpired == isExpired));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,id,supplierId,certType,certNumber,issuedDate,expiryDate,attachmentId,isExpired);
+}
+
+@override
+String toString() {
+    return 'SupplierCertificateDto(id: $id, supplierId: $supplierId, certType: $certType, certNumber: $certNumber, issuedDate: $issuedDate, expiryDate: $expiryDate, attachmentId: $attachmentId, isExpired: $isExpired)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SupplierCertificateDtoCopyWith<$Res> implements $SupplierCertificateDtoCopyWith<$Res> {
+  factory _$SupplierCertificateDtoCopyWith(_SupplierCertificateDto value, $Res Function(_SupplierCertificateDto) _then) = __$SupplierCertificateDtoCopyWithImpl;
+@override @useResult
+$Res call({
+ int id, int supplierId, String certType, String? certNumber,@NullableDateOnlyConverter() DateTime? issuedDate,@NullableDateOnlyConverter() DateTime? expiryDate, int? attachmentId, bool isExpired
+});
+
+
+
+
+}
+/// @nodoc
+class __$SupplierCertificateDtoCopyWithImpl<$Res>
+    implements _$SupplierCertificateDtoCopyWith<$Res> {
+  __$SupplierCertificateDtoCopyWithImpl(this._self, this._then);
+
+  final _SupplierCertificateDto _self;
+  final $Res Function(_SupplierCertificateDto) _then;
+
+/// Create a copy of SupplierCertificateDto
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? supplierId = null,Object? certType = null,Object? certNumber = freezed,Object? issuedDate = freezed,Object? expiryDate = freezed,Object? attachmentId = freezed,Object? isExpired = null,}) {
+  return _then(_SupplierCertificateDto(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,supplierId: null == supplierId ? _self.supplierId : supplierId // ignore: cast_nullable_to_non_nullable
+as int,certType: null == certType ? _self.certType : certType // ignore: cast_nullable_to_non_nullable
+as String,certNumber: freezed == certNumber ? _self.certNumber : certNumber // ignore: cast_nullable_to_non_nullable
+as String?,issuedDate: freezed == issuedDate ? _self.issuedDate : issuedDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,expiryDate: freezed == expiryDate ? _self.expiryDate : expiryDate // ignore: cast_nullable_to_non_nullable
+as DateTime?,attachmentId: freezed == attachmentId ? _self.attachmentId : attachmentId // ignore: cast_nullable_to_non_nullable
+as int?,isExpired: null == isExpired ? _self.isExpired : isExpired // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$SupplierDto {
 
- int get id; String get code; String get name; String get currency; String? get taxId; String? get contactPerson; String? get phone; String? get email; String? get address; String? get paymentTerms; String? get deliveryTerms; String? get incoterms; bool get isApprovedFoodSupplier; bool get isActive; int get rowVersion;
+ int get id; String get code; String get name; String get currency; String? get taxId; String? get contactPerson; String? get phone; String? get email; String? get address; String? get bankDetails; String? get paymentTerms; String? get deliveryTerms; String? get incoterms; bool get isApprovedFoodSupplier; bool get isActive; List<SupplierCertificateDto> get certificates; AuditFieldsDto? get audit;
 /// Create a copy of SupplierDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1254,20 +1557,20 @@ $SupplierDtoCopyWith<SupplierDto> get copyWith => _$SupplierDtoCopyWithImpl<Supp
 @override
 bool operator ==(Object other) {
   final _this = this as SupplierDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupplierDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.currency, _this.currency) || other.currency == _this.currency)&&(identical(other.taxId, _this.taxId) || other.taxId == _this.taxId)&&(identical(other.contactPerson, _this.contactPerson) || other.contactPerson == _this.contactPerson)&&(identical(other.phone, _this.phone) || other.phone == _this.phone)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.paymentTerms, _this.paymentTerms) || other.paymentTerms == _this.paymentTerms)&&(identical(other.deliveryTerms, _this.deliveryTerms) || other.deliveryTerms == _this.deliveryTerms)&&(identical(other.incoterms, _this.incoterms) || other.incoterms == _this.incoterms)&&(identical(other.isApprovedFoodSupplier, _this.isApprovedFoodSupplier) || other.isApprovedFoodSupplier == _this.isApprovedFoodSupplier)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SupplierDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.currency, _this.currency) || other.currency == _this.currency)&&(identical(other.taxId, _this.taxId) || other.taxId == _this.taxId)&&(identical(other.contactPerson, _this.contactPerson) || other.contactPerson == _this.contactPerson)&&(identical(other.phone, _this.phone) || other.phone == _this.phone)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.address, _this.address) || other.address == _this.address)&&(identical(other.bankDetails, _this.bankDetails) || other.bankDetails == _this.bankDetails)&&(identical(other.paymentTerms, _this.paymentTerms) || other.paymentTerms == _this.paymentTerms)&&(identical(other.deliveryTerms, _this.deliveryTerms) || other.deliveryTerms == _this.deliveryTerms)&&(identical(other.incoterms, _this.incoterms) || other.incoterms == _this.incoterms)&&(identical(other.isApprovedFoodSupplier, _this.isApprovedFoodSupplier) || other.isApprovedFoodSupplier == _this.isApprovedFoodSupplier)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&const DeepCollectionEquality().equals(other.certificates, _this.certificates)&&(identical(other.audit, _this.audit) || other.audit == _this.audit));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as SupplierDto;
-  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.currency,_this.taxId,_this.contactPerson,_this.phone,_this.email,_this.address,_this.paymentTerms,_this.deliveryTerms,_this.incoterms,_this.isApprovedFoodSupplier,_this.isActive,_this.rowVersion);
+  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.currency,_this.taxId,_this.contactPerson,_this.phone,_this.email,_this.address,_this.bankDetails,_this.paymentTerms,_this.deliveryTerms,_this.incoterms,_this.isApprovedFoodSupplier,_this.isActive,const DeepCollectionEquality().hash(_this.certificates),_this.audit);
 }
 
 @override
 String toString() {
   final _this = this as SupplierDto;
-  return 'SupplierDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, currency: ${_this.currency}, taxId: ${_this.taxId}, contactPerson: ${_this.contactPerson}, phone: ${_this.phone}, email: ${_this.email}, address: ${_this.address}, paymentTerms: ${_this.paymentTerms}, deliveryTerms: ${_this.deliveryTerms}, incoterms: ${_this.incoterms}, isApprovedFoodSupplier: ${_this.isApprovedFoodSupplier}, isActive: ${_this.isActive}, rowVersion: ${_this.rowVersion})';
+  return 'SupplierDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, currency: ${_this.currency}, taxId: ${_this.taxId}, contactPerson: ${_this.contactPerson}, phone: ${_this.phone}, email: ${_this.email}, address: ${_this.address}, bankDetails: ${_this.bankDetails}, paymentTerms: ${_this.paymentTerms}, deliveryTerms: ${_this.deliveryTerms}, incoterms: ${_this.incoterms}, isApprovedFoodSupplier: ${_this.isApprovedFoodSupplier}, isActive: ${_this.isActive}, certificates: ${_this.certificates}, audit: ${_this.audit})';
 }
 
 
@@ -1278,11 +1581,11 @@ abstract mixin class $SupplierDtoCopyWith<$Res>  {
   factory $SupplierDtoCopyWith(SupplierDto value, $Res Function(SupplierDto) _then) = _$SupplierDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String code, String name, String currency, String? taxId, String? contactPerson, String? phone, String? email, String? address, String? paymentTerms, String? deliveryTerms, String? incoterms, bool isApprovedFoodSupplier, bool isActive, int rowVersion
+ int id, String code, String name, String currency, String? taxId, String? contactPerson, String? phone, String? email, String? address, String? bankDetails, String? paymentTerms, String? deliveryTerms, String? incoterms, bool isApprovedFoodSupplier, bool isActive, List<SupplierCertificateDto> certificates, AuditFieldsDto? audit
 });
 
 
-
+$AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -1295,7 +1598,7 @@ class _$SupplierDtoCopyWithImpl<$Res>
 
 /// Create a copy of SupplierDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? currency = null,Object? taxId = freezed,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? paymentTerms = freezed,Object? deliveryTerms = freezed,Object? incoterms = freezed,Object? isApprovedFoodSupplier = null,Object? isActive = null,Object? rowVersion = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? currency = null,Object? taxId = freezed,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? bankDetails = freezed,Object? paymentTerms = freezed,Object? deliveryTerms = freezed,Object? incoterms = freezed,Object? isApprovedFoodSupplier = null,Object? isActive = null,Object? certificates = null,Object? audit = freezed,}) {
   return _then(SupplierDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -1306,16 +1609,30 @@ as String?,contactPerson: freezed == contactPerson ? _self.contactPerson : conta
 as String?,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
 as String?,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String?,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String?,bankDetails: freezed == bankDetails ? _self.bankDetails : bankDetails // ignore: cast_nullable_to_non_nullable
 as String?,paymentTerms: freezed == paymentTerms ? _self.paymentTerms : paymentTerms // ignore: cast_nullable_to_non_nullable
 as String?,deliveryTerms: freezed == deliveryTerms ? _self.deliveryTerms : deliveryTerms // ignore: cast_nullable_to_non_nullable
 as String?,incoterms: freezed == incoterms ? _self.incoterms : incoterms // ignore: cast_nullable_to_non_nullable
 as String?,isApprovedFoodSupplier: null == isApprovedFoodSupplier ? _self.isApprovedFoodSupplier : isApprovedFoodSupplier // ignore: cast_nullable_to_non_nullable
 as bool,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
-as int,
+as bool,certificates: null == certificates ? _self.certificates : certificates // ignore: cast_nullable_to_non_nullable
+as List<SupplierCertificateDto>,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,
   ));
 }
+/// Create a copy of SupplierDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
@@ -1397,10 +1714,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  String currency,  String? taxId,  String? contactPerson,  String? phone,  String? email,  String? address,  String? paymentTerms,  String? deliveryTerms,  String? incoterms,  bool isApprovedFoodSupplier,  bool isActive,  int rowVersion)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  String currency,  String? taxId,  String? contactPerson,  String? phone,  String? email,  String? address,  String? bankDetails,  String? paymentTerms,  String? deliveryTerms,  String? incoterms,  bool isApprovedFoodSupplier,  bool isActive,  List<SupplierCertificateDto> certificates,  AuditFieldsDto? audit)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SupplierDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.currency,_that.taxId,_that.contactPerson,_that.phone,_that.email,_that.address,_that.paymentTerms,_that.deliveryTerms,_that.incoterms,_that.isApprovedFoodSupplier,_that.isActive,_that.rowVersion);case _:
+return $default(_that.id,_that.code,_that.name,_that.currency,_that.taxId,_that.contactPerson,_that.phone,_that.email,_that.address,_that.bankDetails,_that.paymentTerms,_that.deliveryTerms,_that.incoterms,_that.isApprovedFoodSupplier,_that.isActive,_that.certificates,_that.audit);case _:
   return orElse();
 
 }
@@ -1418,10 +1735,10 @@ return $default(_that.id,_that.code,_that.name,_that.currency,_that.taxId,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  String currency,  String? taxId,  String? contactPerson,  String? phone,  String? email,  String? address,  String? paymentTerms,  String? deliveryTerms,  String? incoterms,  bool isApprovedFoodSupplier,  bool isActive,  int rowVersion)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  String currency,  String? taxId,  String? contactPerson,  String? phone,  String? email,  String? address,  String? bankDetails,  String? paymentTerms,  String? deliveryTerms,  String? incoterms,  bool isApprovedFoodSupplier,  bool isActive,  List<SupplierCertificateDto> certificates,  AuditFieldsDto? audit)  $default,) {final _that = this;
 switch (_that) {
 case _SupplierDto():
-return $default(_that.id,_that.code,_that.name,_that.currency,_that.taxId,_that.contactPerson,_that.phone,_that.email,_that.address,_that.paymentTerms,_that.deliveryTerms,_that.incoterms,_that.isApprovedFoodSupplier,_that.isActive,_that.rowVersion);case _:
+return $default(_that.id,_that.code,_that.name,_that.currency,_that.taxId,_that.contactPerson,_that.phone,_that.email,_that.address,_that.bankDetails,_that.paymentTerms,_that.deliveryTerms,_that.incoterms,_that.isApprovedFoodSupplier,_that.isActive,_that.certificates,_that.audit);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1438,10 +1755,10 @@ return $default(_that.id,_that.code,_that.name,_that.currency,_that.taxId,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  String currency,  String? taxId,  String? contactPerson,  String? phone,  String? email,  String? address,  String? paymentTerms,  String? deliveryTerms,  String? incoterms,  bool isApprovedFoodSupplier,  bool isActive,  int rowVersion)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  String currency,  String? taxId,  String? contactPerson,  String? phone,  String? email,  String? address,  String? bankDetails,  String? paymentTerms,  String? deliveryTerms,  String? incoterms,  bool isApprovedFoodSupplier,  bool isActive,  List<SupplierCertificateDto> certificates,  AuditFieldsDto? audit)?  $default,) {final _that = this;
 switch (_that) {
 case _SupplierDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.currency,_that.taxId,_that.contactPerson,_that.phone,_that.email,_that.address,_that.paymentTerms,_that.deliveryTerms,_that.incoterms,_that.isApprovedFoodSupplier,_that.isActive,_that.rowVersion);case _:
+return $default(_that.id,_that.code,_that.name,_that.currency,_that.taxId,_that.contactPerson,_that.phone,_that.email,_that.address,_that.bankDetails,_that.paymentTerms,_that.deliveryTerms,_that.incoterms,_that.isApprovedFoodSupplier,_that.isActive,_that.certificates,_that.audit);case _:
   return null;
 
 }
@@ -1452,8 +1769,8 @@ return $default(_that.id,_that.code,_that.name,_that.currency,_that.taxId,_that.
 /// @nodoc
 @JsonSerializable()
 
-class _SupplierDto implements SupplierDto {
-  const _SupplierDto({required this.id, required this.code, required this.name, this.currency = 'AZN', this.taxId, this.contactPerson, this.phone, this.email, this.address, this.paymentTerms, this.deliveryTerms, this.incoterms, this.isApprovedFoodSupplier = false, this.isActive = true, this.rowVersion = 1});
+class _SupplierDto extends SupplierDto {
+  const _SupplierDto({required this.id, required this.code, required this.name, this.currency = 'AZN', this.taxId, this.contactPerson, this.phone, this.email, this.address, this.bankDetails, this.paymentTerms, this.deliveryTerms, this.incoterms, this.isApprovedFoodSupplier = false, this.isActive = true,  List<SupplierCertificateDto> certificates = const <SupplierCertificateDto>[], this.audit}): _certificates = certificates,super._();
   factory _SupplierDto.fromJson(Map<String, dynamic> json) => _$SupplierDtoFromJson(json);
 
 @override final  int id;
@@ -1465,12 +1782,20 @@ class _SupplierDto implements SupplierDto {
 @override final  String? phone;
 @override final  String? email;
 @override final  String? address;
+@override final  String? bankDetails;
 @override final  String? paymentTerms;
 @override final  String? deliveryTerms;
 @override final  String? incoterms;
 @override@JsonKey() final  bool isApprovedFoodSupplier;
 @override@JsonKey() final  bool isActive;
-@override@JsonKey() final  int rowVersion;
+ final  List<SupplierCertificateDto> _certificates;
+@override@JsonKey() List<SupplierCertificateDto> get certificates {
+  if (_certificates is EqualUnmodifiableListView) return _certificates;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_certificates);
+}
+
+@override final  AuditFieldsDto? audit;
 
 /// Create a copy of SupplierDto
 /// with the given fields replaced by the non-null parameter values.
@@ -1485,18 +1810,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SupplierDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.taxId, taxId) || other.taxId == taxId)&&(identical(other.contactPerson, contactPerson) || other.contactPerson == contactPerson)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.address, address) || other.address == address)&&(identical(other.paymentTerms, paymentTerms) || other.paymentTerms == paymentTerms)&&(identical(other.deliveryTerms, deliveryTerms) || other.deliveryTerms == deliveryTerms)&&(identical(other.incoterms, incoterms) || other.incoterms == incoterms)&&(identical(other.isApprovedFoodSupplier, isApprovedFoodSupplier) || other.isApprovedFoodSupplier == isApprovedFoodSupplier)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SupplierDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.currency, currency) || other.currency == currency)&&(identical(other.taxId, taxId) || other.taxId == taxId)&&(identical(other.contactPerson, contactPerson) || other.contactPerson == contactPerson)&&(identical(other.phone, phone) || other.phone == phone)&&(identical(other.email, email) || other.email == email)&&(identical(other.address, address) || other.address == address)&&(identical(other.bankDetails, bankDetails) || other.bankDetails == bankDetails)&&(identical(other.paymentTerms, paymentTerms) || other.paymentTerms == paymentTerms)&&(identical(other.deliveryTerms, deliveryTerms) || other.deliveryTerms == deliveryTerms)&&(identical(other.incoterms, incoterms) || other.incoterms == incoterms)&&(identical(other.isApprovedFoodSupplier, isApprovedFoodSupplier) || other.isApprovedFoodSupplier == isApprovedFoodSupplier)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&const DeepCollectionEquality().equals(other.certificates, _certificates)&&(identical(other.audit, audit) || other.audit == audit));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,code,name,currency,taxId,contactPerson,phone,email,address,paymentTerms,deliveryTerms,incoterms,isApprovedFoodSupplier,isActive,rowVersion);
+    return Object.hash(runtimeType,id,code,name,currency,taxId,contactPerson,phone,email,address,bankDetails,paymentTerms,deliveryTerms,incoterms,isApprovedFoodSupplier,isActive,const DeepCollectionEquality().hash(_certificates),audit);
 }
 
 @override
 String toString() {
-    return 'SupplierDto(id: $id, code: $code, name: $name, currency: $currency, taxId: $taxId, contactPerson: $contactPerson, phone: $phone, email: $email, address: $address, paymentTerms: $paymentTerms, deliveryTerms: $deliveryTerms, incoterms: $incoterms, isApprovedFoodSupplier: $isApprovedFoodSupplier, isActive: $isActive, rowVersion: $rowVersion)';
+    return 'SupplierDto(id: $id, code: $code, name: $name, currency: $currency, taxId: $taxId, contactPerson: $contactPerson, phone: $phone, email: $email, address: $address, bankDetails: $bankDetails, paymentTerms: $paymentTerms, deliveryTerms: $deliveryTerms, incoterms: $incoterms, isApprovedFoodSupplier: $isApprovedFoodSupplier, isActive: $isActive, certificates: $certificates, audit: $audit)';
 }
 
 
@@ -1507,11 +1832,11 @@ abstract mixin class _$SupplierDtoCopyWith<$Res> implements $SupplierDtoCopyWith
   factory _$SupplierDtoCopyWith(_SupplierDto value, $Res Function(_SupplierDto) _then) = __$SupplierDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String code, String name, String currency, String? taxId, String? contactPerson, String? phone, String? email, String? address, String? paymentTerms, String? deliveryTerms, String? incoterms, bool isApprovedFoodSupplier, bool isActive, int rowVersion
+ int id, String code, String name, String currency, String? taxId, String? contactPerson, String? phone, String? email, String? address, String? bankDetails, String? paymentTerms, String? deliveryTerms, String? incoterms, bool isApprovedFoodSupplier, bool isActive, List<SupplierCertificateDto> certificates, AuditFieldsDto? audit
 });
 
 
-
+@override $AuditFieldsDtoCopyWith<$Res>? get audit;
 
 }
 /// @nodoc
@@ -1524,7 +1849,7 @@ class __$SupplierDtoCopyWithImpl<$Res>
 
 /// Create a copy of SupplierDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? currency = null,Object? taxId = freezed,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? paymentTerms = freezed,Object? deliveryTerms = freezed,Object? incoterms = freezed,Object? isApprovedFoodSupplier = null,Object? isActive = null,Object? rowVersion = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? currency = null,Object? taxId = freezed,Object? contactPerson = freezed,Object? phone = freezed,Object? email = freezed,Object? address = freezed,Object? bankDetails = freezed,Object? paymentTerms = freezed,Object? deliveryTerms = freezed,Object? incoterms = freezed,Object? isApprovedFoodSupplier = null,Object? isActive = null,Object? certificates = null,Object? audit = freezed,}) {
   return _then(_SupplierDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -1535,24 +1860,38 @@ as String?,contactPerson: freezed == contactPerson ? _self.contactPerson : conta
 as String?,phone: freezed == phone ? _self.phone : phone // ignore: cast_nullable_to_non_nullable
 as String?,email: freezed == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String?,address: freezed == address ? _self.address : address // ignore: cast_nullable_to_non_nullable
+as String?,bankDetails: freezed == bankDetails ? _self.bankDetails : bankDetails // ignore: cast_nullable_to_non_nullable
 as String?,paymentTerms: freezed == paymentTerms ? _self.paymentTerms : paymentTerms // ignore: cast_nullable_to_non_nullable
 as String?,deliveryTerms: freezed == deliveryTerms ? _self.deliveryTerms : deliveryTerms // ignore: cast_nullable_to_non_nullable
 as String?,incoterms: freezed == incoterms ? _self.incoterms : incoterms // ignore: cast_nullable_to_non_nullable
 as String?,isApprovedFoodSupplier: null == isApprovedFoodSupplier ? _self.isApprovedFoodSupplier : isApprovedFoodSupplier // ignore: cast_nullable_to_non_nullable
 as bool,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
-as int,
+as bool,certificates: null == certificates ? _self._certificates : certificates // ignore: cast_nullable_to_non_nullable
+as List<SupplierCertificateDto>,audit: freezed == audit ? _self.audit : audit // ignore: cast_nullable_to_non_nullable
+as AuditFieldsDto?,
   ));
 }
 
+/// Create a copy of SupplierDto
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$AuditFieldsDtoCopyWith<$Res>? get audit {
+    if (_self.audit == null) {
+    return null;
+  }
 
+  return $AuditFieldsDtoCopyWith<$Res>(_self.audit!, (value) {
+    return _then(_self.copyWith(audit: value));
+  });
+}
 }
 
 
 /// @nodoc
 mixin _$LocationDto {
 
- int get id; String get code; String get name; LocationType get locationType; bool get isVirtual; int? get parentId; bool get allowsFood; bool get allowsNonFood; bool get isActive;
+ int get id; String get code; String get name; LocationType get locationType; bool get isVirtual; int? get parentId; bool get allowsFood; bool get allowsNonFood; bool get isActive; int get rowVersion;
 /// Create a copy of LocationDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1566,20 +1905,20 @@ $LocationDtoCopyWith<LocationDto> get copyWith => _$LocationDtoCopyWithImpl<Loca
 @override
 bool operator ==(Object other) {
   final _this = this as LocationDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocationDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.locationType, _this.locationType) || other.locationType == _this.locationType)&&(identical(other.isVirtual, _this.isVirtual) || other.isVirtual == _this.isVirtual)&&(identical(other.parentId, _this.parentId) || other.parentId == _this.parentId)&&(identical(other.allowsFood, _this.allowsFood) || other.allowsFood == _this.allowsFood)&&(identical(other.allowsNonFood, _this.allowsNonFood) || other.allowsNonFood == _this.allowsNonFood)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LocationDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.locationType, _this.locationType) || other.locationType == _this.locationType)&&(identical(other.isVirtual, _this.isVirtual) || other.isVirtual == _this.isVirtual)&&(identical(other.parentId, _this.parentId) || other.parentId == _this.parentId)&&(identical(other.allowsFood, _this.allowsFood) || other.allowsFood == _this.allowsFood)&&(identical(other.allowsNonFood, _this.allowsNonFood) || other.allowsNonFood == _this.allowsNonFood)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as LocationDto;
-  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.locationType,_this.isVirtual,_this.parentId,_this.allowsFood,_this.allowsNonFood,_this.isActive);
+  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.locationType,_this.isVirtual,_this.parentId,_this.allowsFood,_this.allowsNonFood,_this.isActive,_this.rowVersion);
 }
 
 @override
 String toString() {
   final _this = this as LocationDto;
-  return 'LocationDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, locationType: ${_this.locationType}, isVirtual: ${_this.isVirtual}, parentId: ${_this.parentId}, allowsFood: ${_this.allowsFood}, allowsNonFood: ${_this.allowsNonFood}, isActive: ${_this.isActive})';
+  return 'LocationDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, locationType: ${_this.locationType}, isVirtual: ${_this.isVirtual}, parentId: ${_this.parentId}, allowsFood: ${_this.allowsFood}, allowsNonFood: ${_this.allowsNonFood}, isActive: ${_this.isActive}, rowVersion: ${_this.rowVersion})';
 }
 
 
@@ -1590,7 +1929,7 @@ abstract mixin class $LocationDtoCopyWith<$Res>  {
   factory $LocationDtoCopyWith(LocationDto value, $Res Function(LocationDto) _then) = _$LocationDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String code, String name, LocationType locationType, bool isVirtual, int? parentId, bool allowsFood, bool allowsNonFood, bool isActive
+ int id, String code, String name, LocationType locationType, bool isVirtual, int? parentId, bool allowsFood, bool allowsNonFood, bool isActive, int rowVersion
 });
 
 
@@ -1607,7 +1946,7 @@ class _$LocationDtoCopyWithImpl<$Res>
 
 /// Create a copy of LocationDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? locationType = null,Object? isVirtual = null,Object? parentId = freezed,Object? allowsFood = null,Object? allowsNonFood = null,Object? isActive = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? locationType = null,Object? isVirtual = null,Object? parentId = freezed,Object? allowsFood = null,Object? allowsNonFood = null,Object? isActive = null,Object? rowVersion = null,}) {
   return _then(LocationDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -1618,7 +1957,8 @@ as bool,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cas
 as int?,allowsFood: null == allowsFood ? _self.allowsFood : allowsFood // ignore: cast_nullable_to_non_nullable
 as bool,allowsNonFood: null == allowsNonFood ? _self.allowsNonFood : allowsNonFood // ignore: cast_nullable_to_non_nullable
 as bool,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -1703,10 +2043,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  LocationType locationType,  bool isVirtual,  int? parentId,  bool allowsFood,  bool allowsNonFood,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  LocationType locationType,  bool isVirtual,  int? parentId,  bool allowsFood,  bool allowsNonFood,  bool isActive,  int rowVersion)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _LocationDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.locationType,_that.isVirtual,_that.parentId,_that.allowsFood,_that.allowsNonFood,_that.isActive);case _:
+return $default(_that.id,_that.code,_that.name,_that.locationType,_that.isVirtual,_that.parentId,_that.allowsFood,_that.allowsNonFood,_that.isActive,_that.rowVersion);case _:
   return orElse();
 
 }
@@ -1724,10 +2064,10 @@ return $default(_that.id,_that.code,_that.name,_that.locationType,_that.isVirtua
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  LocationType locationType,  bool isVirtual,  int? parentId,  bool allowsFood,  bool allowsNonFood,  bool isActive)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  LocationType locationType,  bool isVirtual,  int? parentId,  bool allowsFood,  bool allowsNonFood,  bool isActive,  int rowVersion)  $default,) {final _that = this;
 switch (_that) {
 case _LocationDto():
-return $default(_that.id,_that.code,_that.name,_that.locationType,_that.isVirtual,_that.parentId,_that.allowsFood,_that.allowsNonFood,_that.isActive);case _:
+return $default(_that.id,_that.code,_that.name,_that.locationType,_that.isVirtual,_that.parentId,_that.allowsFood,_that.allowsNonFood,_that.isActive,_that.rowVersion);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1744,10 +2084,10 @@ return $default(_that.id,_that.code,_that.name,_that.locationType,_that.isVirtua
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  LocationType locationType,  bool isVirtual,  int? parentId,  bool allowsFood,  bool allowsNonFood,  bool isActive)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  LocationType locationType,  bool isVirtual,  int? parentId,  bool allowsFood,  bool allowsNonFood,  bool isActive,  int rowVersion)?  $default,) {final _that = this;
 switch (_that) {
 case _LocationDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.locationType,_that.isVirtual,_that.parentId,_that.allowsFood,_that.allowsNonFood,_that.isActive);case _:
+return $default(_that.id,_that.code,_that.name,_that.locationType,_that.isVirtual,_that.parentId,_that.allowsFood,_that.allowsNonFood,_that.isActive,_that.rowVersion);case _:
   return null;
 
 }
@@ -1759,7 +2099,7 @@ return $default(_that.id,_that.code,_that.name,_that.locationType,_that.isVirtua
 @JsonSerializable()
 
 class _LocationDto implements LocationDto {
-  const _LocationDto({required this.id, required this.code, required this.name, required this.locationType, required this.isVirtual, this.parentId, this.allowsFood = true, this.allowsNonFood = true, this.isActive = true});
+  const _LocationDto({required this.id, required this.code, required this.name, required this.locationType, required this.isVirtual, this.parentId, this.allowsFood = true, this.allowsNonFood = true, this.isActive = true, this.rowVersion = 1});
   factory _LocationDto.fromJson(Map<String, dynamic> json) => _$LocationDtoFromJson(json);
 
 @override final  int id;
@@ -1771,6 +2111,7 @@ class _LocationDto implements LocationDto {
 @override@JsonKey() final  bool allowsFood;
 @override@JsonKey() final  bool allowsNonFood;
 @override@JsonKey() final  bool isActive;
+@override@JsonKey() final  int rowVersion;
 
 /// Create a copy of LocationDto
 /// with the given fields replaced by the non-null parameter values.
@@ -1785,18 +2126,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocationDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.locationType, locationType) || other.locationType == locationType)&&(identical(other.isVirtual, isVirtual) || other.isVirtual == isVirtual)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.allowsFood, allowsFood) || other.allowsFood == allowsFood)&&(identical(other.allowsNonFood, allowsNonFood) || other.allowsNonFood == allowsNonFood)&&(identical(other.isActive, isActive) || other.isActive == isActive));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LocationDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.locationType, locationType) || other.locationType == locationType)&&(identical(other.isVirtual, isVirtual) || other.isVirtual == isVirtual)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.allowsFood, allowsFood) || other.allowsFood == allowsFood)&&(identical(other.allowsNonFood, allowsNonFood) || other.allowsNonFood == allowsNonFood)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,code,name,locationType,isVirtual,parentId,allowsFood,allowsNonFood,isActive);
+    return Object.hash(runtimeType,id,code,name,locationType,isVirtual,parentId,allowsFood,allowsNonFood,isActive,rowVersion);
 }
 
 @override
 String toString() {
-    return 'LocationDto(id: $id, code: $code, name: $name, locationType: $locationType, isVirtual: $isVirtual, parentId: $parentId, allowsFood: $allowsFood, allowsNonFood: $allowsNonFood, isActive: $isActive)';
+    return 'LocationDto(id: $id, code: $code, name: $name, locationType: $locationType, isVirtual: $isVirtual, parentId: $parentId, allowsFood: $allowsFood, allowsNonFood: $allowsNonFood, isActive: $isActive, rowVersion: $rowVersion)';
 }
 
 
@@ -1807,7 +2148,7 @@ abstract mixin class _$LocationDtoCopyWith<$Res> implements $LocationDtoCopyWith
   factory _$LocationDtoCopyWith(_LocationDto value, $Res Function(_LocationDto) _then) = __$LocationDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String code, String name, LocationType locationType, bool isVirtual, int? parentId, bool allowsFood, bool allowsNonFood, bool isActive
+ int id, String code, String name, LocationType locationType, bool isVirtual, int? parentId, bool allowsFood, bool allowsNonFood, bool isActive, int rowVersion
 });
 
 
@@ -1824,7 +2165,7 @@ class __$LocationDtoCopyWithImpl<$Res>
 
 /// Create a copy of LocationDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? locationType = null,Object? isVirtual = null,Object? parentId = freezed,Object? allowsFood = null,Object? allowsNonFood = null,Object? isActive = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? locationType = null,Object? isVirtual = null,Object? parentId = freezed,Object? allowsFood = null,Object? allowsNonFood = null,Object? isActive = null,Object? rowVersion = null,}) {
   return _then(_LocationDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -1835,7 +2176,8 @@ as bool,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cas
 as int?,allowsFood: null == allowsFood ? _self.allowsFood : allowsFood // ignore: cast_nullable_to_non_nullable
 as bool,allowsNonFood: null == allowsNonFood ? _self.allowsNonFood : allowsNonFood // ignore: cast_nullable_to_non_nullable
 as bool,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -1846,7 +2188,7 @@ as bool,
 /// @nodoc
 mixin _$ReasonCodeDto {
 
- int get id; String get code; String get name; ReasonGroup get reasonGroup; bool get requiresApproval; bool get requiresPhoto; bool get isActive;
+ int get id; String get code; String get name; ReasonGroup get reasonGroup; bool get requiresApproval; bool get requiresPhoto; bool get isActive; int get rowVersion;
 /// Create a copy of ReasonCodeDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1860,20 +2202,20 @@ $ReasonCodeDtoCopyWith<ReasonCodeDto> get copyWith => _$ReasonCodeDtoCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as ReasonCodeDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReasonCodeDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.reasonGroup, _this.reasonGroup) || other.reasonGroup == _this.reasonGroup)&&(identical(other.requiresApproval, _this.requiresApproval) || other.requiresApproval == _this.requiresApproval)&&(identical(other.requiresPhoto, _this.requiresPhoto) || other.requiresPhoto == _this.requiresPhoto)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReasonCodeDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.code, _this.code) || other.code == _this.code)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.reasonGroup, _this.reasonGroup) || other.reasonGroup == _this.reasonGroup)&&(identical(other.requiresApproval, _this.requiresApproval) || other.requiresApproval == _this.requiresApproval)&&(identical(other.requiresPhoto, _this.requiresPhoto) || other.requiresPhoto == _this.requiresPhoto)&&(identical(other.isActive, _this.isActive) || other.isActive == _this.isActive)&&(identical(other.rowVersion, _this.rowVersion) || other.rowVersion == _this.rowVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ReasonCodeDto;
-  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.reasonGroup,_this.requiresApproval,_this.requiresPhoto,_this.isActive);
+  return Object.hash(runtimeType,_this.id,_this.code,_this.name,_this.reasonGroup,_this.requiresApproval,_this.requiresPhoto,_this.isActive,_this.rowVersion);
 }
 
 @override
 String toString() {
   final _this = this as ReasonCodeDto;
-  return 'ReasonCodeDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, reasonGroup: ${_this.reasonGroup}, requiresApproval: ${_this.requiresApproval}, requiresPhoto: ${_this.requiresPhoto}, isActive: ${_this.isActive})';
+  return 'ReasonCodeDto(id: ${_this.id}, code: ${_this.code}, name: ${_this.name}, reasonGroup: ${_this.reasonGroup}, requiresApproval: ${_this.requiresApproval}, requiresPhoto: ${_this.requiresPhoto}, isActive: ${_this.isActive}, rowVersion: ${_this.rowVersion})';
 }
 
 
@@ -1884,7 +2226,7 @@ abstract mixin class $ReasonCodeDtoCopyWith<$Res>  {
   factory $ReasonCodeDtoCopyWith(ReasonCodeDto value, $Res Function(ReasonCodeDto) _then) = _$ReasonCodeDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String code, String name, ReasonGroup reasonGroup, bool requiresApproval, bool requiresPhoto, bool isActive
+ int id, String code, String name, ReasonGroup reasonGroup, bool requiresApproval, bool requiresPhoto, bool isActive, int rowVersion
 });
 
 
@@ -1901,7 +2243,7 @@ class _$ReasonCodeDtoCopyWithImpl<$Res>
 
 /// Create a copy of ReasonCodeDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? reasonGroup = null,Object? requiresApproval = null,Object? requiresPhoto = null,Object? isActive = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? code = null,Object? name = null,Object? reasonGroup = null,Object? requiresApproval = null,Object? requiresPhoto = null,Object? isActive = null,Object? rowVersion = null,}) {
   return _then(ReasonCodeDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -1910,7 +2252,8 @@ as String,reasonGroup: null == reasonGroup ? _self.reasonGroup : reasonGroup // 
 as ReasonGroup,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
 as bool,requiresPhoto: null == requiresPhoto ? _self.requiresPhoto : requiresPhoto // ignore: cast_nullable_to_non_nullable
 as bool,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 
@@ -1995,10 +2338,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  ReasonGroup reasonGroup,  bool requiresApproval,  bool requiresPhoto,  bool isActive)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String code,  String name,  ReasonGroup reasonGroup,  bool requiresApproval,  bool requiresPhoto,  bool isActive,  int rowVersion)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ReasonCodeDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.reasonGroup,_that.requiresApproval,_that.requiresPhoto,_that.isActive);case _:
+return $default(_that.id,_that.code,_that.name,_that.reasonGroup,_that.requiresApproval,_that.requiresPhoto,_that.isActive,_that.rowVersion);case _:
   return orElse();
 
 }
@@ -2016,10 +2359,10 @@ return $default(_that.id,_that.code,_that.name,_that.reasonGroup,_that.requiresA
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  ReasonGroup reasonGroup,  bool requiresApproval,  bool requiresPhoto,  bool isActive)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String code,  String name,  ReasonGroup reasonGroup,  bool requiresApproval,  bool requiresPhoto,  bool isActive,  int rowVersion)  $default,) {final _that = this;
 switch (_that) {
 case _ReasonCodeDto():
-return $default(_that.id,_that.code,_that.name,_that.reasonGroup,_that.requiresApproval,_that.requiresPhoto,_that.isActive);case _:
+return $default(_that.id,_that.code,_that.name,_that.reasonGroup,_that.requiresApproval,_that.requiresPhoto,_that.isActive,_that.rowVersion);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -2036,10 +2379,10 @@ return $default(_that.id,_that.code,_that.name,_that.reasonGroup,_that.requiresA
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  ReasonGroup reasonGroup,  bool requiresApproval,  bool requiresPhoto,  bool isActive)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String code,  String name,  ReasonGroup reasonGroup,  bool requiresApproval,  bool requiresPhoto,  bool isActive,  int rowVersion)?  $default,) {final _that = this;
 switch (_that) {
 case _ReasonCodeDto() when $default != null:
-return $default(_that.id,_that.code,_that.name,_that.reasonGroup,_that.requiresApproval,_that.requiresPhoto,_that.isActive);case _:
+return $default(_that.id,_that.code,_that.name,_that.reasonGroup,_that.requiresApproval,_that.requiresPhoto,_that.isActive,_that.rowVersion);case _:
   return null;
 
 }
@@ -2051,7 +2394,7 @@ return $default(_that.id,_that.code,_that.name,_that.reasonGroup,_that.requiresA
 @JsonSerializable()
 
 class _ReasonCodeDto implements ReasonCodeDto {
-  const _ReasonCodeDto({required this.id, required this.code, required this.name, required this.reasonGroup, this.requiresApproval = true, this.requiresPhoto = false, this.isActive = true});
+  const _ReasonCodeDto({required this.id, required this.code, required this.name, required this.reasonGroup, this.requiresApproval = true, this.requiresPhoto = false, this.isActive = true, this.rowVersion = 1});
   factory _ReasonCodeDto.fromJson(Map<String, dynamic> json) => _$ReasonCodeDtoFromJson(json);
 
 @override final  int id;
@@ -2061,6 +2404,7 @@ class _ReasonCodeDto implements ReasonCodeDto {
 @override@JsonKey() final  bool requiresApproval;
 @override@JsonKey() final  bool requiresPhoto;
 @override@JsonKey() final  bool isActive;
+@override@JsonKey() final  int rowVersion;
 
 /// Create a copy of ReasonCodeDto
 /// with the given fields replaced by the non-null parameter values.
@@ -2075,18 +2419,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReasonCodeDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.reasonGroup, reasonGroup) || other.reasonGroup == reasonGroup)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.requiresPhoto, requiresPhoto) || other.requiresPhoto == requiresPhoto)&&(identical(other.isActive, isActive) || other.isActive == isActive));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ReasonCodeDto&&(identical(other.id, id) || other.id == id)&&(identical(other.code, code) || other.code == code)&&(identical(other.name, name) || other.name == name)&&(identical(other.reasonGroup, reasonGroup) || other.reasonGroup == reasonGroup)&&(identical(other.requiresApproval, requiresApproval) || other.requiresApproval == requiresApproval)&&(identical(other.requiresPhoto, requiresPhoto) || other.requiresPhoto == requiresPhoto)&&(identical(other.isActive, isActive) || other.isActive == isActive)&&(identical(other.rowVersion, rowVersion) || other.rowVersion == rowVersion));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,code,name,reasonGroup,requiresApproval,requiresPhoto,isActive);
+    return Object.hash(runtimeType,id,code,name,reasonGroup,requiresApproval,requiresPhoto,isActive,rowVersion);
 }
 
 @override
 String toString() {
-    return 'ReasonCodeDto(id: $id, code: $code, name: $name, reasonGroup: $reasonGroup, requiresApproval: $requiresApproval, requiresPhoto: $requiresPhoto, isActive: $isActive)';
+    return 'ReasonCodeDto(id: $id, code: $code, name: $name, reasonGroup: $reasonGroup, requiresApproval: $requiresApproval, requiresPhoto: $requiresPhoto, isActive: $isActive, rowVersion: $rowVersion)';
 }
 
 
@@ -2097,7 +2441,7 @@ abstract mixin class _$ReasonCodeDtoCopyWith<$Res> implements $ReasonCodeDtoCopy
   factory _$ReasonCodeDtoCopyWith(_ReasonCodeDto value, $Res Function(_ReasonCodeDto) _then) = __$ReasonCodeDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String code, String name, ReasonGroup reasonGroup, bool requiresApproval, bool requiresPhoto, bool isActive
+ int id, String code, String name, ReasonGroup reasonGroup, bool requiresApproval, bool requiresPhoto, bool isActive, int rowVersion
 });
 
 
@@ -2114,7 +2458,7 @@ class __$ReasonCodeDtoCopyWithImpl<$Res>
 
 /// Create a copy of ReasonCodeDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? reasonGroup = null,Object? requiresApproval = null,Object? requiresPhoto = null,Object? isActive = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? code = null,Object? name = null,Object? reasonGroup = null,Object? requiresApproval = null,Object? requiresPhoto = null,Object? isActive = null,Object? rowVersion = null,}) {
   return _then(_ReasonCodeDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
@@ -2123,7 +2467,8 @@ as String,reasonGroup: null == reasonGroup ? _self.reasonGroup : reasonGroup // 
 as ReasonGroup,requiresApproval: null == requiresApproval ? _self.requiresApproval : requiresApproval // ignore: cast_nullable_to_non_nullable
 as bool,requiresPhoto: null == requiresPhoto ? _self.requiresPhoto : requiresPhoto // ignore: cast_nullable_to_non_nullable
 as bool,isActive: null == isActive ? _self.isActive : isActive // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,rowVersion: null == rowVersion ? _self.rowVersion : rowVersion // ignore: cast_nullable_to_non_nullable
+as int,
   ));
 }
 

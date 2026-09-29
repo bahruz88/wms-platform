@@ -161,6 +161,8 @@ abstract class PermissionDto with _$PermissionDto {
     required String code,
     required String module,
     String? description,
+    // Marks a permission that can move stock or money; the role editor warns before granting it.
+    @Default(false) bool isCritical,
   }) = _PermissionDto;
 
   factory PermissionDto.fromJson(Map<String, Object?> json) =>

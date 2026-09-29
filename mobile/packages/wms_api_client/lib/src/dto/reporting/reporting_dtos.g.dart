@@ -11,8 +11,11 @@ _KpiDto _$KpiDtoFromJson(Map<String, dynamic> json) => _KpiDto(
   label: json['label'] as String,
   value: json['value'] as String,
   unit: json['unit'] as String?,
-  trend: json['trend'] as String?,
-  previousValue: json['previousValue'] as String?,
+  trendPct: json['trendPct'] == null
+      ? null
+      : Decimal.fromJson(json['trendPct'] as String),
+  severity: json['severity'] as String? ?? 'NORMAL',
+  link: json['link'] as String?,
   isCost: json['isCost'] as bool? ?? false,
 );
 
@@ -21,8 +24,9 @@ Map<String, dynamic> _$KpiDtoToJson(_KpiDto instance) => <String, dynamic>{
   'label': instance.label,
   'value': instance.value,
   'unit': instance.unit,
-  'trend': instance.trend,
-  'previousValue': instance.previousValue,
+  'trendPct': instance.trendPct?.toJson(),
+  'severity': instance.severity,
+  'link': instance.link,
   'isCost': instance.isCost,
 };
 
@@ -128,6 +132,7 @@ _ReportDefinitionDto _$ReportDefinitionDtoFromJson(Map<String, dynamic> json) =>
               .toList() ??
           const <String>[],
       requiresCostPermission: json['requiresCostPermission'] as bool? ?? false,
+      torRef: json['torRef'] as String?,
       maxSyncRows: (json['maxSyncRows'] as num?)?.toInt(),
     );
 
@@ -142,6 +147,7 @@ Map<String, dynamic> _$ReportDefinitionDtoToJson(
   'columns': instance.columns.map((e) => e.toJson()).toList(),
   'supportedFormats': instance.supportedFormats,
   'requiresCostPermission': instance.requiresCostPermission,
+  'torRef': instance.torRef,
   'maxSyncRows': instance.maxSyncRows,
 };
 
@@ -160,6 +166,7 @@ _ExportJobDto _$ExportJobDtoFromJson(Map<String, dynamic> json) =>
       downloadUrlExpiresAt: json['downloadUrlExpiresAt'] == null
           ? null
           : DateTime.parse(json['downloadUrlExpiresAt'] as String),
+      errorMessage: json['errorMessage'] as String?,
       completedAt: json['completedAt'] == null
           ? null
           : DateTime.parse(json['completedAt'] as String),
@@ -182,6 +189,7 @@ Map<String, dynamic> _$ExportJobDtoToJson(_ExportJobDto instance) =>
       'sizeBytes': instance.sizeBytes,
       'downloadUrl': instance.downloadUrl,
       'downloadUrlExpiresAt': instance.downloadUrlExpiresAt?.toIso8601String(),
+      'errorMessage': instance.errorMessage,
       'completedAt': instance.completedAt?.toIso8601String(),
       'expiresAt': instance.expiresAt?.toIso8601String(),
       'statusUrl': instance.statusUrl,
@@ -227,8 +235,7 @@ _ReportResultPageDto _$ReportResultPageDtoFromJson(Map<String, dynamic> json) =>
           : DateTime.parse(json['dataAsOf'] as String),
       page: (json['page'] as num?)?.toInt() ?? 0,
       size: (json['size'] as num?)?.toInt() ?? 0,
-      totalItems: (json['totalItems'] as num?)?.toInt() ?? 0,
-      totalPages: (json['totalPages'] as num?)?.toInt() ?? 0,
+      total: (json['total'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$ReportResultPageDtoToJson(
@@ -242,6 +249,5 @@ Map<String, dynamic> _$ReportResultPageDtoToJson(
   'dataAsOf': instance.dataAsOf?.toIso8601String(),
   'page': instance.page,
   'size': instance.size,
-  'totalItems': instance.totalItems,
-  'totalPages': instance.totalPages,
+  'total': instance.total,
 };

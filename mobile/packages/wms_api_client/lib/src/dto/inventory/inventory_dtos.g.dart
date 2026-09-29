@@ -111,9 +111,16 @@ _GoodsReceiptLineDto _$GoodsReceiptLineDtoFromJson(Map<String, dynamic> json) =>
       rejectedQty: Quantity.fromJson(json['rejectedQty'] as String),
       id: (json['id'] as num?)?.toInt(),
       poLineId: (json['poLineId'] as num?)?.toInt(),
+      batchId: (json['batchId'] as num?)?.toInt(),
       orderedQty: json['orderedQty'] == null
           ? null
           : Quantity.fromJson(json['orderedQty'] as String),
+      acceptedQtyBase: json['acceptedQtyBase'] == null
+          ? null
+          : Quantity.fromJson(json['acceptedQtyBase'] as String),
+      varianceQty: json['varianceQty'] == null
+          ? null
+          : Quantity.fromJson(json['varianceQty'] as String),
       uomCode: json['uomCode'] as String?,
       batchNo: json['batchNo'] as String?,
       productionDate: const NullableDateOnlyConverter().fromJson(
@@ -139,7 +146,10 @@ Map<String, dynamic> _$GoodsReceiptLineDtoToJson(
   'rejectedQty': instance.rejectedQty.toJson(),
   'id': instance.id,
   'poLineId': instance.poLineId,
+  'batchId': instance.batchId,
   'orderedQty': instance.orderedQty?.toJson(),
+  'acceptedQtyBase': instance.acceptedQtyBase?.toJson(),
+  'varianceQty': instance.varianceQty?.toJson(),
   'uomCode': instance.uomCode,
   'batchNo': instance.batchNo,
   'productionDate': const NullableDateOnlyConverter().toJson(
@@ -172,6 +182,13 @@ _GoodsReceiptDto _$GoodsReceiptDtoFromJson(Map<String, dynamic> json) =>
       postedAt: json['postedAt'] == null
           ? null
           : DateTime.parse(json['postedAt'] as String),
+      hasVariance: json['hasVariance'] as bool? ?? false,
+      lineCount: (json['lineCount'] as num?)?.toInt() ?? 0,
+      attachmentIds:
+          (json['attachmentIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const <int>[],
       audit: json['audit'] == null
           ? null
           : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
@@ -202,6 +219,9 @@ Map<String, dynamic> _$GoodsReceiptDtoToJson(_GoodsReceiptDto instance) =>
       'packagingNote': instance.packagingNote,
       'movementGroupId': instance.movementGroupId,
       'postedAt': instance.postedAt?.toIso8601String(),
+      'hasVariance': instance.hasVariance,
+      'lineCount': instance.lineCount,
+      'attachmentIds': instance.attachmentIds,
       'audit': instance.audit?.toJson(),
       'rowVersion': instance.rowVersion,
       'lines': instance.lines.map((e) => e.toJson()).toList(),
@@ -336,6 +356,12 @@ _StockRequestDto _$StockRequestDtoFromJson(Map<String, dynamic> json) =>
         json['requiredDate'] as String?,
       ),
       note: json['note'] as String?,
+      lineCount: (json['lineCount'] as num?)?.toInt() ?? 0,
+      issueIds:
+          (json['issueIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const <int>[],
       audit: json['audit'] == null
           ? null
           : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
@@ -361,6 +387,8 @@ Map<String, dynamic> _$StockRequestDtoToJson(_StockRequestDto instance) =>
         instance.requiredDate,
       ),
       'note': instance.note,
+      'lineCount': instance.lineCount,
+      'issueIds': instance.issueIds,
       'audit': instance.audit?.toJson(),
       'rowVersion': instance.rowVersion,
       'lines': instance.lines.map((e) => e.toJson()).toList(),
@@ -479,6 +507,8 @@ _IssueDto _$IssueDtoFromJson(Map<String, dynamic> json) => _IssueDto(
   ),
   status: $enumDecode(_$IssueStatusEnumMap, json['status']),
   requestId: (json['requestId'] as num?)?.toInt(),
+  requestDocNo: json['requestDocNo'] as String?,
+  note: json['note'] as String?,
   dispatchGroupId: (json['dispatchGroupId'] as num?)?.toInt(),
   receiptGroupId: (json['receiptGroupId'] as num?)?.toInt(),
   dispatchedAt: json['dispatchedAt'] == null
@@ -488,12 +518,16 @@ _IssueDto _$IssueDtoFromJson(Map<String, dynamic> json) => _IssueDto(
       ? null
       : DateTime.parse(json['receivedAt'] as String),
   receivedBy: (json['receivedBy'] as num?)?.toInt(),
+  lineCount: (json['lineCount'] as num?)?.toInt() ?? 0,
   rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
   lines:
       (json['lines'] as List<dynamic>?)
           ?.map((e) => IssueLineDto.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <IssueLineDto>[],
+  audit: json['audit'] == null
+      ? null
+      : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$IssueDtoToJson(_IssueDto instance) => <String, dynamic>{
@@ -505,13 +539,17 @@ Map<String, dynamic> _$IssueDtoToJson(_IssueDto instance) => <String, dynamic>{
   'toLocation': instance.toLocation.toJson(),
   'status': _$IssueStatusEnumMap[instance.status]!,
   'requestId': instance.requestId,
+  'requestDocNo': instance.requestDocNo,
+  'note': instance.note,
   'dispatchGroupId': instance.dispatchGroupId,
   'receiptGroupId': instance.receiptGroupId,
   'dispatchedAt': instance.dispatchedAt?.toIso8601String(),
   'receivedAt': instance.receivedAt?.toIso8601String(),
   'receivedBy': instance.receivedBy,
+  'lineCount': instance.lineCount,
   'rowVersion': instance.rowVersion,
   'lines': instance.lines.map((e) => e.toJson()).toList(),
+  'audit': instance.audit?.toJson(),
 };
 
 const _$IssueTypeEnumMap = {
@@ -573,6 +611,7 @@ _CreateIssueRequest _$CreateIssueRequestFromJson(Map<String, dynamic> json) =>
           .map((e) => CreateIssueLine.fromJson(e as Map<String, dynamic>))
           .toList(),
       requestId: (json['requestId'] as num?)?.toInt(),
+      note: json['note'] as String?,
     );
 
 Map<String, dynamic> _$CreateIssueRequestToJson(_CreateIssueRequest instance) =>
@@ -583,6 +622,7 @@ Map<String, dynamic> _$CreateIssueRequestToJson(_CreateIssueRequest instance) =>
       'toLocationId': instance.toLocationId,
       'lines': instance.lines.map((e) => e.toJson()).toList(),
       'requestId': instance.requestId,
+      'note': instance.note,
     };
 
 _ConfirmIssueLine _$ConfirmIssueLineFromJson(Map<String, dynamic> json) =>
@@ -607,7 +647,11 @@ _ConfirmIssueRequest _$ConfirmIssueRequestFromJson(Map<String, dynamic> json) =>
           .map((e) => ConfirmIssueLine.fromJson(e as Map<String, dynamic>))
           .toList(),
       rowVersion: (json['rowVersion'] as num).toInt(),
-      note: json['note'] as String?,
+      attachmentIds:
+          (json['attachmentIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const <int>[],
     );
 
 Map<String, dynamic> _$ConfirmIssueRequestToJson(
@@ -615,7 +659,7 @@ Map<String, dynamic> _$ConfirmIssueRequestToJson(
 ) => <String, dynamic>{
   'lines': instance.lines.map((e) => e.toJson()).toList(),
   'rowVersion': instance.rowVersion,
-  'note': instance.note,
+  'attachmentIds': instance.attachmentIds,
 };
 
 _CountLineDto _$CountLineDtoFromJson(Map<String, dynamic> json) =>
@@ -636,6 +680,14 @@ _CountLineDto _$CountLineDtoFromJson(Map<String, dynamic> json) =>
       variancePct: json['variancePct'] == null
           ? null
           : Decimal.fromJson(json['variancePct'] as String),
+      varianceValue: json['varianceValue'] == null
+          ? null
+          : Money.fromJson(json['varianceValue'] as String),
+      exceedsThreshold: json['exceedsThreshold'] as bool? ?? false,
+      countedAt: json['countedAt'] == null
+          ? null
+          : DateTime.parse(json['countedAt'] as String),
+      countedBy: (json['countedBy'] as num?)?.toInt(),
       reasonCodeId: (json['reasonCodeId'] as num?)?.toInt(),
       note: json['note'] as String?,
     );
@@ -650,6 +702,10 @@ Map<String, dynamic> _$CountLineDtoToJson(_CountLineDto instance) =>
       'countedQty': instance.countedQty?.toJson(),
       'varianceQty': instance.varianceQty?.toJson(),
       'variancePct': instance.variancePct?.toJson(),
+      'varianceValue': instance.varianceValue?.toJson(),
+      'exceedsThreshold': instance.exceedsThreshold,
+      'countedAt': instance.countedAt?.toIso8601String(),
+      'countedBy': instance.countedBy,
       'reasonCodeId': instance.reasonCodeId,
       'note': instance.note,
     };
@@ -668,12 +724,23 @@ _CountDto _$CountDtoFromJson(Map<String, dynamic> json) => _CountDto(
       ? null
       : DateTime.parse(json['approvedAt'] as String),
   adjustGroupId: (json['adjustGroupId'] as num?)?.toInt(),
+  requiresApproval: json['requiresApproval'] as bool? ?? false,
+  lineCount: (json['lineCount'] as num?)?.toInt() ?? 0,
+  countedLineCount: (json['countedLineCount'] as num?)?.toInt() ?? 0,
+  varianceLineCount: (json['varianceLineCount'] as num?)?.toInt() ?? 0,
+  totalVarianceValue: json['totalVarianceValue'] == null
+      ? null
+      : Money.fromJson(json['totalVarianceValue'] as String),
+  note: json['note'] as String?,
   rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
   lines:
       (json['lines'] as List<dynamic>?)
           ?.map((e) => CountLineDto.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <CountLineDto>[],
+  audit: json['audit'] == null
+      ? null
+      : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$CountDtoToJson(_CountDto instance) => <String, dynamic>{
@@ -686,8 +753,15 @@ Map<String, dynamic> _$CountDtoToJson(_CountDto instance) => <String, dynamic>{
   'approvedBy': instance.approvedBy,
   'approvedAt': instance.approvedAt?.toIso8601String(),
   'adjustGroupId': instance.adjustGroupId,
+  'requiresApproval': instance.requiresApproval,
+  'lineCount': instance.lineCount,
+  'countedLineCount': instance.countedLineCount,
+  'varianceLineCount': instance.varianceLineCount,
+  'totalVarianceValue': instance.totalVarianceValue?.toJson(),
+  'note': instance.note,
   'rowVersion': instance.rowVersion,
   'lines': instance.lines.map((e) => e.toJson()).toList(),
+  'audit': instance.audit?.toJson(),
 };
 
 const _$CountTypeEnumMap = {
@@ -710,12 +784,26 @@ _CreateCountRequest _$CreateCountRequestFromJson(Map<String, dynamic> json) =>
     _CreateCountRequest(
       locationId: (json['locationId'] as num).toInt(),
       countType: $enumDecode(_$CountTypeEnumMap, json['countType']),
+      categoryIds:
+          (json['categoryIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const <int>[],
+      productIds:
+          (json['productIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const <int>[],
+      note: json['note'] as String?,
     );
 
 Map<String, dynamic> _$CreateCountRequestToJson(_CreateCountRequest instance) =>
     <String, dynamic>{
       'locationId': instance.locationId,
       'countType': _$CountTypeEnumMap[instance.countType]!,
+      'categoryIds': instance.categoryIds,
+      'productIds': instance.productIds,
+      'note': instance.note,
     };
 
 _EnterCountLine _$EnterCountLineFromJson(Map<String, dynamic> json) =>
@@ -770,9 +858,9 @@ _WasteLineDto _$WasteLineDtoFromJson(Map<String, dynamic> json) =>
       unitCost: json['unitCost'] == null
           ? null
           : Money.fromJson(json['unitCost'] as String),
-      lineValue: json['lineValue'] == null
+      totalValue: json['totalValue'] == null
           ? null
-          : Money.fromJson(json['lineValue'] as String),
+          : Money.fromJson(json['totalValue'] as String),
     );
 
 Map<String, dynamic> _$WasteLineDtoToJson(_WasteLineDto instance) =>
@@ -787,7 +875,7 @@ Map<String, dynamic> _$WasteLineDtoToJson(_WasteLineDto instance) =>
       'qtyBase': instance.qtyBase?.toJson(),
       'note': instance.note,
       'unitCost': instance.unitCost?.toJson(),
-      'lineValue': instance.lineValue?.toJson(),
+      'totalValue': instance.totalValue?.toJson(),
     };
 
 _WasteDto _$WasteDtoFromJson(Map<String, dynamic> json) => _WasteDto(
@@ -803,7 +891,12 @@ _WasteDto _$WasteDtoFromJson(Map<String, dynamic> json) => _WasteDto(
   approvedAt: json['approvedAt'] == null
       ? null
       : DateTime.parse(json['approvedAt'] as String),
+  approvalComment: json['approvalComment'] as String?,
   movementGroupId: (json['movementGroupId'] as num?)?.toInt(),
+  lineCount: (json['lineCount'] as num?)?.toInt() ?? 0,
+  totalValue: json['totalValue'] == null
+      ? null
+      : Money.fromJson(json['totalValue'] as String),
   attachmentIds:
       (json['attachmentIds'] as List<dynamic>?)
           ?.map((e) => (e as num).toInt())
@@ -815,6 +908,9 @@ _WasteDto _$WasteDtoFromJson(Map<String, dynamic> json) => _WasteDto(
           ?.map((e) => WasteLineDto.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <WasteLineDto>[],
+  audit: json['audit'] == null
+      ? null
+      : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$WasteDtoToJson(_WasteDto instance) => <String, dynamic>{
@@ -828,10 +924,14 @@ Map<String, dynamic> _$WasteDtoToJson(_WasteDto instance) => <String, dynamic>{
   'note': instance.note,
   'approvedBy': instance.approvedBy,
   'approvedAt': instance.approvedAt?.toIso8601String(),
+  'approvalComment': instance.approvalComment,
   'movementGroupId': instance.movementGroupId,
+  'lineCount': instance.lineCount,
+  'totalValue': instance.totalValue?.toJson(),
   'attachmentIds': instance.attachmentIds,
   'rowVersion': instance.rowVersion,
   'lines': instance.lines.map((e) => e.toJson()).toList(),
+  'audit': instance.audit?.toJson(),
 };
 
 const _$WasteStatusEnumMap = {
@@ -901,6 +1001,12 @@ _SampleLineDto _$SampleLineDtoFromJson(Map<String, dynamic> json) =>
           ? null
           : Quantity.fromJson(json['qtyBase'] as String),
       note: json['note'] as String?,
+      unitCost: json['unitCost'] == null
+          ? null
+          : Money.fromJson(json['unitCost'] as String),
+      totalValue: json['totalValue'] == null
+          ? null
+          : Money.fromJson(json['totalValue'] as String),
     );
 
 Map<String, dynamic> _$SampleLineDtoToJson(_SampleLineDto instance) =>
@@ -914,6 +1020,8 @@ Map<String, dynamic> _$SampleLineDtoToJson(_SampleLineDto instance) =>
       'id': instance.id,
       'qtyBase': instance.qtyBase?.toJson(),
       'note': instance.note,
+      'unitCost': instance.unitCost?.toJson(),
+      'totalValue': instance.totalValue?.toJson(),
     };
 
 _SampleDto _$SampleDtoFromJson(Map<String, dynamic> json) => _SampleDto(
@@ -921,14 +1029,26 @@ _SampleDto _$SampleDtoFromJson(Map<String, dynamic> json) => _SampleDto(
   docNo: json['docNo'] as String,
   docDate: const DateOnlyConverter().fromJson(json['docDate'] as String),
   location: LocationRefDto.fromJson(json['location'] as Map<String, dynamic>),
+  status: $enumDecode(_$SimpleDocStatusEnumMap, json['status']),
   authority: json['authority'] as String? ?? 'AQTA',
   purpose: json['purpose'] as String?,
+  reasonCodeId: (json['reasonCodeId'] as num?)?.toInt(),
   movementGroupId: (json['movementGroupId'] as num?)?.toInt(),
+  lineCount: (json['lineCount'] as num?)?.toInt() ?? 0,
+  attachmentIds:
+      (json['attachmentIds'] as List<dynamic>?)
+          ?.map((e) => (e as num).toInt())
+          .toList() ??
+      const <int>[],
+  rowVersion: (json['rowVersion'] as num?)?.toInt() ?? 1,
   lines:
       (json['lines'] as List<dynamic>?)
           ?.map((e) => SampleLineDto.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <SampleLineDto>[],
+  audit: json['audit'] == null
+      ? null
+      : AuditFieldsDto.fromJson(json['audit'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$SampleDtoToJson(_SampleDto instance) =>
@@ -937,11 +1057,23 @@ Map<String, dynamic> _$SampleDtoToJson(_SampleDto instance) =>
       'docNo': instance.docNo,
       'docDate': const DateOnlyConverter().toJson(instance.docDate),
       'location': instance.location.toJson(),
+      'status': _$SimpleDocStatusEnumMap[instance.status]!,
       'authority': instance.authority,
       'purpose': instance.purpose,
+      'reasonCodeId': instance.reasonCodeId,
       'movementGroupId': instance.movementGroupId,
+      'lineCount': instance.lineCount,
+      'attachmentIds': instance.attachmentIds,
+      'rowVersion': instance.rowVersion,
       'lines': instance.lines.map((e) => e.toJson()).toList(),
+      'audit': instance.audit?.toJson(),
     };
+
+const _$SimpleDocStatusEnumMap = {
+  SimpleDocStatus.draft: 'DRAFT',
+  SimpleDocStatus.posted: 'POSTED',
+  SimpleDocStatus.cancelled: 'CANCELLED',
+};
 
 _CreateSampleLine _$CreateSampleLineFromJson(Map<String, dynamic> json) =>
     _CreateSampleLine(
@@ -970,6 +1102,12 @@ _CreateSampleRequest _$CreateSampleRequestFromJson(Map<String, dynamic> json) =>
           .toList(),
       authority: json['authority'] as String? ?? 'AQTA',
       purpose: json['purpose'] as String?,
+      reasonCodeId: (json['reasonCodeId'] as num?)?.toInt(),
+      attachmentIds:
+          (json['attachmentIds'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          const <int>[],
     );
 
 Map<String, dynamic> _$CreateSampleRequestToJson(
@@ -980,6 +1118,8 @@ Map<String, dynamic> _$CreateSampleRequestToJson(
   'lines': instance.lines.map((e) => e.toJson()).toList(),
   'authority': instance.authority,
   'purpose': instance.purpose,
+  'reasonCodeId': instance.reasonCodeId,
+  'attachmentIds': instance.attachmentIds,
 };
 
 _VersionedActionRequest _$VersionedActionRequestFromJson(

@@ -36,6 +36,8 @@ from __future__ import annotations
 import glob
 import re
 import sys
+
+import yaml
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -73,15 +75,28 @@ INLINE = {
     "SalesParseErrorDto",
 }
 
-# Fields the running server sends that the contract does not declare: contract defects. Keyed by
-# `module/DartClass`. They surface as "dead field" without this, which points at the wrong file.
+# Where the running server and the contract disagree. These are contract defects, not DTO defects,
+# so they are excluded from both directions: a field only the server sends would read as the DTO
+# inventing one, and a field only the contract declares as the DTO ignoring one. Keyed by
+# `module/DartClass`.
 DIVERGENCES = {
     "inventory/BatchDto": {
-        # `GET /inventory/batches` sends these three; the contract declares `qtyOnHand`/`balances`.
+        # `GET /inventory/batches` sends `totalQtyOnHand` with a `byLocation` breakdown and a
+        # `supplierName`; the contract declares `qtyOnHand` and `balances` instead. The DTO reads
+        # what the server sends.
         "totalQtyOnHand",
         "byLocation",
         "supplierName",
+        "balances",
+        "qtyOnHand",
     },
+}
+
+# Fields a DTO drops on purpose, with the reason. Anything not listed here is an oversight.
+DELIBERATE = {
+    # Recomputed from the two numbers printed beside it, so the screen cannot show a total and an
+    # available figure that disagree.
+    "inventory/BalanceDto": {"qtyAvailable"},
 }
 
 # contract module -> DTO folder
@@ -97,51 +112,49 @@ MODULES = {
 }
 
 
+def _ref_name(ref: object) -> str | None:
+    """`'common.v1.yaml#/components/schemas/PageMeta'` -> `'PageMeta'`."""
+    if not isinstance(ref, str):
+        return None
+    marker = "#/components/schemas/"
+    return ref.rsplit(marker, 1)[1] if marker in ref else None
+
+
 def _parse(path: Path, own: dict[str, set[str]], bases: dict[str, list[str]]) -> None:
-    """Reads one contract file into the shared `own`/`bases` pools."""
-    name: str | None = None
-    props: set[str] = set()
-    parents: list[str] = []
-    in_props = False
+    """Reads one contract file's `components.schemas` into the shared `own`/`bases` pools.
 
-    def flush() -> None:
-        if not name:
-            return
-        # A module often re-exports a shared schema as a bare `$ref` alias. That entry carries no
-        # properties and points at its own name, so letting it overwrite the definition already read
-        # from `common.v1.yaml` would erase the schema instead of reusing it.
-        clean = [p for p in parents if p != name]
-        if not props and not clean and name in own:
-            return
+    Parsed as YAML rather than scanned line by line. An earlier version matched `$ref` and property
+    names by indentation, which cannot tell a base schema from an array's item type or an inline
+    object's keys — so `UnreadCount.bySeverity`'s three severity names were reported as top-level
+    fields the DTO ignored, and a document was reported as ignoring the fields only its lines carry.
+    """
+    doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    schemas = (doc.get("components") or {}).get("schemas") or {}
+
+    for name, schema in schemas.items():
+        if not isinstance(schema, dict):
+            continue
+        props: set[str] = set()
+        parents: list[str] = []
+
+        # A schema is either built from `allOf`, or an alias for another schema, or plain.
+        blocks = schema.get("allOf") if isinstance(schema.get("allOf"), list) else [schema]
+        for block in blocks:
+            if not isinstance(block, dict):
+                continue
+            base = _ref_name(block.get("$ref"))
+            # An alias whose target is its own name is a module re-exporting a shared schema.
+            if base and base != name:
+                parents.append(base)
+            if isinstance(block.get("properties"), dict):
+                props |= set(block["properties"])
+
+        # A bare alias adds nothing of its own, so it must not overwrite the real definition already
+        # read from `common.v1.yaml`.
+        if not props and not parents and name in own:
+            continue
         own[name] = props
-        bases[name] = clean
-
-    for line in path.read_text(encoding="utf-8").split("\n"):
-        m = re.match(r"^    (\w+):\s*$", line)
-        if m:
-            flush()
-            name, props, parents, in_props = m.group(1), set(), [], False
-            continue
-        if name is None:
-            continue
-        # A `$ref` to a whole schema is a base, whether it sits under `allOf` as `- $ref:` or
-        # stands alone as an alias. It may point into another file — `common.v1.yaml` holds
-        # `PageMeta`, `AuditFields` and the scalar formats every module reuses — and the target name
-        # is what matters, since all files are parsed into one pool.
-        m = re.match(r"^\s+-? ?\$ref: '(?:[\w.]+)?#/components/schemas/(\w+)'\s*$", line)
-        if m:
-            parents.append(m.group(1))
-            continue
-        if re.match(r"^      properties:\s*$", line) or re.match(r"^          properties:\s*$", line):
-            in_props = True
-            continue
-        m = re.match(r"^        (\w+):", line) or re.match(r"^            (\w+):", line)
-        if m and in_props:
-            props.add(m.group(1))
-        if re.match(r"^[a-z]", line) and name:
-            flush()
-            name = None
-    flush()
+        bases[name] = parents
 
 
 def contract_schemas(path: Path) -> dict[str, set[str]]:
@@ -153,7 +166,7 @@ def contract_schemas(path: Path) -> dict[str, set[str]]:
     DTO, which is how an earlier version of this script over-reported the damage.
 
     `common.v1.yaml` is parsed alongside the module, because a base a module only `$ref`s is
-    otherwise an empty schema — which made `PageMeta`'s four paging fields look invented.
+    otherwise an empty schema — which made `PageMeta`'s paging fields look invented.
     """
     own: dict[str, set[str]] = {}
     bases: dict[str, list[str]] = {}
@@ -223,7 +236,7 @@ def main() -> int:
                 continue
             checked += 1
             diverged = DIVERGENCES.get(f"{module}/{cls}", set())
-            ignored = sorted(schemas[base] - keys)
+            ignored = sorted(schemas[base] - keys - diverged - DELIBERATE.get(f"{module}/{cls}", set()))
             invented = sorted(keys - schemas[base] - diverged)
             # Only a *required* invented field breaks parsing; a nullable one just reads as null.
             # A known server-vs-contract divergence is not the DTO's fault either way.

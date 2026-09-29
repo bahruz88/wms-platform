@@ -2,6 +2,7 @@ import 'package:decimal/decimal.dart';
 import 'package:feature_master_data/feature_master_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:wms_api_client/wms_api_client.dart';
 import 'package:wms_auth/wms_auth.dart';
 import 'package:wms_core/wms_core.dart';
@@ -49,9 +50,17 @@ class DashboardScreen extends ConsumerWidget {
                   value: kpi.amount?.amount ?? Decimal.zero,
                   decimals: kpi.decimals,
                   unit: kpi.unit,
-                  hint: kpi.previousValue == null
-                      ? null
-                      : 'əvvəlki dövr: ${kpi.previousValue}',
+                  // The server compares against the previous period and sends the percentage. The
+                  // card used to look for a `previousValue` the server never sends, so no card ever
+                  // showed a trend at all.
+                  delta: kpi.trendPct,
+                  hint: kpi.trendPct == null ? null : 'əvvəlki dövrlə müqayisə',
+                  // The sign alone does not say whether a move is good — waste rising is not green.
+                  // `severity` is the server's own judgement, and it is the only side that knows the
+                  // tenant's thresholds.
+                  deltaTone: kpi.severity == 'NORMAL' ? null : WmsDeltaTone.down,
+                  // An in-app path, when the server offers one to drill through to.
+                  onTap: kpi.link == null ? null : () => context.go(kpi.link!),
                 ),
             ];
 
