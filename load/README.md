@@ -46,24 +46,22 @@ scripts/seed-ledger.py --target 1000000 --check   # yalnız hesabat, yazmır
 
 ## Ölçülmüş nəticə
 
-Dev stack-ə qarşı, 2026-09-28:
+İki ölçmə, 2026-09-29. Fərq göstərir niyə meyar mövcud ledger ölçüsünü tələb edir.
 
-| | dəyər | hədəf |
-|---|---|---|
-| eyni vaxtlı istifadəçi | 100 VU | 100 |
-| müddət | 3 dəq | — |
-| **p95 (browse)** | **9,18 ms** | < 2 000 ms |
-| p95 (sənəd post) | 35,99 ms | (öz eşiyi: 10 s) |
-| uğursuz sorğu | 0 / 18 070 | < 1 % |
-| hərəkət sürəti | 2 023/saat | 2 000/saat |
-| mövcud `inv_movement` | **1 204** | **1 000 000** |
+| | kiçik ledger | **§17.3 meyarı** | hədəf |
+|---|---|---|---|
+| mövcud `inv_movement` | 1 204 | **1 000 000** | 1 000 000 |
+| eyni vaxtlı istifadəçi | 100 VU | **100 VU** | 100 |
+| müddət | 3 dəq | 3 dəq | — |
+| **p95 (browse)** | 9,18 ms | **90,41 ms** | < 2 000 ms |
+| p95 (sənəd post) | 35,99 ms | 53,49 ms | (öz eşiyi: 10 s) |
+| uğursuz sorğu | 0 / 18 070 | **0 / 17 919** | < 1 % |
+| hərəkət sürəti | 2 023/saat | **2 023/saat** | 2 000/saat |
 
-Son sətir meyarın hələ tam ödənmədiyini bildirir: ölçmə kiçik ledger üzərində
-aparılıb. `inv_movement` üzrə sorğuların planı sətir sayından asılıdır —
-`ix_mv_balance` indeksi min sətirdə fərqli, milyonda fərqli davranır. Ona görə
-9 ms rəqəmi alətin işlədiyini və 100 istifadəçinin platformanı yormadığını
-göstərir, §17.3-ün ödəndiyini isə yox.
+**Meyar ödənilir: p95 = 90,41 ms, hədəfin 22 qatı ehtiyatla.**
 
-Tam meyar üçün əvvəlcə `scripts/seed-ledger.py --target 1000000`, sonra yenidən
-ölçmə lazımdır. Toxumlama geri qaytarılmır (ledger yalnız əlavə olunandır,
-ADR-003), ona görə alət açıq təsdiq tələb edir.
+Sətir sayı 830 dəfə artdıqda p95 10 dəfə artdı — yəni `ix_mv_balance` indeksi
+işləyir, sorğu cədvəli skan etmir. Kiçik ledgerdəki 9 ms rəqəmi tək ölçüldükdə
+yanıltıcı olardı, məhz buna görə meyar milyonu tələb edir.
+
+Ölçmə ayrı `wms_load` bazasında aparıldı; iş bazası toxunulmadı.

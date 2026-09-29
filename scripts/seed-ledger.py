@@ -31,9 +31,11 @@ CONTAINER = os.environ.get("WMS_MYSQL_CONTAINER", "wms-mysql-1")
 DATABASE = os.environ.get("WMS_DB_NAME", "wms")
 TENANT = int(os.environ.get("WMS_TENANT_ID", "1"))
 
-# The virtual counter-account every seeded pair balances against. `V_ADJUSTMENT` is the one that
-# exists for exactly this purpose — a correction with no external counterparty (spec §12.3).
-COUNTER_LOCATION_CODE = "V_ADJUSTMENT"
+# The virtual counter-account every seeded pair balances against. Matched on `location_type`, not on
+# `code`: the type is the platform's (spec §12.3) while the code is the tenant's — this dev tenant
+# calls it `V-ADJ`. `V_ADJUSTMENT` exists for exactly this purpose: a correction with no external
+# counterparty.
+COUNTER_LOCATION_TYPE = "V_ADJUSTMENT"
 
 
 def sql(statement: str, *, read: bool = True) -> str:
@@ -63,8 +65,27 @@ def main() -> int:
     parser.add_argument("--target", type=int, default=1_000_000, help="rows inv_movement should end up with")
     parser.add_argument("--batch", type=int, default=20_000, help="rows per INSERT … SELECT pass")
     parser.add_argument("--check", action="store_true", help="report only")
+    parser.add_argument("--database", help="schema to seed (default: $WMS_DB_NAME or wms)")
     parser.add_argument("--i-know-this-is-a-test-database", action="store_true", dest="confirmed")
+    parser.add_argument(
+        "--reset", action="store_true",
+        help="empty the ledger first — refused on a database named `wms`, which is append-only for real",
+    )
     args = parser.parse_args()
+
+    if args.database:
+        global DATABASE
+        DATABASE = args.database
+    print(f"database: {DATABASE}")
+
+    if args.reset:
+        if DATABASE == "wms":
+            raise SystemExit("refusing to reset `wms`: the ledger is append-only (ADR-003)")
+        if not (args.confirmed or os.environ.get("WMS_ENV") == "test"):
+            raise SystemExit("--reset also needs --i-know-this-is-a-test-database")
+        print(f"emptying the ledger in {DATABASE}")
+        sql("SET FOREIGN_KEY_CHECKS=0; TRUNCATE inv_movement; TRUNCATE inv_movement_group; "
+            "DELETE FROM inv_balance; SET FOREIGN_KEY_CHECKS=1;", read=False)
 
     have = count("inv_movement")
     groups = count("inv_movement_group")
@@ -94,13 +115,14 @@ def main() -> int:
         f"SELECT id FROM master_location WHERE tenant_id={TENANT} AND location_type='CENTRAL_WAREHOUSE' ORDER BY id LIMIT 1"
     )
     counter_loc = sql(
-        f"SELECT id FROM master_location WHERE tenant_id={TENANT} AND code='{COUNTER_LOCATION_CODE}' LIMIT 1"
+        f"SELECT id FROM master_location WHERE tenant_id={TENANT} "
+        f"AND location_type='{COUNTER_LOCATION_TYPE}' ORDER BY id LIMIT 1"
     )
     if not (product and real_loc and counter_loc):
         raise SystemExit(
-            f"reference data missing: product={product!r} warehouse={real_loc!r} {COUNTER_LOCATION_CODE}={counter_loc!r}"
+            f"reference data missing: product={product!r} warehouse={real_loc!r} {COUNTER_LOCATION_TYPE}={counter_loc!r}"
         )
-    print(f"seeding product {product} between location {real_loc} and {COUNTER_LOCATION_CODE} ({counter_loc})")
+    print(f"seeding product {product} between location {real_loc} and {COUNTER_LOCATION_TYPE} ({counter_loc})")
 
     written = 0
     while written < missing:
@@ -120,50 +142,64 @@ def main() -> int:
 
 
 def seed_batch(product: int, base_uom: int, real_loc: int, counter_loc: int, pairs: int) -> int:
-    """One group holding `pairs` balanced pairs. The group sums to zero by construction."""
-    sql(
-        f"""INSERT INTO inv_movement_group
+    """
+    One group holding `pairs` balanced pairs. The group sums to zero by construction.
+
+    The group row and its movements are written in a **single** call, because every `sql()` opens its
+    own connection and `LAST_INSERT_ID()` does not survive that. Splitting them wrote two thousand
+    movements with `group_id = 0` and no group behind them — and the zero-sum check still passed,
+    because group 0 as a whole balanced. `verify()` now looks for orphans too.
+    """
+    # `seq` gives each pair its own line numbers without a temp table: two rows per pair, the
+    # physical location gaining 1 and the counter-account losing 1, so the group nets to zero.
+    out = sql(
+        # The recursive CTE is the row generator, and MySQL caps it at 1 000 iterations by default.
+        # Raised per session rather than globally: the seeder is the only thing that needs it.
+        f"""SET SESSION cte_max_recursion_depth = {max(1000, pairs + 10)};
+            INSERT INTO inv_movement_group
               (tenant_id, doc_type, doc_no, doc_date, source_doc_type, source_doc_id,
                note, posted_at, posted_by, idempotency_key)
             VALUES ({TENANT}, 'OPENING', CONCAT('LOAD-', UUID_SHORT()), CURDATE(), 'LOAD_SEED', 0,
-                    'scripts/seed-ledger.py — SPEC §17.3 load fixture', NOW(3), 1, UUID())""",
-        read=False,
-    )
-    group_id = int(sql("SELECT LAST_INSERT_ID()"))
-
-    # `seq` gives each pair its own line numbers without a temp table: two rows per pair, the
-    # physical location gaining 1 and the counter-account losing 1, so the group nets to zero.
-    sql(
-        f"""INSERT INTO inv_movement
+                    'scripts/seed-ledger.py — SPEC §17.3 load fixture', NOW(3), 1, UUID());
+            SET @g = LAST_INSERT_ID();
+            INSERT INTO inv_movement
               (tenant_id, group_id, line_no, product_id, batch_id, location_id, qty_base,
                base_uom_id, entered_qty, entered_uom_id, conversion_rate, posted_at, posted_by)
             WITH RECURSIVE seq(n) AS (
               SELECT 1 UNION ALL SELECT n + 1 FROM seq WHERE n < {pairs}
             )
-            SELECT {TENANT}, {group_id}, n * 2 - 1, {product}, NULL, {real_loc}, 1.0000,
+            SELECT {TENANT}, @g, n * 2 - 1, {product}, NULL, {real_loc}, 1.0000,
                    {base_uom}, 1.0000, {base_uom}, 1.00000000, NOW(3), 1 FROM seq
             UNION ALL
-            SELECT {TENANT}, {group_id}, n * 2, {product}, NULL, {counter_loc}, -1.0000,
-                   {base_uom}, -1.0000, {base_uom}, 1.00000000, NOW(3), 1 FROM seq""",
-        read=False,
+            SELECT {TENANT}, @g, n * 2, {product}, NULL, {counter_loc}, -1.0000,
+                   {base_uom}, -1.0000, {base_uom}, 1.00000000, NOW(3), 1 FROM seq;
+            SELECT @g;"""
     )
-    return group_id
+    return int(out.split("\n")[-1].strip())
 
 
 def recompute_balance(product: int, locations: list[int], base_uom: int) -> None:
-    """Rewrites the touched balance rows as the sum of their ledger lines (ADR-004)."""
+    """
+    Rewrites the touched balance rows as the sum of their ledger lines (ADR-004).
+
+    `inv_balance` carries no unit: the quantity is always in the product's base UoM, which is why
+    that column is immutable on the product (`BASE_UOM_IMMUTABLE`). `last_movement_id` points at the
+    line the figure was last derived from, so a reader can tell how current it is.
+    """
     for location in locations:
         sql(
             f"""INSERT INTO inv_balance
                   (tenant_id, product_id, location_id, batch_id, qty_on_hand, qty_reserved,
-                   base_uom_id, avg_unit_cost, updated_at)
+                   avg_unit_cost, last_movement_id, updated_at)
                 SELECT {TENANT}, {product}, {location}, 0,
-                       COALESCE(SUM(qty_base), 0), 0, {base_uom}, 0, NOW(3)
+                       COALESCE(SUM(qty_base), 0), 0, 0, MAX(id), NOW(3)
                   FROM inv_movement
                  WHERE tenant_id={TENANT} AND product_id={product}
                    AND location_id={location} AND batch_id IS NULL
                 ON DUPLICATE KEY UPDATE
-                   qty_on_hand = VALUES(qty_on_hand), updated_at = VALUES(updated_at)""",
+                   qty_on_hand = VALUES(qty_on_hand),
+                   last_movement_id = VALUES(last_movement_id),
+                   updated_at = VALUES(updated_at)""",
             read=False,
         )
 
@@ -184,9 +220,17 @@ def verify(product: int, locations: list[int]) -> None:
                   WHERE m.tenant_id=b.tenant_id AND m.product_id=b.product_id
                     AND m.location_id=b.location_id AND m.batch_id IS NULL)"""
     )
+    # A movement whose group does not exist. The zero-sum check alone misses it: orphans all land on
+    # `group_id = 0`, which balances as a whole and so looks like a healthy group.
+    orphans = sql(
+        f"""SELECT COUNT(*) FROM inv_movement m
+             LEFT JOIN inv_movement_group g ON g.id = m.group_id AND g.tenant_id = m.tenant_id
+            WHERE m.tenant_id={TENANT} AND g.id IS NULL"""
+    )
     print(f"  §12.3 groups not summing to zero: {unbalanced}")
     print(f"  §12.2 balance rows disagreeing with the ledger: {drift}")
-    if unbalanced != "0" or drift != "0":
+    print(f"  movements with no group behind them: {orphans}")
+    if unbalanced != "0" or drift != "0" or orphans != "0":
         raise SystemExit("invariant broken — do not run the load test against this data")
 
 
