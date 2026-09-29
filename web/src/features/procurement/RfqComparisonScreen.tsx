@@ -109,7 +109,7 @@ export function RfqComparisonScreen() {
           <span>{quotation.supplier.name}</span>
           <span className="wms-row">
             {quotation.id === data.cheapestQuotationId ? (
-              <Badge tone="success">Ən ucuz</Badge>
+              <Badge tone="success">Ümumilikdə ən ucuz</Badge>
             ) : null}
             {quotation.isSelected ? <Badge tone="accent">Seçilib</Badge> : null}
             <Badge tone="neutral" variant="outline">
@@ -139,7 +139,7 @@ export function RfqComparisonScreen() {
               </span>
             ) : null}
             <span className="wms-row">
-              {cell.isLowest ? <Badge tone="success">Sətirdə ən aşağı</Badge> : null}
+              {cell.isLowest ? <Badge tone="success">Bu məhsulda ən ucuz</Badge> : null}
               {cell.diffFromPrevPct !== null && cell.diffFromPrevPct !== undefined ? (
                 <VarianceIndicator
                   book="100"
