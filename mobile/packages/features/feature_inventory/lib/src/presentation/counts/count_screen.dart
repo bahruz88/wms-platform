@@ -58,12 +58,20 @@ class _CountScreenState extends ConsumerState<CountScreen> {
     final request = EnterCountRequest(
       rowVersion: count.rowVersion,
       lines: [
-        for (final entry in _counted.entries)
-          EnterCountLine(
-            lineId: entry.key,
-            countedQty: entry.value,
-            reasonCodeId: _reasonCodes[entry.key],
-          ),
+        for (final line in count.lines)
+          if (_counted[line.id] case final counted?)
+            EnterCountLine(
+              // The sheet is addressed by product: the server accepts a product it never
+              // pre-created, so the line id is not what identifies the entry.
+              productId: line.product.id,
+              batchId: line.batch?.id,
+              countedQuantity: QuantityInput(
+                value: counted,
+                // The sheet is typed in the product's base unit, which is what it displays.
+                uomId: line.product.baseUomId,
+              ),
+              reasonCodeId: _reasonCodes[line.id],
+            ),
       ],
     );
     final result = await ref

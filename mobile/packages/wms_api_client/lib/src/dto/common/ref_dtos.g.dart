@@ -11,8 +11,8 @@ _ProductRefDto _$ProductRefDtoFromJson(Map<String, dynamic> json) =>
       id: (json['id'] as num).toInt(),
       sku: json['sku'] as String,
       name: json['name'] as String,
-      baseUomId: (json['baseUomId'] as num?)?.toInt(),
-      baseUomCode: json['baseUomCode'] as String?,
+      baseUomId: (json['baseUomId'] as num).toInt(),
+      baseUomCode: json['baseUomCode'] as String,
       requiresBatch: json['requiresBatch'] as bool?,
       requiresExpiry: json['requiresExpiry'] as bool?,
     );

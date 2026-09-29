@@ -16,7 +16,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ProductRefDto {
 
- int get id; String get sku; String get name; int? get baseUomId; String? get baseUomCode; bool? get requiresBatch; bool? get requiresExpiry;
+ int get id; String get sku; String get name; int get baseUomId; String get baseUomCode; bool? get requiresBatch; bool? get requiresExpiry;
 /// Create a copy of ProductRefDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -54,7 +54,7 @@ abstract mixin class $ProductRefDtoCopyWith<$Res>  {
   factory $ProductRefDtoCopyWith(ProductRefDto value, $Res Function(ProductRefDto) _then) = _$ProductRefDtoCopyWithImpl;
 @useResult
 $Res call({
- int id, String sku, String name, int? baseUomId, String? baseUomCode, bool? requiresBatch, bool? requiresExpiry
+ int id, String sku, String name, int baseUomId, String baseUomCode, bool? requiresBatch, bool? requiresExpiry
 });
 
 
@@ -71,14 +71,14 @@ class _$ProductRefDtoCopyWithImpl<$Res>
 
 /// Create a copy of ProductRefDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sku = null,Object? name = null,Object? baseUomId = freezed,Object? baseUomCode = freezed,Object? requiresBatch = freezed,Object? requiresExpiry = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? sku = null,Object? name = null,Object? baseUomId = null,Object? baseUomCode = null,Object? requiresBatch = freezed,Object? requiresExpiry = freezed,}) {
   return _then(ProductRefDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,sku: null == sku ? _self.sku : sku // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,baseUomId: freezed == baseUomId ? _self.baseUomId : baseUomId // ignore: cast_nullable_to_non_nullable
-as int?,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
-as String?,requiresBatch: freezed == requiresBatch ? _self.requiresBatch : requiresBatch // ignore: cast_nullable_to_non_nullable
+as String,baseUomId: null == baseUomId ? _self.baseUomId : baseUomId // ignore: cast_nullable_to_non_nullable
+as int,baseUomCode: null == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
+as String,requiresBatch: freezed == requiresBatch ? _self.requiresBatch : requiresBatch // ignore: cast_nullable_to_non_nullable
 as bool?,requiresExpiry: freezed == requiresExpiry ? _self.requiresExpiry : requiresExpiry // ignore: cast_nullable_to_non_nullable
 as bool?,
   ));
@@ -165,7 +165,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String sku,  String name,  int? baseUomId,  String? baseUomCode,  bool? requiresBatch,  bool? requiresExpiry)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String sku,  String name,  int baseUomId,  String baseUomCode,  bool? requiresBatch,  bool? requiresExpiry)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ProductRefDto() when $default != null:
 return $default(_that.id,_that.sku,_that.name,_that.baseUomId,_that.baseUomCode,_that.requiresBatch,_that.requiresExpiry);case _:
@@ -186,7 +186,7 @@ return $default(_that.id,_that.sku,_that.name,_that.baseUomId,_that.baseUomCode,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String sku,  String name,  int? baseUomId,  String? baseUomCode,  bool? requiresBatch,  bool? requiresExpiry)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String sku,  String name,  int baseUomId,  String baseUomCode,  bool? requiresBatch,  bool? requiresExpiry)  $default,) {final _that = this;
 switch (_that) {
 case _ProductRefDto():
 return $default(_that.id,_that.sku,_that.name,_that.baseUomId,_that.baseUomCode,_that.requiresBatch,_that.requiresExpiry);case _:
@@ -206,7 +206,7 @@ return $default(_that.id,_that.sku,_that.name,_that.baseUomId,_that.baseUomCode,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String sku,  String name,  int? baseUomId,  String? baseUomCode,  bool? requiresBatch,  bool? requiresExpiry)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String sku,  String name,  int baseUomId,  String baseUomCode,  bool? requiresBatch,  bool? requiresExpiry)?  $default,) {final _that = this;
 switch (_that) {
 case _ProductRefDto() when $default != null:
 return $default(_that.id,_that.sku,_that.name,_that.baseUomId,_that.baseUomCode,_that.requiresBatch,_that.requiresExpiry);case _:
@@ -221,14 +221,14 @@ return $default(_that.id,_that.sku,_that.name,_that.baseUomId,_that.baseUomCode,
 @JsonSerializable()
 
 class _ProductRefDto extends ProductRefDto {
-  const _ProductRefDto({required this.id, required this.sku, required this.name, this.baseUomId, this.baseUomCode, this.requiresBatch, this.requiresExpiry}): super._();
+  const _ProductRefDto({required this.id, required this.sku, required this.name, required this.baseUomId, required this.baseUomCode, this.requiresBatch, this.requiresExpiry}): super._();
   factory _ProductRefDto.fromJson(Map<String, dynamic> json) => _$ProductRefDtoFromJson(json);
 
 @override final  int id;
 @override final  String sku;
 @override final  String name;
-@override final  int? baseUomId;
-@override final  String? baseUomCode;
+@override final  int baseUomId;
+@override final  String baseUomCode;
 @override final  bool? requiresBatch;
 @override final  bool? requiresExpiry;
 
@@ -267,7 +267,7 @@ abstract mixin class _$ProductRefDtoCopyWith<$Res> implements $ProductRefDtoCopy
   factory _$ProductRefDtoCopyWith(_ProductRefDto value, $Res Function(_ProductRefDto) _then) = __$ProductRefDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String sku, String name, int? baseUomId, String? baseUomCode, bool? requiresBatch, bool? requiresExpiry
+ int id, String sku, String name, int baseUomId, String baseUomCode, bool? requiresBatch, bool? requiresExpiry
 });
 
 
@@ -284,14 +284,14 @@ class __$ProductRefDtoCopyWithImpl<$Res>
 
 /// Create a copy of ProductRefDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sku = null,Object? name = null,Object? baseUomId = freezed,Object? baseUomCode = freezed,Object? requiresBatch = freezed,Object? requiresExpiry = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? sku = null,Object? name = null,Object? baseUomId = null,Object? baseUomCode = null,Object? requiresBatch = freezed,Object? requiresExpiry = freezed,}) {
   return _then(_ProductRefDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,sku: null == sku ? _self.sku : sku // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,baseUomId: freezed == baseUomId ? _self.baseUomId : baseUomId // ignore: cast_nullable_to_non_nullable
-as int?,baseUomCode: freezed == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
-as String?,requiresBatch: freezed == requiresBatch ? _self.requiresBatch : requiresBatch // ignore: cast_nullable_to_non_nullable
+as String,baseUomId: null == baseUomId ? _self.baseUomId : baseUomId // ignore: cast_nullable_to_non_nullable
+as int,baseUomCode: null == baseUomCode ? _self.baseUomCode : baseUomCode // ignore: cast_nullable_to_non_nullable
+as String,requiresBatch: freezed == requiresBatch ? _self.requiresBatch : requiresBatch // ignore: cast_nullable_to_non_nullable
 as bool?,requiresExpiry: freezed == requiresExpiry ? _self.requiresExpiry : requiresExpiry // ignore: cast_nullable_to_non_nullable
 as bool?,
   ));

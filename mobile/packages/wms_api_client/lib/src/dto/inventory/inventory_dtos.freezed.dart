@@ -3244,7 +3244,7 @@ as String?,
 /// @nodoc
 mixin _$IssueLineDto {
 
- int get lineNo; ProductRefDto get product; Quantity get qty; int get uomId; BatchRefDto? get batch; BatchRefDto? get suggestedBatch; String? get uomCode; Quantity? get receivedQty; Quantity? get discrepancyQty; int? get batchOverrideReasonCodeId; int? get discrepancyReasonCodeId; String? get discrepancyNote;
+ int get id; int get lineNo; ProductRefDto get product; Quantity get qty; int get uomId; BatchRefDto? get batch; BatchRefDto? get suggestedBatch; String? get uomCode; Quantity? get receivedQty; Quantity? get discrepancyQty; int? get batchOverrideReasonCodeId; int? get discrepancyReasonCodeId; String? get discrepancyNote;
 /// Create a copy of IssueLineDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3258,20 +3258,20 @@ $IssueLineDtoCopyWith<IssueLineDto> get copyWith => _$IssueLineDtoCopyWithImpl<I
 @override
 bool operator ==(Object other) {
   final _this = this as IssueLineDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueLineDto&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.batch, _this.batch) || other.batch == _this.batch)&&(identical(other.suggestedBatch, _this.suggestedBatch) || other.suggestedBatch == _this.suggestedBatch)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.receivedQty, _this.receivedQty) || other.receivedQty == _this.receivedQty)&&(identical(other.discrepancyQty, _this.discrepancyQty) || other.discrepancyQty == _this.discrepancyQty)&&(identical(other.batchOverrideReasonCodeId, _this.batchOverrideReasonCodeId) || other.batchOverrideReasonCodeId == _this.batchOverrideReasonCodeId)&&(identical(other.discrepancyReasonCodeId, _this.discrepancyReasonCodeId) || other.discrepancyReasonCodeId == _this.discrepancyReasonCodeId)&&(identical(other.discrepancyNote, _this.discrepancyNote) || other.discrepancyNote == _this.discrepancyNote));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is IssueLineDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.product, _this.product) || other.product == _this.product)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.batch, _this.batch) || other.batch == _this.batch)&&(identical(other.suggestedBatch, _this.suggestedBatch) || other.suggestedBatch == _this.suggestedBatch)&&(identical(other.uomCode, _this.uomCode) || other.uomCode == _this.uomCode)&&(identical(other.receivedQty, _this.receivedQty) || other.receivedQty == _this.receivedQty)&&(identical(other.discrepancyQty, _this.discrepancyQty) || other.discrepancyQty == _this.discrepancyQty)&&(identical(other.batchOverrideReasonCodeId, _this.batchOverrideReasonCodeId) || other.batchOverrideReasonCodeId == _this.batchOverrideReasonCodeId)&&(identical(other.discrepancyReasonCodeId, _this.discrepancyReasonCodeId) || other.discrepancyReasonCodeId == _this.discrepancyReasonCodeId)&&(identical(other.discrepancyNote, _this.discrepancyNote) || other.discrepancyNote == _this.discrepancyNote));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as IssueLineDto;
-  return Object.hash(runtimeType,_this.lineNo,_this.product,_this.qty,_this.uomId,_this.batch,_this.suggestedBatch,_this.uomCode,_this.receivedQty,_this.discrepancyQty,_this.batchOverrideReasonCodeId,_this.discrepancyReasonCodeId,_this.discrepancyNote);
+  return Object.hash(runtimeType,_this.id,_this.lineNo,_this.product,_this.qty,_this.uomId,_this.batch,_this.suggestedBatch,_this.uomCode,_this.receivedQty,_this.discrepancyQty,_this.batchOverrideReasonCodeId,_this.discrepancyReasonCodeId,_this.discrepancyNote);
 }
 
 @override
 String toString() {
   final _this = this as IssueLineDto;
-  return 'IssueLineDto(lineNo: ${_this.lineNo}, product: ${_this.product}, qty: ${_this.qty}, uomId: ${_this.uomId}, batch: ${_this.batch}, suggestedBatch: ${_this.suggestedBatch}, uomCode: ${_this.uomCode}, receivedQty: ${_this.receivedQty}, discrepancyQty: ${_this.discrepancyQty}, batchOverrideReasonCodeId: ${_this.batchOverrideReasonCodeId}, discrepancyReasonCodeId: ${_this.discrepancyReasonCodeId}, discrepancyNote: ${_this.discrepancyNote})';
+  return 'IssueLineDto(id: ${_this.id}, lineNo: ${_this.lineNo}, product: ${_this.product}, qty: ${_this.qty}, uomId: ${_this.uomId}, batch: ${_this.batch}, suggestedBatch: ${_this.suggestedBatch}, uomCode: ${_this.uomCode}, receivedQty: ${_this.receivedQty}, discrepancyQty: ${_this.discrepancyQty}, batchOverrideReasonCodeId: ${_this.batchOverrideReasonCodeId}, discrepancyReasonCodeId: ${_this.discrepancyReasonCodeId}, discrepancyNote: ${_this.discrepancyNote})';
 }
 
 
@@ -3282,7 +3282,7 @@ abstract mixin class $IssueLineDtoCopyWith<$Res>  {
   factory $IssueLineDtoCopyWith(IssueLineDto value, $Res Function(IssueLineDto) _then) = _$IssueLineDtoCopyWithImpl;
 @useResult
 $Res call({
- int lineNo, ProductRefDto product, Quantity qty, int uomId, BatchRefDto? batch, BatchRefDto? suggestedBatch, String? uomCode, Quantity? receivedQty, Quantity? discrepancyQty, int? batchOverrideReasonCodeId, int? discrepancyReasonCodeId, String? discrepancyNote
+ int id, int lineNo, ProductRefDto product, Quantity qty, int uomId, BatchRefDto? batch, BatchRefDto? suggestedBatch, String? uomCode, Quantity? receivedQty, Quantity? discrepancyQty, int? batchOverrideReasonCodeId, int? discrepancyReasonCodeId, String? discrepancyNote
 });
 
 
@@ -3299,9 +3299,10 @@ class _$IssueLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueLineDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? batch = freezed,Object? suggestedBatch = freezed,Object? uomCode = freezed,Object? receivedQty = freezed,Object? discrepancyQty = freezed,Object? batchOverrideReasonCodeId = freezed,Object? discrepancyReasonCodeId = freezed,Object? discrepancyNote = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? batch = freezed,Object? suggestedBatch = freezed,Object? uomCode = freezed,Object? receivedQty = freezed,Object? discrepancyQty = freezed,Object? batchOverrideReasonCodeId = freezed,Object? discrepancyReasonCodeId = freezed,Object? discrepancyNote = freezed,}) {
   return _then(IssueLineDto(
-lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
 as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
 as ProductRefDto,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
@@ -3431,10 +3432,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  BatchRefDto? suggestedBatch,  String? uomCode,  Quantity? receivedQty,  Quantity? discrepancyQty,  int? batchOverrideReasonCodeId,  int? discrepancyReasonCodeId,  String? discrepancyNote)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  BatchRefDto? suggestedBatch,  String? uomCode,  Quantity? receivedQty,  Quantity? discrepancyQty,  int? batchOverrideReasonCodeId,  int? discrepancyReasonCodeId,  String? discrepancyNote)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _IssueLineDto() when $default != null:
-return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.suggestedBatch,_that.uomCode,_that.receivedQty,_that.discrepancyQty,_that.batchOverrideReasonCodeId,_that.discrepancyReasonCodeId,_that.discrepancyNote);case _:
+return $default(_that.id,_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.suggestedBatch,_that.uomCode,_that.receivedQty,_that.discrepancyQty,_that.batchOverrideReasonCodeId,_that.discrepancyReasonCodeId,_that.discrepancyNote);case _:
   return orElse();
 
 }
@@ -3452,10 +3453,10 @@ return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  BatchRefDto? suggestedBatch,  String? uomCode,  Quantity? receivedQty,  Quantity? discrepancyQty,  int? batchOverrideReasonCodeId,  int? discrepancyReasonCodeId,  String? discrepancyNote)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  BatchRefDto? suggestedBatch,  String? uomCode,  Quantity? receivedQty,  Quantity? discrepancyQty,  int? batchOverrideReasonCodeId,  int? discrepancyReasonCodeId,  String? discrepancyNote)  $default,) {final _that = this;
 switch (_that) {
 case _IssueLineDto():
-return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.suggestedBatch,_that.uomCode,_that.receivedQty,_that.discrepancyQty,_that.batchOverrideReasonCodeId,_that.discrepancyReasonCodeId,_that.discrepancyNote);case _:
+return $default(_that.id,_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.suggestedBatch,_that.uomCode,_that.receivedQty,_that.discrepancyQty,_that.batchOverrideReasonCodeId,_that.discrepancyReasonCodeId,_that.discrepancyNote);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -3472,10 +3473,10 @@ return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  BatchRefDto? suggestedBatch,  String? uomCode,  Quantity? receivedQty,  Quantity? discrepancyQty,  int? batchOverrideReasonCodeId,  int? discrepancyReasonCodeId,  String? discrepancyNote)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  int lineNo,  ProductRefDto product,  Quantity qty,  int uomId,  BatchRefDto? batch,  BatchRefDto? suggestedBatch,  String? uomCode,  Quantity? receivedQty,  Quantity? discrepancyQty,  int? batchOverrideReasonCodeId,  int? discrepancyReasonCodeId,  String? discrepancyNote)?  $default,) {final _that = this;
 switch (_that) {
 case _IssueLineDto() when $default != null:
-return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.suggestedBatch,_that.uomCode,_that.receivedQty,_that.discrepancyQty,_that.batchOverrideReasonCodeId,_that.discrepancyReasonCodeId,_that.discrepancyNote);case _:
+return $default(_that.id,_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_that.suggestedBatch,_that.uomCode,_that.receivedQty,_that.discrepancyQty,_that.batchOverrideReasonCodeId,_that.discrepancyReasonCodeId,_that.discrepancyNote);case _:
   return null;
 
 }
@@ -3487,9 +3488,10 @@ return $default(_that.lineNo,_that.product,_that.qty,_that.uomId,_that.batch,_th
 @JsonSerializable()
 
 class _IssueLineDto extends IssueLineDto {
-  const _IssueLineDto({required this.lineNo, required this.product, required this.qty, required this.uomId, this.batch, this.suggestedBatch, this.uomCode, this.receivedQty, this.discrepancyQty, this.batchOverrideReasonCodeId, this.discrepancyReasonCodeId, this.discrepancyNote}): super._();
+  const _IssueLineDto({required this.id, required this.lineNo, required this.product, required this.qty, required this.uomId, this.batch, this.suggestedBatch, this.uomCode, this.receivedQty, this.discrepancyQty, this.batchOverrideReasonCodeId, this.discrepancyReasonCodeId, this.discrepancyNote}): super._();
   factory _IssueLineDto.fromJson(Map<String, dynamic> json) => _$IssueLineDtoFromJson(json);
 
+@override final  int id;
 @override final  int lineNo;
 @override final  ProductRefDto product;
 @override final  Quantity qty;
@@ -3516,18 +3518,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueLineDto&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.product, product) || other.product == product)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.batch, batch) || other.batch == batch)&&(identical(other.suggestedBatch, suggestedBatch) || other.suggestedBatch == suggestedBatch)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.receivedQty, receivedQty) || other.receivedQty == receivedQty)&&(identical(other.discrepancyQty, discrepancyQty) || other.discrepancyQty == discrepancyQty)&&(identical(other.batchOverrideReasonCodeId, batchOverrideReasonCodeId) || other.batchOverrideReasonCodeId == batchOverrideReasonCodeId)&&(identical(other.discrepancyReasonCodeId, discrepancyReasonCodeId) || other.discrepancyReasonCodeId == discrepancyReasonCodeId)&&(identical(other.discrepancyNote, discrepancyNote) || other.discrepancyNote == discrepancyNote));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _IssueLineDto&&(identical(other.id, id) || other.id == id)&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.product, product) || other.product == product)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.batch, batch) || other.batch == batch)&&(identical(other.suggestedBatch, suggestedBatch) || other.suggestedBatch == suggestedBatch)&&(identical(other.uomCode, uomCode) || other.uomCode == uomCode)&&(identical(other.receivedQty, receivedQty) || other.receivedQty == receivedQty)&&(identical(other.discrepancyQty, discrepancyQty) || other.discrepancyQty == discrepancyQty)&&(identical(other.batchOverrideReasonCodeId, batchOverrideReasonCodeId) || other.batchOverrideReasonCodeId == batchOverrideReasonCodeId)&&(identical(other.discrepancyReasonCodeId, discrepancyReasonCodeId) || other.discrepancyReasonCodeId == discrepancyReasonCodeId)&&(identical(other.discrepancyNote, discrepancyNote) || other.discrepancyNote == discrepancyNote));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,lineNo,product,qty,uomId,batch,suggestedBatch,uomCode,receivedQty,discrepancyQty,batchOverrideReasonCodeId,discrepancyReasonCodeId,discrepancyNote);
+    return Object.hash(runtimeType,id,lineNo,product,qty,uomId,batch,suggestedBatch,uomCode,receivedQty,discrepancyQty,batchOverrideReasonCodeId,discrepancyReasonCodeId,discrepancyNote);
 }
 
 @override
 String toString() {
-    return 'IssueLineDto(lineNo: $lineNo, product: $product, qty: $qty, uomId: $uomId, batch: $batch, suggestedBatch: $suggestedBatch, uomCode: $uomCode, receivedQty: $receivedQty, discrepancyQty: $discrepancyQty, batchOverrideReasonCodeId: $batchOverrideReasonCodeId, discrepancyReasonCodeId: $discrepancyReasonCodeId, discrepancyNote: $discrepancyNote)';
+    return 'IssueLineDto(id: $id, lineNo: $lineNo, product: $product, qty: $qty, uomId: $uomId, batch: $batch, suggestedBatch: $suggestedBatch, uomCode: $uomCode, receivedQty: $receivedQty, discrepancyQty: $discrepancyQty, batchOverrideReasonCodeId: $batchOverrideReasonCodeId, discrepancyReasonCodeId: $discrepancyReasonCodeId, discrepancyNote: $discrepancyNote)';
 }
 
 
@@ -3538,7 +3540,7 @@ abstract mixin class _$IssueLineDtoCopyWith<$Res> implements $IssueLineDtoCopyWi
   factory _$IssueLineDtoCopyWith(_IssueLineDto value, $Res Function(_IssueLineDto) _then) = __$IssueLineDtoCopyWithImpl;
 @override @useResult
 $Res call({
- int lineNo, ProductRefDto product, Quantity qty, int uomId, BatchRefDto? batch, BatchRefDto? suggestedBatch, String? uomCode, Quantity? receivedQty, Quantity? discrepancyQty, int? batchOverrideReasonCodeId, int? discrepancyReasonCodeId, String? discrepancyNote
+ int id, int lineNo, ProductRefDto product, Quantity qty, int uomId, BatchRefDto? batch, BatchRefDto? suggestedBatch, String? uomCode, Quantity? receivedQty, Quantity? discrepancyQty, int? batchOverrideReasonCodeId, int? discrepancyReasonCodeId, String? discrepancyNote
 });
 
 
@@ -3555,9 +3557,10 @@ class __$IssueLineDtoCopyWithImpl<$Res>
 
 /// Create a copy of IssueLineDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? batch = freezed,Object? suggestedBatch = freezed,Object? uomCode = freezed,Object? receivedQty = freezed,Object? discrepancyQty = freezed,Object? batchOverrideReasonCodeId = freezed,Object? discrepancyReasonCodeId = freezed,Object? discrepancyNote = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? lineNo = null,Object? product = null,Object? qty = null,Object? uomId = null,Object? batch = freezed,Object? suggestedBatch = freezed,Object? uomCode = freezed,Object? receivedQty = freezed,Object? discrepancyQty = freezed,Object? batchOverrideReasonCodeId = freezed,Object? discrepancyReasonCodeId = freezed,Object? discrepancyNote = freezed,}) {
   return _then(_IssueLineDto(
-lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as int,lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
 as int,product: null == product ? _self.product : product // ignore: cast_nullable_to_non_nullable
 as ProductRefDto,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
@@ -3965,9 +3968,282 @@ $LocationRefDtoCopyWith<$Res> get toLocation {
 
 
 /// @nodoc
+mixin _$QuantityInput {
+
+ Quantity get value; int get uomId;
+/// Create a copy of QuantityInput
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$QuantityInputCopyWith<QuantityInput> get copyWith => _$QuantityInputCopyWithImpl<QuantityInput>(this as QuantityInput, _$identity);
+
+  /// Serializes this QuantityInput to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as QuantityInput;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuantityInput&&(identical(other.value, _this.value) || other.value == _this.value)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as QuantityInput;
+  return Object.hash(runtimeType,_this.value,_this.uomId);
+}
+
+@override
+String toString() {
+  final _this = this as QuantityInput;
+  return 'QuantityInput(value: ${_this.value}, uomId: ${_this.uomId})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $QuantityInputCopyWith<$Res>  {
+  factory $QuantityInputCopyWith(QuantityInput value, $Res Function(QuantityInput) _then) = _$QuantityInputCopyWithImpl;
+@useResult
+$Res call({
+ Quantity value, int uomId
+});
+
+
+
+
+}
+/// @nodoc
+class _$QuantityInputCopyWithImpl<$Res>
+    implements $QuantityInputCopyWith<$Res> {
+  _$QuantityInputCopyWithImpl(this._self, this._then);
+
+  final QuantityInput _self;
+  final $Res Function(QuantityInput) _then;
+
+/// Create a copy of QuantityInput
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? value = null,Object? uomId = null,}) {
+  return _then(QuantityInput(
+value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [QuantityInput].
+extension QuantityInputPatterns on QuantityInput {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _QuantityInput value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _QuantityInput() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _QuantityInput value)  $default,){
+final _that = this;
+switch (_that) {
+case _QuantityInput():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _QuantityInput value)?  $default,){
+final _that = this;
+switch (_that) {
+case _QuantityInput() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( Quantity value,  int uomId)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _QuantityInput() when $default != null:
+return $default(_that.value,_that.uomId);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( Quantity value,  int uomId)  $default,) {final _that = this;
+switch (_that) {
+case _QuantityInput():
+return $default(_that.value,_that.uomId);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( Quantity value,  int uomId)?  $default,) {final _that = this;
+switch (_that) {
+case _QuantityInput() when $default != null:
+return $default(_that.value,_that.uomId);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _QuantityInput implements QuantityInput {
+  const _QuantityInput({required this.value, required this.uomId});
+  factory _QuantityInput.fromJson(Map<String, dynamic> json) => _$QuantityInputFromJson(json);
+
+@override final  Quantity value;
+@override final  int uomId;
+
+/// Create a copy of QuantityInput
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$QuantityInputCopyWith<_QuantityInput> get copyWith => __$QuantityInputCopyWithImpl<_QuantityInput>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$QuantityInputToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuantityInput&&(identical(other.value, value) || other.value == value)&&(identical(other.uomId, uomId) || other.uomId == uomId));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,value,uomId);
+}
+
+@override
+String toString() {
+    return 'QuantityInput(value: $value, uomId: $uomId)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$QuantityInputCopyWith<$Res> implements $QuantityInputCopyWith<$Res> {
+  factory _$QuantityInputCopyWith(_QuantityInput value, $Res Function(_QuantityInput) _then) = __$QuantityInputCopyWithImpl;
+@override @useResult
+$Res call({
+ Quantity value, int uomId
+});
+
+
+
+
+}
+/// @nodoc
+class __$QuantityInputCopyWithImpl<$Res>
+    implements _$QuantityInputCopyWith<$Res> {
+  __$QuantityInputCopyWithImpl(this._self, this._then);
+
+  final _QuantityInput _self;
+  final $Res Function(_QuantityInput) _then;
+
+/// Create a copy of QuantityInput
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? value = null,Object? uomId = null,}) {
+  return _then(_QuantityInput(
+value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
+as int,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$CreateIssueLine {
 
- int get productId; Quantity get qty; int get uomId; int? get batchId; int? get reasonCodeId; String? get note;
+ int get productId; Quantity get qty; int get uomId; int? get requestLineId; int? get batchId; int? get batchOverrideReasonCodeId; String? get batchOverrideNote;
 /// Create a copy of CreateIssueLine
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -3981,20 +4257,20 @@ $CreateIssueLineCopyWith<CreateIssueLine> get copyWith => _$CreateIssueLineCopyW
 @override
 bool operator ==(Object other) {
   final _this = this as CreateIssueLine;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateIssueLine&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId)&&(identical(other.reasonCodeId, _this.reasonCodeId) || other.reasonCodeId == _this.reasonCodeId)&&(identical(other.note, _this.note) || other.note == _this.note));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateIssueLine&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.requestLineId, _this.requestLineId) || other.requestLineId == _this.requestLineId)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId)&&(identical(other.batchOverrideReasonCodeId, _this.batchOverrideReasonCodeId) || other.batchOverrideReasonCodeId == _this.batchOverrideReasonCodeId)&&(identical(other.batchOverrideNote, _this.batchOverrideNote) || other.batchOverrideNote == _this.batchOverrideNote));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as CreateIssueLine;
-  return Object.hash(runtimeType,_this.productId,_this.qty,_this.uomId,_this.batchId,_this.reasonCodeId,_this.note);
+  return Object.hash(runtimeType,_this.productId,_this.qty,_this.uomId,_this.requestLineId,_this.batchId,_this.batchOverrideReasonCodeId,_this.batchOverrideNote);
 }
 
 @override
 String toString() {
   final _this = this as CreateIssueLine;
-  return 'CreateIssueLine(productId: ${_this.productId}, qty: ${_this.qty}, uomId: ${_this.uomId}, batchId: ${_this.batchId}, reasonCodeId: ${_this.reasonCodeId}, note: ${_this.note})';
+  return 'CreateIssueLine(productId: ${_this.productId}, qty: ${_this.qty}, uomId: ${_this.uomId}, requestLineId: ${_this.requestLineId}, batchId: ${_this.batchId}, batchOverrideReasonCodeId: ${_this.batchOverrideReasonCodeId}, batchOverrideNote: ${_this.batchOverrideNote})';
 }
 
 
@@ -4005,7 +4281,7 @@ abstract mixin class $CreateIssueLineCopyWith<$Res>  {
   factory $CreateIssueLineCopyWith(CreateIssueLine value, $Res Function(CreateIssueLine) _then) = _$CreateIssueLineCopyWithImpl;
 @useResult
 $Res call({
- int productId, Quantity qty, int uomId, int? batchId, int? reasonCodeId, String? note
+ int productId, Quantity qty, int uomId, int? requestLineId, int? batchId, int? batchOverrideReasonCodeId, String? batchOverrideNote
 });
 
 
@@ -4022,14 +4298,15 @@ class _$CreateIssueLineCopyWithImpl<$Res>
 
 /// Create a copy of CreateIssueLine
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? qty = null,Object? uomId = null,Object? batchId = freezed,Object? reasonCodeId = freezed,Object? note = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? qty = null,Object? uomId = null,Object? requestLineId = freezed,Object? batchId = freezed,Object? batchOverrideReasonCodeId = freezed,Object? batchOverrideNote = freezed,}) {
   return _then(CreateIssueLine(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
-as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as int,requestLineId: freezed == requestLineId ? _self.requestLineId : requestLineId // ignore: cast_nullable_to_non_nullable
+as int?,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
+as int?,batchOverrideReasonCodeId: freezed == batchOverrideReasonCodeId ? _self.batchOverrideReasonCodeId : batchOverrideReasonCodeId // ignore: cast_nullable_to_non_nullable
+as int?,batchOverrideNote: freezed == batchOverrideNote ? _self.batchOverrideNote : batchOverrideNote // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -4115,10 +4392,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int productId,  Quantity qty,  int uomId,  int? batchId,  int? reasonCodeId,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int productId,  Quantity qty,  int uomId,  int? requestLineId,  int? batchId,  int? batchOverrideReasonCodeId,  String? batchOverrideNote)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CreateIssueLine() when $default != null:
-return $default(_that.productId,_that.qty,_that.uomId,_that.batchId,_that.reasonCodeId,_that.note);case _:
+return $default(_that.productId,_that.qty,_that.uomId,_that.requestLineId,_that.batchId,_that.batchOverrideReasonCodeId,_that.batchOverrideNote);case _:
   return orElse();
 
 }
@@ -4136,10 +4413,10 @@ return $default(_that.productId,_that.qty,_that.uomId,_that.batchId,_that.reason
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int productId,  Quantity qty,  int uomId,  int? batchId,  int? reasonCodeId,  String? note)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int productId,  Quantity qty,  int uomId,  int? requestLineId,  int? batchId,  int? batchOverrideReasonCodeId,  String? batchOverrideNote)  $default,) {final _that = this;
 switch (_that) {
 case _CreateIssueLine():
-return $default(_that.productId,_that.qty,_that.uomId,_that.batchId,_that.reasonCodeId,_that.note);case _:
+return $default(_that.productId,_that.qty,_that.uomId,_that.requestLineId,_that.batchId,_that.batchOverrideReasonCodeId,_that.batchOverrideNote);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -4156,10 +4433,10 @@ return $default(_that.productId,_that.qty,_that.uomId,_that.batchId,_that.reason
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int productId,  Quantity qty,  int uomId,  int? batchId,  int? reasonCodeId,  String? note)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int productId,  Quantity qty,  int uomId,  int? requestLineId,  int? batchId,  int? batchOverrideReasonCodeId,  String? batchOverrideNote)?  $default,) {final _that = this;
 switch (_that) {
 case _CreateIssueLine() when $default != null:
-return $default(_that.productId,_that.qty,_that.uomId,_that.batchId,_that.reasonCodeId,_that.note);case _:
+return $default(_that.productId,_that.qty,_that.uomId,_that.requestLineId,_that.batchId,_that.batchOverrideReasonCodeId,_that.batchOverrideNote);case _:
   return null;
 
 }
@@ -4171,15 +4448,16 @@ return $default(_that.productId,_that.qty,_that.uomId,_that.batchId,_that.reason
 @JsonSerializable()
 
 class _CreateIssueLine implements CreateIssueLine {
-  const _CreateIssueLine({required this.productId, required this.qty, required this.uomId, this.batchId, this.reasonCodeId, this.note});
+  const _CreateIssueLine({required this.productId, required this.qty, required this.uomId, this.requestLineId, this.batchId, this.batchOverrideReasonCodeId, this.batchOverrideNote});
   factory _CreateIssueLine.fromJson(Map<String, dynamic> json) => _$CreateIssueLineFromJson(json);
 
 @override final  int productId;
 @override final  Quantity qty;
 @override final  int uomId;
+@override final  int? requestLineId;
 @override final  int? batchId;
-@override final  int? reasonCodeId;
-@override final  String? note;
+@override final  int? batchOverrideReasonCodeId;
+@override final  String? batchOverrideNote;
 
 /// Create a copy of CreateIssueLine
 /// with the given fields replaced by the non-null parameter values.
@@ -4194,18 +4472,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateIssueLine&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.reasonCodeId, reasonCodeId) || other.reasonCodeId == reasonCodeId)&&(identical(other.note, note) || other.note == note));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateIssueLine&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.requestLineId, requestLineId) || other.requestLineId == requestLineId)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.batchOverrideReasonCodeId, batchOverrideReasonCodeId) || other.batchOverrideReasonCodeId == batchOverrideReasonCodeId)&&(identical(other.batchOverrideNote, batchOverrideNote) || other.batchOverrideNote == batchOverrideNote));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,productId,qty,uomId,batchId,reasonCodeId,note);
+    return Object.hash(runtimeType,productId,qty,uomId,requestLineId,batchId,batchOverrideReasonCodeId,batchOverrideNote);
 }
 
 @override
 String toString() {
-    return 'CreateIssueLine(productId: $productId, qty: $qty, uomId: $uomId, batchId: $batchId, reasonCodeId: $reasonCodeId, note: $note)';
+    return 'CreateIssueLine(productId: $productId, qty: $qty, uomId: $uomId, requestLineId: $requestLineId, batchId: $batchId, batchOverrideReasonCodeId: $batchOverrideReasonCodeId, batchOverrideNote: $batchOverrideNote)';
 }
 
 
@@ -4216,7 +4494,7 @@ abstract mixin class _$CreateIssueLineCopyWith<$Res> implements $CreateIssueLine
   factory _$CreateIssueLineCopyWith(_CreateIssueLine value, $Res Function(_CreateIssueLine) _then) = __$CreateIssueLineCopyWithImpl;
 @override @useResult
 $Res call({
- int productId, Quantity qty, int uomId, int? batchId, int? reasonCodeId, String? note
+ int productId, Quantity qty, int uomId, int? requestLineId, int? batchId, int? batchOverrideReasonCodeId, String? batchOverrideNote
 });
 
 
@@ -4233,14 +4511,15 @@ class __$CreateIssueLineCopyWithImpl<$Res>
 
 /// Create a copy of CreateIssueLine
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? qty = null,Object? uomId = null,Object? batchId = freezed,Object? reasonCodeId = freezed,Object? note = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? qty = null,Object? uomId = null,Object? requestLineId = freezed,Object? batchId = freezed,Object? batchOverrideReasonCodeId = freezed,Object? batchOverrideNote = freezed,}) {
   return _then(_CreateIssueLine(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
 as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
 as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
-as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as int,requestLineId: freezed == requestLineId ? _self.requestLineId : requestLineId // ignore: cast_nullable_to_non_nullable
+as int?,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
+as int?,batchOverrideReasonCodeId: freezed == batchOverrideReasonCodeId ? _self.batchOverrideReasonCodeId : batchOverrideReasonCodeId // ignore: cast_nullable_to_non_nullable
+as int?,batchOverrideNote: freezed == batchOverrideNote ? _self.batchOverrideNote : batchOverrideNote // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -4543,7 +4822,7 @@ as int?,
 /// @nodoc
 mixin _$ConfirmIssueLine {
 
- int get lineNo; Quantity get receivedQty; String? get note;
+ int get lineId; Quantity get receivedQty; int? get reasonCodeId; String? get note;
 /// Create a copy of ConfirmIssueLine
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4557,20 +4836,20 @@ $ConfirmIssueLineCopyWith<ConfirmIssueLine> get copyWith => _$ConfirmIssueLineCo
 @override
 bool operator ==(Object other) {
   final _this = this as ConfirmIssueLine;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConfirmIssueLine&&(identical(other.lineNo, _this.lineNo) || other.lineNo == _this.lineNo)&&(identical(other.receivedQty, _this.receivedQty) || other.receivedQty == _this.receivedQty)&&(identical(other.note, _this.note) || other.note == _this.note));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConfirmIssueLine&&(identical(other.lineId, _this.lineId) || other.lineId == _this.lineId)&&(identical(other.receivedQty, _this.receivedQty) || other.receivedQty == _this.receivedQty)&&(identical(other.reasonCodeId, _this.reasonCodeId) || other.reasonCodeId == _this.reasonCodeId)&&(identical(other.note, _this.note) || other.note == _this.note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ConfirmIssueLine;
-  return Object.hash(runtimeType,_this.lineNo,_this.receivedQty,_this.note);
+  return Object.hash(runtimeType,_this.lineId,_this.receivedQty,_this.reasonCodeId,_this.note);
 }
 
 @override
 String toString() {
   final _this = this as ConfirmIssueLine;
-  return 'ConfirmIssueLine(lineNo: ${_this.lineNo}, receivedQty: ${_this.receivedQty}, note: ${_this.note})';
+  return 'ConfirmIssueLine(lineId: ${_this.lineId}, receivedQty: ${_this.receivedQty}, reasonCodeId: ${_this.reasonCodeId}, note: ${_this.note})';
 }
 
 
@@ -4581,7 +4860,7 @@ abstract mixin class $ConfirmIssueLineCopyWith<$Res>  {
   factory $ConfirmIssueLineCopyWith(ConfirmIssueLine value, $Res Function(ConfirmIssueLine) _then) = _$ConfirmIssueLineCopyWithImpl;
 @useResult
 $Res call({
- int lineNo, Quantity receivedQty, String? note
+ int lineId, Quantity receivedQty, int? reasonCodeId, String? note
 });
 
 
@@ -4598,11 +4877,12 @@ class _$ConfirmIssueLineCopyWithImpl<$Res>
 
 /// Create a copy of ConfirmIssueLine
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lineNo = null,Object? receivedQty = null,Object? note = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? lineId = null,Object? receivedQty = null,Object? reasonCodeId = freezed,Object? note = freezed,}) {
   return _then(ConfirmIssueLine(
-lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
+lineId: null == lineId ? _self.lineId : lineId // ignore: cast_nullable_to_non_nullable
 as int,receivedQty: null == receivedQty ? _self.receivedQty : receivedQty // ignore: cast_nullable_to_non_nullable
-as Quantity,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as Quantity,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
+as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -4688,10 +4968,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineNo,  Quantity receivedQty,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineId,  Quantity receivedQty,  int? reasonCodeId,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ConfirmIssueLine() when $default != null:
-return $default(_that.lineNo,_that.receivedQty,_that.note);case _:
+return $default(_that.lineId,_that.receivedQty,_that.reasonCodeId,_that.note);case _:
   return orElse();
 
 }
@@ -4709,10 +4989,10 @@ return $default(_that.lineNo,_that.receivedQty,_that.note);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineNo,  Quantity receivedQty,  String? note)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineId,  Quantity receivedQty,  int? reasonCodeId,  String? note)  $default,) {final _that = this;
 switch (_that) {
 case _ConfirmIssueLine():
-return $default(_that.lineNo,_that.receivedQty,_that.note);case _:
+return $default(_that.lineId,_that.receivedQty,_that.reasonCodeId,_that.note);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -4729,10 +5009,10 @@ return $default(_that.lineNo,_that.receivedQty,_that.note);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineNo,  Quantity receivedQty,  String? note)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineId,  Quantity receivedQty,  int? reasonCodeId,  String? note)?  $default,) {final _that = this;
 switch (_that) {
 case _ConfirmIssueLine() when $default != null:
-return $default(_that.lineNo,_that.receivedQty,_that.note);case _:
+return $default(_that.lineId,_that.receivedQty,_that.reasonCodeId,_that.note);case _:
   return null;
 
 }
@@ -4744,11 +5024,12 @@ return $default(_that.lineNo,_that.receivedQty,_that.note);case _:
 @JsonSerializable()
 
 class _ConfirmIssueLine implements ConfirmIssueLine {
-  const _ConfirmIssueLine({required this.lineNo, required this.receivedQty, this.note});
+  const _ConfirmIssueLine({required this.lineId, required this.receivedQty, this.reasonCodeId, this.note});
   factory _ConfirmIssueLine.fromJson(Map<String, dynamic> json) => _$ConfirmIssueLineFromJson(json);
 
-@override final  int lineNo;
+@override final  int lineId;
 @override final  Quantity receivedQty;
+@override final  int? reasonCodeId;
 @override final  String? note;
 
 /// Create a copy of ConfirmIssueLine
@@ -4764,18 +5045,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConfirmIssueLine&&(identical(other.lineNo, lineNo) || other.lineNo == lineNo)&&(identical(other.receivedQty, receivedQty) || other.receivedQty == receivedQty)&&(identical(other.note, note) || other.note == note));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConfirmIssueLine&&(identical(other.lineId, lineId) || other.lineId == lineId)&&(identical(other.receivedQty, receivedQty) || other.receivedQty == receivedQty)&&(identical(other.reasonCodeId, reasonCodeId) || other.reasonCodeId == reasonCodeId)&&(identical(other.note, note) || other.note == note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,lineNo,receivedQty,note);
+    return Object.hash(runtimeType,lineId,receivedQty,reasonCodeId,note);
 }
 
 @override
 String toString() {
-    return 'ConfirmIssueLine(lineNo: $lineNo, receivedQty: $receivedQty, note: $note)';
+    return 'ConfirmIssueLine(lineId: $lineId, receivedQty: $receivedQty, reasonCodeId: $reasonCodeId, note: $note)';
 }
 
 
@@ -4786,7 +5067,7 @@ abstract mixin class _$ConfirmIssueLineCopyWith<$Res> implements $ConfirmIssueLi
   factory _$ConfirmIssueLineCopyWith(_ConfirmIssueLine value, $Res Function(_ConfirmIssueLine) _then) = __$ConfirmIssueLineCopyWithImpl;
 @override @useResult
 $Res call({
- int lineNo, Quantity receivedQty, String? note
+ int lineId, Quantity receivedQty, int? reasonCodeId, String? note
 });
 
 
@@ -4803,11 +5084,12 @@ class __$ConfirmIssueLineCopyWithImpl<$Res>
 
 /// Create a copy of ConfirmIssueLine
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lineNo = null,Object? receivedQty = null,Object? note = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? lineId = null,Object? receivedQty = null,Object? reasonCodeId = freezed,Object? note = freezed,}) {
   return _then(_ConfirmIssueLine(
-lineNo: null == lineNo ? _self.lineNo : lineNo // ignore: cast_nullable_to_non_nullable
+lineId: null == lineId ? _self.lineId : lineId // ignore: cast_nullable_to_non_nullable
 as int,receivedQty: null == receivedQty ? _self.receivedQty : receivedQty // ignore: cast_nullable_to_non_nullable
-as Quantity,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as Quantity,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
+as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -6037,7 +6319,7 @@ as CountType,
 /// @nodoc
 mixin _$EnterCountLine {
 
- int get lineId; Quantity get countedQty; int? get reasonCodeId; String? get note;
+ int get productId; QuantityInput get countedQuantity; int? get batchId; int? get reasonCodeId; String? get note;
 /// Create a copy of EnterCountLine
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -6051,20 +6333,20 @@ $EnterCountLineCopyWith<EnterCountLine> get copyWith => _$EnterCountLineCopyWith
 @override
 bool operator ==(Object other) {
   final _this = this as EnterCountLine;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is EnterCountLine&&(identical(other.lineId, _this.lineId) || other.lineId == _this.lineId)&&(identical(other.countedQty, _this.countedQty) || other.countedQty == _this.countedQty)&&(identical(other.reasonCodeId, _this.reasonCodeId) || other.reasonCodeId == _this.reasonCodeId)&&(identical(other.note, _this.note) || other.note == _this.note));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is EnterCountLine&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.countedQuantity, _this.countedQuantity) || other.countedQuantity == _this.countedQuantity)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId)&&(identical(other.reasonCodeId, _this.reasonCodeId) || other.reasonCodeId == _this.reasonCodeId)&&(identical(other.note, _this.note) || other.note == _this.note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as EnterCountLine;
-  return Object.hash(runtimeType,_this.lineId,_this.countedQty,_this.reasonCodeId,_this.note);
+  return Object.hash(runtimeType,_this.productId,_this.countedQuantity,_this.batchId,_this.reasonCodeId,_this.note);
 }
 
 @override
 String toString() {
   final _this = this as EnterCountLine;
-  return 'EnterCountLine(lineId: ${_this.lineId}, countedQty: ${_this.countedQty}, reasonCodeId: ${_this.reasonCodeId}, note: ${_this.note})';
+  return 'EnterCountLine(productId: ${_this.productId}, countedQuantity: ${_this.countedQuantity}, batchId: ${_this.batchId}, reasonCodeId: ${_this.reasonCodeId}, note: ${_this.note})';
 }
 
 
@@ -6075,11 +6357,11 @@ abstract mixin class $EnterCountLineCopyWith<$Res>  {
   factory $EnterCountLineCopyWith(EnterCountLine value, $Res Function(EnterCountLine) _then) = _$EnterCountLineCopyWithImpl;
 @useResult
 $Res call({
- int lineId, Quantity countedQty, int? reasonCodeId, String? note
+ int productId, QuantityInput countedQuantity, int? batchId, int? reasonCodeId, String? note
 });
 
 
-
+$QuantityInputCopyWith<$Res> get countedQuantity;
 
 }
 /// @nodoc
@@ -6092,16 +6374,26 @@ class _$EnterCountLineCopyWithImpl<$Res>
 
 /// Create a copy of EnterCountLine
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? lineId = null,Object? countedQty = null,Object? reasonCodeId = freezed,Object? note = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? countedQuantity = null,Object? batchId = freezed,Object? reasonCodeId = freezed,Object? note = freezed,}) {
   return _then(EnterCountLine(
-lineId: null == lineId ? _self.lineId : lineId // ignore: cast_nullable_to_non_nullable
-as int,countedQty: null == countedQty ? _self.countedQty : countedQty // ignore: cast_nullable_to_non_nullable
-as Quantity,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
+productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
+as int,countedQuantity: null == countedQuantity ? _self.countedQuantity : countedQuantity // ignore: cast_nullable_to_non_nullable
+as QuantityInput,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
+as int?,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
 as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
-
+/// Create a copy of EnterCountLine
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$QuantityInputCopyWith<$Res> get countedQuantity {
+  
+  return $QuantityInputCopyWith<$Res>(_self.countedQuantity, (value) {
+    return _then(_self.copyWith(countedQuantity: value));
+  });
+}
 }
 
 
@@ -6183,10 +6475,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int lineId,  Quantity countedQty,  int? reasonCodeId,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int productId,  QuantityInput countedQuantity,  int? batchId,  int? reasonCodeId,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _EnterCountLine() when $default != null:
-return $default(_that.lineId,_that.countedQty,_that.reasonCodeId,_that.note);case _:
+return $default(_that.productId,_that.countedQuantity,_that.batchId,_that.reasonCodeId,_that.note);case _:
   return orElse();
 
 }
@@ -6204,10 +6496,10 @@ return $default(_that.lineId,_that.countedQty,_that.reasonCodeId,_that.note);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int lineId,  Quantity countedQty,  int? reasonCodeId,  String? note)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int productId,  QuantityInput countedQuantity,  int? batchId,  int? reasonCodeId,  String? note)  $default,) {final _that = this;
 switch (_that) {
 case _EnterCountLine():
-return $default(_that.lineId,_that.countedQty,_that.reasonCodeId,_that.note);case _:
+return $default(_that.productId,_that.countedQuantity,_that.batchId,_that.reasonCodeId,_that.note);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -6224,10 +6516,10 @@ return $default(_that.lineId,_that.countedQty,_that.reasonCodeId,_that.note);cas
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int lineId,  Quantity countedQty,  int? reasonCodeId,  String? note)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int productId,  QuantityInput countedQuantity,  int? batchId,  int? reasonCodeId,  String? note)?  $default,) {final _that = this;
 switch (_that) {
 case _EnterCountLine() when $default != null:
-return $default(_that.lineId,_that.countedQty,_that.reasonCodeId,_that.note);case _:
+return $default(_that.productId,_that.countedQuantity,_that.batchId,_that.reasonCodeId,_that.note);case _:
   return null;
 
 }
@@ -6239,11 +6531,12 @@ return $default(_that.lineId,_that.countedQty,_that.reasonCodeId,_that.note);cas
 @JsonSerializable()
 
 class _EnterCountLine implements EnterCountLine {
-  const _EnterCountLine({required this.lineId, required this.countedQty, this.reasonCodeId, this.note});
+  const _EnterCountLine({required this.productId, required this.countedQuantity, this.batchId, this.reasonCodeId, this.note});
   factory _EnterCountLine.fromJson(Map<String, dynamic> json) => _$EnterCountLineFromJson(json);
 
-@override final  int lineId;
-@override final  Quantity countedQty;
+@override final  int productId;
+@override final  QuantityInput countedQuantity;
+@override final  int? batchId;
 @override final  int? reasonCodeId;
 @override final  String? note;
 
@@ -6260,18 +6553,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EnterCountLine&&(identical(other.lineId, lineId) || other.lineId == lineId)&&(identical(other.countedQty, countedQty) || other.countedQty == countedQty)&&(identical(other.reasonCodeId, reasonCodeId) || other.reasonCodeId == reasonCodeId)&&(identical(other.note, note) || other.note == note));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EnterCountLine&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.countedQuantity, countedQuantity) || other.countedQuantity == countedQuantity)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.reasonCodeId, reasonCodeId) || other.reasonCodeId == reasonCodeId)&&(identical(other.note, note) || other.note == note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,lineId,countedQty,reasonCodeId,note);
+    return Object.hash(runtimeType,productId,countedQuantity,batchId,reasonCodeId,note);
 }
 
 @override
 String toString() {
-    return 'EnterCountLine(lineId: $lineId, countedQty: $countedQty, reasonCodeId: $reasonCodeId, note: $note)';
+    return 'EnterCountLine(productId: $productId, countedQuantity: $countedQuantity, batchId: $batchId, reasonCodeId: $reasonCodeId, note: $note)';
 }
 
 
@@ -6282,11 +6575,11 @@ abstract mixin class _$EnterCountLineCopyWith<$Res> implements $EnterCountLineCo
   factory _$EnterCountLineCopyWith(_EnterCountLine value, $Res Function(_EnterCountLine) _then) = __$EnterCountLineCopyWithImpl;
 @override @useResult
 $Res call({
- int lineId, Quantity countedQty, int? reasonCodeId, String? note
+ int productId, QuantityInput countedQuantity, int? batchId, int? reasonCodeId, String? note
 });
 
 
-
+@override $QuantityInputCopyWith<$Res> get countedQuantity;
 
 }
 /// @nodoc
@@ -6299,17 +6592,27 @@ class __$EnterCountLineCopyWithImpl<$Res>
 
 /// Create a copy of EnterCountLine
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? lineId = null,Object? countedQty = null,Object? reasonCodeId = freezed,Object? note = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? countedQuantity = null,Object? batchId = freezed,Object? reasonCodeId = freezed,Object? note = freezed,}) {
   return _then(_EnterCountLine(
-lineId: null == lineId ? _self.lineId : lineId // ignore: cast_nullable_to_non_nullable
-as int,countedQty: null == countedQty ? _self.countedQty : countedQty // ignore: cast_nullable_to_non_nullable
-as Quantity,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
+productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
+as int,countedQuantity: null == countedQuantity ? _self.countedQuantity : countedQuantity // ignore: cast_nullable_to_non_nullable
+as QuantityInput,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
+as int?,reasonCodeId: freezed == reasonCodeId ? _self.reasonCodeId : reasonCodeId // ignore: cast_nullable_to_non_nullable
 as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
 
-
+/// Create a copy of EnterCountLine
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$QuantityInputCopyWith<$Res> get countedQuantity {
+  
+  return $QuantityInputCopyWith<$Res>(_self.countedQuantity, (value) {
+    return _then(_self.copyWith(countedQuantity: value));
+  });
+}
 }
 
 
@@ -7276,7 +7579,7 @@ $LocationRefDtoCopyWith<$Res> get location {
 /// @nodoc
 mixin _$CreateWasteLine {
 
- int get productId; Quantity get qty; int get uomId; int? get batchId;
+ int get productId; QuantityInput get quantity; int? get batchId; String? get note;
 /// Create a copy of CreateWasteLine
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -7290,20 +7593,20 @@ $CreateWasteLineCopyWith<CreateWasteLine> get copyWith => _$CreateWasteLineCopyW
 @override
 bool operator ==(Object other) {
   final _this = this as CreateWasteLine;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateWasteLine&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateWasteLine&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.quantity, _this.quantity) || other.quantity == _this.quantity)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId)&&(identical(other.note, _this.note) || other.note == _this.note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as CreateWasteLine;
-  return Object.hash(runtimeType,_this.productId,_this.qty,_this.uomId,_this.batchId);
+  return Object.hash(runtimeType,_this.productId,_this.quantity,_this.batchId,_this.note);
 }
 
 @override
 String toString() {
   final _this = this as CreateWasteLine;
-  return 'CreateWasteLine(productId: ${_this.productId}, qty: ${_this.qty}, uomId: ${_this.uomId}, batchId: ${_this.batchId})';
+  return 'CreateWasteLine(productId: ${_this.productId}, quantity: ${_this.quantity}, batchId: ${_this.batchId}, note: ${_this.note})';
 }
 
 
@@ -7314,11 +7617,11 @@ abstract mixin class $CreateWasteLineCopyWith<$Res>  {
   factory $CreateWasteLineCopyWith(CreateWasteLine value, $Res Function(CreateWasteLine) _then) = _$CreateWasteLineCopyWithImpl;
 @useResult
 $Res call({
- int productId, Quantity qty, int uomId, int? batchId
+ int productId, QuantityInput quantity, int? batchId, String? note
 });
 
 
-
+$QuantityInputCopyWith<$Res> get quantity;
 
 }
 /// @nodoc
@@ -7331,16 +7634,25 @@ class _$CreateWasteLineCopyWithImpl<$Res>
 
 /// Create a copy of CreateWasteLine
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? qty = null,Object? uomId = null,Object? batchId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? quantity = null,Object? batchId = freezed,Object? note = freezed,}) {
   return _then(CreateWasteLine(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
-as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,
+as int,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as QuantityInput,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
+as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
-
+/// Create a copy of CreateWasteLine
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$QuantityInputCopyWith<$Res> get quantity {
+  
+  return $QuantityInputCopyWith<$Res>(_self.quantity, (value) {
+    return _then(_self.copyWith(quantity: value));
+  });
+}
 }
 
 
@@ -7422,10 +7734,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int productId,  Quantity qty,  int uomId,  int? batchId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int productId,  QuantityInput quantity,  int? batchId,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CreateWasteLine() when $default != null:
-return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
+return $default(_that.productId,_that.quantity,_that.batchId,_that.note);case _:
   return orElse();
 
 }
@@ -7443,10 +7755,10 @@ return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int productId,  Quantity qty,  int uomId,  int? batchId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int productId,  QuantityInput quantity,  int? batchId,  String? note)  $default,) {final _that = this;
 switch (_that) {
 case _CreateWasteLine():
-return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
+return $default(_that.productId,_that.quantity,_that.batchId,_that.note);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -7463,10 +7775,10 @@ return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int productId,  Quantity qty,  int uomId,  int? batchId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int productId,  QuantityInput quantity,  int? batchId,  String? note)?  $default,) {final _that = this;
 switch (_that) {
 case _CreateWasteLine() when $default != null:
-return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
+return $default(_that.productId,_that.quantity,_that.batchId,_that.note);case _:
   return null;
 
 }
@@ -7478,13 +7790,13 @@ return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
 @JsonSerializable()
 
 class _CreateWasteLine implements CreateWasteLine {
-  const _CreateWasteLine({required this.productId, required this.qty, required this.uomId, this.batchId});
+  const _CreateWasteLine({required this.productId, required this.quantity, this.batchId, this.note});
   factory _CreateWasteLine.fromJson(Map<String, dynamic> json) => _$CreateWasteLineFromJson(json);
 
 @override final  int productId;
-@override final  Quantity qty;
-@override final  int uomId;
+@override final  QuantityInput quantity;
 @override final  int? batchId;
+@override final  String? note;
 
 /// Create a copy of CreateWasteLine
 /// with the given fields replaced by the non-null parameter values.
@@ -7499,18 +7811,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateWasteLine&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.batchId, batchId) || other.batchId == batchId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateWasteLine&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.note, note) || other.note == note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,productId,qty,uomId,batchId);
+    return Object.hash(runtimeType,productId,quantity,batchId,note);
 }
 
 @override
 String toString() {
-    return 'CreateWasteLine(productId: $productId, qty: $qty, uomId: $uomId, batchId: $batchId)';
+    return 'CreateWasteLine(productId: $productId, quantity: $quantity, batchId: $batchId, note: $note)';
 }
 
 
@@ -7521,11 +7833,11 @@ abstract mixin class _$CreateWasteLineCopyWith<$Res> implements $CreateWasteLine
   factory _$CreateWasteLineCopyWith(_CreateWasteLine value, $Res Function(_CreateWasteLine) _then) = __$CreateWasteLineCopyWithImpl;
 @override @useResult
 $Res call({
- int productId, Quantity qty, int uomId, int? batchId
+ int productId, QuantityInput quantity, int? batchId, String? note
 });
 
 
-
+@override $QuantityInputCopyWith<$Res> get quantity;
 
 }
 /// @nodoc
@@ -7538,17 +7850,26 @@ class __$CreateWasteLineCopyWithImpl<$Res>
 
 /// Create a copy of CreateWasteLine
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? qty = null,Object? uomId = null,Object? batchId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? quantity = null,Object? batchId = freezed,Object? note = freezed,}) {
   return _then(_CreateWasteLine(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
-as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,
+as int,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as QuantityInput,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
+as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
-
+/// Create a copy of CreateWasteLine
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$QuantityInputCopyWith<$Res> get quantity {
+  
+  return $QuantityInputCopyWith<$Res>(_self.quantity, (value) {
+    return _then(_self.copyWith(quantity: value));
+  });
+}
 }
 
 
@@ -8503,7 +8824,7 @@ $LocationRefDtoCopyWith<$Res> get location {
 /// @nodoc
 mixin _$CreateSampleLine {
 
- int get productId; Quantity get qty; int get uomId; int? get batchId;
+ int get productId; QuantityInput get quantity; int? get batchId; String? get note;
 /// Create a copy of CreateSampleLine
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -8517,20 +8838,20 @@ $CreateSampleLineCopyWith<CreateSampleLine> get copyWith => _$CreateSampleLineCo
 @override
 bool operator ==(Object other) {
   final _this = this as CreateSampleLine;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateSampleLine&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.qty, _this.qty) || other.qty == _this.qty)&&(identical(other.uomId, _this.uomId) || other.uomId == _this.uomId)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreateSampleLine&&(identical(other.productId, _this.productId) || other.productId == _this.productId)&&(identical(other.quantity, _this.quantity) || other.quantity == _this.quantity)&&(identical(other.batchId, _this.batchId) || other.batchId == _this.batchId)&&(identical(other.note, _this.note) || other.note == _this.note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as CreateSampleLine;
-  return Object.hash(runtimeType,_this.productId,_this.qty,_this.uomId,_this.batchId);
+  return Object.hash(runtimeType,_this.productId,_this.quantity,_this.batchId,_this.note);
 }
 
 @override
 String toString() {
   final _this = this as CreateSampleLine;
-  return 'CreateSampleLine(productId: ${_this.productId}, qty: ${_this.qty}, uomId: ${_this.uomId}, batchId: ${_this.batchId})';
+  return 'CreateSampleLine(productId: ${_this.productId}, quantity: ${_this.quantity}, batchId: ${_this.batchId}, note: ${_this.note})';
 }
 
 
@@ -8541,11 +8862,11 @@ abstract mixin class $CreateSampleLineCopyWith<$Res>  {
   factory $CreateSampleLineCopyWith(CreateSampleLine value, $Res Function(CreateSampleLine) _then) = _$CreateSampleLineCopyWithImpl;
 @useResult
 $Res call({
- int productId, Quantity qty, int uomId, int? batchId
+ int productId, QuantityInput quantity, int? batchId, String? note
 });
 
 
-
+$QuantityInputCopyWith<$Res> get quantity;
 
 }
 /// @nodoc
@@ -8558,16 +8879,25 @@ class _$CreateSampleLineCopyWithImpl<$Res>
 
 /// Create a copy of CreateSampleLine
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? qty = null,Object? uomId = null,Object? batchId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? productId = null,Object? quantity = null,Object? batchId = freezed,Object? note = freezed,}) {
   return _then(CreateSampleLine(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
-as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,
+as int,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as QuantityInput,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
+as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
-
+/// Create a copy of CreateSampleLine
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$QuantityInputCopyWith<$Res> get quantity {
+  
+  return $QuantityInputCopyWith<$Res>(_self.quantity, (value) {
+    return _then(_self.copyWith(quantity: value));
+  });
+}
 }
 
 
@@ -8649,10 +8979,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int productId,  Quantity qty,  int uomId,  int? batchId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int productId,  QuantityInput quantity,  int? batchId,  String? note)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CreateSampleLine() when $default != null:
-return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
+return $default(_that.productId,_that.quantity,_that.batchId,_that.note);case _:
   return orElse();
 
 }
@@ -8670,10 +9000,10 @@ return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int productId,  Quantity qty,  int uomId,  int? batchId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int productId,  QuantityInput quantity,  int? batchId,  String? note)  $default,) {final _that = this;
 switch (_that) {
 case _CreateSampleLine():
-return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
+return $default(_that.productId,_that.quantity,_that.batchId,_that.note);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -8690,10 +9020,10 @@ return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int productId,  Quantity qty,  int uomId,  int? batchId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int productId,  QuantityInput quantity,  int? batchId,  String? note)?  $default,) {final _that = this;
 switch (_that) {
 case _CreateSampleLine() when $default != null:
-return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
+return $default(_that.productId,_that.quantity,_that.batchId,_that.note);case _:
   return null;
 
 }
@@ -8705,13 +9035,13 @@ return $default(_that.productId,_that.qty,_that.uomId,_that.batchId);case _:
 @JsonSerializable()
 
 class _CreateSampleLine implements CreateSampleLine {
-  const _CreateSampleLine({required this.productId, required this.qty, required this.uomId, this.batchId});
+  const _CreateSampleLine({required this.productId, required this.quantity, this.batchId, this.note});
   factory _CreateSampleLine.fromJson(Map<String, dynamic> json) => _$CreateSampleLineFromJson(json);
 
 @override final  int productId;
-@override final  Quantity qty;
-@override final  int uomId;
+@override final  QuantityInput quantity;
 @override final  int? batchId;
+@override final  String? note;
 
 /// Create a copy of CreateSampleLine
 /// with the given fields replaced by the non-null parameter values.
@@ -8726,18 +9056,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateSampleLine&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.qty, qty) || other.qty == qty)&&(identical(other.uomId, uomId) || other.uomId == uomId)&&(identical(other.batchId, batchId) || other.batchId == batchId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CreateSampleLine&&(identical(other.productId, productId) || other.productId == productId)&&(identical(other.quantity, quantity) || other.quantity == quantity)&&(identical(other.batchId, batchId) || other.batchId == batchId)&&(identical(other.note, note) || other.note == note));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,productId,qty,uomId,batchId);
+    return Object.hash(runtimeType,productId,quantity,batchId,note);
 }
 
 @override
 String toString() {
-    return 'CreateSampleLine(productId: $productId, qty: $qty, uomId: $uomId, batchId: $batchId)';
+    return 'CreateSampleLine(productId: $productId, quantity: $quantity, batchId: $batchId, note: $note)';
 }
 
 
@@ -8748,11 +9078,11 @@ abstract mixin class _$CreateSampleLineCopyWith<$Res> implements $CreateSampleLi
   factory _$CreateSampleLineCopyWith(_CreateSampleLine value, $Res Function(_CreateSampleLine) _then) = __$CreateSampleLineCopyWithImpl;
 @override @useResult
 $Res call({
- int productId, Quantity qty, int uomId, int? batchId
+ int productId, QuantityInput quantity, int? batchId, String? note
 });
 
 
-
+@override $QuantityInputCopyWith<$Res> get quantity;
 
 }
 /// @nodoc
@@ -8765,17 +9095,26 @@ class __$CreateSampleLineCopyWithImpl<$Res>
 
 /// Create a copy of CreateSampleLine
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? qty = null,Object? uomId = null,Object? batchId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? productId = null,Object? quantity = null,Object? batchId = freezed,Object? note = freezed,}) {
   return _then(_CreateSampleLine(
 productId: null == productId ? _self.productId : productId // ignore: cast_nullable_to_non_nullable
-as int,qty: null == qty ? _self.qty : qty // ignore: cast_nullable_to_non_nullable
-as Quantity,uomId: null == uomId ? _self.uomId : uomId // ignore: cast_nullable_to_non_nullable
-as int,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
-as int?,
+as int,quantity: null == quantity ? _self.quantity : quantity // ignore: cast_nullable_to_non_nullable
+as QuantityInput,batchId: freezed == batchId ? _self.batchId : batchId // ignore: cast_nullable_to_non_nullable
+as int?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
-
+/// Create a copy of CreateSampleLine
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$QuantityInputCopyWith<$Res> get quantity {
+  
+  return $QuantityInputCopyWith<$Res>(_self.quantity, (value) {
+    return _then(_self.copyWith(quantity: value));
+  });
+}
 }
 
 

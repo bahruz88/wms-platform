@@ -17,6 +17,7 @@ final _balance = BalanceDto(
     id: 1,
     sku: 'CHS-0042',
     name: 'Chicken Strips',
+    baseUomId: 1,
     baseUomCode: 'KG',
   ),
   location: const LocationRefDto(id: 2, code: 'FOOD-WH', name: 'Qida anbarı'),

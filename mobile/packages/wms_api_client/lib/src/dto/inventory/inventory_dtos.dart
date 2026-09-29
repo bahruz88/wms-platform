@@ -275,6 +275,8 @@ abstract class CreateStockRequestRequest with _$CreateStockRequestRequest {
 @freezed
 abstract class IssueLineDto with _$IssueLineDto {
   const factory IssueLineDto({
+    // Needed to confirm a receipt: `IssueConfirmLine.lineId` is this, not `lineNo`.
+    required int id,
     required int lineNo,
     required ProductRefDto product,
     required Quantity qty,
@@ -323,15 +325,36 @@ abstract class IssueDto with _$IssueDto {
       _$IssueDtoFromJson(json);
 }
 
+/// `Quantity` of common.v1.yaml — a value plus the unit the user typed it in.
+///
+/// Some request bodies nest the quantity (`{"quantity": {"value": "1.0000", "uomId": 3}}`) and
+/// others keep it flat beside a `uomId`. The server binds each one only in its own shape, so the
+/// difference is not cosmetic: the waste and count bodies used to send the flat form and every
+/// submission was rejected with 400 before it reached a validator.
+@freezed
+abstract class QuantityInput with _$QuantityInput {
+  const factory QuantityInput({
+    required Quantity value,
+    required int uomId,
+  }) = _QuantityInput;
+
+  factory QuantityInput.fromJson(Map<String, Object?> json) =>
+      _$QuantityInputFromJson(json);
+}
+
 @freezed
 abstract class CreateIssueLine with _$CreateIssueLine {
   const factory CreateIssueLine({
     required int productId,
     required Quantity qty,
     required int uomId,
+    // Ties the line back to the stock request it fulfils.
+    int? requestLineId,
     int? batchId,
-    int? reasonCodeId,
-    String? note,
+    // Overriding the suggested batch needs a reason and a note, and the server binds them under
+    // these names — a plain `reasonCodeId`/`note` pair was silently dropped.
+    int? batchOverrideReasonCodeId,
+    String? batchOverrideNote,
   }) = _CreateIssueLine;
 
   factory CreateIssueLine.fromJson(Map<String, Object?> json) =>
@@ -357,8 +380,11 @@ abstract class CreateIssueRequest with _$CreateIssueRequest {
 @freezed
 abstract class ConfirmIssueLine with _$ConfirmIssueLine {
   const factory ConfirmIssueLine({
-    required int lineNo,
+    // The line's id, not its `lineNo`. They differ, and the server looks up by id.
+    required int lineId,
     required Quantity receivedQty,
+    // Mandatory when `receivedQty` differs from the dispatched quantity.
+    int? reasonCodeId,
     String? note,
   }) = _ConfirmIssueLine;
 
@@ -448,8 +474,11 @@ abstract class CreateCountRequest with _$CreateCountRequest {
 @freezed
 abstract class EnterCountLine with _$EnterCountLine {
   const factory EnterCountLine({
-    required int lineId,
-    required Quantity countedQty,
+    // The count sheet is addressed by product, not by line id: a line the sheet did not pre-create
+    // can still be counted.
+    required int productId,
+    required QuantityInput countedQuantity,
+    int? batchId,
     int? reasonCodeId,
     String? note,
   }) = _EnterCountLine;
@@ -522,9 +551,9 @@ abstract class WasteDto with _$WasteDto {
 abstract class CreateWasteLine with _$CreateWasteLine {
   const factory CreateWasteLine({
     required int productId,
-    required Quantity qty,
-    required int uomId,
+    required QuantityInput quantity,
     int? batchId,
+    String? note,
   }) = _CreateWasteLine;
 
   factory CreateWasteLine.fromJson(Map<String, Object?> json) =>
@@ -591,9 +620,9 @@ abstract class SampleDto with _$SampleDto {
 abstract class CreateSampleLine with _$CreateSampleLine {
   const factory CreateSampleLine({
     required int productId,
-    required Quantity qty,
-    required int uomId,
+    required QuantityInput quantity,
     int? batchId,
+    String? note,
   }) = _CreateSampleLine;
 
   factory CreateSampleLine.fromJson(Map<String, Object?> json) =>

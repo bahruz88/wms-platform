@@ -164,7 +164,9 @@ void main() {
     expect(request.attachmentIds, [42]);
     expect(request.reasonCodeId, 9);
     expect(request.locationId, 3);
-    expect(request.lines.single.qty, Quantity.parse('2.5'));
+    // The line nests the quantity with its unit; the flat `qty` the DTO used to send was rejected
+    // by the server before it reached a validator.
+    expect(request.lines.single.quantity.value, Quantity.parse('2.5'));
     expect(find.textContaining('WS-2026-00001'), findsOneWidget);
     // The attachment block starts empty for the next draft.
     expect(find.text('tullanti.jpg'), findsNothing);

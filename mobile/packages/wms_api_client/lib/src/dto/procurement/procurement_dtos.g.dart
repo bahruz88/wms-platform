@@ -433,41 +433,38 @@ Map<String, dynamic> _$ApprovalDecisionRequestToJson(
   'comment': instance.comment,
 };
 
-_PriceHistoryDto _$PriceHistoryDtoFromJson(Map<String, dynamic> json) =>
-    _PriceHistoryDto(
-      id: (json['id'] as num).toInt(),
-      productId: (json['productId'] as num).toInt(),
-      supplierId: (json['supplierId'] as num).toInt(),
-      priceDate: const DateOnlyConverter().fromJson(
-        json['priceDate'] as String,
-      ),
-      unitPrice: Money.fromJson(json['unitPrice'] as String),
-      currency: json['currency'] as String,
-      unitPriceBase: Money.fromJson(json['unitPriceBase'] as String),
-      supplierName: json['supplierName'] as String?,
-      poId: (json['poId'] as num?)?.toInt(),
-      poDocNo: json['poDocNo'] as String?,
-      prevPriceBase: json['prevPriceBase'] == null
-          ? null
-          : Money.fromJson(json['prevPriceBase'] as String),
-      diffAmount: json['diffAmount'] == null
-          ? null
-          : Money.fromJson(json['diffAmount'] as String),
-      diffPct: json['diffPct'] == null
-          ? null
-          : Decimal.fromJson(json['diffPct'] as String),
-    );
+_PriceHistoryDto _$PriceHistoryDtoFromJson(
+  Map<String, dynamic> json,
+) => _PriceHistoryDto(
+  id: (json['id'] as num).toInt(),
+  product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
+  supplier: SupplierRefDto.fromJson(json['supplier'] as Map<String, dynamic>),
+  priceDate: const DateOnlyConverter().fromJson(json['priceDate'] as String),
+  unitPrice: Money.fromJson(json['unitPrice'] as String),
+  currency: json['currency'] as String,
+  unitPriceBase: Money.fromJson(json['unitPriceBase'] as String),
+  poId: (json['poId'] as num?)?.toInt(),
+  poDocNo: json['poDocNo'] as String?,
+  prevPriceBase: json['prevPriceBase'] == null
+      ? null
+      : Money.fromJson(json['prevPriceBase'] as String),
+  diffAmount: json['diffAmount'] == null
+      ? null
+      : Money.fromJson(json['diffAmount'] as String),
+  diffPct: json['diffPct'] == null
+      ? null
+      : Decimal.fromJson(json['diffPct'] as String),
+);
 
 Map<String, dynamic> _$PriceHistoryDtoToJson(_PriceHistoryDto instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'productId': instance.productId,
-      'supplierId': instance.supplierId,
+      'product': instance.product.toJson(),
+      'supplier': instance.supplier.toJson(),
       'priceDate': const DateOnlyConverter().toJson(instance.priceDate),
       'unitPrice': instance.unitPrice.toJson(),
       'currency': instance.currency,
       'unitPriceBase': instance.unitPriceBase.toJson(),
-      'supplierName': instance.supplierName,
       'poId': instance.poId,
       'poDocNo': instance.poDocNo,
       'prevPriceBase': instance.prevPriceBase?.toJson(),

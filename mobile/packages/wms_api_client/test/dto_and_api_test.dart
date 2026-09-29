@@ -43,7 +43,7 @@ void main() {
 
     test('BalanceDto has no batch when the row is not batch tracked', () {
       final dto = BalanceDto.fromJson(const {
-        'product': {'id': 25, 'sku': 'DETERGENT', 'name': 'Yuyucu vasitə'},
+        'product': {'id': 25, 'sku': 'DETERGENT', 'name': 'Yuyucu vasitə', 'baseUomId': 5, 'baseUomCode': 'L'},
         'location': {'id': 1, 'code': 'WH-01', 'name': 'Mərkəzi anbar'},
         'qtyOnHand': '12.0000',
         'qtyReserved': '0.0000',
@@ -137,7 +137,7 @@ void main() {
     test('GoodsReceiptLineDto variance rules', () {
       final line = GoodsReceiptLineDto.fromJson(const {
         'lineNo': 1,
-        'product': {'id': 1, 'sku': 'CHK-001', 'name': 'Toyuq döşü'},
+        'product': {'id': 1, 'sku': 'CHK-001', 'name': 'Toyuq döşü', 'baseUomId': 1, 'baseUomCode': 'G'},
         'receivedQty': '90',
         'orderedQty': '100',
         'rejectedQty': '0',
@@ -154,7 +154,7 @@ void main() {
     test('CountLineDto requires reason code when variance != 0', () {
       final line = CountLineDto.fromJson(const {
         'id': 1,
-        'product': {'id': 1, 'sku': 'CHK-001', 'name': 'Toyuq döşü'},
+        'product': {'id': 1, 'sku': 'CHK-001', 'name': 'Toyuq döşü', 'baseUomId': 1, 'baseUomCode': 'G'},
         'bookQty': '10',
         'countedQty': '9.5',
         'variancePct': '-5.0000',
@@ -214,7 +214,7 @@ void main() {
         adapter.enqueueJson({
           'items': [
             {
-              'product': {'id': 1, 'sku': 'LETTUCE', 'name': 'Kahı'},
+              'product': {'id': 1, 'sku': 'LETTUCE', 'name': 'Kahı', 'baseUomId': 1, 'baseUomCode': 'G'},
               'location': {'id': 2, 'code': 'WH-01', 'name': 'Mərkəzi anbar'},
               'qtyOnHand': '1.0000',
               'qtyReserved': '0.0000',

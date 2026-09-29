@@ -425,6 +425,7 @@ Map<String, dynamic> _$CreateStockRequestRequestToJson(
 _IssueLineDto _$IssueLineDtoFromJson(
   Map<String, dynamic> json,
 ) => _IssueLineDto(
+  id: (json['id'] as num).toInt(),
   lineNo: (json['lineNo'] as num).toInt(),
   product: ProductRefDto.fromJson(json['product'] as Map<String, dynamic>),
   qty: Quantity.fromJson(json['qty'] as String),
@@ -450,6 +451,7 @@ _IssueLineDto _$IssueLineDtoFromJson(
 
 Map<String, dynamic> _$IssueLineDtoToJson(_IssueLineDto instance) =>
     <String, dynamic>{
+      'id': instance.id,
       'lineNo': instance.lineNo,
       'product': instance.product.toJson(),
       'qty': instance.qty.toJson(),
@@ -526,14 +528,28 @@ const _$IssueStatusEnumMap = {
   IssueStatus.cancelled: 'CANCELLED',
 };
 
+_QuantityInput _$QuantityInputFromJson(Map<String, dynamic> json) =>
+    _QuantityInput(
+      value: Quantity.fromJson(json['value'] as String),
+      uomId: (json['uomId'] as num).toInt(),
+    );
+
+Map<String, dynamic> _$QuantityInputToJson(_QuantityInput instance) =>
+    <String, dynamic>{
+      'value': instance.value.toJson(),
+      'uomId': instance.uomId,
+    };
+
 _CreateIssueLine _$CreateIssueLineFromJson(Map<String, dynamic> json) =>
     _CreateIssueLine(
       productId: (json['productId'] as num).toInt(),
       qty: Quantity.fromJson(json['qty'] as String),
       uomId: (json['uomId'] as num).toInt(),
+      requestLineId: (json['requestLineId'] as num?)?.toInt(),
       batchId: (json['batchId'] as num?)?.toInt(),
-      reasonCodeId: (json['reasonCodeId'] as num?)?.toInt(),
-      note: json['note'] as String?,
+      batchOverrideReasonCodeId: (json['batchOverrideReasonCodeId'] as num?)
+          ?.toInt(),
+      batchOverrideNote: json['batchOverrideNote'] as String?,
     );
 
 Map<String, dynamic> _$CreateIssueLineToJson(_CreateIssueLine instance) =>
@@ -541,9 +557,10 @@ Map<String, dynamic> _$CreateIssueLineToJson(_CreateIssueLine instance) =>
       'productId': instance.productId,
       'qty': instance.qty.toJson(),
       'uomId': instance.uomId,
+      'requestLineId': instance.requestLineId,
       'batchId': instance.batchId,
-      'reasonCodeId': instance.reasonCodeId,
-      'note': instance.note,
+      'batchOverrideReasonCodeId': instance.batchOverrideReasonCodeId,
+      'batchOverrideNote': instance.batchOverrideNote,
     };
 
 _CreateIssueRequest _$CreateIssueRequestFromJson(Map<String, dynamic> json) =>
@@ -570,15 +587,17 @@ Map<String, dynamic> _$CreateIssueRequestToJson(_CreateIssueRequest instance) =>
 
 _ConfirmIssueLine _$ConfirmIssueLineFromJson(Map<String, dynamic> json) =>
     _ConfirmIssueLine(
-      lineNo: (json['lineNo'] as num).toInt(),
+      lineId: (json['lineId'] as num).toInt(),
       receivedQty: Quantity.fromJson(json['receivedQty'] as String),
+      reasonCodeId: (json['reasonCodeId'] as num?)?.toInt(),
       note: json['note'] as String?,
     );
 
 Map<String, dynamic> _$ConfirmIssueLineToJson(_ConfirmIssueLine instance) =>
     <String, dynamic>{
-      'lineNo': instance.lineNo,
+      'lineId': instance.lineId,
       'receivedQty': instance.receivedQty.toJson(),
+      'reasonCodeId': instance.reasonCodeId,
       'note': instance.note,
     };
 
@@ -701,16 +720,20 @@ Map<String, dynamic> _$CreateCountRequestToJson(_CreateCountRequest instance) =>
 
 _EnterCountLine _$EnterCountLineFromJson(Map<String, dynamic> json) =>
     _EnterCountLine(
-      lineId: (json['lineId'] as num).toInt(),
-      countedQty: Quantity.fromJson(json['countedQty'] as String),
+      productId: (json['productId'] as num).toInt(),
+      countedQuantity: QuantityInput.fromJson(
+        json['countedQuantity'] as Map<String, dynamic>,
+      ),
+      batchId: (json['batchId'] as num?)?.toInt(),
       reasonCodeId: (json['reasonCodeId'] as num?)?.toInt(),
       note: json['note'] as String?,
     );
 
 Map<String, dynamic> _$EnterCountLineToJson(_EnterCountLine instance) =>
     <String, dynamic>{
-      'lineId': instance.lineId,
-      'countedQty': instance.countedQty.toJson(),
+      'productId': instance.productId,
+      'countedQuantity': instance.countedQuantity.toJson(),
+      'batchId': instance.batchId,
       'reasonCodeId': instance.reasonCodeId,
       'note': instance.note,
     };
@@ -822,17 +845,19 @@ const _$WasteStatusEnumMap = {
 _CreateWasteLine _$CreateWasteLineFromJson(Map<String, dynamic> json) =>
     _CreateWasteLine(
       productId: (json['productId'] as num).toInt(),
-      qty: Quantity.fromJson(json['qty'] as String),
-      uomId: (json['uomId'] as num).toInt(),
+      quantity: QuantityInput.fromJson(
+        json['quantity'] as Map<String, dynamic>,
+      ),
       batchId: (json['batchId'] as num?)?.toInt(),
+      note: json['note'] as String?,
     );
 
 Map<String, dynamic> _$CreateWasteLineToJson(_CreateWasteLine instance) =>
     <String, dynamic>{
       'productId': instance.productId,
-      'qty': instance.qty.toJson(),
-      'uomId': instance.uomId,
+      'quantity': instance.quantity.toJson(),
       'batchId': instance.batchId,
+      'note': instance.note,
     };
 
 _CreateWasteRequest _$CreateWasteRequestFromJson(Map<String, dynamic> json) =>
@@ -921,17 +946,19 @@ Map<String, dynamic> _$SampleDtoToJson(_SampleDto instance) =>
 _CreateSampleLine _$CreateSampleLineFromJson(Map<String, dynamic> json) =>
     _CreateSampleLine(
       productId: (json['productId'] as num).toInt(),
-      qty: Quantity.fromJson(json['qty'] as String),
-      uomId: (json['uomId'] as num).toInt(),
+      quantity: QuantityInput.fromJson(
+        json['quantity'] as Map<String, dynamic>,
+      ),
       batchId: (json['batchId'] as num?)?.toInt(),
+      note: json['note'] as String?,
     );
 
 Map<String, dynamic> _$CreateSampleLineToJson(_CreateSampleLine instance) =>
     <String, dynamic>{
       'productId': instance.productId,
-      'qty': instance.qty.toJson(),
-      'uomId': instance.uomId,
+      'quantity': instance.quantity.toJson(),
       'batchId': instance.batchId,
+      'note': instance.note,
     };
 
 _CreateSampleRequest _$CreateSampleRequestFromJson(Map<String, dynamic> json) =>

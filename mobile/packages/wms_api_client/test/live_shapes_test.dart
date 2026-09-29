@@ -1,7 +1,9 @@
 import 'package:test/test.dart';
 import 'package:wms_api_client/wms_api_client.dart';
+import 'package:wms_core/wms_core.dart';
 
-/// Every payload below was copied verbatim from the running gateway on 2026-09-28.
+/// Every payload below was copied verbatim from the running gateway (responses on 2026-09-28,
+/// request bodies on 2026-09-29).
 ///
 /// It is the guard the hand-written fixtures could not be: those were invented to match the DTOs,
 /// so a DTO that disagreed with the wire had a test that agreed with the DTO. These do not — if a
@@ -273,5 +275,90 @@ void main() {
     expect(dto.docNo, isNotEmpty);
     expect(dto.lines, isNotEmpty);
   });
+  });
+
+  group('request bodies against what the gateway accepts', () {
+    // These four bodies were rejected before this test existed. The gateway either refused to bind
+    // them (`Failed to read parameter ... as JSON`, HTTP 400) or bound them to nothing and failed
+    // validation, so waste, samples, count entry and receipt confirmation could not be submitted
+    // from the app at all. Each expectation below is the exact JSON a POST answered 201 with.
+    test('CreateWasteRequest nests the quantity with its unit', () {
+      final body = CreateWasteRequest(
+        docDate: DateTime.utc(2026, 9, 29),
+        locationId: 1,
+        reasonCodeId: 6,
+        lines: [
+          CreateWasteLine(
+            productId: 6,
+            quantity: QuantityInput(value: Quantity.parse('1'), uomId: 1),
+          ),
+        ],
+      ).toJson();
+
+      expect(body['lines'], [
+        {'productId': 6, 'quantity': {'value': '1.0000', 'uomId': 1}, 'batchId': null, 'note': null},
+      ]);
+      // A flat `qty` beside a `uomId` is what the DTO used to send, and the server cannot read it.
+      expect((body['lines']! as List).first, isNot(contains('qty')));
+    });
+
+    test('CreateSampleRequest nests the quantity too', () {
+      final body = CreateSampleRequest(
+        docDate: DateTime.utc(2026, 9, 29),
+        locationId: 1,
+        lines: [
+          CreateSampleLine(
+            productId: 6,
+            quantity: QuantityInput(value: Quantity.parse('0.5'), uomId: 1),
+          ),
+        ],
+      ).toJson();
+
+      expect(((body['lines']! as List).first as Map)['quantity'], {
+        'value': '0.5000',
+        'uomId': 1,
+      });
+    });
+
+    test('EnterCountRequest addresses the line by product, not by line id', () {
+      final body = EnterCountRequest(
+        rowVersion: 2,
+        lines: [
+          EnterCountLine(
+            productId: 6,
+            countedQuantity: QuantityInput(value: Quantity.parse('12'), uomId: 1),
+            reasonCodeId: 9,
+          ),
+        ],
+      ).toJson();
+
+      final line = (body['lines']! as List).first as Map;
+      expect(line['productId'], 6);
+      expect(line['countedQuantity'], {'value': '12.0000', 'uomId': 1});
+      // `lineId` and `countedQty` are what this used to send; the server binds neither.
+      expect(line, isNot(contains('lineId')));
+      expect(line, isNot(contains('countedQty')));
+    });
+
+    test('ConfirmIssueRequest identifies the line by id and carries the reason', () {
+      final body = ConfirmIssueRequest(
+        rowVersion: 2,
+        lines: [
+          ConfirmIssueLine(
+            lineId: 117,
+            receivedQty: Quantity.parse('11'),
+            reasonCodeId: 4,
+            note: 'bir qutu çatışmır',
+          ),
+        ],
+      ).toJson();
+
+      final line = (body['lines']! as List).first as Map;
+      expect(line['lineId'], 117);
+      expect(line['receivedQty'], '11.0000');
+      // Mandatory whenever the received quantity differs from the dispatched one.
+      expect(line['reasonCodeId'], 4);
+      expect(line, isNot(contains('lineNo')));
+    });
   });
 }

@@ -19,8 +19,10 @@ abstract class ProductRefDto with _$ProductRefDto {
     required int id,
     required String sku,
     required String name,
-    int? baseUomId,
-    String? baseUomCode,
+    // Required by the contract and sent by every endpoint: a line entered in the base unit — a
+    // count sheet, for one — needs the id to name the unit it was typed in.
+    required int baseUomId,
+    required String baseUomCode,
     bool? requiresBatch,
     bool? requiresExpiry,
   }) = _ProductRefDto;

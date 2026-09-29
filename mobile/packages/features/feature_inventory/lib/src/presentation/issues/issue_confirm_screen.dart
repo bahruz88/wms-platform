@@ -23,6 +23,9 @@ class IssueConfirmScreen extends ConsumerStatefulWidget {
 class _IssueConfirmScreenState extends ConsumerState<IssueConfirmScreen> {
   final Map<int, Quantity> _received = {};
   final Map<int, String> _notes = {};
+  // A discrepancy needs a reason code from the `TRANSFER` group — the server rejects the receipt
+  // without one, and this screen used to offer no way to supply it.
+  final Map<int, int> _reasonCodes = {};
   bool _submitting = false;
   Failure? _failure;
   bool _done = false;
@@ -37,8 +40,10 @@ class _IssueConfirmScreenState extends ConsumerState<IssueConfirmScreen> {
       lines: [
         for (final line in issue.lines)
           ConfirmIssueLine(
-            lineNo: line.lineNo,
+            // Keyed by `lineNo` in the form state, but the server looks the line up by id.
+            lineId: line.id,
             receivedQty: _received[line.lineNo] ?? line.qty,
+            reasonCodeId: _reasonCodes[line.lineNo],
             note: _notes[line.lineNo],
           ),
       ],
@@ -59,6 +64,7 @@ class _IssueConfirmScreenState extends ConsumerState<IssueConfirmScreen> {
     final l10n = context.l10n;
     final c = WmsColors.of(context);
     final issue = ref.watch(issueDetailProvider(widget.issueId));
+    final reasons = ref.watch(reasonCodeListProvider(ReasonGroup.transfer));
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.actionConfirmReceipt)),
@@ -106,11 +112,27 @@ class _IssueConfirmScreenState extends ConsumerState<IssueConfirmScreen> {
                 _ConfirmLine(
                   line: line,
                   received: _received[line.lineNo],
+                  reasonCodeId: _reasonCodes[line.lineNo],
+                  reasonOptions: [
+                    for (final reason
+                        in reasons.value ?? const <ReasonCodeDto>[])
+                      WmsSelectOption(
+                        value: reason.id,
+                        label: '${reason.code} · ${reason.name}',
+                      ),
+                  ],
                   onQtyChanged: (value) => setState(() {
                     if (value == null) {
                       _received.remove(line.lineNo);
                     } else {
                       _received[line.lineNo] = value;
+                    }
+                  }),
+                  onReasonChanged: (value) => setState(() {
+                    if (value == null) {
+                      _reasonCodes.remove(line.lineNo);
+                    } else {
+                      _reasonCodes[line.lineNo] = value;
                     }
                   }),
                   onNoteChanged: (value) => _notes[line.lineNo] = value,
@@ -139,14 +161,20 @@ class _IssueConfirmScreenState extends ConsumerState<IssueConfirmScreen> {
 class _ConfirmLine extends StatelessWidget {
   const _ConfirmLine({
     required this.line,
+    required this.reasonOptions,
     required this.onQtyChanged,
+    required this.onReasonChanged,
     required this.onNoteChanged,
     this.received,
+    this.reasonCodeId,
   });
 
   final IssueLineDto line;
   final Quantity? received;
+  final int? reasonCodeId;
+  final List<WmsSelectOption<int>> reasonOptions;
   final ValueChanged<Quantity?> onQtyChanged;
+  final ValueChanged<int?> onReasonChanged;
   final ValueChanged<String> onNoteChanged;
 
   @override
@@ -229,6 +257,21 @@ class _ConfirmLine extends StatelessWidget {
             ],
           ),
           if (hasDiscrepancy) ...[
+            const SizedBox(height: WmsSpacing.space3),
+            SizedBox(
+              width: 360,
+              child: WmsSelect<int>(
+                label: l10n.labelReasonCode,
+                required: true,
+                value: reasonCodeId,
+                placeholder: 'Səbəb seçin',
+                error: reasonCodeId == null
+                    ? l10n.validationReasonCodeRequired
+                    : null,
+                options: reasonOptions,
+                onChanged: onReasonChanged,
+              ),
+            ),
             const SizedBox(height: WmsSpacing.space3),
             WmsTextField(
               label: l10n.labelNote,

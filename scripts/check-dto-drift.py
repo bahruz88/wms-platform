@@ -23,7 +23,13 @@ Two kinds of difference, and only one of them fails the check:
   incomplete  the contract sends a field the DTO ignores. Usually just unfinished; sometimes
               deliberate, as when a DTO recomputes a derived value instead of trusting it.
 
-A DTO with no same-named contract schema is skipped: not every DTO mirrors a schema one to one.
+A DTO with no same-named contract schema is skipped, but it is now *counted and listed* — that
+silence is how `CurrentUserDto` shipped unable to parse `/identity/me` at all: the schema behind it
+is called `Me`, so the name never matched and the DTO was never checked. `ALIASES` maps the ones
+that legitimately differ; anything left in the unmatched list is unverified, not verified.
+
+Some fields are sent by the server but absent from the contract. Those are contract defects, not DTO
+defects, and `DIVERGENCES` marks them so they read as known rather than as a DTO inventing a field.
 """
 from __future__ import annotations
 
@@ -34,6 +40,49 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DTO_ROOT = ROOT / "mobile/packages/wms_api_client/lib/src/dto"
+
+# Dart class -> contract schema, where the two legitimately carry different names. Without a mapping
+# the DTO is silently unchecked, which is how `CurrentUserDto` shipped unable to parse `/identity/me`.
+ALIASES = {
+    "CurrentUserDto": "Me",
+    "UpdateRecipeRequest": "RecipeUpdate",
+    "ConfirmIssueLine": "IssueConfirmLine",
+    "ConfirmIssueRequest": "IssueConfirmReceipt",
+    "CreateCountRequest": "CountCreate",
+    "CreateIssueLine": "IssueLineCreate",
+    "CreateIssueRequest": "IssueCreate",
+    "CreateWasteLine": "WasteLineCreate",
+    "CreateWasteRequest": "WasteCreate",
+    "CreateSampleRequest": "SampleCreate",
+    "EnterCountLine": "CountLineInput",
+    "EnterCountRequest": "CountLinesSubmit",
+    "ProductCategoryDto": "Category",
+    "PriceHistoryDto": "PriceHistoryEntry",
+    "SeriesPointDto": "DashboardSeriesPoint",
+    "QuantityInput": "Quantity",
+    # A sample is a waste document with an authority attached, so it reuses the waste line schemas
+    # rather than declaring its own.
+    "SampleLineDto": "WasteLine",
+    "CreateSampleLine": "WasteLineCreate",
+}
+
+# DTOs that mirror an inline schema with no name of its own, so there is nothing to compare against.
+# Listing them here keeps them out of the unchecked report without pretending they were verified.
+INLINE = {
+    # `SalesImportParseResult.parseErrors[]` is declared inline.
+    "SalesParseErrorDto",
+}
+
+# Fields the running server sends that the contract does not declare: contract defects. Keyed by
+# `module/DartClass`. They surface as "dead field" without this, which points at the wrong file.
+DIVERGENCES = {
+    "inventory/BatchDto": {
+        # `GET /inventory/batches` sends these three; the contract declares `qtyOnHand`/`balances`.
+        "totalQtyOnHand",
+        "byLocation",
+        "supplierName",
+    },
+}
 
 # contract module -> DTO folder
 MODULES = {
@@ -48,25 +97,24 @@ MODULES = {
 }
 
 
-def contract_schemas(path: Path) -> dict[str, set[str]]:
-    """
-    Schema name -> every property name the schema carries, `allOf` bases included.
-
-    The contracts build detail schemas on their summary: `GoodsReceipt` is `allOf: [GoodsReceiptSummary,
-    {the extra fields}]`. Reading only the extension block makes `docNo` and `id` look invented by the
-    DTO, which is how an earlier version of this script over-reported the damage.
-    """
-    own: dict[str, set[str]] = {}
-    bases: dict[str, list[str]] = {}
+def _parse(path: Path, own: dict[str, set[str]], bases: dict[str, list[str]]) -> None:
+    """Reads one contract file into the shared `own`/`bases` pools."""
     name: str | None = None
     props: set[str] = set()
     parents: list[str] = []
     in_props = False
 
     def flush() -> None:
-        if name:
-            own[name] = props
-            bases[name] = parents
+        if not name:
+            return
+        # A module often re-exports a shared schema as a bare `$ref` alias. That entry carries no
+        # properties and points at its own name, so letting it overwrite the definition already read
+        # from `common.v1.yaml` would erase the schema instead of reusing it.
+        clean = [p for p in parents if p != name]
+        if not props and not clean and name in own:
+            return
+        own[name] = props
+        bases[name] = clean
 
     for line in path.read_text(encoding="utf-8").split("\n"):
         m = re.match(r"^    (\w+):\s*$", line)
@@ -76,8 +124,11 @@ def contract_schemas(path: Path) -> dict[str, set[str]]:
             continue
         if name is None:
             continue
-        # `- $ref: '#/components/schemas/X'` directly under allOf is a base schema.
-        m = re.match(r"^\s+- \$ref: '#/components/schemas/(\w+)'\s*$", line)
+        # A `$ref` to a whole schema is a base, whether it sits under `allOf` as `- $ref:` or
+        # stands alone as an alias. It may point into another file — `common.v1.yaml` holds
+        # `PageMeta`, `AuditFields` and the scalar formats every module reuses — and the target name
+        # is what matters, since all files are parsed into one pool.
+        m = re.match(r"^\s+-? ?\$ref: '(?:[\w.]+)?#/components/schemas/(\w+)'\s*$", line)
         if m:
             parents.append(m.group(1))
             continue
@@ -91,6 +142,23 @@ def contract_schemas(path: Path) -> dict[str, set[str]]:
             flush()
             name = None
     flush()
+
+
+def contract_schemas(path: Path) -> dict[str, set[str]]:
+    """
+    Schema name -> every property name the schema carries, `allOf` bases included.
+
+    The contracts build detail schemas on their summary: `GoodsReceipt` is `allOf: [GoodsReceiptSummary,
+    {the extra fields}]`. Reading only the extension block makes `docNo` and `id` look invented by the
+    DTO, which is how an earlier version of this script over-reported the damage.
+
+    `common.v1.yaml` is parsed alongside the module, because a base a module only `$ref`s is
+    otherwise an empty schema — which made `PageMeta`'s four paging fields look invented.
+    """
+    own: dict[str, set[str]] = {}
+    bases: dict[str, list[str]] = {}
+    _parse(ROOT / "contracts/openapi/common.v1.yaml", own, bases)
+    _parse(path, own, bases)
 
     def resolve(schema: str, seen: frozenset[str] = frozenset()) -> set[str]:
         if schema in seen or schema not in own:
@@ -134,6 +202,7 @@ def main() -> int:
     summary_only = "--summary" in sys.argv
     checked = broken = incomplete = 0
     findings: list[str] = []
+    unmatched: list[str] = []
 
     for module, folder in MODULES.items():
         spec = ROOT / f"contracts/openapi/{module}.v1.yaml"
@@ -147,14 +216,18 @@ def main() -> int:
             continue
 
         for cls, (keys, required) in sorted(dart_dtos(Path(generated[0])).items()):
-            base = cls[:-3] if cls.endswith("Dto") else cls
+            base = ALIASES.get(cls) or (cls[:-3] if cls.endswith("Dto") else cls)
             if base not in schemas:
+                if cls not in INLINE:
+                    unmatched.append(f"{module}/{cls}")
                 continue
             checked += 1
+            diverged = DIVERGENCES.get(f"{module}/{cls}", set())
             ignored = sorted(schemas[base] - keys)
-            invented = sorted(keys - schemas[base])
+            invented = sorted(keys - schemas[base] - diverged)
             # Only a *required* invented field breaks parsing; a nullable one just reads as null.
-            fatal = sorted(required - schemas[base])
+            # A known server-vs-contract divergence is not the DTO's fault either way.
+            fatal = sorted(required - schemas[base] - diverged)
             if not ignored and not invented:
                 continue
             if fatal:
@@ -175,10 +248,17 @@ def main() -> int:
         f"DTOs mirroring a contract schema: {checked}"
         f"   in step: {checked - broken - incomplete}"
         f"   broken: {broken}   incomplete: {incomplete}"
+        f"   unchecked: {len(unmatched)}"
     )
     if findings and not summary_only:
         print()
         print("\n".join(findings))
+    if unmatched and not summary_only:
+        print()
+        print("  No contract schema of the same name — these are NOT checked by anything:")
+        for name in sorted(unmatched):
+            print(f"      {name}")
+        print("  Add a mapping to ALIASES if the schema is simply named differently.")
     # Only BROKEN fails the check. A DTO that expects a field the contract never sends cannot parse
     # a real response at all — that is the bug this script was written for. Ignoring a field the
     # contract does send is usually just incomplete, and occasionally deliberate: `BalanceDto` drops

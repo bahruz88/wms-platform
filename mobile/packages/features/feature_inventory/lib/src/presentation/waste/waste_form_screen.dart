@@ -92,8 +92,10 @@ class _WasteFormScreenState extends ConsumerState<WasteFormScreen> {
               for (final line in _lines)
                 CreateWasteLine(
                   productId: line.productId!,
-                  qty: line.qty!,
-                  uomId: line.uomId!,
+                  quantity: QuantityInput(
+                    value: line.qty!,
+                    uomId: line.uomId!,
+                  ),
                   batchId: line.batchId,
                 ),
             ],

@@ -251,13 +251,14 @@ abstract class ApprovalDecisionRequest with _$ApprovalDecisionRequest {
 abstract class PriceHistoryDto with _$PriceHistoryDto {
   const factory PriceHistoryDto({
     required int id,
-    required int productId,
-    required int supplierId,
+    // Nested refs, like the rest of procurement: the flat `productId`/`supplierId` this DTO used to
+    // declare are not sent, so `fromJson` threw on every row and the screen behind it never loaded.
+    required ProductRefDto product,
+    required SupplierRefDto supplier,
     @DateOnlyConverter() required DateTime priceDate,
     required Money unitPrice,
     required String currency,
     required Money unitPriceBase,
-    String? supplierName,
     int? poId,
     String? poDocNo,
     Money? prevPriceBase,
