@@ -28,8 +28,13 @@ final identityRepositoryProvider = Provider<IdentityRepository>(
 /// pushed back into the session so `hasPermissionProvider` sees the
 /// effective permissions (the JWT alone does not carry them).
 final currentUserProvider = FutureProvider<CurrentUserDto?>((ref) async {
-  final session = ref.watch(sessionProvider);
-  if (session == null) return null;
+  // Keyed on the access token, not on the whole session: this provider *writes*
+  // the permissions back into the session, and watching the session itself would
+  // make that write re-run the fetch. One extra round trip per sign-in, every
+  // sign-in. A new token — login or refresh — is the only thing that makes the
+  // answer stale.
+  final token = ref.watch(sessionProvider.select((s) => s?.accessToken));
+  if (token == null) return null;
   final result = await ref.watch(identityRepositoryProvider).me();
   final user = result.valueOrNull;
   if (user != null) {

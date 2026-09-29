@@ -31,7 +31,11 @@ class AsyncView<T> extends StatelessWidget {
         child: WmsSpinner(size: 20),
       ),
     ),
-    error: (error, _) => Padding(
+    // Scrollable: a server problem can carry a long `detail`, and a failure the
+    // client did not expect carries the exception's own text. Laid out flat,
+    // anything taller than the screen overflows — the reader sees a striped bar
+    // instead of the reason, which is the one thing the screen exists to show.
+    error: (error, _) => SingleChildScrollView(
       padding: const EdgeInsets.all(WmsSpacing.space4),
       child: Column(
         mainAxisSize: MainAxisSize.min,

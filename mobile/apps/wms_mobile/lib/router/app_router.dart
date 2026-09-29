@@ -105,6 +105,13 @@ class _MobileShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final unread = ref.watch(unreadBadgeProvider);
+    // Loading `/identity/me` is what puts the effective permissions on the
+    // session: the access token carries roles, not permissions. Watching it here
+    // means they arrive once, as soon as anything is on screen. Before this, the
+    // only screen that asked was the profile — so until someone opened it every
+    // permission read as denied: the task list came back empty and the branch
+    // tab never appeared.
+    ref.watch(currentUserProvider);
     final permissions =
         ref.watch(sessionProvider)?.permissions ?? const <String>{};
 

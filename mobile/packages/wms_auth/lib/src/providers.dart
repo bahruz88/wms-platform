@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'auth_repository.dart';
@@ -14,13 +16,32 @@ final Provider<AuthRepository> authRepositoryProvider =
 
 /// Live session stream (null = signed out). Seeds with the current value so
 /// widgets never see a spurious loading state after startup restore.
-final StreamProvider<Session?> sessionStreamProvider = StreamProvider<Session?>(
-  (ref) async* {
-    final repo = ref.watch(authRepositoryProvider);
-    yield repo.currentSession;
-    yield* repo.sessionChanges;
-  },
-);
+///
+/// Subscribes *before* it seeds, and does both without an await in between.
+/// `sessionChanges` is a broadcast stream, so anything published while nobody is
+/// listening is gone for good — and the obvious `yield current; yield* changes;`
+/// leaves exactly such a gap. `/identity/me` writes the effective permissions
+/// into the session in that window, so they were dropped: the stream kept
+/// serving the seed, `sessionProvider` preferred it over the repository's newer
+/// value, and every permission in the app read as denied. The task list came
+/// back empty and permission-gated navigation never appeared — unless someone
+/// happened to open the profile, whose own watch made the timing work.
+final StreamProvider<Session?> sessionStreamProvider = StreamProvider<Session?>((
+  ref,
+) {
+  final repo = ref.watch(authRepositoryProvider);
+  final controller = StreamController<Session?>();
+  final subscription = repo.sessionChanges.listen(
+    controller.add,
+    onError: controller.addError,
+  );
+  controller.add(repo.currentSession);
+  ref.onDispose(() {
+    unawaited(subscription.cancel());
+    unawaited(controller.close());
+  });
+  return controller.stream;
+});
 
 /// Synchronous view of the session for guards and permission checks.
 final Provider<Session?> sessionProvider = Provider<Session?>((ref) {
