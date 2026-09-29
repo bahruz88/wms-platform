@@ -9,6 +9,7 @@ import 'package:wms_l10n/wms_l10n.dart';
 
 import '../consumption_providers.dart';
 import '../run_detail_view.dart';
+import 'branch_picker.dart';
 
 /// «İstehlak nəticəsi» — yesterday's calculated consumption for the branch.
 ///
@@ -48,11 +49,7 @@ class _Body extends ConsumerWidget {
     final l10n = context.l10n;
     final locationId = ref.watch(branchLocationIdProvider);
     if (locationId == null) {
-      return const WmsEmptyState(
-        reason: 'Hesabınıza filial təyin edilməyib.',
-        nextStep: 'Administratordan lokasiya bağlanmasını istəyin.',
-        icon: Icons.store_outlined,
-      );
+      return const BranchPicker();
     }
     final head = ref.watch(branchRunOfDayProvider(date));
     return AsyncView<ConsumptionRunDto?>(

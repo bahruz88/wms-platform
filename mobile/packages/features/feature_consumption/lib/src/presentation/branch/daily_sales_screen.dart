@@ -12,6 +12,7 @@ import '../../domain/daily_sales_draft.dart';
 import '../../domain/daily_sales_submitter.dart';
 import '../consumption_alert.dart';
 import '../consumption_providers.dart';
+import 'branch_picker.dart';
 
 /// «Günün satışı» — the branch types how many of each menu item were sold
 /// on a business date. This is the manual feed of ADR-012: no POS, no CSV,
@@ -126,11 +127,9 @@ class _Body extends ConsumerWidget {
     final existing = ref.watch(dailySalesImportProvider);
 
     if (locationId == null) {
-      return const WmsEmptyState(
-        reason: 'Hesabınıza filial təyin edilməyib.',
-        nextStep: 'Administratordan lokasiya bağlanmasını istəyin.',
-        icon: Icons.store_outlined,
-      );
+      // Not "no branch": an account that sees several branches has to say which
+      // one the day's sales belong to.
+      return const BranchPicker();
     }
 
     final blocked = existing.value == null

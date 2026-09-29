@@ -29,13 +29,41 @@ DateTime todayDate() {
 /// `ConsumptionRunner` calculates the previous working day at 03:00.
 DateTime yesterdayDate() => todayDate().subtract(const Duration(days: 1));
 
-/// The branch the mobile screens work with: the first location on the
-/// session (`iam_user_location`). `null` when the user has none, which the
-/// screens explain instead of failing.
+/// The branch the mobile screens work with.
+///
+/// An empty `locationIds` does **not** mean the account has no branch — the
+/// contract says the opposite: "Görünən lokasiyalar. Boş = məhdudiyyət yoxdur."
+/// It is what an administrator or a manager with `iam.location.view_all` gets.
+/// Reading it as "none assigned" shut those accounts out of the branch screens
+/// entirely, with a message telling them to ask an administrator for the access
+/// they already had.
+///
+/// So: one assigned location is used directly, several or none means the user
+/// picks, and the screens ask rather than refuse.
 final branchLocationIdProvider = Provider<int?>((ref) {
+  final chosen = ref.watch(chosenBranchLocationIdProvider);
+  if (chosen != null) return chosen;
   final locations = ref.watch(sessionProvider)?.locationIds ?? const <int>[];
-  return locations.isEmpty ? null : locations.first;
+  return locations.length == 1 ? locations.first : null;
 });
+
+/// The branch the user picked, when their account is not pinned to exactly one.
+final chosenBranchLocationIdProvider =
+    NotifierProvider<ChosenBranchLocationNotifier, int?>(
+      ChosenBranchLocationNotifier.new,
+    );
+
+class ChosenBranchLocationNotifier extends Notifier<int?> {
+  @override
+  int? build() => null;
+
+  /// The branch the screens now work with; `null` asks again. A named action,
+  /// not a setter: `choose(3)` says what happens at the call site, and a setter
+  /// would want a getter beside it that only repeats `state`.
+  // ignore: use_setters_to_change_properties
+  void choose(int? locationId) => state = locationId;
+}
+
 
 // ---------------------------------------------------------------------------
 // Menu items / recipes
