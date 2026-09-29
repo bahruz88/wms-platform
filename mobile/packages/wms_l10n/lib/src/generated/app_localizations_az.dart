@@ -595,4 +595,7 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get navAlerts => 'Bildiriş';
+
+  @override
+  String get navMenu => 'Menyu';
 }

@@ -82,9 +82,9 @@ void main() {
       // Exactly once: the provider writes the permissions back into the
       // session, and if it watched the session it would re-run its own fetch.
       expect(identity.calls, 1);
-      // The branch tab is permission-gated, so it can only be here if the
-      // permission arrived from `/identity/me`.
-      expect(find.text('Filial'), findsOneWidget);
+      // The menu tile is permission-gated, so it can only be here if the
+      // permission arrived from `/identity/me` — the token carried none.
+      expect(find.text('Günün satışı'), findsOneWidget);
     },
   );
 }

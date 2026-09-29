@@ -597,4 +597,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navAlerts => 'Alerts';
+
+  @override
+  String get navMenu => 'Menu';
 }

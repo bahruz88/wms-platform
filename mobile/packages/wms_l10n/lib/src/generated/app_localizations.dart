@@ -1203,6 +1203,12 @@ abstract class AppLocalizations {
   /// In az, this message translates to:
   /// **'Bildiriş'**
   String get navAlerts;
+
+  /// No description provided for @navMenu.
+  ///
+  /// In az, this message translates to:
+  /// **'Menyu'**
+  String get navMenu;
 }
 
 class _AppLocalizationsDelegate

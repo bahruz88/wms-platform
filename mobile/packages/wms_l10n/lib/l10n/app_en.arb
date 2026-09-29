@@ -215,5 +215,9 @@
   "navAlerts": "Alerts",
   "@navAlerts": {
     "description": "Bottom navigation: the short form. The screen itself is titled with navNotifications."
+  },
+  "navMenu": "Menu",
+  "@navMenu": {
+    "description": "Bottom navigation: the home menu of operations."
   }
 }

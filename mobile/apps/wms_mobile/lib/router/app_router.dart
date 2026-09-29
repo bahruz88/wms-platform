@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:wms_auth/wms_auth.dart';
-import 'package:wms_core/wms_core.dart';
 import 'package:wms_design_system/wms_design_system.dart';
 import 'package:wms_l10n/wms_l10n.dart';
 
+import '../menu/menu_routes.dart';
 import '../tasks/tasks_routes.dart';
 
 /// Root navigator of the app. The barcode scanner pushes its full screen
@@ -26,23 +26,28 @@ final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>(
 /// on the balances: a balance table answers "how much is there", and the
 /// question someone opens this app to ask is "what should I do next".
 ///
-/// Two things sit outside those four on purpose. The profile is reached from the
-/// person's own name in the task header — an account screen is not work, and it
-/// does not earn a permanent tab. The branch workplace (ADR-012 daily sales) is
-/// a fifth destination shown only to an account that can actually use it: the
-/// designs cover the warehouse keeper, and for a keeper the bar is exactly the
-/// four. A branch user would otherwise have no way in at all.
+/// **Menyu** is the home: the tiles of everything this person may do. It is what
+/// makes the app legible to someone who is not an administrator — the keeper's
+/// menu, the branch's menu and the buyer's menu are the same screen showing
+/// different tiles, because each tile is gated on the permission behind it.
+///
+/// The bar itself carries only what someone returns to over and over: the menu,
+/// the queue of documents waiting on them, the stock they look things up in, and
+/// their alerts. Everything else — writing off stock, entering a count, the
+/// branch's daily sales, the buyer's requisitions — is a tile, reached and then
+/// finished with. The profile is behind the person's own name on the menu: an
+/// account screen is not work and does not earn a permanent tab.
 final goRouterProvider = Provider<GoRouter>((ref) {
   final repository = ref.watch(authRepositoryProvider);
   final guard = AuthGuard(
     repository: repository,
-    homePath: TasksRoutes.tasksPath,
+    homePath: MenuRoutes.menuPath,
   );
   ref.onDispose(guard.dispose);
 
   final router = GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: TasksRoutes.tasksPath,
+    initialLocation: MenuRoutes.menuPath,
     redirect: guard.redirect,
     refreshListenable: guard,
     routes: [
@@ -57,6 +62,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         // when permissions arrive from `/identity/me`; which of them the bar
         // offers is decided below.
         branches: [
+          StatefulShellBranch(routes: menuRoutes()),
           StatefulShellBranch(routes: tasksRoutes()),
           StatefulShellBranch(routes: inventoryDocumentRoutes()),
           StatefulShellBranch(routes: inventoryStockRoutes()),
@@ -112,42 +118,33 @@ class _MobileShell extends ConsumerWidget {
     // permission read as denied: the task list came back empty and the branch
     // tab never appeared.
     ref.watch(currentUserProvider);
-    final permissions =
-        ref.watch(sessionProvider)?.permissions ?? const <String>{};
 
     final tabs = <_Tab>[
       _Tab(
         branch: 0,
+        label: l10n.navMenu,
+        icon: Icons.grid_view_outlined,
+        selectedIcon: Icons.grid_view,
+      ),
+      _Tab(
+        branch: 1,
         label: l10n.navTasks,
         icon: Icons.checklist_outlined,
         selectedIcon: Icons.checklist,
       ),
       _Tab(
-        branch: 1,
-        label: l10n.navOperations,
-        icon: Icons.description_outlined,
-        selectedIcon: Icons.description,
-      ),
-      _Tab(
-        branch: 2,
+        branch: 3,
         label: l10n.navStock,
         icon: Icons.inventory_2_outlined,
         selectedIcon: Icons.inventory_2,
       ),
       _Tab(
-        branch: 3,
+        branch: 4,
         label: l10n.navAlerts,
         icon: Icons.notifications_outlined,
         selectedIcon: Icons.notifications,
         badgeCount: unread,
       ),
-      if (permissions.contains(Permissions.salesImport))
-        _Tab(
-          branch: 4,
-          label: l10n.navBranch,
-          icon: Icons.storefront_outlined,
-          selectedIcon: Icons.storefront,
-        ),
     ];
 
     // The profile is not a tab; while it is open nothing in the bar is selected,

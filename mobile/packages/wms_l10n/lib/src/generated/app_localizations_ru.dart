@@ -596,4 +596,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get navAlerts => 'Уведомл.';
+
+  @override
+  String get navMenu => 'Меню';
 }

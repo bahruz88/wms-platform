@@ -14,7 +14,7 @@ abstract final class Permissions {
   static const String balanceView = 'inv.balance.view';
   static const String receiptCreate = 'inv.receipt.create';
   static const String receiptPost = 'inv.receipt.post';
-  static const String stockRequestCreate = 'inv.stock_request.create';
+  static const String stockRequestCreate = 'inv.request.create';
   static const String issueCreate = 'inv.issue.create';
   static const String issueDispatch = 'inv.issue.dispatch';
   static const String issueConfirm = 'inv.issue.confirm';
@@ -24,12 +24,11 @@ abstract final class Permissions {
   static const String sampleCreate = 'inv.sample.create';
 
   // --- Procurement --------------------------------------------------------
-  static const String requisitionCreate = 'proc.requisition.create';
-  static const String rfqManage = 'proc.rfq.manage';
+  static const String requisitionCreate = 'proc.pr.create';
+  static const String rfqCreate = 'proc.rfq.create';
   static const String quotationSelect = 'proc.quotation.select';
   static const String poCreate = 'proc.po.create';
   static const String poView = 'proc.po.view';
-  static const String priceHistoryView = 'proc.price_history.view';
 
   // --- Consumption (ADR-012, branch-operations.md §8) ---------------------
   /// Create and version recipes (manager).
@@ -54,7 +53,7 @@ abstract final class Permissions {
 
   // --- Reporting ----------------------------------------------------------
   static const String reportView = 'rpt.report.view';
-  static const String reportExport = 'rpt.report.export';
+  static const String exportCreate = 'rpt.export.create';
 
   static const Set<String> all = {
     productViewCost,
@@ -74,11 +73,10 @@ abstract final class Permissions {
     wasteCreate,
     sampleCreate,
     requisitionCreate,
-    rfqManage,
+    rfqCreate,
     quotationSelect,
     poCreate,
     poView,
-    priceHistoryView,
     recipeManage,
     recipeView,
     salesImport,
@@ -92,7 +90,7 @@ abstract final class Permissions {
     userManage,
     roleManage,
     reportView,
-    reportExport,
+    exportCreate,
   };
 }
 

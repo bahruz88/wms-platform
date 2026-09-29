@@ -17,6 +17,7 @@ dependencies:
   feature_inventory: ^0.1.0
   feature_master_data: ^0.1.0
   feature_notifications: ^0.1.0
+  feature_procurement: ^0.1.0
   flutter:
     sdk: flutter
   flutter_localizations:

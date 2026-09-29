@@ -197,5 +197,6 @@
   "navTasks": "Задачи",
   "navOperations": "Операции",
   "navStock": "Остаток",
-  "navAlerts": "Уведомл."
+  "navAlerts": "Уведомл.",
+  "navMenu": "Меню"
 }

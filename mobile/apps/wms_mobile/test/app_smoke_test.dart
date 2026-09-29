@@ -59,29 +59,27 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(NavigationBar), findsOneWidget);
-    // The four the screen designs lay out, in their order.
-    expect(find.text('Tapşırıq'), findsWidgets);
-    expect(find.text('Əməliyyat'), findsOneWidget);
-    expect(find.text('Qalıq'), findsOneWidget);
+    // Only what someone returns to over and over. Every operation is a tile on
+    // the menu, not a tab.
+    expect(find.text('Menyu'), findsWidgets);
+    expect(find.text('Tapşırıq'), findsOneWidget);
+    // Twice: the tab, and the tile that looks stock up.
+    expect(find.text('Qalıq'), findsWidgets);
     expect(find.text('Bildiriş'), findsOneWidget);
-    // The profile is reached from the person's own name in the task header, and
-    // the branch workplace only appears for an account that can enter sales.
     expect(find.text('Profil'), findsNothing);
-    expect(find.text('Filial'), findsNothing);
     // Warehouse keepers must never see cost data (spec §7.1, §16).
     expect(find.text('Dəyər'), findsNothing);
   });
 
-  testWidgets('a branch account also gets the branch workplace', (
-    tester,
-  ) async {
+  testWidgets('the menu shows only what the account may do', (tester) async {
     tester.view.physicalSize = const Size(420, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
 
     final repository = FakeAuthRepository(
       session: testSession(
-        permissions: {Permissions.balanceView, Permissions.salesImport},
+        roles: const [Roles.branchUser],
+        permissions: {Permissions.salesImport, Permissions.balanceView},
       ),
     );
     addTearDown(repository.dispose);
@@ -90,7 +88,38 @@ void main() {
     await tester.pumpWidget(host(repository));
     await tester.pumpAndSettle();
 
+    // A branch account: its own day, and the stock it can look up.
+    expect(find.text('Günün satışı'), findsOneWidget);
+    expect(find.text('Qalıq'), findsWidgets);
+    // Not the keeper's work, and not the buyer's.
+    expect(find.text('Mal qəbul et'), findsNothing);
+    expect(find.text('Sayım'), findsNothing);
+    expect(find.text('Təklif sorğuları'), findsNothing);
+    // And the heading says whose screen this is.
     expect(find.text('Filial'), findsOneWidget);
+  });
+
+  testWidgets('a keeper gets the keeper tiles instead', (tester) async {
+    tester.view.physicalSize = const Size(420, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    final repository = FakeAuthRepository(
+      session: testSession(
+        roles: const [Roles.warehouseKeeper],
+        permissions: {Permissions.receiptCreate, Permissions.countEnter},
+      ),
+    );
+    addTearDown(repository.dispose);
+    await repository.login();
+
+    await tester.pumpWidget(host(repository));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mal qəbul et'), findsOneWidget);
+    expect(find.text('Sayım'), findsOneWidget);
+    expect(find.text('Günün satışı'), findsNothing);
+    expect(find.text('Anbar'), findsOneWidget);
   });
 
   test('flavour configuration', () {
