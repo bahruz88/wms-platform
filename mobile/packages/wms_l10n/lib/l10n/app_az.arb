@@ -75,13 +75,17 @@
   "labelSignedInAs": "{name} kimi daxil olmusunuz",
   "@labelSignedInAs": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "labelUnreadCount": "{count} oxunmamış bildiriş",
   "@labelUnreadCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "errorGeneric": "Xəta baş verdi",
@@ -187,5 +191,7 @@
   "consErrPeriodClosed": "Bu tarixdən əvvəl post edilmiş istehlak sənədi var. Daha sonrakı tarix seçin.",
   "consErrDuplicateBusinessDate": "Bu filial və gün üçün sənəd artıq mövcuddur. Mövcud sənədi açın.",
   "consErrUomFactorMissing": "Bu tarix üçün vahid çevirmə əmsalı yoxdur. Master Data-da vahidi yoxlayın.",
-  "consErrFileTooLarge": "Fayl 5 MB-dan böyükdür. Hesabatı bölüb yükləyin."
+  "consErrFileTooLarge": "Fayl 5 MB-dan böyükdür. Hesabatı bölüb yükləyin.",
+  "labelUsername": "İstifadəçi adı",
+  "labelPassword": "Parol"
 }

@@ -27,11 +27,6 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
-        // flutter_appauth: OIDC redirect scheme (az.wms.mobile://callback).
-        // Keep in sync with Keycloak client `wms-mobile` and
-        // AppConfig.redirectScheme.
-        manifestPlaceholders["appAuthRedirectScheme"] = "az.wms.mobile"
     }
 
     buildTypes {

@@ -8,7 +8,7 @@ import 'package:wms_core/wms_core.dart';
 
 import 'app.dart';
 import 'attachments/camera_attachment_picker.dart';
-import 'auth/keycloak_auth_mobile.dart';
+import 'auth/keycloak_auth_native.dart';
 import 'config/flavors.dart';
 import 'observability/error_handlers.dart';
 import 'router/app_router.dart';
@@ -27,10 +27,10 @@ Future<void> bootstrap({
     WidgetsFlutterBinding.ensureInitialized();
     installErrorHandlers(reporter);
 
-    // The redirect URL defaults to AppConfig.redirectUrl
-    // (az.wms.mobile://callback), which the Android manifest placeholder
-    // and the iOS CFBundleURLTypes entry declare.
-    final authRepository = KeycloakAuthMobile(
+    // Sign-in happens inside the app: the login screen collects the
+    // credentials and this repository exchanges them at Keycloak's token
+    // endpoint. No browser, no redirect URL.
+    final authRepository = KeycloakAuthNative(
       issuer: resolved.env.keycloakIssuer,
       clientId: resolved.clientId,
       store: SecureTokenStore(),

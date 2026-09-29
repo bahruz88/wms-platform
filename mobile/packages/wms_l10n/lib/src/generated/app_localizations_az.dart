@@ -577,4 +577,10 @@ class AppLocalizationsAz extends AppLocalizations {
   @override
   String get consErrFileTooLarge =>
       'Fayl 5 MB-dan böyükdür. Hesabatı bölüb yükləyin.';
+
+  @override
+  String get labelUsername => 'İstifadəçi adı';
+
+  @override
+  String get labelPassword => 'Parol';
 }

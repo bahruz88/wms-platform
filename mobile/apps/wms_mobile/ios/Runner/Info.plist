@@ -49,18 +49,6 @@
 			</array>
 		</dict>
 	</dict>
-	<!-- OIDC redirect: az.wms.mobile://callback (Keycloak client wms-mobile) -->
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>az.wms.mobile</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>az.wms.mobile</string>
-			</array>
 		</dict>
 	</array>
 	<!-- Local dev realm/gateway are plain HTTP; production uses HTTPS only. -->

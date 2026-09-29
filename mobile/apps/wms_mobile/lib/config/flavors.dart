@@ -32,10 +32,6 @@ class AppConfig {
   String get clientId =>
       env.keycloakClientId.isEmpty ? 'wms-mobile' : env.keycloakClientId;
 
-  /// Deep link scheme / redirect used by the Authorization Code + PKCE flow.
-  static const String redirectScheme = 'az.wms.mobile';
-  static const String redirectUrl = '$redirectScheme://callback';
-
   /// Shown in the app bar of non-production builds.
   String? get banner => flavor == Flavor.prod ? null : flavor.key;
 

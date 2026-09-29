@@ -1167,6 +1167,18 @@ abstract class AppLocalizations {
   /// In az, this message translates to:
   /// **'Fayl 5 MB-dan böyükdür. Hesabatı bölüb yükləyin.'**
   String get consErrFileTooLarge;
+
+  /// No description provided for @labelUsername.
+  ///
+  /// In az, this message translates to:
+  /// **'İstifadəçi adı'**
+  String get labelUsername;
+
+  /// No description provided for @labelPassword.
+  ///
+  /// In az, this message translates to:
+  /// **'Parol'**
+  String get labelPassword;
 }
 
 class _AppLocalizationsDelegate

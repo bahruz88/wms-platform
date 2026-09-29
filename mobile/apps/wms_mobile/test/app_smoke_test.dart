@@ -67,9 +67,7 @@ void main() {
     expect(find.text('Dəyər'), findsNothing);
   });
 
-  test('flavour and redirect configuration', () {
-    expect(AppConfig.redirectScheme, 'az.wms.mobile');
-    expect(AppConfig.redirectUrl, 'az.wms.mobile://callback');
+  test('flavour configuration', () {
     expect(Flavor.fromKey('prod'), Flavor.prod);
     expect(Flavor.fromKey('unknown'), Flavor.dev);
     expect(_config.clientId, 'wms-mobile');

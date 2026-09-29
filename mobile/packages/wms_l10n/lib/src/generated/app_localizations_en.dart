@@ -579,4 +579,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get consErrFileTooLarge =>
       'The file is larger than 5 MB. Split the report and upload it again.';
+
+  @override
+  String get labelUsername => 'Username';
+
+  @override
+  String get labelPassword => 'Password';
 }

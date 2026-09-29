@@ -18,7 +18,6 @@ dependencies:
   feature_notifications: ^0.1.0
   flutter:
     sdk: flutter
-  flutter_appauth: ^12.1.0
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^3.4.3

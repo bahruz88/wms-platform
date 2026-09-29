@@ -13,7 +13,7 @@ class _FailingAuthRepository extends FakeAuthRepository {
   _FailingAuthRepository() : super(session: testSession());
 
   @override
-  Future<Session> performLogin() async =>
+  Future<Session> performLogin({String? username, String? password}) async =>
       throw const AppException(NetworkFailure());
 }
 
@@ -28,17 +28,46 @@ Widget host(AuthRepository repository) => ProviderScope(
   ),
 );
 
+/// Fills the two fields the way a keeper would.
+Future<void> enterCredentials(
+  WidgetTester tester, {
+  String username = 'admin',
+  String password = 'admin',
+}) async {
+  final fields = find.byType(TextField);
+  await tester.enterText(fields.at(0), username);
+  await tester.enterText(fields.at(1), password);
+  await tester.pump();
+}
+
 void main() {
-  testWidgets('delegates the flow to AuthRepository', (tester) async {
+  testWidgets('signs in with the credentials typed into the form', (
+    tester,
+  ) async {
     final repository = FakeAuthRepository(session: testSession());
     addTearDown(repository.dispose);
     await tester.pumpWidget(host(repository));
     await tester.pumpAndSettle();
 
-    expect(find.text('Daxil ol'), findsOneWidget);
+    await enterCredentials(tester);
     await tester.tap(find.text('Daxil ol'));
     await tester.pumpAndSettle();
     expect(repository.isAuthenticated, isTrue);
+  });
+
+  testWidgets('will not submit an incomplete form', (tester) async {
+    final repository = FakeAuthRepository(session: testSession());
+    addTearDown(repository.dispose);
+    await tester.pumpWidget(host(repository));
+    await tester.pumpAndSettle();
+
+    // A username with no password: the button stays disabled rather than
+    // sending a request that can only come back 401.
+    await tester.enterText(find.byType(TextField).at(0), 'admin');
+    await tester.pump();
+    await tester.tap(find.text('Daxil ol'));
+    await tester.pumpAndSettle();
+    expect(repository.isAuthenticated, isFalse);
   });
 
   testWidgets('shows the failure as a WmsAlert', (tester) async {
@@ -47,10 +76,24 @@ void main() {
     await tester.pumpWidget(host(repository));
     await tester.pumpAndSettle();
 
+    await enterCredentials(tester);
     await tester.tap(find.text('Daxil ol'));
     await tester.pumpAndSettle();
     expect(find.byType(WmsAlert), findsOneWidget);
     expect(find.text('Şəbəkə xətası'), findsOneWidget);
     expect(repository.isAuthenticated, isFalse);
+  });
+
+  testWidgets('the password is masked', (tester) async {
+    final repository = FakeAuthRepository(session: testSession());
+    addTearDown(repository.dispose);
+    await tester.pumpWidget(host(repository));
+    await tester.pumpAndSettle();
+
+    final password = tester.widget<TextField>(find.byType(TextField).at(1));
+    expect(password.obscureText, isTrue);
+    // A masked field must not feed the keyboard's dictionary.
+    expect(password.enableSuggestions, isFalse);
+    expect(password.autocorrect, isFalse);
   });
 }

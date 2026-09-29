@@ -578,4 +578,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get consErrFileTooLarge =>
       'Файл больше 5 МБ. Разделите отчёт и загрузите снова.';
+
+  @override
+  String get labelUsername => 'Имя пользователя';
+
+  @override
+  String get labelPassword => 'Пароль';
 }

@@ -75,13 +75,17 @@
   "labelSignedInAs": "Signed in as {name}",
   "@labelSignedInAs": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "labelUnreadCount": "{count} unread notifications",
   "@labelUnreadCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "errorGeneric": "Something went wrong",
@@ -187,5 +191,13 @@
   "consErrPeriodClosed": "A consumption document is already posted before this date. Pick a later date.",
   "consErrDuplicateBusinessDate": "A document already exists for this branch and day. Open the existing one.",
   "consErrUomFactorMissing": "There is no unit conversion factor for this date. Check the unit in Master Data.",
-  "consErrFileTooLarge": "The file is larger than 5 MB. Split the report and upload it again."
+  "consErrFileTooLarge": "The file is larger than 5 MB. Split the report and upload it again.",
+  "labelUsername": "Username",
+  "@labelUsername": {
+    "description": "Login form: the account name field."
+  },
+  "labelPassword": "Password",
+  "@labelPassword": {
+    "description": "Login form: the password field."
+  }
 }

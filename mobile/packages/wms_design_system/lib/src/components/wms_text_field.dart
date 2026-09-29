@@ -33,6 +33,8 @@ class WmsTextField extends StatelessWidget {
     this.autofocus = false,
     this.focusNode,
     this.textInputAction,
+    this.obscureText = false,
+    this.autofillHints,
     super.key,
   });
 
@@ -56,6 +58,14 @@ class WmsTextField extends StatelessWidget {
   final bool autofocus;
   final FocusNode? focusNode;
   final TextInputAction? textInputAction;
+
+  /// Masks what is typed. A password field also turns off the on-screen
+  /// keyboard's suggestion strip, so a password never reaches the dictionary.
+  final bool obscureText;
+
+  /// Lets the platform's password manager fill the field
+  /// (`AutofillHints.username`, `AutofillHints.password`).
+  final Iterable<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +96,10 @@ class WmsTextField extends StatelessWidget {
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       textInputAction: textInputAction,
+      obscureText: obscureText,
+      enableSuggestions: !obscureText,
+      autocorrect: !obscureText,
+      autofillHints: autofillHints,
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       style: style,

@@ -19,8 +19,9 @@ abstract interface class AuthRepository {
   /// Restores a persisted session (call once at startup).
   Future<Session?> restore();
 
-  /// Starts the interactive login (Authorization Code + PKCE).
-  Future<Result<Session>> login();
+  /// Signs in. [username] and [password] are the credentials a native form
+  /// collected; a repository that runs a browser flow ignores them.
+  Future<Result<Session>> login({String? username, String? password});
 
   /// Refreshes the access token using the refresh token.
   Future<Result<Session>> refresh();
@@ -55,8 +56,8 @@ abstract class BaseAuthRepository implements AuthRepository {
   @override
   bool get isAuthenticated => _current != null;
 
-  /// Interactive login; returns the new session.
-  Future<Session> performLogin();
+  /// Performs the sign-in and returns the new session.
+  Future<Session> performLogin({String? username, String? password});
 
   /// Token refresh; returns the new session.
   Future<Session> performRefresh(Session session);
@@ -73,8 +74,9 @@ abstract class BaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Result<Session>> login() => Result.guard(() async {
-    final session = await performLogin();
+  Future<Result<Session>> login({String? username, String? password}) =>
+      Result.guard(() async {
+    final session = await performLogin(username: username, password: password);
     await _publish(session);
     return session;
   });
@@ -145,7 +147,8 @@ class FakeAuthRepository extends BaseAuthRepository {
   int refreshCount = 0;
 
   @override
-  Future<Session> performLogin() async => session;
+  Future<Session> performLogin({String? username, String? password}) async =>
+      session;
 
   @override
   Future<Session> performRefresh(Session current) async {

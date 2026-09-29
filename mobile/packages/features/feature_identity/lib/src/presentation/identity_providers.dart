@@ -59,11 +59,13 @@ class LoginController extends AsyncNotifier<void> {
   @override
   Future<void> build() async {}
 
-  /// Runs the interactive OIDC flow; the failure is surfaced through
-  /// [AsyncValue.error] so the screen can show a `WmsAlert`.
-  Future<bool> login() async {
+  /// Signs in with the credentials the form collected; the failure is surfaced
+  /// through [AsyncValue.error] so the screen can show a `WmsAlert`.
+  Future<bool> login({String? username, String? password}) async {
     state = const AsyncValue<void>.loading();
-    final result = await ref.read(authRepositoryProvider).login();
+    final result = await ref
+        .read(authRepositoryProvider)
+        .login(username: username, password: password);
     return result.fold(
       (_) {
         state = const AsyncValue<void>.data(null);

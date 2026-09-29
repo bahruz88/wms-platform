@@ -12,16 +12,4 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="28" />
 
-    <!--
-      `flutter_appauth` opens the login page in a browser. The main manifest declares the `https`
-      intent only, which is right for production; in dev the Keycloak page is `http`, and without
-      this query the package visibility rules hide every browser and the login never opens.
-    -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.VIEW"/>
-            <category android:name="android.intent.category.BROWSABLE"/>
-            <data android:scheme="http"/>
-        </intent>
-    </queries>
 </manifest>

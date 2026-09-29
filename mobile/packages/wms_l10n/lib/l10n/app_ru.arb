@@ -75,13 +75,17 @@
   "labelSignedInAs": "Вы вошли как {name}",
   "@labelSignedInAs": {
     "placeholders": {
-      "name": {"type": "String"}
+      "name": {
+        "type": "String"
+      }
     }
   },
   "labelUnreadCount": "Непрочитанных уведомлений: {count}",
   "@labelUnreadCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "errorGeneric": "Произошла ошибка",
@@ -187,5 +191,7 @@
   "consErrPeriodClosed": "До этой даты уже есть проведённый документ потребления. Выберите более позднюю дату.",
   "consErrDuplicateBusinessDate": "Документ для этого филиала и дня уже существует. Откройте существующий.",
   "consErrUomFactorMissing": "На эту дату нет коэффициента пересчёта единиц. Проверьте единицу в Master Data.",
-  "consErrFileTooLarge": "Файл больше 5 МБ. Разделите отчёт и загрузите снова."
+  "consErrFileTooLarge": "Файл больше 5 МБ. Разделите отчёт и загрузите снова.",
+  "labelUsername": "Имя пользователя",
+  "labelPassword": "Пароль"
 }
