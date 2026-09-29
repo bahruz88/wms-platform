@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: WMS MasterData API
-  version: 1.0.0
+  version: 1.1.0
   summary: Məhsul, kateqoriya, ölçü vahidi, supplier, lokasiya, məzənnə, səbəb kodu, nömrə seriyası (SPEC §8).
   description: |
     MasterData modulu istinad məlumatlarının "system of record"-udur (1C sahibliyi — SPEC §20.2 açıq qərar).
@@ -1061,8 +1061,11 @@ components:
       enum: [WASTE, ADJUSTMENT, RETURN, SAMPLE, TRANSFER]
     DocType:
       type: string
-      enum: [PR, PO, GR, SR, IS, IC, WS, SM, RV]
-      description: Sənəd nömrə seriyası tipi (SPEC Əlavə B).
+      enum: [PR, RFQ, PO, GR, SR, IS, IC, WS, SM, RV, CN, REV]
+      description: |
+        Sənəd nömrə seriyası tipi (SPEC Əlavə B). `RFQ` təklif sorğusu, `CN` istehlak sənədi,
+        `REV` isə hərəkət qrupunun geri alınmasıdır; hər üçü `INumberSequenceService`-də var və
+        `GET /masterdata/number-sequences` onları qaytarır.
 
     # --- Product ---
     ProductSummary:

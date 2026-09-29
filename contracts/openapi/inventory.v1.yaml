@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: WMS Inventory API
-  version: 1.0.0
+  version: 1.1.0
   summary: Partiya, ledger, balans, qəbul, məxaric/transfer, sayım, tullantı, nümunə, qaytarma, storno (SPEC §9, §12).
   description: |
     Inventory modulu **bölünmür** (ADR-002): bütün sənədlər eyni balans/partiya cədvəllərinə tək ACID
@@ -3623,6 +3623,9 @@ components:
           description: İşarəli — `+` mədaxil, `−` məxaric.
         baseUomId:
           $ref: '#/components/schemas/Id'
+        baseUomCode:
+          type: string
+          description: Base UoM-un kodu, hərəkət sətrini ayrıca sorğu olmadan yazmaq üçün.
         enteredQty:
           $ref: '#/components/schemas/Decimal'
         enteredUomId:
@@ -3705,6 +3708,11 @@ components:
         idempotencyKey:
           type: string
           format: uuid
+        sumQtyBase:
+          $ref: '#/components/schemas/Decimal'
+          description: |
+            Qrupun bütün sətirlərinin cəmi, base UoM. İkili yazılış qaydasına görə (ADR-003) həmişə
+            `0` olmalıdır; server onu hesablayıb göndərir ki, qrupu açan ekran özü toplamasın.
         lines:
           type: array
           items:

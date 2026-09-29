@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: WMS Notifications API
-  version: 1.0.0
+  version: 1.1.0
   summary: In-app bildirişlər (inbox), oxunma, oxunmamış sayı və bildiriş qaydaları (SPEC §5 Notification modulu).
   description: |
     Notification modulu **yalnız event-lə işləyir** — RabbitMQ `wms.events` exchange-indən gələn integration
@@ -417,6 +417,10 @@ components:
         - BalanceReconciliationFailed
         - DoubleEntryCheckFailed
         - ExportReady
+        # Consumption (ADR-012). Both are raised by the module and both already have a seeded
+        # notification rule; the enum simply never followed.
+        - ConsumptionShortfallDetected
+        - SalesItemUnmapped
 
     Severity:
       type: string

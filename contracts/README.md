@@ -164,6 +164,26 @@ işlədən developer decimal tələsinə düşməsin.
 
 Bu testlər CI-da `contracts/**` və ya `backend/**` dəyişəndə işləyir.
 
+### İşləyən serverə qarşı yoxlama
+
+Yuxarıdakılar müqavilənin özünü yoxlayır. Serverin ona **əməl etdiyini** ayrıca skript yoxlayır:
+
+```sh
+scripts/check-response-conformance.py              # bütün modullar
+scripts/check-response-conformance.py --module inventory
+```
+
+Qaldırılmış stack-ə hər `GET` əməliyyatını göndərir və cavabı sxemlə tutuşdurur: məcburi sahənin
+yoxluğu, müqavilədə **elan olunmamış** sahə, tip uyğunsuzluğu, enum-dan kənar dəyər və ondalığın
+string yox, JSON rəqəmi kimi gəlməsi (ADR-008). `POST` göndərilmir — baza dəyişməməlidir.
+
+Bu skript olmadan sürüşmə səssiz qalır: `GET /inventory/batches` müqavilədə `qtyOnHand` deyilən
+sahəni `totalQtyOnHand` adı ilə göndərirdi, veb sütunu isə aylarla boş idi, çünki mövcud olmayan
+açar `undefined` oxunur və heç nə şikayət etmir.
+
+Client tərəfi üçün qarşılığı `scripts/check-dto-drift.py`-dır: o, mobil DTO-ları müqavilə ilə
+tutuşdurur.
+
 ---
 
 ## 5. Versiyalaşdırma (SPEC §13.6)
