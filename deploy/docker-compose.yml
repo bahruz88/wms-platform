@@ -24,7 +24,9 @@ x-backend-env: &backend-env
   ASPNETCORE_URLS: http://+:8080
   ModuleTransport: Http
   Jobs__Enabled: "false"
-  ConnectionStrings__Wms: Server=mysql;Port=3306;Database=wms;User=wms_app;Password=${MYSQL_APP_PASSWORD:-wms_app};
+  # WMS_DB_HOST / WMS_DB_PORT point the services at a MySQL outside the stack (deploy/.env); unset, they use
+  # the `mysql` container, which keeps running either way.
+  ConnectionStrings__Wms: Server=${WMS_DB_HOST:-mysql};Port=${WMS_DB_PORT:-3306};Database=wms;User=wms_app;Password=${MYSQL_APP_PASSWORD:-wms_app};
   Redis__ConnectionString: redis:6379
   RabbitMq__Host: rabbitmq
   RabbitMq__User: ${RABBITMQ_USER:-wms}
@@ -448,8 +450,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
       Modules: "*"
-      ConnectionStrings__WmsMigrator: Server=mysql;Port=3306;Database=wms;User=wms_migrator;Password=${MYSQL_MIGRATOR_PASSWORD:-wms_migrator};
-      ConnectionStrings__Wms: Server=mysql;Port=3306;Database=wms;User=wms_app;Password=${MYSQL_APP_PASSWORD:-wms_app};
+      ConnectionStrings__WmsMigrator: Server=${WMS_DB_HOST:-mysql};Port=${WMS_DB_PORT:-3306};Database=wms;User=wms_migrator;Password=${MYSQL_MIGRATOR_PASSWORD:-wms_migrator};
+      ConnectionStrings__Wms: Server=${WMS_DB_HOST:-mysql};Port=${WMS_DB_PORT:-3306};Database=wms;User=wms_app;Password=${MYSQL_APP_PASSWORD:-wms_app};
       Seq__Url: http://seq:5341
     depends_on:
       mysql: { condition: service_healthy }
