@@ -37,15 +37,17 @@
 ARG NODE_IMAGE=node:22-alpine
 ARG NGINX_IMAGE=nginxinc/nginx-unprivileged:stable-alpine
 
+# The node stages run on the build host ($BUILDPLATFORM): their output is a static bundle that does not
+# depend on the CPU, so an amd64 image built on an arm64 Mac does not run npm and vite under emulation.
 # ---- 1. deps: only the lockfile manifests, so `npm ci` is cacheable ----
-FROM ${NODE_IMAGE} AS deps
+FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN --mount=type=cache,id=npm,target=/root/.npm,sharing=locked \
     npm ci
 
 # ---- 2. build ----
-FROM ${NODE_IMAGE} AS build
+FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS build
 ARG VITE_API_BASE_URL=
 ARG VITE_KEYCLOAK_ISSUER=http://localhost:8080/realms/wms
 ARG VITE_KEYCLOAK_CLIENT_ID=wms-web
