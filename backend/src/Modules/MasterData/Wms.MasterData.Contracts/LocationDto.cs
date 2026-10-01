@@ -15,6 +15,13 @@ public static class LocationTypes
 
     /// <summary>Counter-account of a branch consumption document (ADR-012).</summary>
     public const string VConsumption = "V_CONSUMPTION";
+
+    /// <summary>
+    /// The types that are virtual (<c>is_virtual = 1</c>) — the same set as <c>Location.IsVirtualType</c>, which a
+    /// MasterData unit test pins. A module outside MasterData uses it to tell physical stock from the
+    /// counter-accounts without reading <c>master_location</c>.
+    /// </summary>
+    public static IReadOnlyList<string> Virtual { get; } = [InTransit, VSupplier, VWaste, VSample, VAdjustment, VConsumption];
 }
 
 public sealed record LocationDto(

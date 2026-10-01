@@ -98,14 +98,22 @@ internal sealed class RecordingInventorySource : IInventoryReportingSource
 
     public DateOnly? LastTo { get; private set; }
 
+    public InventoryDashboardRequest? LastDashboardRequest { get; private set; }
+
     public InventoryDashboardDto Dashboard { get; set; } = new(
         1234.5678m, 42, 100m, 30, 7, 3, 2, 1, 4, 1, 5, 9, 6, 250m, 100m,
         [new DashboardDayPoint(new DateOnly(2026, 9, 21), 2m)],
         [new DashboardDayPoint(new DateOnly(2026, 9, 21), 1m)],
-        [new DashboardDayPoint(new DateOnly(2026, 9, 21), 25m)]);
+        [new DashboardDayPoint(new DateOnly(2026, 9, 21), 25m)],
+        [new DashboardDayPoint(new DateOnly(2026, 9, 21), 300m)],
+        [new DashboardDayPoint(new DateOnly(2026, 9, 21), 100m)],
+        0m,
+        [new DashboardDayPoint(new DateOnly(2026, 9, 25), 3m), new DashboardDayPoint(new DateOnly(2026, 10, 10), 2m)],
+        [new DashboardProductValue(1, 1000m), new DashboardProductValue(2, 234.5678m)]);
 
     public Task<InventoryDashboardDto> GetDashboardAsync(InventoryDashboardRequest request, CancellationToken cancellationToken)
     {
+        LastDashboardRequest = request;
         LastScope = request.Scope;
         LastLocationId = request.LocationId;
         LastFrom = request.PeriodFrom;
@@ -199,6 +207,63 @@ internal sealed class StubReferenceLoader : IReportReferenceLoader
             [3] = new(3, "SUP-1", "Təchizatçı A", "AZN", true, true),
         };
         return Task.FromResult(new ReportReferenceData(products, locations, suppliers));
+    }
+}
+
+/// <summary>A product catalogue of explicit entries; an id it does not hold is simply not returned, as in MasterData.</summary>
+internal sealed class MapReferenceLoader(params ProductDto[] products) : IReportReferenceLoader
+{
+    public List<uint> RequestedProductIds { get; } = [];
+
+    public int Calls { get; private set; }
+
+    public static ProductDto Product(uint id, uint categoryId) =>
+        new(id, $"SKU-{id}", $"Məhsul {id}", categoryId, "FOOD_PRODUCT", 1, "KQ", 3, false, false, "FIFO", null, null, null, null, 18m, true);
+
+    public Task<ReportReferenceData> LoadAsync(
+        IEnumerable<uint> productIds,
+        IEnumerable<uint> locationIds,
+        IEnumerable<uint> supplierIds,
+        CancellationToken cancellationToken)
+    {
+        Calls++;
+        var requested = productIds.ToList();
+        RequestedProductIds.AddRange(requested);
+        var found = products.Where(p => requested.Contains(p.Id)).ToDictionary(p => p.Id);
+        return Task.FromResult(new ReportReferenceData(
+            found, new Dictionary<uint, LocationDto>(), new Dictionary<uint, SupplierRefDto>()));
+    }
+}
+
+/// <summary>A tenant's virtual locations by type — the only part of the location catalogue the dashboard reads.</summary>
+internal sealed class StubLocationCatalog(IReadOnlyDictionary<string, uint>? virtualByType = null) : ILocationCatalog
+{
+    public static IReadOnlyDictionary<string, uint> Default { get; } = new Dictionary<string, uint>(StringComparer.Ordinal)
+    {
+        [LocationTypes.VSupplier] = 900,
+        [LocationTypes.VConsumption] = 901,
+        [LocationTypes.VAdjustment] = 902,
+        [LocationTypes.VWaste] = 918,
+        [LocationTypes.VSample] = 919,
+        [LocationTypes.InTransit] = 920,
+    };
+
+    private readonly IReadOnlyDictionary<string, uint> _virtualByType = virtualByType ?? Default;
+
+    public List<string> RequestedTypes { get; } = [];
+
+    public Task<LocationDto?> GetAsync(long locationId, CancellationToken cancellationToken) =>
+        Task.FromResult<LocationDto?>(null);
+
+    public Task<IReadOnlyList<LocationDto>> GetManyAsync(IReadOnlyCollection<uint> locationIds, CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<LocationDto>>([]);
+
+    public Task<LocationDto?> GetVirtualAsync(string locationType, CancellationToken cancellationToken)
+    {
+        RequestedTypes.Add(locationType);
+        return Task.FromResult(_virtualByType.TryGetValue(locationType, out var id)
+            ? new LocationDto(id, locationType, locationType, locationType, null, true, true, true, true)
+            : null);
     }
 }
 

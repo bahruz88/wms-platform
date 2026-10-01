@@ -43,8 +43,12 @@ paths:
       summary: Dashboard xülasəsi
       description: |
         Rol və lokasiya girişinə görə uyğunlaşdırılmış KPI dəsti. Hər KPI `value` (string Decimal), trend və
-        istinad linki daşıyır. `stockValue*` KPI-ları yalnız `master.product.view_cost` ilə gəlir.
-        Nəticə 60 saniyə Redis-də keşlənir (`Cache-Control: max-age=60`).
+        istinad linki daşıyır. `stockValue*` KPI-ları, dəyər seriyaları (`isCost: true`) və `categoryValues`
+        yalnız `master.product.view_cost` ilə gəlir — icazə olmadan sahə **yoxdur**, sıfır deyil.
+        Qalıq və ledger rəqəmləri yalnız **fiziki** lokasiyaları sayır: virtual lokasiyalar (`V_SUPPLIER`,
+        `V_WASTE`, `IN_TRANSIT` ...) xaricdir, çünki hər sənəd dəyərcə ikitərəflidir və onlar daxil olanda
+        xalis ledger sıfırlanır. Şirkət dashboard-u filialların cəmidir.
+        Cavab `Cache-Control: private, max-age=60` ilə gəlir.
       tags: [Dashboard]
       x-permission: rpt.dashboard.view
       parameters:
@@ -52,10 +56,13 @@ paths:
         - name: period
           in: query
           required: false
-          description: Trend müqayisə dövrü.
+          description: |
+            Seriyaların pəncərəsi və trend müqayisə dövrü: `TODAY` 1 gün, `WEEK` 7 gün, `TWO_WEEKS` 14 gün,
+            `MONTH` 30 gün. Pəncərə bu gün daxil olmaqla geriyə sayılır; trend eyni uzunluqda əvvəlki
+            pəncərə ilə müqayisədir.
           schema:
             type: string
-            enum: [TODAY, WEEK, MONTH]
+            enum: [TODAY, WEEK, TWO_WEEKS, MONTH]
             default: WEEK
       responses:
         '200':
@@ -519,7 +526,9 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Percent'
             - type: 'null'
-          description: Əvvəlki dövrlə müqayisə.
+          description: |
+            Əvvəlki dövrlə müqayisə. `stockValueTotal` üçün — pəncərədən əvvəlki günün sonundakı anbar dəyəri ilə
+            (`stockValuePerDay` ilə eyni hesab). Müqayisə bazası sıfırdırsa `null`.
         severity:
           type: string
           enum: [NORMAL, WARNING, CRITICAL]
@@ -560,10 +569,25 @@ components:
     DashboardSeries:
       type: object
       required: [key, label, points]
+      description: |
+        Gündəlik seriya. Nöqtəsi olmayan gün sıfır deməkdir (server boş günləri göndərməyə borclu deyil),
+        `stockValuePerDay` istisnadır — onda pəncərənin hər günü var.
+
+        * `receiptsPerDay`, `issuesPerDay` — sənəd sayı.
+        * `wasteValuePerDay` — POSTED tullantı dəyəri, AZN (`isCost`).
+        * `inboundValuePerDay` — `inv_movement` sətirlərindən `qty_base > 0` olanların `qty_base × unit_cost`
+          cəmi, qrupun `doc_date` günü üzrə, AZN (`isCost`).
+        * `outboundValuePerDay` — `qty_base < 0` olanların `|qty_base| × unit_cost` cəmi, **müsbət** ədəd, AZN
+          (`isCost`). Hər iki seriya ledger-dir: iki görünən lokasiya arasında köçürmə hər ikisində görünür.
+        * `stockValuePerDay` — günün sonundakı anbar dəyəri, AZN (`isCost`): cari dəyərdən həmin gündən sonrakı
+          xalis ledger dəyəri çıxılır.
+        * `batchExpiriesAhead` — **gələcək** tarixlər: bu gündən `expiry_warning_days` sonrasına qədər hər
+          son istifadə tarixində bitən, qalığı müsbət, `BLOCKED` olmayan partiya-lokasiya sətirlərinin sayı.
+          Cəmi `expiringBatches` KPI-na bərabərdir. `period`-dən asılı deyil.
       properties:
         key:
           type: string
-          examples: [receiptsPerDay, wasteValuePerDay, issuesPerDay]
+          examples: [receiptsPerDay, issuesPerDay, wasteValuePerDay, inboundValuePerDay, outboundValuePerDay, stockValuePerDay, batchExpiriesAhead]
         label:
           type: string
         unit:
@@ -597,6 +621,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DashboardSeries'
+        categoryValues:
+          type: array
+          description: |
+            Cari anbar dəyəri məhsul kateqoriyası üzrə (məhsulun öz kateqoriyası, yarpaq səviyyəsi; ağacı client
+            qurur). Yalnız `master.product.view_cost` ilə gəlir. Dəyəri sıfır olan kateqoriya göndərilmir.
+          items:
+            $ref: '#/components/schemas/DashboardCategoryValue'
         systemHealth:
           type: object
           description: Yalnız ADMIN/AUDITOR üçün — özünüyoxlama job-larının son nəticəsi (SPEC §15).
@@ -616,6 +647,18 @@ components:
             outboxPending:
               type: [integer, 'null']
               format: int32
+
+    DashboardCategoryValue:
+      type: object
+      required: [categoryId, value]
+      properties:
+        categoryId:
+          oneOf:
+            - $ref: '#/components/schemas/Id'
+            - type: 'null'
+          description: '`null` — məhsul kataloqda tapılmadı; dəyər itirilmir, «kateqoriyasız» kimi gəlir.'
+        value:
+          $ref: '#/components/schemas/Decimal'
 
     # --- Exports ---
     ExportFormat:

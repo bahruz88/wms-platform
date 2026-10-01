@@ -8,6 +8,10 @@ import { format } from './format';
  * but the direction is not always good news — falling waste is an improvement — so `deltaTone`
  * overrides it. A money KPI is bound to `master.product.view_cost`: without the permission the
  * card is not rendered at all, which the screen decides, not the component.
+ *
+ * `tone` is the dashboard artboard's tinted card (Main.dc.html): a soft background and a 4px
+ * accent bar that group the card, never judge it — the figure and the delta still say what
+ * happened in words. `spark` sits at the right end of the foot row.
  */
 export interface KpiCardProps {
   label: ReactNode;
@@ -21,6 +25,9 @@ export interface KpiCardProps {
   deltaTone?: 'up' | 'down' | 'flat';
   badge?: ReactNode;
   hint?: ReactNode;
+  tone?: 'accent' | 'warning' | 'virtual' | 'success';
+  /** A small trend chart for the foot row, e.g. the dashboard's `Sparkline`. */
+  spark?: ReactNode;
 }
 
 export function KpiCard({
@@ -34,13 +41,15 @@ export function KpiCard({
   deltaTone,
   badge,
   hint,
+  tone,
+  spark,
 }: KpiCardProps) {
   const isPreformatted = typeof value === 'string' && !/^-?\d+(\.\d+)?$/.test(value);
   const shown = isPreformatted ? value : format.number(value, decimals);
 
-  let tone = deltaTone;
-  if (delta !== undefined && tone === undefined) {
-    tone = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+  let direction = deltaTone;
+  if (delta !== undefined && direction === undefined) {
+    direction = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
   }
 
   if (import.meta.env?.DEV && delta !== undefined && hint === undefined) {
@@ -50,22 +59,30 @@ export function KpiCard({
   }
 
   return (
-    <div className="wms-kpi">
+    <div className={tone ? `wms-kpi wms-kpi--${tone}` : 'wms-kpi'}>
       <div className="wms-kpi__label">{label}</div>
       <div className="wms-kpi__value">
         <span>{shown}</span>
         {unit ? <span className="wms-kpi__unit">{unit}</span> : null}
       </div>
-      {delta !== undefined || badge || hint ? (
+      {delta !== undefined || badge || hint || spark ? (
         <div className="wms-kpi__foot">
-          {delta !== undefined ? (
-            <span className={`wms-delta wms-delta--${tone ?? 'flat'}`}>
-              {format.signed(delta, deltaDecimals)}
-              {deltaUnit ? ` ${deltaUnit}` : ''}
-            </span>
-          ) : null}
-          {badge}
-          {hint ? <span className="wms-kpi__hint">{hint}</span> : null}
+          <div className="wms-kpi__foot-text">
+            {delta !== undefined ? (
+              <span className={`wms-delta wms-delta--${direction ?? 'flat'}`}>
+                {delta !== 0 ? (
+                  <span className="wms-delta__arrow" aria-hidden="true">
+                    {delta > 0 ? '▲' : '▼'}
+                  </span>
+                ) : null}
+                {format.signed(delta, deltaDecimals)}
+                {deltaUnit ? ` ${deltaUnit}` : ''}
+              </span>
+            ) : null}
+            {badge}
+            {hint ? <span className="wms-kpi__hint">{hint}</span> : null}
+          </div>
+          {spark}
         </div>
       ) : null}
     </div>

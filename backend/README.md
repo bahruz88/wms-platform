@@ -1163,10 +1163,15 @@ Kontrakt: [reporting.v1.yaml](../contracts/openapi/reporting.v1.yaml).
 
 - **Maya dəyəri.** `master.product.view_cost` olmayan istifadəçi üçün `isCost` sütunları həm `columns`
   siyahısından, həm sətirlərdən **çıxarılır** (maskalanmır), `stockValueTotal` və `wasteValuePeriod`
-  KPI-ları ümumiyyətlə göndərilmir (SPEC §16, TOR §3.1).
+  KPI-ları, dəyər seriyaları (`isCost: true`) və `categoryValues` ümumiyyətlə göndərilmir (SPEC §16, TOR §3.1).
 - **Lokasiya.** Hər sorğu `LocationScope` ilə məhdudlaşır (README §8.17). Filial istifadəçisinin
   dashboard-u onun filialını təsvir edir; `iam_user_location`-da olmayan `locationId` sorulduqda cavab
   **403**-dür, sükutla genişləndirilmir.
+- **Fiziki qalıq.** Dashboard-un qalıq və ledger rəqəmləri virtual lokasiyaları (`LocationTypes.Virtual`:
+  `V_SUPPLIER`, `V_WASTE`, `IN_TRANSIT` ...) saymır. Hər sənəd dəyərcə də ikitərəflidir, ona görə onlar
+  daxil olanda məhdudiyyətsiz istifadəçinin anbar dəyəri `V_SUPPLIER`-in mənfi qalığı ilə azalırdı,
+  `stockValuePerDay` düz xətt olurdu və hər qəbul həm də «çıxış» kimi görünürdü. Şirkət dashboard-u
+  filialların cəmidir.
 
 ### 13.1. Hesabat kataloqu — 24-dən 9-u
 

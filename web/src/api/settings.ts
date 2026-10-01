@@ -40,12 +40,20 @@ export interface InventorySettings {
   isLoading: boolean;
 }
 
-export function useInventorySettings(scope: string): InventorySettings {
+/**
+ * `enabled: false` is for a screen whose user does not hold `inv.settings.view`: the call is not
+ * made, every threshold reads `null`, and `unavailable` stays false — a role that may not read
+ * the settings is not shown a 403 notice about them (screen-map §2: not rendered, not broken).
+ */
+export function useInventorySettings(
+  scope: string,
+  { enabled = true }: { enabled?: boolean } = {},
+): InventorySettings {
   const settings = useApiPage<InventorySetting>(
     ['inventory-settings', scope],
     listInventorySettings,
     100,
-    { retry: false },
+    { retry: false, enabled },
   );
 
   const rows = settings.data?.items ?? [];
@@ -61,7 +69,7 @@ export function useInventorySettings(scope: string): InventorySettings {
   return {
     get: numeric,
     raw,
-    unavailable: !settings.isLoading && (settings.isError || rows.length === 0),
+    unavailable: enabled && !settings.isLoading && (settings.isError || rows.length === 0),
     status: settings.error?.status ?? null,
     code: settings.error?.code ?? null,
     isLoading: settings.isLoading,

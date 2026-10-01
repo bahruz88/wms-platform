@@ -149,6 +149,7 @@ export type ExportJob = ReportingComponents['schemas']['ExportJob'];
 export type DashboardSummary = ReportingComponents['schemas']['DashboardSummary'];
 export type DashboardAlert = ReportingComponents['schemas']['DashboardAlert'];
 export type Kpi = ReportingComponents['schemas']['Kpi'];
+export type DashboardSeries = ReportingComponents['schemas']['DashboardSeries'];
 
 // --- identity -----------------------------------------------------------------------------------
 export const getMe = async (): Promise<Me> => unwrap(await identityApi.GET('/me'));
@@ -264,15 +265,18 @@ type MdSchema<K extends keyof MasterDataComponents['schemas']> = MasterDataCompo
 const idem = () => ({ 'Idempotency-Key': crypto.randomUUID() });
 
 export const createProduct = async (body: MdSchema<'ProductCreate'>) =>
-  unwrap(
-    await masterDataApi.POST('/products', { params: { header: idem() }, body }),
-  );
+  unwrap(await masterDataApi.POST('/products', { params: { header: idem() }, body }));
 
 export const updateProduct = async (id: number, body: MdSchema<'ProductUpdate'>) =>
   unwrap(await masterDataApi.PUT('/products/{id}', { params: { path: { id } }, body }));
 
 export const addProductUom = async (id: number, body: MdSchema<'ProductUomCreate'>) =>
-  unwrap(await masterDataApi.POST('/products/{id}/uoms', { params: { path: { id }, header: idem() }, body }));
+  unwrap(
+    await masterDataApi.POST('/products/{id}/uoms', {
+      params: { path: { id }, header: idem() },
+      body,
+    }),
+  );
 
 export const createCategory = async (body: MdSchema<'CategoryCreate'>) =>
   unwrap(await masterDataApi.POST('/categories', { params: { header: idem() }, body }));
@@ -284,9 +288,7 @@ export const createUom = async (body: MdSchema<'UomCreate'>) =>
   unwrap(await masterDataApi.POST('/uoms', { params: { header: idem() }, body }));
 
 export const createSupplier = async (body: MdSchema<'SupplierCreate'>) =>
-  unwrap(
-    await masterDataApi.POST('/suppliers', { params: { header: idem() }, body }),
-  );
+  unwrap(await masterDataApi.POST('/suppliers', { params: { header: idem() }, body }));
 
 export const updateSupplier = async (id: number, body: MdSchema<'SupplierUpdate'>) =>
   unwrap(await masterDataApi.PUT('/suppliers/{id}', { params: { path: { id } }, body }));
@@ -294,7 +296,13 @@ export const updateSupplier = async (id: number, body: MdSchema<'SupplierUpdate'
 export const addSupplierCertificate = async (
   id: number,
   body: MdSchema<'SupplierCertificateCreate'>,
-) => unwrap(await masterDataApi.POST('/suppliers/{id}/certificates', { params: { path: { id }, header: idem() }, body }));
+) =>
+  unwrap(
+    await masterDataApi.POST('/suppliers/{id}/certificates', {
+      params: { path: { id }, header: idem() },
+      body,
+    }),
+  );
 
 export const createLocation = async (body: MdSchema<'LocationCreate'>) =>
   unwrap(await masterDataApi.POST('/locations', { params: { header: idem() }, body }));
@@ -750,7 +758,8 @@ export const listPriceHistory = async (query: Query<ProcurementPaths, '/price-hi
   unwrap(await procurementApi.GET('/price-history', { params: { query } }));
 
 // --- procurement writes ---------------------------------------------------------------------------------
-type ProcSchema<K extends keyof ProcurementComponents['schemas']> = ProcurementComponents['schemas'][K];
+type ProcSchema<K extends keyof ProcurementComponents['schemas']> =
+  ProcurementComponents['schemas'][K];
 
 export const getRequisition = async (id: number) =>
   unwrap(await procurementApi.GET('/requisitions/{id}', { params: { path: { id } } }));
@@ -890,7 +899,8 @@ export const getRecipe = async (id: number) =>
   unwrap(await consumptionApi.GET('/recipes/{id}', { params: { path: { id } } }));
 
 // --- consumption writes ---------------------------------------------------------------------------------
-type ConsSchema<K extends keyof ConsumptionComponents['schemas']> = ConsumptionComponents['schemas'][K];
+type ConsSchema<K extends keyof ConsumptionComponents['schemas']> =
+  ConsumptionComponents['schemas'][K];
 
 export const createMenuItem = async (body: ConsSchema<'MenuItemCreate'>) =>
   unwrap(
@@ -994,7 +1004,9 @@ export const getConsumptionVariance = async (query: Query<ConsumptionPaths, '/va
   unwrap(await consumptionApi.GET('/variance', { params: { query } }));
 
 // --- reporting ------------------------------------------------------------------------------------------
-export const getDashboardSummary = async () => unwrap(await reportingApi.GET('/dashboard/summary'));
+export const getDashboardSummary = async (
+  query: Query<ReportingPaths, '/dashboard/summary'> = {},
+) => unwrap(await reportingApi.GET('/dashboard/summary', { params: { query } }));
 
 export const listReports = async () => unwrap(await reportingApi.GET('/reports'));
 

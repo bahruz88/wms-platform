@@ -1,22 +1,39 @@
 using Wms.Common.Application.Abstractions;
 using Wms.Common.Application.Security;
 using Wms.Inventory.Contracts;
+using Wms.MasterData.Contracts;
 using Wms.Reporting.Application.Abstractions;
 using Wms.Reporting.Application.Dtos;
+using Wms.Reporting.Infrastructure.Reports;
 
 namespace Wms.Reporting.Infrastructure.Queries;
 
 /// <summary>
-/// Assembles <c>DashboardSummary</c> (reporting.v1.yaml). Two rules govern every figure on it:
+/// Assembles <c>DashboardSummary</c> (reporting.v1.yaml). Three rules govern every figure on it:
 /// <list type="bullet">
 ///   <item>money is <b>absent</b> — not null, not zero — without <c>master.product.view_cost</c> (spec §16);</item>
 ///   <item>everything is scoped by <c>iam_user_location</c>, so a branch principal's dashboard describes their
-///   branch and not the company (README §8.17).</item>
+///   branch and not the company (README §8.17);</item>
+///   <item>stock means physical stock: the virtual counter-accounts (ADR-003) are left out of every balance and
+///   ledger figure, so the company dashboard is the sum of the branch dashboards.</item>
 /// </list>
-/// The numbers come from <c>Wms.Inventory.Contracts</c>; <c>common_outbox</c> is shared platform infrastructure
-/// that every module context maps, not another module's table.
+/// The numbers come from <c>Wms.Inventory.Contracts</c>, the virtual locations and product categories from
+/// <c>Wms.MasterData.Contracts</c>; <c>common_outbox</c> is shared platform infrastructure that every module
+/// context maps, not another module's table.
 /// </summary>
-public sealed class DashboardQueries(IInventoryReportingSource inventory, IOutboxBacklogReader outbox, IClock clock) : IDashboardQueries
+/// <remarks>
+/// The third rule is not cosmetic. Every document is double-entry in value as well as in quantity, and the
+/// counter-accounts carry balances of their own: <c>V_SUPPLIER</c> runs a large negative quantity. Left in, an
+/// unrestricted principal's stock value netted the supplier account against the warehouses, the rebuilt
+/// stock-value line stayed flat because every day's ledger summed to zero, and each receipt appeared as an
+/// outbound movement of the supplier account. Wasted batches sitting on <c>V_WASTE</c> also counted as expired.
+/// </remarks>
+public sealed class DashboardQueries(
+    IInventoryReportingSource inventory,
+    IOutboxBacklogReader outbox,
+    IReportReferenceLoader references,
+    ILocationCatalog locations,
+    IClock clock) : IDashboardQueries
 {
     public async Task<DashboardSummaryDto> GetAsync(DashboardFilter filter, CancellationToken cancellationToken)
     {
@@ -26,11 +43,23 @@ public sealed class DashboardQueries(IInventoryReportingSource inventory, IOutbo
         var today = DateOnly.FromDateTime(now.UtcDateTime);
         var (from, to, previousFrom, previousTo) = Window(today, filter.Period);
 
+        var virtualLocations = await VirtualLocationIdsAsync(cancellationToken).ConfigureAwait(false);
         var metrics = await inventory
             .GetDashboardAsync(
-                new InventoryDashboardRequest(Scope(filter.VisibleLocations), filter.LocationId, from, to, previousFrom, previousTo),
+                new InventoryDashboardRequest(
+                    Scope(filter.VisibleLocations),
+                    filter.LocationId,
+                    from,
+                    to,
+                    previousFrom,
+                    previousTo,
+                    virtualLocations),
                 cancellationToken)
             .ConfigureAwait(false);
+
+        // The KPI trend and the series come from the same walk, so the trend's base is the point left of the chart.
+        var stockValue = StockValueHistory.Rebuild(
+            metrics.StockValueTotal, from, to, metrics.InboundValuePerDay, metrics.OutboundValuePerDay, metrics.LedgerValueAfterPeriod);
 
         var kpis = new List<KpiDto>();
         if (filter.IncludeCost)
@@ -40,7 +69,7 @@ public sealed class DashboardQueries(IInventoryReportingSource inventory, IOutbo
                 "Anbar dəyəri",
                 metrics.StockValueTotal,
                 "AZN",
-                null,
+                Trend(metrics.StockValueTotal, stockValue.ValueBeforeWindow),
                 KpiSeverity.Normal,
                 "/inventory/balances",
                 IsCost: true));
@@ -158,10 +187,19 @@ public sealed class DashboardQueries(IInventoryReportingSource inventory, IOutbo
             new("issuesPerDay", "Gündəlik məxaric sayı", null, false, Points(metrics.IssuesPerDay)),
         };
 
+        IReadOnlyList<DashboardCategoryValueDto>? categoryValues = null;
         if (filter.IncludeCost)
         {
             series.Add(new DashboardSeriesDto("wasteValuePerDay", "Gündəlik tullantı dəyəri", "AZN", true, Points(metrics.WasteValuePerDay)));
+            series.Add(new DashboardSeriesDto("inboundValuePerDay", "Gündəlik giriş dəyəri", "AZN", true, Points(metrics.InboundValuePerDay)));
+            series.Add(new DashboardSeriesDto("outboundValuePerDay", "Gündəlik çıxış dəyəri", "AZN", true, Points(metrics.OutboundValuePerDay)));
+            series.Add(new DashboardSeriesDto("stockValuePerDay", "Gün sonuna anbar dəyəri", "AZN", true, stockValue.Points));
+            categoryValues = await CategoryValuesAsync(metrics.StockValueByProduct, cancellationToken).ConfigureAwait(false);
         }
+
+        // Future dates, whatever the period: the same rows as the expiringBatches KPI, spread over the day they expire.
+        series.Add(new DashboardSeriesDto(
+            "batchExpiriesAhead", "Qarşıdakı günlərdə bitən partiyalar", "batches", false, Points(metrics.BatchExpiriesAhead)));
 
         SystemHealthDto? health = null;
         if (filter.IncludeSystemHealth)
@@ -173,7 +211,55 @@ public sealed class DashboardQueries(IInventoryReportingSource inventory, IOutbo
             health = new SystemHealthDto(null, null, null, null, pending);
         }
 
-        return new DashboardSummaryDto(now, filter.LocationId, kpis, alerts, series, health);
+        return new DashboardSummaryDto(now, filter.LocationId, kpis, alerts, series, health, categoryValues);
+    }
+
+    /// <summary>
+    /// The tenant's virtual locations, one per type (<see cref="LocationTypes.Virtual"/>). Six lookups rather than
+    /// one because that is the catalogue contract there is; each is a single-row read by type.
+    /// </summary>
+    private async Task<IReadOnlyList<uint>> VirtualLocationIdsAsync(CancellationToken cancellationToken)
+    {
+        var ids = new List<uint>(LocationTypes.Virtual.Count);
+        foreach (var locationType in LocationTypes.Virtual)
+        {
+            var location = await locations.GetVirtualAsync(locationType, cancellationToken).ConfigureAwait(false);
+            if (location is not null)
+            {
+                ids.Add(location.Id);
+            }
+        }
+
+        return ids;
+    }
+
+    /// <summary>
+    /// Current stock value per product category. The grouping happens here and not in SQL because Reporting may
+    /// not join <c>master_product</c> (ADR-001); the catalogue lookup is chunked by the reference loader. A product
+    /// the catalogue no longer returns keeps its value under a <c>null</c> category instead of vanishing, so the
+    /// categories always add up to the stock value KPI.
+    /// </summary>
+    private async Task<IReadOnlyList<DashboardCategoryValueDto>> CategoryValuesAsync(
+        IReadOnlyList<DashboardProductValue> productValues,
+        CancellationToken cancellationToken)
+    {
+        if (productValues.Count == 0)
+        {
+            return [];
+        }
+
+        var reference = await references
+            .LoadAsync(productValues.Select(p => p.ProductId), [], [], cancellationToken)
+            .ConfigureAwait(false);
+
+        return
+        [
+            .. productValues
+                .GroupBy(p => reference.Product(p.ProductId)?.CategoryId)
+                .Select(g => new DashboardCategoryValueDto(g.Key, g.Sum(p => p.Value)))
+                .Where(c => c.Value != 0m)
+                .OrderByDescending(c => c.Value),
+        ];
     }
 
     private static IReadOnlyList<DashboardSeriesPointDto> Points(IReadOnlyList<DashboardDayPoint> points) =>
@@ -185,12 +271,13 @@ public sealed class DashboardQueries(IInventoryReportingSource inventory, IOutbo
     private static decimal? Trend(decimal current, decimal previous) =>
         previous == 0m ? null : Math.Round((current - previous) * 100m / previous, 4, MidpointRounding.AwayFromZero);
 
-    /// <summary>Trend window of <c>period</c>: the current stretch and the equally long one before it.</summary>
+    /// <summary>Series and trend window of <c>period</c>: the current stretch and the equally long one before it.</summary>
     private static (DateOnly From, DateOnly To, DateOnly PreviousFrom, DateOnly PreviousTo) Window(DateOnly today, DashboardPeriod period)
     {
         var days = period switch
         {
             DashboardPeriod.Today => 1,
+            DashboardPeriod.TwoWeeks => 14,
             DashboardPeriod.Month => 30,
             _ => 7,
         };

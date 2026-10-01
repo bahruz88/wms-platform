@@ -147,10 +147,31 @@ public sealed record StockCoverageReportRow(
 /// <summary>One point of a daily dashboard series.</summary>
 public sealed record DashboardDayPoint(DateOnly Date, decimal Value);
 
+/// <summary>Current stock value of one product over the visible locations — the input of the category breakdown.</summary>
+public sealed record DashboardProductValue(uint ProductId, decimal Value);
+
 /// <summary>
 /// Everything the Reporting dashboard needs from the <c>inv</c> schema, in one round trip. Costs are always
 /// returned; whether they reach the client is decided by Reporting against <c>master.product.view_cost</c>.
 /// </summary>
+/// <remarks>
+/// The value ledger figures are dated by <c>inv_movement_group.doc_date</c>, valued at
+/// <c>qty_base × COALESCE(unit_cost, 0)</c>, and raw on purpose: the end-of-day stock value is rebuilt from them
+/// in exactly one place, on the Reporting side, instead of being computed twice.
+/// </remarks>
+/// <param name="InboundValuePerDay">Σ <c>qty_base × unit_cost</c> of the lines with <c>qty_base &gt; 0</c>, per day of the period.</param>
+/// <param name="OutboundValuePerDay">Σ <c>−qty_base × unit_cost</c> of the lines with <c>qty_base &lt; 0</c> — a positive number.</param>
+/// <param name="LedgerValueAfterPeriod">
+/// Net ledger value (signed) of the lines dated <b>after</b> <see cref="InventoryDashboardRequest.PeriodTo"/>.
+/// Normally zero; a document dated in the future is the exception, and without it the last day of the period
+/// would not match the balance.
+/// </param>
+/// <param name="BatchExpiriesAhead">
+/// Future expiry dates, today up to the larger of the warning and critical windows: per date, the balance rows
+/// that <paramref name="ExpiringBatchCount"/> and <paramref name="CriticalBatchCount"/> are made of, so the
+/// series adds up to exactly those two counts. Independent of the period.
+/// </param>
+/// <param name="StockValueByProduct">Non-zero current stock value per product, over the same rows as <paramref name="StockValueTotal"/>.</param>
 public sealed record InventoryDashboardDto(
     decimal StockValueTotal,
     long BalanceRowCount,
@@ -169,16 +190,29 @@ public sealed record InventoryDashboardDto(
     decimal WasteValuePrevious,
     IReadOnlyList<DashboardDayPoint> ReceiptsPerDay,
     IReadOnlyList<DashboardDayPoint> IssuesPerDay,
-    IReadOnlyList<DashboardDayPoint> WasteValuePerDay);
+    IReadOnlyList<DashboardDayPoint> WasteValuePerDay,
+    IReadOnlyList<DashboardDayPoint> InboundValuePerDay,
+    IReadOnlyList<DashboardDayPoint> OutboundValuePerDay,
+    decimal LedgerValueAfterPeriod,
+    IReadOnlyList<DashboardDayPoint> BatchExpiriesAhead,
+    IReadOnlyList<DashboardProductValue> StockValueByProduct);
 
 /// <summary>Request of <see cref="IInventoryReportingSource.GetDashboardAsync"/>.</summary>
+/// <param name="ExcludedLocationIds">
+/// Locations left out of every <c>inv_balance</c> and <c>inv_movement</c> figure, on top of the scope. Reporting
+/// passes the tenant's virtual counter-accounts (ADR-003) here: each document is double-entry in value as well
+/// as in quantity, so over an unrestricted scope the supplier, waste and transit legs would cancel the
+/// physical ones — a flat stock-value line, and every receipt counted as outbound too. <c>null</c> or empty
+/// excludes nothing.
+/// </param>
 public sealed record InventoryDashboardRequest(
     ReportingScope Scope,
     uint? LocationId,
     DateOnly PeriodFrom,
     DateOnly PeriodTo,
     DateOnly PreviousFrom,
-    DateOnly PreviousTo);
+    DateOnly PreviousTo,
+    IReadOnlyList<uint>? ExcludedLocationIds = null);
 
 /// <summary>Request of <see cref="IInventoryReportingSource.GetStockBalancesAsync"/>.</summary>
 public sealed record StockBalanceReportRequest(

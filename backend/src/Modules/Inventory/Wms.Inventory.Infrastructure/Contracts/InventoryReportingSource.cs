@@ -16,7 +16,9 @@ namespace Wms.Inventory.Infrastructure.Contracts;
 /// The outflow documents (WASTE, SAMPLE, CONSUMPTION, RETURN) write two ledger lines: a negative one on the real
 /// location and a positive one on the virtual counter-account (ADR-003). Inventory cannot see
 /// <c>master_location.is_virtual</c>, so the aggregates select the side by sign instead — which is exactly the
-/// same rule and needs no cross-schema join.
+/// same rule and needs no cross-schema join. The dashboard sums every document type at once, where the sign
+/// no longer tells the sides apart, so its caller names the virtual locations instead
+/// (<see cref="InventoryDashboardRequest.ExcludedLocationIds"/>).
 /// </remarks>
 public sealed class InventoryReportingSource(InventoryDbContext db, ITenantContext tenantContext, IInventorySettings settings, IClock clock)
     : IInventoryReportingSource
@@ -33,8 +35,9 @@ public sealed class InventoryReportingSource(InventoryDbContext db, ITenantConte
         var today = DateOnly.FromDateTime(clock.UtcNow.UtcDateTime);
 
         var scope = request.Scope;
-        var balanceLoc = Where(scope, "b") + Single(request.LocationId, "b");
-        var batchLoc = Where(scope, "b") + Single(request.LocationId, "b");
+        var excluded = request.ExcludedLocationIds is { Count: > 0 } ex ? ex : null;
+        var balanceLoc = Where(scope, "b") + Single(request.LocationId, "b") + Exclude(excluded, "b");
+        var movementLoc = Where(scope, "m") + Single(request.LocationId, "m") + Exclude(excluded, "m");
         var wasteLoc = Where(scope, "w") + Single(request.LocationId, "w");
         var countLoc = Where(scope, "c") + Single(request.LocationId, "c");
         var receiptLoc = Where(scope, "r") + Single(request.LocationId, "r");
@@ -45,9 +48,14 @@ public sealed class InventoryReportingSource(InventoryDbContext db, ITenantConte
         parameters.Add("tenantId", tenantContext.TenantId);
         parameters.Add("locationIds", scope.LocationIds is { Count: > 0 } ids ? ids : null);
         parameters.Add("locationId", request.LocationId);
+        parameters.Add("excludedLocationIds", excluded);
         parameters.Add("today", today.ToDateTime(TimeOnly.MinValue));
         parameters.Add("warnUntil", today.AddDays(warningDays).ToDateTime(TimeOnly.MinValue));
         parameters.Add("criticalUntil", today.AddDays(criticalDays).ToDateTime(TimeOnly.MinValue));
+
+        // Expiring = (critical, warning], critical = [today, critical]: together [today, max(warning, critical)],
+        // which is the range of the per-date series that must add up to those two counts.
+        parameters.Add("aheadUntil", today.AddDays(Math.Max(warningDays, criticalDays)).ToDateTime(TimeOnly.MinValue));
         parameters.Add("fromDate", request.PeriodFrom.ToDateTime(TimeOnly.MinValue));
         parameters.Add("toDate", request.PeriodTo.ToDateTime(TimeOnly.MinValue));
         parameters.Add("prevFrom", request.PreviousFrom.ToDateTime(TimeOnly.MinValue));
@@ -66,7 +74,7 @@ public sealed class InventoryReportingSource(InventoryDbContext db, ITenantConte
               FROM inv_balance b
               JOIN inv_batch bt ON bt.id = b.batch_id AND bt.tenant_id = b.tenant_id
              WHERE b.tenant_id = @tenantId AND b.batch_id <> 0 AND b.qty_on_hand > 0
-               AND bt.expiry_date IS NOT NULL AND bt.status <> 'BLOCKED'{batchLoc};
+               AND bt.expiry_date IS NOT NULL AND bt.status <> 'BLOCKED'{balanceLoc};
 
             SELECT (SELECT COUNT(*) FROM inv_waste w
                      WHERE w.tenant_id = @tenantId AND w.status = 'PENDING_APPROVAL'{wasteLoc}) AS PendingWaste,
@@ -107,6 +115,28 @@ public sealed class InventoryReportingSource(InventoryDbContext db, ITenantConte
              WHERE w.tenant_id = @tenantId AND w.status = 'POSTED'
                AND w.doc_date BETWEEN @fromDate AND @toDate{wasteLoc}
              GROUP BY w.doc_date ORDER BY w.doc_date;
+
+            SELECT g.doc_date AS Day,
+                   COALESCE(SUM(CASE WHEN m.qty_base > 0 THEN m.qty_base * COALESCE(m.unit_cost, 0) ELSE 0 END), 0) AS Inbound,
+                   COALESCE(SUM(CASE WHEN m.qty_base < 0 THEN -m.qty_base * COALESCE(m.unit_cost, 0) ELSE 0 END), 0) AS Outbound
+              FROM inv_movement_group g
+              JOIN inv_movement m ON m.group_id = g.id AND m.tenant_id = g.tenant_id
+             WHERE g.tenant_id = @tenantId AND g.doc_date >= @fromDate{movementLoc}
+             GROUP BY g.doc_date ORDER BY g.doc_date;
+
+            SELECT bt.expiry_date AS Day, COUNT(*) AS Value
+              FROM inv_balance b
+              JOIN inv_batch bt ON bt.id = b.batch_id AND bt.tenant_id = b.tenant_id
+             WHERE b.tenant_id = @tenantId AND b.batch_id <> 0 AND b.qty_on_hand > 0
+               AND bt.expiry_date IS NOT NULL AND bt.status <> 'BLOCKED'
+               AND bt.expiry_date BETWEEN @today AND @aheadUntil{balanceLoc}
+             GROUP BY bt.expiry_date ORDER BY bt.expiry_date;
+
+            SELECT b.product_id AS ProductId, SUM(b.qty_on_hand * b.avg_unit_cost) AS Value
+              FROM inv_balance b
+             WHERE b.tenant_id = @tenantId AND b.qty_on_hand <> 0{balanceLoc}
+             GROUP BY b.product_id
+            HAVING SUM(b.qty_on_hand * b.avg_unit_cost) <> 0;
             """;
 
         var connection = db.Database.GetDbConnection();
@@ -125,6 +155,17 @@ public sealed class InventoryReportingSource(InventoryDbContext db, ITenantConte
             var receiptSeries = (await reader.ReadAsync<SeriesRow>().ConfigureAwait(false)).ToList();
             var issueSeries = (await reader.ReadAsync<SeriesRow>().ConfigureAwait(false)).ToList();
             var wasteSeries = (await reader.ReadAsync<SeriesRow>().ConfigureAwait(false)).ToList();
+            var ledgerDays = (await reader.ReadAsync<LedgerDayRow>().ConfigureAwait(false)).ToList();
+            var expiriesAhead = (await reader.ReadAsync<SeriesRow>().ConfigureAwait(false)).ToList();
+            var productValues = (await reader.ReadAsync<ProductValueRow>().ConfigureAwait(false)).ToList();
+
+            // One ledger read covers both the period and anything dated after it: a document dated in the future
+            // is rare, but it is already in the balance, so the rebuild of the last day has to subtract it.
+            var toDate = request.PeriodTo;
+            var inPeriod = ledgerDays.Where(d => DateOnly.FromDateTime(d.Day) <= toDate).ToList();
+            var afterPeriod = ledgerDays
+                .Where(d => DateOnly.FromDateTime(d.Day) > toDate)
+                .Sum(d => d.Inbound - d.Outbound);
 
             return new InventoryDashboardDto(
                 stock.StockValue,
@@ -144,7 +185,12 @@ public sealed class InventoryReportingSource(InventoryDbContext db, ITenantConte
                 waste.Previous,
                 Points(receiptSeries),
                 Points(issueSeries),
-                Points(wasteSeries));
+                Points(wasteSeries),
+                [.. inPeriod.Where(d => d.Inbound != 0m).Select(d => new DashboardDayPoint(DateOnly.FromDateTime(d.Day), d.Inbound))],
+                [.. inPeriod.Where(d => d.Outbound != 0m).Select(d => new DashboardDayPoint(DateOnly.FromDateTime(d.Day), d.Outbound))],
+                afterPeriod,
+                Points(expiriesAhead),
+                [.. productValues.Select(p => new DashboardProductValue(p.ProductId, p.Value))]);
         }
         finally
         {
@@ -572,6 +618,10 @@ public sealed class InventoryReportingSource(InventoryDbContext db, ITenantConte
     private static string Single(uint? locationId, string alias) =>
         locationId is null ? string.Empty : $" AND {alias}.location_id = @locationId";
 
+    /// <summary>Locations the caller asked to leave out (the virtual counter-accounts of the dashboard); binds <c>@excludedLocationIds</c>.</summary>
+    private static string Exclude(IReadOnlyList<uint>? excludedLocationIds, string alias) =>
+        excludedLocationIds is null ? string.Empty : $" AND {alias}.location_id NOT IN @excludedLocationIds";
+
     private static string SingleBothEnds(uint? locationId, string alias) =>
         locationId is null ? string.Empty : $" AND ({alias}.from_location_id = @locationId OR {alias}.to_location_id = @locationId)";
 
@@ -653,6 +703,22 @@ public sealed class InventoryReportingSource(InventoryDbContext db, ITenantConte
     private sealed class SeriesRow
     {
         public DateTime Day { get; set; }
+
+        public decimal Value { get; set; }
+    }
+
+    private sealed class LedgerDayRow
+    {
+        public DateTime Day { get; set; }
+
+        public decimal Inbound { get; set; }
+
+        public decimal Outbound { get; set; }
+    }
+
+    private sealed class ProductValueRow
+    {
+        public uint ProductId { get; set; }
 
         public decimal Value { get; set; }
     }

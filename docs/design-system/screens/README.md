@@ -7,7 +7,7 @@ Beş artboard, hər biri 1440×960, `docs/design-system/` tokenləri və kompone
 
 | Fayl | Ekran |
 |---|---|
-| `Main.dc.html` | Anbar paneli — KPI-lar, bitən partiyalar, təsdiq gözləyənlər |
+| `Main.dc.html` | Anbar paneli — dövr seçimi, rəngli KPI-lar trend xətti ilə, mədaxil/məxaric qrafiki, kateqoriya üzrə dəyər, bitən partiyalar, təsdiq gözləyənlər (30.09.2026 yeniləməsi) |
 | `Qebul.dc.html` | Anbara qəbul — sənəd başlığı, meta sahələr, sətir cədvəli, fərq göstəriciləri |
 | `Mexaric.dc.html` | Filiala məxaric — partiya seçimi, FEFO xəbərdarlığı, ledger ön baxışı |
 | `Sayim.dc.html` | Sayım və fərqlər — dondurma xəbərdarlığı, KPI-lar, fərq cədvəli |

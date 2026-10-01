@@ -1150,9 +1150,282 @@ as List<SeriesPointDto>,
 
 
 /// @nodoc
+mixin _$DashboardCategoryValueDto {
+
+ int? get categoryId; String get value;
+/// Create a copy of DashboardCategoryValueDto
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$DashboardCategoryValueDtoCopyWith<DashboardCategoryValueDto> get copyWith => _$DashboardCategoryValueDtoCopyWithImpl<DashboardCategoryValueDto>(this as DashboardCategoryValueDto, _$identity);
+
+  /// Serializes this DashboardCategoryValueDto to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  final _this = this as DashboardCategoryValueDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardCategoryValueDto&&(identical(other.categoryId, _this.categoryId) || other.categoryId == _this.categoryId)&&(identical(other.value, _this.value) || other.value == _this.value));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+  final _this = this as DashboardCategoryValueDto;
+  return Object.hash(runtimeType,_this.categoryId,_this.value);
+}
+
+@override
+String toString() {
+  final _this = this as DashboardCategoryValueDto;
+  return 'DashboardCategoryValueDto(categoryId: ${_this.categoryId}, value: ${_this.value})';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $DashboardCategoryValueDtoCopyWith<$Res>  {
+  factory $DashboardCategoryValueDtoCopyWith(DashboardCategoryValueDto value, $Res Function(DashboardCategoryValueDto) _then) = _$DashboardCategoryValueDtoCopyWithImpl;
+@useResult
+$Res call({
+ int? categoryId, String value
+});
+
+
+
+
+}
+/// @nodoc
+class _$DashboardCategoryValueDtoCopyWithImpl<$Res>
+    implements $DashboardCategoryValueDtoCopyWith<$Res> {
+  _$DashboardCategoryValueDtoCopyWithImpl(this._self, this._then);
+
+  final DashboardCategoryValueDto _self;
+  final $Res Function(DashboardCategoryValueDto) _then;
+
+/// Create a copy of DashboardCategoryValueDto
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? categoryId = freezed,Object? value = null,}) {
+  return _then(DashboardCategoryValueDto(
+categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as int?,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [DashboardCategoryValueDto].
+extension DashboardCategoryValueDtoPatterns on DashboardCategoryValueDto {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _DashboardCategoryValueDto value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _DashboardCategoryValueDto() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _DashboardCategoryValueDto value)  $default,){
+final _that = this;
+switch (_that) {
+case _DashboardCategoryValueDto():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _DashboardCategoryValueDto value)?  $default,){
+final _that = this;
+switch (_that) {
+case _DashboardCategoryValueDto() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int? categoryId,  String value)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _DashboardCategoryValueDto() when $default != null:
+return $default(_that.categoryId,_that.value);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int? categoryId,  String value)  $default,) {final _that = this;
+switch (_that) {
+case _DashboardCategoryValueDto():
+return $default(_that.categoryId,_that.value);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int? categoryId,  String value)?  $default,) {final _that = this;
+switch (_that) {
+case _DashboardCategoryValueDto() when $default != null:
+return $default(_that.categoryId,_that.value);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _DashboardCategoryValueDto extends DashboardCategoryValueDto {
+  const _DashboardCategoryValueDto({this.categoryId, required this.value}): super._();
+  factory _DashboardCategoryValueDto.fromJson(Map<String, dynamic> json) => _$DashboardCategoryValueDtoFromJson(json);
+
+@override final  int? categoryId;
+@override final  String value;
+
+/// Create a copy of DashboardCategoryValueDto
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$DashboardCategoryValueDtoCopyWith<_DashboardCategoryValueDto> get copyWith => __$DashboardCategoryValueDtoCopyWithImpl<_DashboardCategoryValueDto>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$DashboardCategoryValueDtoToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardCategoryValueDto&&(identical(other.categoryId, categoryId) || other.categoryId == categoryId)&&(identical(other.value, value) || other.value == value));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode {
+    return Object.hash(runtimeType,categoryId,value);
+}
+
+@override
+String toString() {
+    return 'DashboardCategoryValueDto(categoryId: $categoryId, value: $value)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$DashboardCategoryValueDtoCopyWith<$Res> implements $DashboardCategoryValueDtoCopyWith<$Res> {
+  factory _$DashboardCategoryValueDtoCopyWith(_DashboardCategoryValueDto value, $Res Function(_DashboardCategoryValueDto) _then) = __$DashboardCategoryValueDtoCopyWithImpl;
+@override @useResult
+$Res call({
+ int? categoryId, String value
+});
+
+
+
+
+}
+/// @nodoc
+class __$DashboardCategoryValueDtoCopyWithImpl<$Res>
+    implements _$DashboardCategoryValueDtoCopyWith<$Res> {
+  __$DashboardCategoryValueDtoCopyWithImpl(this._self, this._then);
+
+  final _DashboardCategoryValueDto _self;
+  final $Res Function(_DashboardCategoryValueDto) _then;
+
+/// Create a copy of DashboardCategoryValueDto
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? categoryId = freezed,Object? value = null,}) {
+  return _then(_DashboardCategoryValueDto(
+categoryId: freezed == categoryId ? _self.categoryId : categoryId // ignore: cast_nullable_to_non_nullable
+as int?,value: null == value ? _self.value : value // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+
+/// @nodoc
 mixin _$DashboardSummaryDto {
 
- DateTime get generatedAt; List<KpiDto> get kpis; List<DashboardAlertDto> get alerts; List<DashboardSeriesDto> get series; Map<String, Object?>? get systemHealth;
+ DateTime get generatedAt; List<KpiDto> get kpis; List<DashboardAlertDto> get alerts; List<DashboardSeriesDto> get series; List<DashboardCategoryValueDto>? get categoryValues; Map<String, Object?>? get systemHealth;
 /// Create a copy of DashboardSummaryDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1166,20 +1439,20 @@ $DashboardSummaryDtoCopyWith<DashboardSummaryDto> get copyWith => _$DashboardSum
 @override
 bool operator ==(Object other) {
   final _this = this as DashboardSummaryDto;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardSummaryDto&&(identical(other.generatedAt, _this.generatedAt) || other.generatedAt == _this.generatedAt)&&const DeepCollectionEquality().equals(other.kpis, _this.kpis)&&const DeepCollectionEquality().equals(other.alerts, _this.alerts)&&const DeepCollectionEquality().equals(other.series, _this.series)&&const DeepCollectionEquality().equals(other.systemHealth, _this.systemHealth));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardSummaryDto&&(identical(other.generatedAt, _this.generatedAt) || other.generatedAt == _this.generatedAt)&&const DeepCollectionEquality().equals(other.kpis, _this.kpis)&&const DeepCollectionEquality().equals(other.alerts, _this.alerts)&&const DeepCollectionEquality().equals(other.series, _this.series)&&const DeepCollectionEquality().equals(other.categoryValues, _this.categoryValues)&&const DeepCollectionEquality().equals(other.systemHealth, _this.systemHealth));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as DashboardSummaryDto;
-  return Object.hash(runtimeType,_this.generatedAt,const DeepCollectionEquality().hash(_this.kpis),const DeepCollectionEquality().hash(_this.alerts),const DeepCollectionEquality().hash(_this.series),const DeepCollectionEquality().hash(_this.systemHealth));
+  return Object.hash(runtimeType,_this.generatedAt,const DeepCollectionEquality().hash(_this.kpis),const DeepCollectionEquality().hash(_this.alerts),const DeepCollectionEquality().hash(_this.series),const DeepCollectionEquality().hash(_this.categoryValues),const DeepCollectionEquality().hash(_this.systemHealth));
 }
 
 @override
 String toString() {
   final _this = this as DashboardSummaryDto;
-  return 'DashboardSummaryDto(generatedAt: ${_this.generatedAt}, kpis: ${_this.kpis}, alerts: ${_this.alerts}, series: ${_this.series}, systemHealth: ${_this.systemHealth})';
+  return 'DashboardSummaryDto(generatedAt: ${_this.generatedAt}, kpis: ${_this.kpis}, alerts: ${_this.alerts}, series: ${_this.series}, categoryValues: ${_this.categoryValues}, systemHealth: ${_this.systemHealth})';
 }
 
 
@@ -1190,7 +1463,7 @@ abstract mixin class $DashboardSummaryDtoCopyWith<$Res>  {
   factory $DashboardSummaryDtoCopyWith(DashboardSummaryDto value, $Res Function(DashboardSummaryDto) _then) = _$DashboardSummaryDtoCopyWithImpl;
 @useResult
 $Res call({
- DateTime generatedAt, List<KpiDto> kpis, List<DashboardAlertDto> alerts, List<DashboardSeriesDto> series, Map<String, Object?>? systemHealth
+ DateTime generatedAt, List<KpiDto> kpis, List<DashboardAlertDto> alerts, List<DashboardSeriesDto> series, List<DashboardCategoryValueDto>? categoryValues, Map<String, Object?>? systemHealth
 });
 
 
@@ -1207,13 +1480,14 @@ class _$DashboardSummaryDtoCopyWithImpl<$Res>
 
 /// Create a copy of DashboardSummaryDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? generatedAt = null,Object? kpis = null,Object? alerts = null,Object? series = null,Object? systemHealth = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? generatedAt = null,Object? kpis = null,Object? alerts = null,Object? series = null,Object? categoryValues = freezed,Object? systemHealth = freezed,}) {
   return _then(DashboardSummaryDto(
 generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,kpis: null == kpis ? _self.kpis : kpis // ignore: cast_nullable_to_non_nullable
 as List<KpiDto>,alerts: null == alerts ? _self.alerts : alerts // ignore: cast_nullable_to_non_nullable
 as List<DashboardAlertDto>,series: null == series ? _self.series : series // ignore: cast_nullable_to_non_nullable
-as List<DashboardSeriesDto>,systemHealth: freezed == systemHealth ? _self.systemHealth : systemHealth // ignore: cast_nullable_to_non_nullable
+as List<DashboardSeriesDto>,categoryValues: freezed == categoryValues ? _self.categoryValues : categoryValues // ignore: cast_nullable_to_non_nullable
+as List<DashboardCategoryValueDto>?,systemHealth: freezed == systemHealth ? _self.systemHealth : systemHealth // ignore: cast_nullable_to_non_nullable
 as Map<String, Object?>?,
   ));
 }
@@ -1299,10 +1573,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime generatedAt,  List<KpiDto> kpis,  List<DashboardAlertDto> alerts,  List<DashboardSeriesDto> series,  Map<String, Object?>? systemHealth)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime generatedAt,  List<KpiDto> kpis,  List<DashboardAlertDto> alerts,  List<DashboardSeriesDto> series,  List<DashboardCategoryValueDto>? categoryValues,  Map<String, Object?>? systemHealth)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DashboardSummaryDto() when $default != null:
-return $default(_that.generatedAt,_that.kpis,_that.alerts,_that.series,_that.systemHealth);case _:
+return $default(_that.generatedAt,_that.kpis,_that.alerts,_that.series,_that.categoryValues,_that.systemHealth);case _:
   return orElse();
 
 }
@@ -1320,10 +1594,10 @@ return $default(_that.generatedAt,_that.kpis,_that.alerts,_that.series,_that.sys
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime generatedAt,  List<KpiDto> kpis,  List<DashboardAlertDto> alerts,  List<DashboardSeriesDto> series,  Map<String, Object?>? systemHealth)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime generatedAt,  List<KpiDto> kpis,  List<DashboardAlertDto> alerts,  List<DashboardSeriesDto> series,  List<DashboardCategoryValueDto>? categoryValues,  Map<String, Object?>? systemHealth)  $default,) {final _that = this;
 switch (_that) {
 case _DashboardSummaryDto():
-return $default(_that.generatedAt,_that.kpis,_that.alerts,_that.series,_that.systemHealth);case _:
+return $default(_that.generatedAt,_that.kpis,_that.alerts,_that.series,_that.categoryValues,_that.systemHealth);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1340,10 +1614,10 @@ return $default(_that.generatedAt,_that.kpis,_that.alerts,_that.series,_that.sys
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime generatedAt,  List<KpiDto> kpis,  List<DashboardAlertDto> alerts,  List<DashboardSeriesDto> series,  Map<String, Object?>? systemHealth)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime generatedAt,  List<KpiDto> kpis,  List<DashboardAlertDto> alerts,  List<DashboardSeriesDto> series,  List<DashboardCategoryValueDto>? categoryValues,  Map<String, Object?>? systemHealth)?  $default,) {final _that = this;
 switch (_that) {
 case _DashboardSummaryDto() when $default != null:
-return $default(_that.generatedAt,_that.kpis,_that.alerts,_that.series,_that.systemHealth);case _:
+return $default(_that.generatedAt,_that.kpis,_that.alerts,_that.series,_that.categoryValues,_that.systemHealth);case _:
   return null;
 
 }
@@ -1355,7 +1629,7 @@ return $default(_that.generatedAt,_that.kpis,_that.alerts,_that.series,_that.sys
 @JsonSerializable()
 
 class _DashboardSummaryDto extends DashboardSummaryDto {
-  const _DashboardSummaryDto({required this.generatedAt,  List<KpiDto> kpis = const <KpiDto>[],  List<DashboardAlertDto> alerts = const <DashboardAlertDto>[],  List<DashboardSeriesDto> series = const <DashboardSeriesDto>[],  Map<String, Object?>? systemHealth}): _kpis = kpis,_alerts = alerts,_series = series,_systemHealth = systemHealth,super._();
+  const _DashboardSummaryDto({required this.generatedAt,  List<KpiDto> kpis = const <KpiDto>[],  List<DashboardAlertDto> alerts = const <DashboardAlertDto>[],  List<DashboardSeriesDto> series = const <DashboardSeriesDto>[],  List<DashboardCategoryValueDto>? categoryValues,  Map<String, Object?>? systemHealth}): _kpis = kpis,_alerts = alerts,_series = series,_categoryValues = categoryValues,_systemHealth = systemHealth,super._();
   factory _DashboardSummaryDto.fromJson(Map<String, dynamic> json) => _$DashboardSummaryDtoFromJson(json);
 
 @override final  DateTime generatedAt;
@@ -1378,6 +1652,15 @@ class _DashboardSummaryDto extends DashboardSummaryDto {
   if (_series is EqualUnmodifiableListView) return _series;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_series);
+}
+
+ final  List<DashboardCategoryValueDto>? _categoryValues;
+@override List<DashboardCategoryValueDto>? get categoryValues {
+  final value = _categoryValues;
+  if (value == null) return null;
+  if (_categoryValues is EqualUnmodifiableListView) return _categoryValues;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(value);
 }
 
  final  Map<String, Object?>? _systemHealth;
@@ -1403,18 +1686,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardSummaryDto&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other.kpis, _kpis)&&const DeepCollectionEquality().equals(other.alerts, _alerts)&&const DeepCollectionEquality().equals(other.series, _series)&&const DeepCollectionEquality().equals(other.systemHealth, _systemHealth));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardSummaryDto&&(identical(other.generatedAt, generatedAt) || other.generatedAt == generatedAt)&&const DeepCollectionEquality().equals(other.kpis, _kpis)&&const DeepCollectionEquality().equals(other.alerts, _alerts)&&const DeepCollectionEquality().equals(other.series, _series)&&const DeepCollectionEquality().equals(other.categoryValues, _categoryValues)&&const DeepCollectionEquality().equals(other.systemHealth, _systemHealth));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,generatedAt,const DeepCollectionEquality().hash(_kpis),const DeepCollectionEquality().hash(_alerts),const DeepCollectionEquality().hash(_series),const DeepCollectionEquality().hash(_systemHealth));
+    return Object.hash(runtimeType,generatedAt,const DeepCollectionEquality().hash(_kpis),const DeepCollectionEquality().hash(_alerts),const DeepCollectionEquality().hash(_series),const DeepCollectionEquality().hash(_categoryValues),const DeepCollectionEquality().hash(_systemHealth));
 }
 
 @override
 String toString() {
-    return 'DashboardSummaryDto(generatedAt: $generatedAt, kpis: $kpis, alerts: $alerts, series: $series, systemHealth: $systemHealth)';
+    return 'DashboardSummaryDto(generatedAt: $generatedAt, kpis: $kpis, alerts: $alerts, series: $series, categoryValues: $categoryValues, systemHealth: $systemHealth)';
 }
 
 
@@ -1425,7 +1708,7 @@ abstract mixin class _$DashboardSummaryDtoCopyWith<$Res> implements $DashboardSu
   factory _$DashboardSummaryDtoCopyWith(_DashboardSummaryDto value, $Res Function(_DashboardSummaryDto) _then) = __$DashboardSummaryDtoCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime generatedAt, List<KpiDto> kpis, List<DashboardAlertDto> alerts, List<DashboardSeriesDto> series, Map<String, Object?>? systemHealth
+ DateTime generatedAt, List<KpiDto> kpis, List<DashboardAlertDto> alerts, List<DashboardSeriesDto> series, List<DashboardCategoryValueDto>? categoryValues, Map<String, Object?>? systemHealth
 });
 
 
@@ -1442,13 +1725,14 @@ class __$DashboardSummaryDtoCopyWithImpl<$Res>
 
 /// Create a copy of DashboardSummaryDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? generatedAt = null,Object? kpis = null,Object? alerts = null,Object? series = null,Object? systemHealth = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? generatedAt = null,Object? kpis = null,Object? alerts = null,Object? series = null,Object? categoryValues = freezed,Object? systemHealth = freezed,}) {
   return _then(_DashboardSummaryDto(
 generatedAt: null == generatedAt ? _self.generatedAt : generatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,kpis: null == kpis ? _self._kpis : kpis // ignore: cast_nullable_to_non_nullable
 as List<KpiDto>,alerts: null == alerts ? _self._alerts : alerts // ignore: cast_nullable_to_non_nullable
 as List<DashboardAlertDto>,series: null == series ? _self._series : series // ignore: cast_nullable_to_non_nullable
-as List<DashboardSeriesDto>,systemHealth: freezed == systemHealth ? _self._systemHealth : systemHealth // ignore: cast_nullable_to_non_nullable
+as List<DashboardSeriesDto>,categoryValues: freezed == categoryValues ? _self._categoryValues : categoryValues // ignore: cast_nullable_to_non_nullable
+as List<DashboardCategoryValueDto>?,systemHealth: freezed == systemHealth ? _self._systemHealth : systemHealth // ignore: cast_nullable_to_non_nullable
 as Map<String, Object?>?,
   ));
 }

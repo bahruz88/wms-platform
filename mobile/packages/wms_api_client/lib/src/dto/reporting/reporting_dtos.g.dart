@@ -82,6 +82,20 @@ Map<String, dynamic> _$DashboardSeriesDtoToJson(_DashboardSeriesDto instance) =>
       'points': instance.points.map((e) => e.toJson()).toList(),
     };
 
+_DashboardCategoryValueDto _$DashboardCategoryValueDtoFromJson(
+  Map<String, dynamic> json,
+) => _DashboardCategoryValueDto(
+  categoryId: (json['categoryId'] as num?)?.toInt(),
+  value: json['value'] as String,
+);
+
+Map<String, dynamic> _$DashboardCategoryValueDtoToJson(
+  _DashboardCategoryValueDto instance,
+) => <String, dynamic>{
+  'categoryId': instance.categoryId,
+  'value': instance.value,
+};
+
 _DashboardSummaryDto _$DashboardSummaryDtoFromJson(
   Map<String, dynamic> json,
 ) => _DashboardSummaryDto(
@@ -101,6 +115,11 @@ _DashboardSummaryDto _$DashboardSummaryDtoFromJson(
           ?.map((e) => DashboardSeriesDto.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const <DashboardSeriesDto>[],
+  categoryValues: (json['categoryValues'] as List<dynamic>?)
+      ?.map(
+        (e) => DashboardCategoryValueDto.fromJson(e as Map<String, dynamic>),
+      )
+      .toList(),
   systemHealth: json['systemHealth'] as Map<String, dynamic>?,
 );
 
@@ -111,6 +130,7 @@ Map<String, dynamic> _$DashboardSummaryDtoToJson(
   'kpis': instance.kpis.map((e) => e.toJson()).toList(),
   'alerts': instance.alerts.map((e) => e.toJson()).toList(),
   'series': instance.series.map((e) => e.toJson()).toList(),
+  'categoryValues': instance.categoryValues?.map((e) => e.toJson()).toList(),
   'systemHealth': instance.systemHealth,
 };
 

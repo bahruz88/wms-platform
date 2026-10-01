@@ -198,6 +198,32 @@ void main() {
       expect(po.totalAmountBase, Money.parse('200.6'));
       expect(po.lines.single.outstandingQty, Quantity.parse('6'));
     });
+
+    test('DashboardSummaryDto reads the category breakdown, and its absence without cost', () {
+      final withCost = DashboardSummaryDto.fromJson(const {
+        'generatedAt': '2026-09-30T08:00:00Z',
+        'kpis': <Object?>[],
+        'alerts': <Object?>[],
+        'series': <Object?>[],
+        'categoryValues': [
+          {'categoryId': 10, 'value': '1000.5000'},
+          // A product the catalogue did not return: the value stays, the category is null.
+          {'categoryId': null, 'value': '234.5678'},
+        ],
+      });
+      expect(withCost.categoryValues, hasLength(2));
+      expect(withCost.categoryValues!.first.categoryId, 10);
+      expect(withCost.categoryValues!.last.categoryId, isNull);
+      expect(withCost.categoryValues!.last.amount, Money.parse('234.5678'));
+
+      final withoutCost = DashboardSummaryDto.fromJson(const {
+        'generatedAt': '2026-09-30T08:00:00Z',
+        'kpis': <Object?>[],
+        'alerts': <Object?>[],
+        'series': <Object?>[],
+      });
+      expect(withoutCost.categoryValues, isNull);
+    });
   });
 
   group('Module APIs', () {

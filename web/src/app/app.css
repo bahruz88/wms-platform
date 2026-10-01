@@ -947,6 +947,681 @@ a:hover {
   gap: var(--space-4);
 }
 
+/* ---------- warehouse dashboard — Main.dc.html (30.09.2026) ---------- */
+
+/* Chart slots. The five category colours are the artboard's palette, validated in both themes
+ * (worst adjacent CVD ΔE 9,1 light / 8,4 dark). Three light slots sit under 3:1 on the surface,
+ * which is why the donut legend always prints the share. Inflow and outflow reuse the status
+ * tokens: the chart's two series are the ledger's two signs. */
+.wms-viz {
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-5: #e87ba4;
+  --viz-in: var(--success);
+  --viz-out: var(--danger);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .wms-viz {
+    --viz-1: #3987e5;
+    --viz-2: #d95926;
+    --viz-3: #199e70;
+    --viz-4: #c98500;
+    --viz-5: #d55181;
+  }
+}
+
+:root[data-theme='dark'] .wms-viz {
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --viz-3: #199e70;
+  --viz-4: #c98500;
+  --viz-5: #d55181;
+}
+
+.wms-dash {
+  gap: 14px;
+}
+
+.wms-dash__live {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: opacity 120ms ease;
+}
+
+/* A period switch holds the previous figures, dimmed, until the new ones land. */
+.wms-dash__live.is-refreshing {
+  opacity: var(--opacity-pending);
+}
+
+.wms-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Period control: one pressed segment in accent. */
+.wms-seg {
+  display: inline-flex;
+  border: 1px solid var(--border-control);
+  border-radius: var(--radius-md, 6px);
+  overflow: hidden;
+}
+
+.wms-seg button {
+  appearance: none;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink-muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+.wms-seg button:last-child {
+  border-right: 0;
+}
+
+.wms-seg button:hover {
+  background: var(--row-hover);
+  color: var(--ink);
+}
+
+.wms-seg button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.wms-seg button:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--accent));
+  outline-offset: -2px;
+}
+
+/* Reconciliation strip: a transaction-level problem, so it sits above everything, compact. */
+.wms-strip {
+  flex: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.wms-strip--danger {
+  background: var(--danger-soft);
+  border: 1px solid var(--danger);
+}
+
+.wms-strip__icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--danger);
+  color: var(--on-danger);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.wms-strip__text {
+  flex-grow: 1;
+  min-width: 0;
+  color: var(--ink);
+}
+
+.wms-strip__code {
+  color: var(--ink-muted);
+}
+
+.wms-strip__link,
+.wms-card__link {
+  flex: none;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Tinted KPI: soft background plus a 4px bar. The colour groups the card; the words say what
+ * happened. */
+.wms-kpi--accent,
+.wms-kpi--warning,
+.wms-kpi--virtual,
+.wms-kpi--success {
+  position: relative;
+  overflow: hidden;
+  min-height: 116px;
+  box-sizing: border-box;
+  padding: 12px 14px 10px 16px;
+  gap: 0;
+}
+
+.wms-kpi--accent::before,
+.wms-kpi--warning::before,
+.wms-kpi--virtual::before,
+.wms-kpi--success::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--kpi-c);
+}
+
+.wms-kpi--accent {
+  --kpi-c: var(--accent);
+  background: var(--accent-soft);
+}
+
+.wms-kpi--warning {
+  --kpi-c: var(--warning);
+  background: var(--warning-soft);
+}
+
+.wms-kpi--virtual {
+  --kpi-c: var(--virtual-location);
+  background: var(--virtual-location-soft);
+}
+
+.wms-kpi--success {
+  --kpi-c: var(--success);
+  background: var(--success-soft);
+}
+
+.wms-kpi--accent .wms-kpi__value,
+.wms-kpi--warning .wms-kpi__value,
+.wms-kpi--virtual .wms-kpi__value,
+.wms-kpi--success .wms-kpi__value {
+  font-size: 26px;
+  line-height: 32px;
+  margin-top: 4px;
+}
+
+.wms-kpi__foot {
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.wms-kpi--accent .wms-kpi__foot,
+.wms-kpi--warning .wms-kpi__foot,
+.wms-kpi--virtual .wms-kpi__foot,
+.wms-kpi--success .wms-kpi__foot {
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.wms-kpi__foot-text {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.wms-kpi__alarm {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.wms-delta__arrow {
+  margin-right: 4px;
+  font-family: var(--font-sans);
+}
+
+.wms-spark {
+  display: block;
+  flex: none;
+}
+
+/* Charts row: flow 1.5fr, category 1fr. */
+.wms-dash__charts {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.wms-dash__charts--one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.wms-dash__charts > .wms-card > .wms-card__body {
+  padding: 8px 16px 10px;
+  justify-content: center;
+}
+
+.wms-dash__empty {
+  padding: 16px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+.wms-dash__charts .wms-dash__empty {
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.wms-legend {
+  display: flex;
+  gap: 14px;
+}
+
+.wms-legend span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.wms-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.wms-flow {
+  position: relative;
+}
+
+.wms-flow__svg {
+  display: block;
+}
+
+.wms-flow__svg:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--accent));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.wms-flow__grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.wms-flow__zero {
+  stroke: var(--ink-muted);
+  stroke-width: 1;
+}
+
+.wms-flow__axis {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--ink-muted);
+}
+
+.wms-flow__peak {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+
+.wms-flow__hover {
+  fill: var(--row-hover);
+}
+
+.wms-flow__tip {
+  position: absolute;
+  top: 8px;
+  z-index: 2;
+  min-width: 180px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.wms-flow__tip-date {
+  color: var(--ink-muted);
+  margin-bottom: 4px;
+}
+
+.wms-flow__tip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 20px;
+}
+
+.wms-flow__tip-row i {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  flex: none;
+}
+
+.wms-flow__tip-row b {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.wms-flow__tip-row span {
+  color: var(--ink-muted);
+}
+
+.wms-flow__tip-net {
+  margin-top: 2px;
+  padding-top: 4px;
+  padding-left: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.wms-donut {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wms-donut svg {
+  flex: none;
+}
+
+.wms-donut__value {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+
+.wms-donut__unit {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  fill: var(--ink-muted);
+}
+
+.wms-donut__legend {
+  flex-grow: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wms-donut__legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px;
+  border-radius: 6px;
+  cursor: default;
+}
+
+.wms-donut__legend li.is-active,
+.wms-donut__legend li:hover {
+  background: var(--row-hover);
+}
+
+.wms-donut__legend li:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--accent));
+  outline-offset: -2px;
+}
+
+.wms-donut__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.wms-donut__name {
+  flex-grow: 1;
+  min-width: 0;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wms-donut__share {
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+
+/* Lists row: the two cards share the rest of the height and scroll their own bodies. */
+.wms-dash__lists {
+  min-height: 340px;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.wms-dash__lists > .wms-card {
+  overflow: hidden;
+}
+
+.wms-dash__scroll {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.wms-dash__expired {
+  text-decoration: none;
+}
+
+.wms-dash__lists .wms-card__head > div:first-child {
+  min-width: 0;
+}
+
+.wms-dtable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.wms-dtable th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink-muted);
+  padding: 8px 10px;
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--border);
+}
+
+.wms-dtable th:first-child,
+.wms-dtable td:first-child {
+  padding-left: 16px;
+}
+
+.wms-dtable td {
+  font-size: 14px;
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.wms-dtable tr:last-child td {
+  border-bottom: 0;
+}
+
+.wms-dtable__num {
+  text-align: right !important;
+}
+
+/* Batch numbers and quantities never break mid-code; the product name wraps instead. */
+.wms-dtable td.wms-num {
+  white-space: nowrap;
+}
+
+.wms-dtable__uom {
+  margin-left: 4px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.wms-dtable__days {
+  width: 150px;
+}
+
+.wms-pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.wms-pill--danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.wms-pill--warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.wms-pill--success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.wms-pill--neutral {
+  background: var(--surface-sunken);
+  color: var(--ink-muted);
+}
+
+.wms-meter {
+  height: 5px;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.wms-meter i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.wms-meter__fill--danger {
+  background: var(--danger);
+}
+
+.wms-meter__fill--warning {
+  background: var(--warning);
+}
+
+.wms-meter__fill--success {
+  background: var(--success);
+}
+
+.wms-meter__fill--neutral {
+  background: var(--ink-subtle);
+}
+
+/* Decision rows: a 3px left rule names the kind of document; a late one also gets a tint. */
+.wms-aplist__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px 11px 13px;
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid transparent;
+}
+
+.wms-aplist__row:last-child {
+  border-bottom: 0;
+}
+
+.wms-aplist__row--accent {
+  border-left-color: var(--accent);
+}
+
+.wms-aplist__row--warning {
+  border-left-color: var(--warning);
+}
+
+.wms-aplist__row--virtual {
+  border-left-color: var(--virtual-location);
+}
+
+.wms-aplist__row--danger {
+  border-left-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.wms-aplist__main {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.wms-aplist__title {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.wms-aplist__meta {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+.wms-aplist__late {
+  color: var(--danger);
+}
+
+@media (max-width: 1180px) {
+  .wms-dash__charts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wms-dash__lists {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .wms-donut {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wms-donut svg {
+    align-self: center;
+  }
+
+  .wms-dtable__days {
+    width: 110px;
+  }
+}
+
 /* ---------- narrower viewports ---------- */
 
 @media (max-width: 1280px) {

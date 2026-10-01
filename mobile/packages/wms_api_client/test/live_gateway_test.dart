@@ -132,6 +132,12 @@ void main() {
           expect(kpi.label, isNotEmpty);
         }
 
+        // The same permission brings the stock value per category.
+        expect(dashboard.categoryValues, isNotNull);
+        for (final category in dashboard.categoryValues!) {
+          expect(category.amount, isNotNull);
+        }
+
         expect(await client.reporting.listReports(), isNotEmpty);
       });
 

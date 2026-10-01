@@ -107,6 +107,25 @@ abstract class DashboardSeriesDto with _$DashboardSeriesDto {
       _$DashboardSeriesDtoFromJson(json);
 }
 
+/// Current stock value of one product category — the product's own (leaf) category; the screen
+/// builds the tree itself. `categoryId` is null for products the catalogue did not return, so their
+/// value is shown as uncategorised instead of being lost. `value` is a decimal string (ADR-008).
+@freezed
+abstract class DashboardCategoryValueDto with _$DashboardCategoryValueDto {
+  const factory DashboardCategoryValueDto({
+    int? categoryId,
+    required String value,
+  }) = _DashboardCategoryValueDto;
+
+  const DashboardCategoryValueDto._();
+
+  factory DashboardCategoryValueDto.fromJson(Map<String, Object?> json) =>
+      _$DashboardCategoryValueDtoFromJson(json);
+
+  /// The value as a number, for arithmetic.
+  Money get amount => Money.parse(value);
+}
+
 /// `GET /reporting/dashboard/summary`.
 ///
 /// The server answers with a **list of KPIs**, not a fixed set of counters: which figures a caller
@@ -120,6 +139,9 @@ abstract class DashboardSummaryDto with _$DashboardSummaryDto {
     @Default(<KpiDto>[]) List<KpiDto> kpis,
     @Default(<DashboardAlertDto>[]) List<DashboardAlertDto> alerts,
     @Default(<DashboardSeriesDto>[]) List<DashboardSeriesDto> series,
+    // Stock value per product category. Null — not empty — when the caller lacks
+    // `master.product.view_cost`: the server leaves the field out rather than sending zeros.
+    List<DashboardCategoryValueDto>? categoryValues,
     Map<String, Object?>? systemHealth,
   }) = _DashboardSummaryDto;
 

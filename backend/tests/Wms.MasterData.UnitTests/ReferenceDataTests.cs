@@ -1,3 +1,4 @@
+using Wms.Common.Infrastructure.Persistence;
 using Wms.MasterData.Application.Commands;
 using Wms.MasterData.Domain.Entities;
 using Wms.MasterData.Domain.Enums;
@@ -92,6 +93,19 @@ public sealed class ReferenceDataTests
         var location = Location.Create(1, "L1", "Lokasiya", locationType).Value;
 
         Assert.Equal(expected, location.IsVirtual);
+    }
+
+    [Fact]
+    public void The_contract_list_of_virtual_types_matches_the_domain_rule()
+    {
+        // Reporting drops these from the dashboard's stock figures; a virtual type missing from the list would
+        // put its counter-account back into the company's stock value.
+        var domain = Enum.GetValues<LocationType>()
+            .Where(Location.IsVirtualType)
+            .Select(t => UpperSnakeCaseEnum.Format(t))
+            .Order(StringComparer.Ordinal);
+
+        Assert.Equal(domain, Wms.MasterData.Contracts.LocationTypes.Virtual.Order(StringComparer.Ordinal));
     }
 
     // ================================================================ supplier certificates

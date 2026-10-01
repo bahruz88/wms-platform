@@ -64,7 +64,7 @@ public static class ReportingEndpoints
     {
         if (!TryParseEnum<DashboardPeriod>(period, DashboardPeriod.Week, out var parsedPeriod))
         {
-            return Invalid("period", "TODAY, WEEK və ya MONTH gözlənilir.");
+            return Invalid("period", "TODAY, WEEK, TWO_WEEKS və ya MONTH gözlənilir.");
         }
 
         var result = await dispatcher
