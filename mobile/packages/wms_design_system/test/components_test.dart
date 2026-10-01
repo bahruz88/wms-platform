@@ -751,13 +751,13 @@ void main() {
       ),
     ];
 
-    Widget scaffold(Size size) => MediaQuery(
+    Widget scaffold(Size size, {int? selectedIndex = 0}) => MediaQuery(
       data: MediaQueryData(size: size),
       child: MaterialApp(
         theme: WmsTheme.light(),
         home: WmsAdaptiveScaffold(
           destinations: destinations,
-          selectedIndex: 0,
+          selectedIndex: selectedIndex,
           onDestinationSelected: (_) {},
           body: const Text('body'),
         ),
@@ -781,6 +781,39 @@ void main() {
       await tester.pumpWidget(scaffold(const Size(1280, 900)));
       expect(find.byType(NavigationRail), findsOneWidget);
       expect(find.byType(NavigationBar), findsNothing);
+    });
+
+    // The profile is open and is not a destination. An index past the end
+    // used to say so, and both Material widgets assert against it in debug.
+    testWidgets('nothing selected on a tablet rail', (tester) async {
+      tester.view.physicalSize = const Size(800, 1280);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        scaffold(const Size(800, 1280), selectedIndex: null),
+      );
+      expect(tester.takeException(), isNull);
+      final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
+      expect(rail.selectedIndex, isNull);
+    });
+
+    testWidgets('nothing selected on a phone bar', (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        scaffold(const Size(400, 800), selectedIndex: null),
+      );
+      expect(tester.takeException(), isNull);
+      final theme = tester.widget<NavigationBarTheme>(
+        find
+            .ancestor(
+              of: find.byType(NavigationBar),
+              matching: find.byType(NavigationBarTheme),
+            )
+            .first,
+      );
+      expect(theme.data.indicatorColor, Colors.transparent);
     });
   });
 }

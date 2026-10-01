@@ -147,14 +147,16 @@ class _MobileShell extends ConsumerWidget {
       ),
     ];
 
-    // The profile is not a tab; while it is open nothing in the bar is selected,
-    // which is what `NavigationBar` shows for an index outside its range.
+    // The profile is not a tab; while it is open nothing in the bar is selected.
+    // That is `null`: an index past the end used to stand for it, and both
+    // `NavigationBar` and the tablet's `NavigationRail` assert against it in
+    // debug — opening the profile on the Lenovo tablet turned the screen red.
     final selected = tabs.indexWhere(
       (tab) => tab.branch == navigationShell.currentIndex,
     );
 
     return WmsAdaptiveScaffold(
-      selectedIndex: selected < 0 ? tabs.length : selected,
+      selectedIndex: selected < 0 ? null : selected,
       onDestinationSelected: (index) => navigationShell.goBranch(
         tabs[index].branch,
         initialLocation: tabs[index].branch == navigationShell.currentIndex,

@@ -36,7 +36,12 @@ class WmsAdaptiveScaffold extends StatelessWidget {
   });
 
   final List<WmsDestination> destinations;
-  final int selectedIndex;
+
+  /// The current destination, or `null` when the screen on show is not one of
+  /// them (the profile). Both Material widgets assert an in-range index in
+  /// debug builds, so "nothing selected" has to be said with `null`, not with
+  /// an index past the end.
+  final int? selectedIndex;
   final ValueChanged<int> onDestinationSelected;
   final Widget body;
   final PreferredSizeWidget? appBar;
@@ -47,6 +52,41 @@ class WmsAdaptiveScaffold extends StatelessWidget {
     final size = WmsBreakpoints.of(context);
     final c = WmsColors.of(context);
     if (size.isCompact) {
+      final noneSelected = selectedIndex == null;
+      Widget bar = NavigationBar(
+        selectedIndex: selectedIndex ?? 0,
+        onDestinationSelected: onDestinationSelected,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        destinations: [
+          for (final d in destinations)
+            NavigationDestination(
+              icon: _Icon(destination: d, selected: false),
+              selectedIcon: _Icon(destination: d, selected: !noneSelected),
+              label: d.label,
+              tooltip: d.label,
+            ),
+        ],
+      );
+      if (noneSelected) {
+        // `NavigationBar` has no unselected state, so the first destination
+        // carries the index and is drawn exactly like the others: no
+        // indicator, unselected icon colour.
+        final base = NavigationBarTheme.of(context);
+        Set<WidgetState> unselected(Set<WidgetState> states) =>
+            states.difference({WidgetState.selected});
+        bar = NavigationBarTheme(
+          data: base.copyWith(
+            indicatorColor: Colors.transparent,
+            iconTheme: WidgetStateProperty.resolveWith(
+              (states) => base.iconTheme?.resolve(unselected(states)),
+            ),
+            labelTextStyle: WidgetStateProperty.resolveWith(
+              (states) => base.labelTextStyle?.resolve(unselected(states)),
+            ),
+          ),
+          child: bar,
+        );
+      }
       return Scaffold(
         appBar: appBar,
         body: body,
@@ -55,20 +95,7 @@ class WmsAdaptiveScaffold extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border(top: BorderSide(color: c.border)),
           ),
-          child: NavigationBar(
-            selectedIndex: selectedIndex,
-            onDestinationSelected: onDestinationSelected,
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            destinations: [
-              for (final d in destinations)
-                NavigationDestination(
-                  icon: _Icon(destination: d, selected: false),
-                  selectedIcon: _Icon(destination: d, selected: true),
-                  label: d.label,
-                  tooltip: d.label,
-                ),
-            ],
-          ),
+          child: bar,
         ),
       );
     }
